@@ -1,0 +1,402 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "adminUserName": {
+            "type": "string",
+            "defaultValue": "AzureUser",
+            "minLength": 1,
+            "maxLength": 20,
+            "metadata": {
+                "description": "The administrator user name."
+            }
+        },
+        "adminPassword": {
+            "type": "securestring",
+            "minLength": 12,
+            "maxLength": 123,
+            "metadata": {
+                "description": "The administrator password."
+            }
+        },
+        "labHostVmName": {
+            "type": "string",
+            "defaultValue": "hcilab-vm1",
+            "minLength": 1,
+            "maxLength": 15,
+            "metadata": {
+                "description": "The lab hosting virtual machine name."
+            }
+        },
+        "labHostVmSize": {
+            "type": "string",
+            "defaultValue": "Standard_E16s_v5",
+            "allowedValues": [
+                "Standard_D16s_v3",
+                "Standard_D32s_v3",
+                "Standard_D64s_v3",
+                "Standard_D16s_v4",
+                "Standard_D32s_v4",
+                "Standard_D64s_v4",
+                "Standard_D16d_v4",
+                "Standard_D32d_v4",
+                "Standard_D64d_v4",
+                "Standard_D16ds_v4",
+                "Standard_D32ds_v4",
+                "Standard_D64ds_v4",
+                "Standard_E8s_v3",
+                "Standard_E16s_v3",
+                "Standard_E16-4s_v3",
+                "Standard_E16-8s_v3",
+                "Standard_E20s_v3",
+                "Standard_E32s_v3",
+                "Standard_E32-8s_v3",
+                "Standard_E32-16s_v3",
+                "Standard_E48s_v3",
+                "Standard_E64s_v3",
+                "Standard_E64-16s_v3",
+                "Standard_E64-32s_v3",
+                "Standard_E8s_v4",
+                "Standard_E16s_v4",
+                "Standard_E16s_v5",
+                "Standard_E16-8s_v4",
+                "Standard_E20s_v4",
+                "Standard_E32s_v4",
+                "Standard_E32-8s_v4",
+                "Standard_E32-16s_v4",
+                "Standard_E48s_v4",
+                "Standard_E64s_v4",
+                "Standard_E64-16s_v4",
+                "Standard_E64-32s_v4",
+                "Standard_E8d_v4",
+                "Standard_E16d_v4",
+                "Standard_E20d_v4",
+                "Standard_E32d_v4",
+                "Standard_E48d_v4",
+                "Standard_E64d_v4",
+                "Standard_E8ds_v4",
+                "Standard_E16ds_v4",
+                "Standard_E20ds_v4",
+                "Standard_E32ds_v4",
+                "Standard_E48ds_v4",
+                "Standard_E64ds_v4",
+                "Standard_E64-16ds_v4",
+                "Standard_E64-32ds_v4"
+            ],
+            "metadata": {
+                "description": "The lab hosting virtual machine size."
+            }
+        },
+        "labHostVmOsDiskType": {
+            "type": "string",
+            "defaultValue": "StandardSSD_LRS",
+            "allowedValues": [
+                "Premium_LRS",
+                "StandardSSD_LRS",
+                "Standard_LRS"
+            ],
+            "metadata": {
+                "description": "The Storage type of the lab hosting virtual machine's OS disk."
+            }
+        },
+        "labHostVmDataDiskType": {
+            "type": "string",
+            "defaultValue": "StandardSSD_LRS",
+            "allowedValues": [
+                "Premium_LRS",
+                "StandardSSD_LRS"
+            ],
+            "metadata": {
+                "description": "The Storage type of the lab hosting virtual machine's data disk."
+            }
+        },
+        "labHostVmDataDiskSize": {
+            "type": "int",
+            "defaultValue": 64,
+            "allowedValues": [
+                32,
+                64,
+                128,
+                256,
+                512,
+                1024
+            ],
+            "metadata": {
+                "description": "The size of the individual data disks in GiB."
+            }
+        },
+        "isHaveEligibleWindowsServerLicense": {
+            "type": "bool",
+            "defaultValue": false,
+            "metadata": {
+                "description": "By specifying True, you confirm you have an eligible Windows Server license with Software Assurance or Windows Server subscription to apply this Azure Hybrid Benefit. You can read more about compliance here: http://go.microsoft.com/fwlink/?LinkId=859786"
+            }
+        }
+    },
+    "variables": {
+        "location": "[resourceGroup().location]",
+        "uniqueString": "[substring(uniqueString(resourceGroup().id, parameters('labHostVmName')), 0, 6)]",
+
+        "virtualNetworkName": "hcilab-vnet",
+        "virtualNetworkNameAddressPrefix": "10.0.0.0/16",
+        "subnetName": "default",
+        "subnetAddressPrefix": "10.0.0.0/24",
+        "subnetNetworkSecurityGroupName": "[format('{0}-{1}-nsg', variables('virtualNetworkName'), variables('subnetName'))]",
+
+        "dataDisksCount": 8,
+        "networkInterfaceName": "[format('{0}-nic1', parameters('labHostVmName'))]",
+        "privateIPAddress": "10.0.0.4",
+        "publicIpAddressName": "[format('{0}-ip1', parameters('labHostVmName'))]",
+        "dnsNameForPublicIP": "[toLower(format('{0}-{1}-{2}', resourceGroup().name, parameters('labHostVmName'), variables('uniqueString')))]",
+
+        "clusterWitnessStorageAccountName": "[format('hcicluswitness{0}', toLower(variables('uniqueString')))]"
+    },
+    "resources": [
+        // Network security group for the subnet.
+
+        {
+            "name": "[variables('subnetNetworkSecurityGroupName')]",
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2020-11-01",
+            "location": "[variables('location')]",
+            "properties": {
+                "securityRules": []
+            }
+        },
+
+        // Virtual network.
+
+        {
+            "name": "[variables('virtualNetworkName')]",
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2020-11-01",
+            "location": "[variables('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', variables('subnetNetworkSecurityGroupName'))]"
+            ],
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[variables('virtualNetworkNameAddressPrefix')]"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "[variables('subnetName')]",
+                        "properties": {
+                            "addressPrefix": "[variables('subnetAddressPrefix')]",
+                            "networkSecurityGroup": {
+                                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('subnetNetworkSecurityGroupName'))]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+
+        // Lab hosting virtual machine.
+
+        {
+            "name": "[variables('publicIpAddressName')]",
+            "type": "Microsoft.Network/publicIpAddresses",
+            "apiVersion": "2020-11-01",
+            "location": "[variables('location')]",
+            "sku": {
+                "name": "Standard"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "Static",
+                "dnsSettings": {
+                    "domainNameLabel": "[variables('dnsNameForPublicIP')]"
+                }
+            }
+        },
+        {
+            "name": "[variables('networkInterfaceName')]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2020-11-01",
+            "location": "[variables('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
+                "[resourceId('Microsoft.Network/publicIpAddresses', variables('publicIpAddressName'))]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetName'))]"
+                            },
+                            "privateIPAllocationMethod": "Static",
+                            "privateIPAddress": "[variables('privateIPAddress')]",
+                            "publicIpAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIpAddresses', variables('publicIpAddressName'))]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "[parameters('labHostVmName')]",
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2021-11-01",
+            "location": "[variables('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfaceName'))]"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[parameters('labHostVmSize')]"
+                },
+                "osProfile": {
+                    "computerName": "[parameters('labHostVmName')]",
+                    "adminUsername": "[parameters('adminUserName')]",
+                    "adminPassword": "[parameters('adminPassword')]",
+                    "windowsConfiguration": {
+                        "provisionVmAgent": true
+                    }
+                },
+                "licenseType": "[if(parameters('isHaveEligibleWindowsServerLicense'), 'Windows_Server', 'None')]",
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfaceName'))]"
+                        }
+                    ]
+                },
+                "storageProfile": {
+                    "osDisk": {
+                        "name": "[format('{0}-osdisk', parameters('labHostVmName'))]",
+                        "createOption": "FromImage",
+                        "managedDisk": {
+                            "storageAccountType": "[parameters('labHostVmOsDiskType')]"
+                        }
+                    },
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "2022-datacenter-azure-edition-smalldisk",
+                        "version": "latest"
+                    },
+                    "copy": [
+                        {
+                            "name": "dataDisks",
+                            "count": "[variables('dataDisksCount')]",
+                            "input": {
+                                "name": "[format('{0}-datadisk{1}', parameters('labHostVmName'), copyIndex('dataDisks'))]",
+                                "diskSizeGB": "[parameters('labHostVmDataDiskSize')]",
+                                "lun": "[copyIndex('dataDisks')]",
+                                "createOption": "Empty",
+                                "caching": "None",
+                                "managedDisk": {
+                                    "storageAccountType": "[parameters('labHostVmDataDiskType')]"
+                                }
+                            }
+                        }
+                    ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": true
+                    }
+                }
+            }
+        },
+
+        // Storage account for the HCI cluster witness.
+
+        {
+            "name": "[variables('clusterWitnessStorageAccountName')]",
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2022-05-01",
+            "location": "[variables('location')]",
+            "kind": "StorageV2",
+            "sku": {
+                "name": "Standard_LRS"
+            },
+            "properties": {
+                "accessTier": "Hot",
+                "minimumTlsVersion": "TLS1_2",
+                "supportsHttpsTrafficOnly": true,
+                "publicNetworkAccess": "Enabled",
+                "allowBlobPublicAccess": false,
+                "allowSharedKeyAccess": true,
+                "allowCrossTenantReplication": true,
+                "defaultToOAuthAuthentication": false,
+                "networkAcls": {
+                    "bypass": "AzureServices",
+                    "defaultAction": "Allow",
+                    "ipRules": []
+                },
+                "dnsEndpointType": "Standard",
+                "encryption": {
+                    "keySource": "Microsoft.Storage",
+                    "services": {
+                        "blob": {
+                            "enabled": true
+                        },
+                        "file": {
+                            "enabled": true
+                        },
+                        "table": {
+                            "enabled": true
+                        },
+                        "queue": {
+                            "enabled": true
+                        }
+                    },
+                    "requireInfrastructureEncryption": false
+                }
+            }
+        },
+        {
+            "name": "[format('{0}/default', variables('clusterWitnessStorageAccountName'))]",
+            "type": "Microsoft.Storage/storageAccounts/blobServices",
+            "apiVersion": "2022-05-01",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', variables('clusterWitnessStorageAccountName'))]"
+            ],
+            "properties": {
+                "restorePolicy": {
+                    "enabled": false
+                },
+                "deleteRetentionPolicy": {
+                    "enabled": false
+                },
+                "containerDeleteRetentionPolicy": {
+                    "enabled": false
+                },
+                "changeFeed": {
+                    "enabled": false
+                },
+                "isVersioningEnabled": false
+            }
+        },
+        {
+            "name": "[format('{0}/default', variables('clusterWitnessStorageAccountName'))]",
+            "type": "Microsoft.Storage/storageAccounts/fileservices",
+            "apiVersion": "2022-05-01",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', variables('clusterWitnessStorageAccountName'))]",
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', variables('clusterWitnessStorageAccountName'), 'default')]"
+            ],
+            "properties": {
+                "shareDeleteRetentionPolicy": {
+                    "enabled": false
+                }
+            }
+        }
+    ],
+    "outputs": {
+        "adminUserName": {
+            "type": "string",
+            "value": "[parameters('adminUserName')]"
+        },
+        "fqdn": {
+            "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))).dnsSettings.fqdn]",
+            "type": "string"
+        }
+    }
+}
