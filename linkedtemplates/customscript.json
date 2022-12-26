@@ -1,0 +1,65 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string",
+            "metadata": {
+                "description": "The location for the custom script extension resource."
+            }
+        },
+        "parentVmResourceName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the parent virtual machine resource."
+            }
+        },
+        "customScriptExtensionName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the custom script extension resource."
+            }
+        },
+        "fileUris": {
+            "type": "array",
+            "minLength": 1,
+            "metadata": {
+                "description": "The URI of custom scripts."
+            }
+        },
+        "commandToExecute": {
+            "type": "string",
+            "metadata": {
+                "description": "The command-line to execute the custom script."
+            }
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "name": "[format('{0}/{1}', parameters('parentVmResourceName'), parameters('customScriptExtensionName'))]",
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "apiVersion": "2022-08-01",
+            "location": "[parameters('location')]",
+            "properties": {
+                "publisher": "Microsoft.Compute",
+                "type": "CustomScriptExtension",
+                "typeHandlerVersion": "1.10",
+                "autoUpgradeMinorVersion": true,
+                "enableAutomaticUpgrade": true,
+                "suppressFailures": false,
+                "settings": {},
+                "protectedSettings": {                    
+                    "fileUris": "[parameters('fileUris')]",
+                    "commandToExecute": "[parameters('commandToExecute')]"
+                }
+            }
+        }
+    ],
+    "outputs": {
+        "instanceView": {
+            "type": "object",
+            "value": "[reference(resourceId('Microsoft.Compute/virtualMachines/extensions', parameters('parentVmResourceName'), parameters('customScriptExtensionName'))).instanceView]"
+        }
+    }
+}
