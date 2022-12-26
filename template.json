@@ -152,7 +152,7 @@
         "customScriptBaseUri": "[uri(variables('repoBaseUri'), 'customscripts/')]",  // Must end with "/".
         "customScriptParams": {
             "createVolume": {
-                "extensionName": "create-volume",
+                "deploymentName": "volume-creation",
                 "fileUris": [
                     "[uri(variables('customScriptBaseUri'), 'create-volume.ps1')]"
                 ],
@@ -319,7 +319,7 @@
         // Create volume.
 
         {
-            "name": "[variables('customScriptParams').createVolume.extensionName]",
+            "name": "[variables('customScriptParams').createVolume.deploymentName]",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2021-04-01",
             "dependsOn": [
@@ -339,7 +339,7 @@
                         "value": "[parameters('labHostVmName')]"
                     },
                     "customScriptExtensionName": {
-                        "value": "[variables('customScriptParams').createVolume.extensionName]"
+                        "value": "hci-lab-configuration"
                     },
                     "fileUris": {
                         "value": "[variables('customScriptParams').createVolume.fileUris]"
