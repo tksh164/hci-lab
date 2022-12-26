@@ -149,7 +149,7 @@
         "publicIpAddressName": "[format('{0}-ip1', parameters('labHostVmName'))]",
         "dnsNameForPublicIP": "[toLower(format('{0}-{1}-{2}', resourceGroup().name, parameters('labHostVmName'), variables('uniqueString')))]",
 
-        "clusterWitnessStorageAccountName": "[format('hcicluswitness{0}', toLower(variables('uniqueString')))]"
+        "clusterWitnessStorageAccountName": "[format('hciclusterwitness{0}', toLower(variables('uniqueString')))]"
     },
     "resources": [
         // Network security group for the subnet.
