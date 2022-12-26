@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param (
     [Parameter(Mandatory = $true)]
-    [string] $DriveLetter,
+    [char] $DriveLetter,
 
     [Parameter(Mandatory = $false)]
     [string] $VolumeLabel = 'HCI Lab Data',
