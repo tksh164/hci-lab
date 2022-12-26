@@ -13,6 +13,10 @@ param (
 $ErrorActionPreference = [System.Management.Automation.ActionPreference]::Stop
 $ProgressPreference = [System.Management.Automation.ActionPreference]::SilentlyContinue
 
+New-Item -ItemType Directory -Path 'C:\Temp' -Force
+
+Start-Transcript -OutputDirectory 'C:\Temp'
+
 # Create a storage pool.
 
 New-StoragePool -FriendlyName $StoragePoolName -StorageSubSystemFriendlyName '*storage*' -PhysicalDisks (Get-PhysicalDisk -CanPool $true)
@@ -41,7 +45,9 @@ if ((Get-MpPreference).ExclusionPath -notcontains $volumeRootPath) {
 
 # Create the folder structure on the volume.
 
-New-Item -ItemType Directory -Path ([IO.Path]::Combine($volumeRootPath, 'temp')) -Force | Out-Null
-New-Item -ItemType Directory -Path ([IO.Path]::Combine($volumeRootPath, 'iso')) -Force | Out-Null
-New-Item -ItemType Directory -Path ([IO.Path]::Combine($volumeRootPath, 'vhd')) -Force | Out-Null
-New-Item -ItemType Directory -Path ([IO.Path]::Combine($volumeRootPath, 'vm')) -Force | Out-Null
+New-Item -ItemType Directory -Path ([IO.Path]::Combine($volumeRootPath, 'temp')) -Force
+New-Item -ItemType Directory -Path ([IO.Path]::Combine($volumeRootPath, 'iso')) -Force
+New-Item -ItemType Directory -Path ([IO.Path]::Combine($volumeRootPath, 'vhd')) -Force
+New-Item -ItemType Directory -Path ([IO.Path]::Combine($volumeRootPath, 'vm')) -Force
+
+Stop-Transcript
