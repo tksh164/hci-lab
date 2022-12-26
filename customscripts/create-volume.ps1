@@ -29,19 +29,19 @@ if ((Get-Volume -DriveLetter $DriveLetter -ErrorAction SilentlyContinue).Operati
     throw 'Volume creation failed.'
 }
 
+$volumeRootPath = $DriveLetter + ':\'
+
 # Set Defender exclusions.
 
-$exclusionPath = $DriveLetter + ':\'
+Add-MpPreference -ExclusionPath $volumeRootPath
 
-Add-MpPreference -ExclusionPath $exclusionPath
-
-if ((Get-MpPreference).ExclusionPath -notcontains $exclusionPath) {
+if ((Get-MpPreference).ExclusionPath -notcontains $volumeRootPath) {
     throw 'Defender exclusion setting failed.'
 }
 
 # Create the folder structure on the volume.
 
-New-Item -ItemType Directory -Path ([IO.Path]::Combine($DriveLetter, 'temp')) -Force
-New-Item -ItemType Directory -Path ([IO.Path]::Combine($DriveLetter, 'iso')) -Force
-New-Item -ItemType Directory -Path ([IO.Path]::Combine($DriveLetter, 'vhd')) -Force
-New-Item -ItemType Directory -Path ([IO.Path]::Combine($DriveLetter, 'vm')) -Force
+New-Item -ItemType Directory -Path ([IO.Path]::Combine($volumeRootPath, 'temp')) -Force | Out-Null
+New-Item -ItemType Directory -Path ([IO.Path]::Combine($volumeRootPath, 'iso')) -Force | Out-Null
+New-Item -ItemType Directory -Path ([IO.Path]::Combine($volumeRootPath, 'vhd')) -Force | Out-Null
+New-Item -ItemType Directory -Path ([IO.Path]::Combine($volumeRootPath, 'vm')) -Force | Out-Null
