@@ -147,6 +147,19 @@
         "publicIpAddressName": "[format('{0}-ip1', parameters('labHostVmName'))]",
         "dnsNameForPublicIP": "[toLower(format('{0}-{1}-{2}', resourceGroup().name, parameters('labHostVmName'), variables('uniqueString')))]",
 
+        "repoBaseUri": "https://raw.githubusercontent.com/tksh164/azure-demo-scripts-templates/master/arm-templates/hci-lab/",  // Must end with "/".
+        "customScriptLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/customscript.json')]",
+        "customScriptBaseUri": "[uri(variables('repoBaseUri'), 'customscripts/')]",  // Must end with "/".
+        "customScriptParams": {
+            "createVolume": {
+                "extensionName": "create-volume",
+                "fileUris": [
+                    "[uri(variables('customScriptBaseUri'), 'create-volume.ps1')]"
+                ],
+                "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\create-volume.ps1 -DriveLetter V"
+            }
+        },
+
         "clusterWitnessStorageAccountName": "[format('hciclusterwitness{0}', toLower(variables('uniqueString')))]"
     },
     "resources": [
@@ -298,6 +311,41 @@
                 "diagnosticsProfile": {
                     "bootDiagnostics": {
                         "enabled": true
+                    }
+                }
+            }
+        },
+
+        // Create volume.
+
+        {
+            "name": "[variables('customScriptParams').createVolume.extensionName]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2021-04-01",
+            "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachines', parameters('labHostVmName'))]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('customScriptLinkedTemplateUri')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
+                    "parentVmResourceName": {
+                        "value": "[parameters('labHostVmName')]"
+                    },
+                    "customScriptExtensionName": {
+                        "value": "[variables('customScriptParams').createVolume.extensionName]"
+                    },
+                    "fileUris": {
+                        "value": "[variables('customScriptParams').createVolume.fileUris]"
+                    },
+                    "commandToExecute": {
+                        "value": "[variables('customScriptParams').createVolume.commandToExecute]"
                     }
                 }
             }
