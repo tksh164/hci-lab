@@ -13,8 +13,9 @@ param (
 $ErrorActionPreference = [System.Management.Automation.ActionPreference]::Stop
 $ProgressPreference = [System.Management.Automation.ActionPreference]::SilentlyContinue
 
-New-Item -ItemType Directory -Path 'C:\Temp' -Force
-Start-Transcript -OutputDirectory 'C:\Temp'
+$logFolderPath = 'C:\Temp'
+New-Item -ItemType Directory -Path $logFolderPath -Force
+Start-Transcript -OutputDirectory $logFolderPath
 
 # Create a storage pool.
 
