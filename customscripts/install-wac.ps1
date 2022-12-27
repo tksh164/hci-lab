@@ -10,20 +10,6 @@ $configParams = GetConfigParameters
 Start-Transcript -OutputDirectory $configParams.transcriptFolder
 $configParams
 
-# function InstallWAC
-# {
-#     param (
-#         [Parameter(Mandatory = $true)]
-#         [string] $InstallerFilePath,
-
-#         [Parameter(Mandatory = $true)]
-#         [string] $LogFilePath
-#     )
-
-#     $msiArgs = '/i', ('"{0}"' -f $InstallerFilePath), '/qn', '/L*v', ('"{0}"' -f $LogFilePath), 'SME_PORT=443', 'SSL_CERTIFICATE_OPTION=generate'
-#     Start-Process -FilePath 'msiexec.exe' -ArgumentList $msiArgs -Wait -PassThru
-# }
-
 # Create the download folder if it does not exist.
 New-Item -ItemType Directory -Path $configParams.tempFolder -Force
 
@@ -49,18 +35,8 @@ $msiArgs = @(
 $result = Start-Process -FilePath 'msiexec.exe' -ArgumentList $msiArgs -Wait -PassThru
 $result | Format-List -Property '*'
 if ($result.ExitCode -ne 0) {
-    throw 'Windows Admin Center installation failed.'
+    throw ('Windows Admin Center installation failed with exit code {0}.' -f $result.ExitCode)
 }
-# $result = InstallWAC -InstallerFilePath $wacMsiFilePath.FullName -LogFilePath ([IO.Path]::Combine($configParams.tempFolder, 'wac-install-log.txt'))
-# $result | Format-List -Property '*'
-# if ($result.ExitCode -ne 0) {
-#     # Retry to installation (for CustomAction CreateFirewallRule returned actual error code 1603).
-#     $result = InstallWAC -InstallerFilePath $wacMsiFilePath.FullName -LogFilePath ([IO.Path]::Combine($configParams.tempFolder, 'wac-install-log2.txt'))
-#     $result | Format-List -Property '*'
-#     if ($result.ExitCode -ne 0) {
-#         throw 'Windows Admin Center installation failed.'
-#     }
-# }
 
 # Create shortcut for Windows Admin Center in desktop.
 $wshShell = New-Object -ComObject 'WScript.Shell'
