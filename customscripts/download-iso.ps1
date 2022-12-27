@@ -16,7 +16,7 @@ Import-Module -Name '.\common.psm1'
 $configParams = GetConfigParametersFromJsonFile -FilePath $ConfigParametersFile
 
 # Create the download folder if it does not exist.
-New-Item -ItemType Directory -Path $DownloadFolder -Force
+New-Item -ItemType Directory -Path $configParams.tempFolder -Force
 
 # Download the ISO file.
 $params = @{
