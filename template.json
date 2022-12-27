@@ -167,7 +167,7 @@
                     "[uri(variables('customScriptBaseUri'), 'common.psm1')]",
                     "[uri(variables('customScriptBaseUri'), 'download-iso.ps1')]"
                 ],
-                "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\download-iso.ps1"
+                "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\download-iso.ps1 -NodeOS as22h2 -NodeOSLang jajp"
             },
             "installWac": {
                 "deploymentName": "wac-installation",
