@@ -1,8 +1,0 @@
-{
-    "storagePoolName": "hcisandboxpool",
-    "driveLetter": "V",
-    "volumeLabel": "HCI Lab Data",
-    "tempFolder": "V:\\temp",
-    "vhdFolder": "V:\\vhd",
-    "vmFolder": "V:\\vm"
-}
