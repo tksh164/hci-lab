@@ -19,8 +19,12 @@ $configParams = GetConfigParametersFromJsonFile -FilePath $ConfigParametersFile
 New-Item -ItemType Directory -Path $configParams.tempFolder -Force
 
 # Download the Windows Admin Center installer.
-$wacMsiFilePath = [IO.Path]::Combine($configParams.tempFolder, 'WindowsAdminCenter.msi')
-Start-BitsTransfer -Source 'https://aka.ms/WACDownload' -Destination $wacMsiFilePath
+$params = @{
+    SourceUri      = 'https://aka.ms/WACDownload'
+    DownloadFolder = $configParams.tempFolder
+    FileNameToSave = 'WindowsAdminCenter.msi'
+}
+$wacMsiFilePath = DownloadFile @params
 
 # Install Windows Admin Center.
 $msiArgs = '/i', ('"{0}"' -f $wacMsiFilePath), '/qn', '/L*v', 'log.txt', 'SME_PORT=443', 'SSL_CERTIFICATE_OPTION=generate'
