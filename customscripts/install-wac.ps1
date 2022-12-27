@@ -23,7 +23,16 @@ $wacMsiFilePath = DownloadFile @params
 $wacMsiFilePath
 
 # Install Windows Admin Center.
-$msiArgs = '/i', ('"{0}"' -f $wacMsiFilePath.FullName), '/qn', '/L*v', 'log.txt', 'SME_PORT=443', 'SSL_CERTIFICATE_OPTION=generate'
+$msiArgs = '/i', ('"{0}"' -f $wacMsiFilePath.FullName), '/qn', '/L*v', '"{0}"' -f ([IO.Path]::Combine($configParams.tempFolder, 'wac-install-log.txt')), 'SME_PORT=443', 'SSL_CERTIFICATE_OPTION=generate'
 Start-Process -FilePath 'msiexec.exe' -ArgumentList $msiArgs -Wait
+
+# Create shortcut for Windows Admin Center in desktop.
+$wshShell = New-Object -ComObject 'WScript.Shell'
+$shortcut = $wshShell.CreateShortcut('C:\Users\Public\Desktop\Windows Admin Center.lnk')
+$shortcut.TargetPath = 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
+$shortcut.Arguments = 'https://{0}' -f $env:ComputerName
+$shortcut.Description = 'Windows Admin Center for the lab environment.'
+$shortcut.IconLocation = 'shell32.dll,34'
+$shortcut.Save()
 
 Stop-Transcript
