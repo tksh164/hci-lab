@@ -36,4 +36,5 @@ function DownloadFile
 
     $destinationFilePath = [IO.Path]::Combine($DownloadFolder, $FileNameToSave)
     Start-BitsTransfer -Source $SourceUri -Destination $destinationFilePath
+    $destinationFilePath
 }
