@@ -132,8 +132,13 @@
         }
     },
     "variables": {
+
+        // General
+
         "location": "[resourceGroup().location]",
         "uniqueString": "[substring(uniqueString(resourceGroup().id, parameters('labHostVmName')), 0, 6)]",
+
+        // Virtual network
 
         "virtualNetworkName": "hcilab-vnet",
         "virtualNetworkNameAddressPrefix": "10.0.0.0/16",
@@ -141,11 +146,15 @@
         "subnetAddressPrefix": "10.0.0.0/24",
         "subnetNetworkSecurityGroupName": "[format('{0}-{1}-nsg', variables('virtualNetworkName'), variables('subnetName'))]",
 
+        // Virtual machine
+
         "dataDisksCount": 8,
         "networkInterfaceName": "[format('{0}-nic1', parameters('labHostVmName'))]",
         "privateIPAddress": "10.0.0.4",
         "publicIpAddressName": "[format('{0}-ip1', parameters('labHostVmName'))]",
         "dnsNameForPublicIP": "[toLower(format('{0}-{1}-{2}', resourceGroup().name, parameters('labHostVmName'), variables('uniqueString')))]",
+
+        // Custom script extension
 
         "repoBaseUri": "https://raw.githubusercontent.com/tksh164/azure-demo-scripts-templates/master/arm-templates/hci-lab/",  // Must end with "/".
         "customScriptLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/customscript.json')]",
@@ -154,33 +163,48 @@
             "createVolume": {
                 "deploymentName": "volume-creation",
                 "fileUris": [
-                    "[uri(variables('repoBaseUri'), 'config-parameters.json')]",
-                    "[uri(variables('customScriptBaseUri'), 'common.psm1')]",
-                    "[uri(variables('customScriptBaseUri'), 'create-volume.ps1')]"
+                    "[uri(variables('customScriptBaseUri'), 'create-volume.ps1')]",
+                    "[uri(variables('customScriptBaseUri'), 'common.psm1')]"
                 ],
                 "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\create-volume.ps1"
             },
             "downloadIso": {
                 "deploymentName": "iso-download",
                 "fileUris": [
-                    "[uri(variables('repoBaseUri'), 'config-parameters.json')]",
-                    "[uri(variables('customScriptBaseUri'), 'common.psm1')]",
-                    "[uri(variables('customScriptBaseUri'), 'download-iso.ps1')]"
+                    "[uri(variables('customScriptBaseUri'), 'download-iso.ps1')]",
+                    "[uri(variables('customScriptBaseUri'), 'common.psm1')]"
                 ],
-                "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\download-iso.ps1 -NodeOS as22h2 -NodeOSLang jajp"
+                "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\download-iso.ps1"
             },
             "installWac": {
                 "deploymentName": "wac-installation",
                 "fileUris": [
-                    "[uri(variables('repoBaseUri'), 'config-parameters.json')]",
-                    "[uri(variables('customScriptBaseUri'), 'common.psm1')]",
-                    "[uri(variables('customScriptBaseUri'), 'install-wac.ps1')]"
+                    "[uri(variables('customScriptBaseUri'), 'install-wac.ps1')]",
+                    "[uri(variables('customScriptBaseUri'), 'common.psm1')]"
                 ],
                 "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\install-wac.ps1"
             }
         },
 
-        "clusterWitnessStorageAccountName": "[format('hciclusterwitness{0}', toLower(variables('uniqueString')))]"
+        // Storage account for Cloud Witness
+
+        "clusterWitnessStorageAccountName": "[format('hciclusterwitness{0}', toLower(variables('uniqueString')))]",
+
+        // Configuration parameters
+
+        "configParameters": {
+            "transcriptFolder": "C:\\temp",
+
+            "storagePoolName": "hcisandboxpool",
+            "driveLetter": "V",
+            "volumeLabel": "HCI Lab Data",
+            "tempFolder": "V:\\temp",
+            "vhdFolder": "V:\\vhd",
+            "vmFolder": "V:\\vm",
+
+            "hciNodeOS": "as22h2",
+            "hciNodeOSCulture": "en-us"
+        }
     },
     "resources": [
         // Network security group for the subnet.
@@ -332,7 +356,8 @@
                     "bootDiagnostics": {
                         "enabled": true
                     }
-                }
+                },
+                "userData": "[base64(string(variables('configParameters')))]"
             }
         },
 
