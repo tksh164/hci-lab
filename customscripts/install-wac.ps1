@@ -25,9 +25,10 @@ $params = @{
     FileNameToSave = 'WindowsAdminCenter.msi'
 }
 $wacMsiFilePath = DownloadFile @params
+$wacMsiFilePath
 
 # Install Windows Admin Center.
-$msiArgs = '/i', ('"{0}"' -f $wacMsiFilePath), '/qn', '/L*v', 'log.txt', 'SME_PORT=443', 'SSL_CERTIFICATE_OPTION=generate'
+$msiArgs = '/i', ('"{0}"' -f $wacMsiFilePath.FullName), '/qn', '/L*v', 'log.txt', 'SME_PORT=443', 'SSL_CERTIFICATE_OPTION=generate'
 Start-Process -FilePath 'msiexec.exe' -ArgumentList $msiArgs -Wait
 
 Stop-Transcript
