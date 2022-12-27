@@ -154,16 +154,20 @@
             "createVolume": {
                 "deploymentName": "volume-creation",
                 "fileUris": [
+                    "[uri(variables('repoBaseUri'), 'config-parameters.json')]",
+                    "[uri(variables('customScriptBaseUri'), 'common.psm1')]",
                     "[uri(variables('customScriptBaseUri'), 'create-volume.ps1')]"
                 ],
-                "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\create-volume.ps1 -DriveLetter V"
+                "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\create-volume.ps1"
             },
             "downloadIso": {
                 "deploymentName": "iso-download",
                 "fileUris": [
+                    "[uri(variables('repoBaseUri'), 'config-parameters.json')]",
+                    "[uri(variables('customScriptBaseUri'), 'common.psm1')]",
                     "[uri(variables('customScriptBaseUri'), 'download-iso.ps1')]"
                 ],
-                "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\download-iso.ps1 -DownloadFolder \"V:\\temp\""
+                "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\download-iso.ps1"
             }
         },
 
