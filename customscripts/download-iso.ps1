@@ -1,5 +1,13 @@
 [CmdletBinding()]
 param (
+    [Parameter(Mandatory = $true)]
+    [ValidateSet('as22h2', 'as21h2', 'as20h2', 'ws2022')]
+    [string] $NodeOS = 'as22h2',
+
+    [Parameter(Mandatory = $true)]
+    [ValidateSet('enus', 'jajp')]
+    [string] $NodeOSLang = 'enus',
+
     [Parameter(Mandatory = $false)]
     [string] $ConfigParametersFile = '.\config-parameters.json'
 )
@@ -15,39 +23,44 @@ Import-Module -Name '.\common.psm1'
 
 $configParams = GetConfigParametersFromJsonFile -FilePath $ConfigParametersFile
 
+$isoUris = @{
+    'as22h2' = @{
+        'enus' = 'https://software-static.download.prss.microsoft.com/dbazure/988969d5-f34g-4e03-ac9d-1f9786c66751/20349.1129.221007-2120.fe_release_hciv3_svc_refresh_SERVERAZURESTACKHCICOR_OEMRET_x64FRE_en-us.iso'
+        'jajp' = 'https://software-static.download.prss.microsoft.com/dbazure/988969d5-f34g-4e03-ac9d-1f9786c66751/20349.1129.221007-2120.fe_release_hciv3_svc_refresh_SERVERAZURESTACKHCICOR_OEMRET_x64FRE_ja-jp.iso'
+    }
+    'as21h2' = @{
+        'enus' = 'https://software-download.microsoft.com/download/sg/AzureStackHCI_20348.288_en-us.iso'
+        'jajp' = 'https://software-download.microsoft.com/download/sg/AzureStackHCI_20348.288_ja-jp.iso'
+    }
+    'as20h2' = @{
+        'enus' = 'https://software-download.microsoft.com/download/sg/AzureStackHCI_17784.1408_en-us.iso'
+        'jajp' = 'https://software-download.microsoft.com/download/sg/AzureStackHCI_17784.1408_ja-jp.iso'
+    }
+    'ws2022' = @{
+        'enus' = 'https://go.microsoft.com/fwlink/p/?LinkID=2195280&clcid=0x409&culture=en-us&country=US'
+        'jajp' = 'https://go.microsoft.com/fwlink/p/?LinkID=2195280&clcid=0x411&culture=ja-jp&country=JP'
+    }
+}
+
 # Create the download folder if it does not exist.
 New-Item -ItemType Directory -Path $configParams.tempFolder -Force
 
 # Download the ISO file.
 $params = @{
-    SourceUri      = 'https://software-static.download.prss.microsoft.com/dbazure/988969d5-f34g-4e03-ac9d-1f9786c66751/20349.1129.221007-2120.fe_release_hciv3_svc_refresh_SERVERAZURESTACKHCICOR_OEMRET_x64FRE_ja-jp.iso'
+    SourceUri      = $isoUris[$NodeOS][$NodeOSLang]
     DownloadFolder = $configParams.tempFolder
-    FileNameToSave = 'as22h2.iso'
+    FileNameToSave = '{0}{1}.iso' -f $NodeOS, $NodeOSLang
 }
 DownloadFile @params
 
-# Download the ISO file.
-$params = @{
-    SourceUri      = 'https://software-download.microsoft.com/download/sg/AzureStackHCI_20348.288_ja-jp.iso'
-    DownloadFolder = $configParams.tempFolder
-    FileNameToSave = 'as21h2.iso'
+if ($NodeOS -ne 'ws2022') {
+    # The Windows Server 2022 ISO is always needed for the domain controller VM.
+    $params = @{
+        SourceUri      = $isoUris['ws2022'][$NodeOSLang]
+        DownloadFolder = $configParams.tempFolder
+        FileNameToSave = '{0}{1}.iso' -f 'ws2022', $NodeOSLang
+    }
+    DownloadFile @params
 }
-DownloadFile @params
-
-# Download the ISO file.
-$params = @{
-    SourceUri      = 'https://software-download.microsoft.com/download/sg/AzureStackHCI_17784.1408_ja-jp.iso'
-    DownloadFolder = $configParams.tempFolder
-    FileNameToSave = 'as20h2.iso'
-}
-DownloadFile @params
-
-# Download the ISO file.
-$params = @{
-    SourceUri      = 'https://go.microsoft.com/fwlink/p/?LinkID=2195280&clcid=0x411&culture=ja-jp&country=JP'
-    DownloadFolder = $configParams.tempFolder
-    FileNameToSave = 'ws2022.iso'
-}
-DownloadFile @params
 
 Stop-Transcript
