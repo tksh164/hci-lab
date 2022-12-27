@@ -168,6 +168,15 @@
                     "[uri(variables('customScriptBaseUri'), 'download-iso.ps1')]"
                 ],
                 "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\download-iso.ps1"
+            },
+            "installWac": {
+                "deploymentName": "wac-installation",
+                "fileUris": [
+                    "[uri(variables('repoBaseUri'), 'config-parameters.json')]",
+                    "[uri(variables('customScriptBaseUri'), 'common.psm1')]",
+                    "[uri(variables('customScriptBaseUri'), 'install-wac.ps1')]"
+                ],
+                "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\install-wac.ps1"
             }
         },
 
@@ -392,6 +401,41 @@
                     },
                     "commandToExecute": {
                         "value": "[variables('customScriptParams').downloadIso.commandToExecute]"
+                    }
+                }
+            }
+        },
+
+        // Install Windows Admin Center.
+
+        {
+            "name": "[variables('customScriptParams').installWac.deploymentName]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2021-04-01",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', variables('customScriptParams').downloadIso.deploymentName)]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('customScriptLinkedTemplateUri')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
+                    "parentVmResourceName": {
+                        "value": "[parameters('labHostVmName')]"
+                    },
+                    "customScriptExtensionName": {
+                        "value": "hci-lab-configuration"
+                    },
+                    "fileUris": {
+                        "value": "[variables('customScriptParams').installWac.fileUris]"
+                    },
+                    "commandToExecute": {
+                        "value": "[variables('customScriptParams').installWac.commandToExecute]"
                     }
                 }
             }
