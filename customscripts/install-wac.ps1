@@ -6,11 +6,9 @@ $ProgressPreference = [System.Management.Automation.ActionPreference]::SilentlyC
 
 Import-Module -Name '.\common.psm1'
 
-# Retrieve the configuration parameters.
 $configParams = GetConfigParameters
+Start-Transcript -OutputDirectory $configParams.transcriptFolder
 $configParams
-
-Start-Transcript -OutputDirectory ([IO.Path]::Combine($configParams.transcriptFolder, $MyInvocation.MyCommand.Name + '.log'))
 
 # Create the download folder if it does not exist.
 New-Item -ItemType Directory -Path $configParams.tempFolder -Force
