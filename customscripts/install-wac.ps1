@@ -24,7 +24,11 @@ $wacMsiFilePath
 
 # Install Windows Admin Center.
 $msiArgs = '/i', ('"{0}"' -f $wacMsiFilePath.FullName), '/qn', '/L*v', '"{0}"' -f ([IO.Path]::Combine($configParams.tempFolder, 'wac-install-log.txt')), 'SME_PORT=443', 'SSL_CERTIFICATE_OPTION=generate'
-Start-Process -FilePath 'msiexec.exe' -ArgumentList $msiArgs -Wait
+$result = Start-Process -FilePath 'msiexec.exe' -ArgumentList $msiArgs -Wait -PassThru
+$result | Format-List -Property '*'
+if ($result.ExitCode -ne 0) {
+    throw 'Windows Admin Center installation failed.'
+}
 
 # Create shortcut for Windows Admin Center in desktop.
 $wshShell = New-Object -ComObject 'WScript.Shell'

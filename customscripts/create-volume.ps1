@@ -13,7 +13,6 @@ $configParams
 # Create a storage pool.
 
 New-StoragePool -FriendlyName $configParams.storagePoolName -StorageSubSystemFriendlyName '*storage*' -PhysicalDisks (Get-PhysicalDisk -CanPool $true)
-
 if ((Get-StoragePool -FriendlyName $configParams.storagePoolName -ErrorAction SilentlyContinue).OperationalStatus -ne 'OK') {
     throw 'Storage pool creation failed.'
 }
@@ -21,7 +20,6 @@ if ((Get-StoragePool -FriendlyName $configParams.storagePoolName -ErrorAction Si
 # Create a volume.
 
 New-Volume -StoragePoolFriendlyName $configParams.storagePoolName -FileSystem NTFS -AllocationUnitSize 64KB -ResiliencySettingName Simple -UseMaximumSize -DriveLetter $configParams.driveLetter -FriendlyName $configParams.volumeLabel
-
 if ((Get-Volume -DriveLetter $configParams.driveLetter -ErrorAction SilentlyContinue).OperationalStatus -ne 'OK') {
     throw 'Volume creation failed.'
 }
@@ -30,7 +28,6 @@ if ((Get-Volume -DriveLetter $configParams.driveLetter -ErrorAction SilentlyCont
 
 $exclusionPath = $configParams.driveLetter + ':\'
 Add-MpPreference -ExclusionPath $exclusionPath
-
 if ((Get-MpPreference).ExclusionPath -notcontains $exclusionPath) {
     throw 'Defender exclusion setting failed.'
 }
