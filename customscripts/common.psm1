@@ -1,23 +1,10 @@
-function GetConfigParametersFromJsonFile
+function GetConfigParameters
 {
     [CmdletBinding()]
-    param (
-        [Parameter(Mandatory = $true)]
-        [string] $FilePath
-    )
+    param ()
 
-    Get-Content -Raw -Encoding UTF8 -LiteralPath $FilePath | ConvertJsonToCustomObject
-}
-
-function ConvertJsonToCustomObject
-{
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
-        [string] $Json
-    )
-
-    $Json -replace '(?m)(?<=^([^"]|"[^"]*")*)//.*' -replace '(?ms)/\*.*?\*/' | ConvertFrom-Json
+    $encodedUserData = Invoke-RestMethod -UseBasicParsing -Method Get -Headers @{ Metadata = 'true' } -Uri 'http://169.254.169.254/metadata/instance/compute/userData?api-version=2021-12-13&format=text'
+    [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($encodedUserData)) | ConvertFrom-Json
 }
 
 function DownloadFile

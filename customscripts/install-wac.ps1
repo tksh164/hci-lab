@@ -1,19 +1,16 @@
 [CmdletBinding()]
-param (
-    [Parameter(Mandatory = $false)]
-    [string] $ConfigParametersFile = '.\config-parameters.json'
-)
+param ()
 
 $ErrorActionPreference = [System.Management.Automation.ActionPreference]::Stop
 $ProgressPreference = [System.Management.Automation.ActionPreference]::SilentlyContinue
 
-$logFolderPath = 'C:\Temp'
-New-Item -ItemType Directory -Path $logFolderPath -Force
-Start-Transcript -OutputDirectory $logFolderPath
-
 Import-Module -Name '.\common.psm1'
 
-$configParams = GetConfigParametersFromJsonFile -FilePath $ConfigParametersFile
+# Retrieve the configuration parameters.
+$configParams = GetConfigParameters
+$configParams
+
+Start-Transcript -OutputDirectory ([IO.Path]::Combine($configParams.transcriptFolder, $MyInvocation.MyCommand.Name + '.log'))
 
 # Create the download folder if it does not exist.
 New-Item -ItemType Directory -Path $configParams.tempFolder -Force
