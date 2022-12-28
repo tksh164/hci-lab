@@ -8,7 +8,7 @@ Import-Module -Name '.\common.psm1'
 
 $configParams = GetConfigParameters
 Start-Transcript -OutputDirectory $configParams.folderPath.transcript
-$configParams
+$configParams | COnvertTo-Json -Depth 16
 
 # Create the download folder if it does not exist.
 New-Item -ItemType Directory -Path $configParams.folderPath.temp -Force
