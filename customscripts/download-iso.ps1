@@ -40,7 +40,7 @@ $params = @{
 }
 DownloadFile @params
 
-if ($configParams.hciNodeOS -ne 'ws2022') {
+if ($configParams.hciNode.operatingSystem -ne 'ws2022') {
     # The Windows Server 2022 ISO is always needed for the domain controller VM.
     $params = @{
         SourceUri      = $isoUris['ws2022'][$configParams.hciNode.culture]
