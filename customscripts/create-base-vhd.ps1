@@ -44,7 +44,7 @@ Import-Module -Name '.\common.psm1'
 
 $configParams = GetConfigParameters
 Start-Transcript -OutputDirectory $configParams.folderPath.transcript
-$configParams | COnvertTo-Json -Depth 16
+$configParams | ConvertTo-Json -Depth 16
 
 # Create the temp folder if it does not exist.
 New-Item -ItemType Directory -Path $configParams.folderPath.temp -Force
