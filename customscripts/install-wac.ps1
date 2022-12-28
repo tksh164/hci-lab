@@ -7,16 +7,16 @@ $ProgressPreference = [System.Management.Automation.ActionPreference]::SilentlyC
 Import-Module -Name '.\common.psm1'
 
 $configParams = GetConfigParameters
-Start-Transcript -OutputDirectory $configParams.transcriptFolder
+Start-Transcript -OutputDirectory $configParams.folderPath.transcript
 $configParams
 
 # Create the download folder if it does not exist.
-New-Item -ItemType Directory -Path $configParams.tempFolder -Force
+New-Item -ItemType Directory -Path $configParams.folderPath.temp -Force
 
 # Download the Windows Admin Center installer.
 $params = @{
     SourceUri      = 'https://aka.ms/WACDownload'
-    DownloadFolder = $configParams.tempFolder
+    DownloadFolder = $configParams.folderPath.temp
     FileNameToSave = 'WindowsAdminCenter.msi'
 }
 $wacMsiFilePath = DownloadFile @params
@@ -28,7 +28,7 @@ $msiArgs = @(
     ('"{0}"' -f $wacMsiFilePath.FullName),
     '/qn',
     '/L*v',
-    ('"{0}"' -f [IO.Path]::Combine($configParams.tempFolder, 'wac-install-log.txt')),
+    ('"{0}"' -f [IO.Path]::Combine($configParams.folderPath.temp, 'wac-install-log.txt')),
     'SME_PORT=443',
     'SSL_CERTIFICATE_OPTION=generate'
 )
