@@ -137,6 +137,7 @@
 
         "location": "[resourceGroup().location]",
         "uniqueString": "[substring(uniqueString(resourceGroup().id, parameters('labHostVmName')), 0, 6)]",
+        "repoBaseUri": "https://raw.githubusercontent.com/tksh164/azure-demo-scripts-templates/master/arm-templates/hci-lab/",  // Must end with "/".
 
         // Virtual network
 
@@ -156,7 +157,6 @@
 
         // Custom script extension
 
-        "repoBaseUri": "https://raw.githubusercontent.com/tksh164/azure-demo-scripts-templates/master/arm-templates/hci-lab/",  // Must end with "/".
         "customScriptLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/customscript.json')]",
         "customScriptBaseUri": "[uri(variables('repoBaseUri'), 'customscripts/')]",  // Must end with "/".
         "customScriptParams": {
@@ -188,7 +188,8 @@
 
         // Storage account for Cloud Witness
 
-        "clusterWitnessStorageAccountName": "[format('hciclusterwitness{0}', toLower(variables('uniqueString')))]",
+        "cloudWitnessStorageAccountLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/cloudwitness.json')]",
+        "cloudWitnessStorageAccountName": "[format('hciclusterwitness{0}', toLower(variables('uniqueString')))]",
 
         // Configuration parameters
 
@@ -469,83 +470,22 @@
         // Storage account for the HCI cluster witness.
 
         {
-            "name": "[variables('clusterWitnessStorageAccountName')]",
-            "type": "Microsoft.Storage/storageAccounts",
-            "apiVersion": "2022-05-01",
-            "location": "[variables('location')]",
-            "kind": "StorageV2",
-            "sku": {
-                "name": "Standard_LRS"
-            },
+            "name": "cloud-witness-storage-account",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2021-04-01",
             "properties": {
-                "accessTier": "Hot",
-                "minimumTlsVersion": "TLS1_2",
-                "supportsHttpsTrafficOnly": true,
-                "publicNetworkAccess": "Enabled",
-                "allowBlobPublicAccess": false,
-                "allowSharedKeyAccess": true,
-                "allowCrossTenantReplication": true,
-                "defaultToOAuthAuthentication": false,
-                "networkAcls": {
-                    "bypass": "AzureServices",
-                    "defaultAction": "Allow",
-                    "ipRules": []
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('cloudWitnessStorageAccountLinkedTemplateUri')]",
+                    "contentVersion": "1.0.0.0"
                 },
-                "dnsEndpointType": "Standard",
-                "encryption": {
-                    "keySource": "Microsoft.Storage",
-                    "services": {
-                        "blob": {
-                            "enabled": true
-                        },
-                        "file": {
-                            "enabled": true
-                        },
-                        "table": {
-                            "enabled": true
-                        },
-                        "queue": {
-                            "enabled": true
-                        }
+                "parameters": {
+                    "location": {
+                        "value": "[variables('location')]"
                     },
-                    "requireInfrastructureEncryption": false
-                }
-            }
-        },
-        {
-            "name": "[format('{0}/default', variables('clusterWitnessStorageAccountName'))]",
-            "type": "Microsoft.Storage/storageAccounts/blobServices",
-            "apiVersion": "2022-05-01",
-            "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts', variables('clusterWitnessStorageAccountName'))]"
-            ],
-            "properties": {
-                "restorePolicy": {
-                    "enabled": false
-                },
-                "deleteRetentionPolicy": {
-                    "enabled": false
-                },
-                "containerDeleteRetentionPolicy": {
-                    "enabled": false
-                },
-                "changeFeed": {
-                    "enabled": false
-                },
-                "isVersioningEnabled": false
-            }
-        },
-        {
-            "name": "[format('{0}/default', variables('clusterWitnessStorageAccountName'))]",
-            "type": "Microsoft.Storage/storageAccounts/fileservices",
-            "apiVersion": "2022-05-01",
-            "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts', variables('clusterWitnessStorageAccountName'))]",
-                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', variables('clusterWitnessStorageAccountName'), 'default')]"
-            ],
-            "properties": {
-                "shareDeleteRetentionPolicy": {
-                    "enabled": false
+                    "clusterWitnessStorageAccountName": {
+                        "value": "[variables('cloudWitnessStorageAccountName')]"
+                    }
                 }
             }
         }
