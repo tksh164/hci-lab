@@ -177,13 +177,21 @@
                 ],
                 "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\download-iso.ps1"
             },
-            "installWac": {
-                "deploymentName": "wac-installation",
+            // "installWac": {
+            //     "deploymentName": "wac-installation",
+            //     "fileUris": [
+            //         "[uri(variables('customScriptBaseUri'), 'install-wac.ps1')]",
+            //         "[uri(variables('customScriptBaseUri'), 'common.psm1')]"
+            //     ],
+            //     "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\install-wac.ps1"
+            // },
+            "createBaseVhd": {
+                "deploymentName": "base-vhd-creation",
                 "fileUris": [
-                    "[uri(variables('customScriptBaseUri'), 'install-wac.ps1')]",
+                    "[uri(variables('customScriptBaseUri'), 'create-base-vhd.ps1')]",
                     "[uri(variables('customScriptBaseUri'), 'common.psm1')]"
                 ],
-                "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\install-wac.ps1"
+                "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\create-base-vhd.ps1"
             }
         },
 
@@ -352,8 +360,42 @@
         },
 
         // Install Windows Admin Center.
+        // {
+        //     "name": "[variables('customScriptParams').installWac.deploymentName]",
+        //     "type": "Microsoft.Resources/deployments",
+        //     "apiVersion": "2021-04-01",
+        //     "dependsOn": [
+        //         "[resourceId('Microsoft.Resources/deployments', variables('customScriptParams').downloadIso.deploymentName)]"
+        //     ],
+        //     "properties": {
+        //         "mode": "Incremental",
+        //         "templateLink": {
+        //             "uri": "[variables('customScriptLinkedTemplateUri')]",
+        //             "contentVersion": "1.0.0.0"
+        //         },
+        //         "parameters": {
+        //             "location": {
+        //                 "value": "[variables('location')]"
+        //             },
+        //             "parentVmResourceName": {
+        //                 "value": "[parameters('labHostVmName')]"
+        //             },
+        //             "customScriptExtensionName": {
+        //                 "value": "[variables('customScriptExtensionName')]"
+        //             },
+        //             "fileUris": {
+        //                 "value": "[variables('customScriptParams').installWac.fileUris]"
+        //             },
+        //             "commandToExecute": {
+        //                 "value": "[variables('customScriptParams').installWac.commandToExecute]"
+        //             }
+        //         }
+        //     }
+        // },
+
+        // Create base virtual hard disks.
         {
-            "name": "[variables('customScriptParams').installWac.deploymentName]",
+            "name": "[variables('customScriptParams').createBaseVhd.deploymentName]",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2021-04-01",
             "dependsOn": [
@@ -376,10 +418,10 @@
                         "value": "[variables('customScriptExtensionName')]"
                     },
                     "fileUris": {
-                        "value": "[variables('customScriptParams').installWac.fileUris]"
+                        "value": "[variables('customScriptParams').createBaseVhd.fileUris]"
                     },
                     "commandToExecute": {
-                        "value": "[variables('customScriptParams').installWac.commandToExecute]"
+                        "value": "[variables('customScriptParams').createBaseVhd.commandToExecute]"
                     }
                 }
             }
