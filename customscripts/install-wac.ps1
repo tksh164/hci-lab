@@ -19,13 +19,13 @@ $params = @{
     DownloadFolder = $configParams.folderPath.temp
     FileNameToSave = 'WindowsAdminCenter.msi'
 }
-$wacMsiFilePath = DownloadFile @params
-$wacMsiFilePath
+$wacMsiFile = DownloadFile @params
+$wacMsiFile
 
 # Install Windows Admin Center.
 $msiArgs = @(
     '/i',
-    ('"{0}"' -f $wacMsiFilePath.FullName),
+    ('"{0}"' -f $wacMsiFile.FullName),
     '/qn',
     '/L*v',
     ('"{0}"' -f [IO.Path]::Combine($configParams.folderPath.temp, 'wac-install-log.txt')),
