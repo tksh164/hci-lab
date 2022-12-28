@@ -190,17 +190,22 @@
         // Configuration parameters
 
         "configParameters": {
-            "transcriptFolder": "C:\\temp",
-
-            "storagePoolName": "hcisandboxpool",
-            "driveLetter": "V",
-            "volumeLabel": "HCI Lab Data",
-            "tempFolder": "V:\\temp",
-            "vhdFolder": "V:\\vhd",
-            "vmFolder": "V:\\vm",
-
-            "hciNodeOS": "as22h2",
-            "hciNodeOSCulture": "en-us"
+            "labHostStorage": {
+                "storagePoolName": "hcisandboxpool",
+                "driveLetter": "V",
+                "volumeLabel": "HCI Lab Data"
+            },
+            "folderPath": {
+                "transcript": "C:\\temp",
+                "temp": "V:\\temp",
+                "vhd": "V:\\vhd",
+                "vm": "V:\\vm"
+            },
+            "hciNode": {
+                "operatingSystem": "as22h2",
+                "culture": "en-us",
+                "imageIndex": 1
+            }
         }
     },
     "resources": [
