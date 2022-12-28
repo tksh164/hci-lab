@@ -129,36 +129,37 @@
             "metadata": {
                 "description": "By specifying True, you confirm you have an eligible Windows Server license with Software Assurance or Windows Server subscription to apply this Azure Hybrid Benefit. You can read more about compliance here: http://go.microsoft.com/fwlink/?LinkId=859786"
             }
+        },
+        "salt": {
+            "type": "string",
+            "defaultValue": "[utcNow()]",
+            "metadata": {
+                "description": "The value for generate unique values."
+            }
         }
     },
     "variables": {
-
         // General
 
         "location": "[resourceGroup().location]",
-        "uniqueString": "[substring(uniqueString(resourceGroup().id, parameters('labHostVmName')), 0, 6)]",
-        "repoBaseUri": "https://raw.githubusercontent.com/tksh164/azure-demo-scripts-templates/master/arm-templates/hci-lab/",  // Must end with "/".
+        "uniqueString": "[substring(uniqueString(resourceGroup().id, parameters('salt')), 0, 6)]",
+        "repoUriBase": "https://raw.githubusercontent.com/tksh164/azure-demo-scripts-templates/master/arm-templates/hci-lab/",  // Must end with "/".
 
-        // Virtual network
+        // Lab host virtual machine
 
-        "virtualNetworkName": "hcilab-vnet",
-        "virtualNetworkNameAddressPrefix": "10.0.0.0/16",
-        "subnetName": "default",
-        "subnetAddressPrefix": "10.0.0.0/24",
-        "subnetNetworkSecurityGroupName": "[format('{0}-{1}-nsg', variables('virtualNetworkName'), variables('subnetName'))]",
+        "labHostVmDeploymentName": "vm-and-vnet",
+        "labHostVmLinkedTemplateUri": "[uri(variables('repoUriBase'), 'linkedtemplates/labhostvm.json')]",
 
-        // Virtual machine
+        // Storage account for Cloud Witness
 
-        "dataDisksCount": 8,
-        "networkInterfaceName": "[format('{0}-nic1', parameters('labHostVmName'))]",
-        "privateIPAddress": "10.0.0.4",
-        "publicIpAddressName": "[format('{0}-ip1', parameters('labHostVmName'))]",
-        "dnsNameForPublicIP": "[toLower(format('{0}-{1}-{2}', resourceGroup().name, parameters('labHostVmName'), variables('uniqueString')))]",
+        "cloudWitnessStorageAccountDeploymentName": "cloud-witness-storage-account",
+        "cloudWitnessStorageAccountLinkedTemplateUri": "[uri(variables('repoUriBase'), 'linkedtemplates/cloudwitness.json')]",
 
         // Custom script extension
 
-        "customScriptLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/customscript.json')]",
-        "customScriptBaseUri": "[uri(variables('repoBaseUri'), 'customscripts/')]",  // Must end with "/".
+        "customScriptLinkedTemplateUri": "[uri(variables('repoUriBase'), 'linkedtemplates/customscript.json')]",
+        "customScriptBaseUri": "[uri(variables('repoUriBase'), 'customscripts/')]",  // Must end with "/".
+        "customScriptExtensionName": "hci-lab-configuration",
         "customScriptParams": {
             "createVolume": {
                 "deploymentName": "volume-creation",
@@ -186,11 +187,6 @@
             }
         },
 
-        // Storage account for Cloud Witness
-
-        "cloudWitnessStorageAccountLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/cloudwitness.json')]",
-        "cloudWitnessStorageAccountName": "[format('hciclusterwitness{0}', toLower(variables('uniqueString')))]",
-
         // Configuration parameters
 
         "configParameters": {
@@ -208,168 +204,87 @@
         }
     },
     "resources": [
-        // Network security group for the subnet.
-
+        // Lab host virtual machine and virtual network.
         {
-            "name": "[variables('subnetNetworkSecurityGroupName')]",
-            "type": "Microsoft.Network/networkSecurityGroups",
-            "apiVersion": "2020-11-01",
-            "location": "[variables('location')]",
+            "name": "[variables('labHostVmDeploymentName')]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2021-04-01",
             "properties": {
-                "securityRules": []
-            }
-        },
-
-        // Virtual network.
-
-        {
-            "name": "[variables('virtualNetworkName')]",
-            "type": "Microsoft.Network/virtualNetworks",
-            "apiVersion": "2020-11-01",
-            "location": "[variables('location')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Network/networkSecurityGroups', variables('subnetNetworkSecurityGroupName'))]"
-            ],
-            "properties": {
-                "addressSpace": {
-                    "addressPrefixes": [
-                        "[variables('virtualNetworkNameAddressPrefix')]"
-                    ]
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('labHostVmLinkedTemplateUri')]",
+                    "contentVersion": "1.0.0.0"
                 },
-                "subnets": [
-                    {
-                        "name": "[variables('subnetName')]",
-                        "properties": {
-                            "addressPrefix": "[variables('subnetAddressPrefix')]",
-                            "networkSecurityGroup": {
-                                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('subnetNetworkSecurityGroupName'))]"
-                            }
-                        }
+                "parameters": {
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
+                    "vmName": {
+                        "value": "[parameters('labHostVmName')]"
+                    },
+                    "adminUserName": {
+                        "value": "[parameters('adminUserName')]"
+                    },
+                    "adminPassword": {
+                        "value": "[parameters('adminPassword')]"
+                    },
+                    "vmSize": {
+                        "value": "[parameters('labHostVmSize')]"
+                    },
+                    "osDiskType": {
+                        "value": "[parameters('labHostVmOsDiskType')]"
+                    },
+                    "dataDiskType": {
+                        "value": "[parameters('labHostVmDataDiskType')]"
+                    },
+                    "dataDiskSize": {
+                        "value": "[parameters('labHostVmDataDiskSize')]"
+                    },
+                    "isHaveEligibleWindowsServerLicense": {
+                        "value": "[parameters('isHaveEligibleWindowsServerLicense')]"
+                    },
+                    "base64EncodedConfigParameters": {
+                        "value": "[base64(string(variables('configParameters')))]"
+                    },
+                    "uniqueString": {
+                        "value": "[variables('uniqueString')]"
                     }
-                ]
-            }
-        },
-
-        // Lab hosting virtual machine.
-
-        {
-            "name": "[variables('publicIpAddressName')]",
-            "type": "Microsoft.Network/publicIpAddresses",
-            "apiVersion": "2020-11-01",
-            "location": "[variables('location')]",
-            "sku": {
-                "name": "Standard"
-            },
-            "properties": {
-                "publicIPAllocationMethod": "Static",
-                "dnsSettings": {
-                    "domainNameLabel": "[variables('dnsNameForPublicIP')]"
                 }
             }
         },
+
+        // Storage account for the HCI cluster witness.
         {
-            "name": "[variables('networkInterfaceName')]",
-            "type": "Microsoft.Network/networkInterfaces",
-            "apiVersion": "2020-11-01",
-            "location": "[variables('location')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
-                "[resourceId('Microsoft.Network/publicIpAddresses', variables('publicIpAddressName'))]"
-            ],
+            "name": "[variables('cloudWitnessStorageAccountDeploymentName')]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2021-04-01",
             "properties": {
-                "ipConfigurations": [
-                    {
-                        "name": "ipconfig1",
-                        "properties": {
-                            "subnet": {
-                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetName'))]"
-                            },
-                            "privateIPAllocationMethod": "Static",
-                            "privateIPAddress": "[variables('privateIPAddress')]",
-                            "publicIpAddress": {
-                                "id": "[resourceId('Microsoft.Network/publicIpAddresses', variables('publicIpAddressName'))]"
-                            }
-                        }
-                    }
-                ]
-            }
-        },
-        {
-            "name": "[parameters('labHostVmName')]",
-            "type": "Microsoft.Compute/virtualMachines",
-            "apiVersion": "2021-11-01",
-            "location": "[variables('location')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfaceName'))]"
-            ],
-            "properties": {
-                "hardwareProfile": {
-                    "vmSize": "[parameters('labHostVmSize')]"
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('cloudWitnessStorageAccountLinkedTemplateUri')]",
+                    "contentVersion": "1.0.0.0"
                 },
-                "osProfile": {
-                    "computerName": "[parameters('labHostVmName')]",
-                    "adminUsername": "[parameters('adminUserName')]",
-                    "adminPassword": "[parameters('adminPassword')]",
-                    "windowsConfiguration": {
-                        "provisionVmAgent": true
-                    }
-                },
-                "licenseType": "[if(parameters('isHaveEligibleWindowsServerLicense'), 'Windows_Server', 'None')]",
-                "networkProfile": {
-                    "networkInterfaces": [
-                        {
-                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfaceName'))]"
-                        }
-                    ]
-                },
-                "storageProfile": {
-                    "osDisk": {
-                        "name": "[format('{0}-osdisk', parameters('labHostVmName'))]",
-                        "createOption": "FromImage",
-                        "managedDisk": {
-                            "storageAccountType": "[parameters('labHostVmOsDiskType')]"
-                        }
+                "parameters": {
+                    "location": {
+                        "value": "[variables('location')]"
                     },
-                    "imageReference": {
-                        "publisher": "MicrosoftWindowsServer",
-                        "offer": "WindowsServer",
-                        "sku": "2022-datacenter-azure-edition-smalldisk",
-                        "version": "latest"
+                    "storageAccountNamePrefix": {
+                        "value": "hciclusterwitness"
                     },
-                    "copy": [
-                        {
-                            "name": "dataDisks",
-                            "count": "[variables('dataDisksCount')]",
-                            "input": {
-                                "name": "[format('{0}-datadisk{1}', parameters('labHostVmName'), copyIndex('dataDisks'))]",
-                                "diskSizeGB": "[parameters('labHostVmDataDiskSize')]",
-                                "lun": "[copyIndex('dataDisks')]",
-                                "createOption": "Empty",
-                                "caching": "None",
-                                "managedDisk": {
-                                    "storageAccountType": "[parameters('labHostVmDataDiskType')]"
-                                }
-                            }
-                        }
-                    ]
-                },
-                "diagnosticsProfile": {
-                    "bootDiagnostics": {
-                        "enabled": true
+                    "uniqueString": {
+                        "value": "[variables('uniqueString')]"
                     }
-                },
-                "userData": "[base64(string(variables('configParameters')))]"
+                }
             }
         },
 
         // Create volume.
-
         {
             "name": "[variables('customScriptParams').createVolume.deploymentName]",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2021-04-01",
             "dependsOn": [
-                "[resourceId('Microsoft.Compute/virtualMachines', parameters('labHostVmName'))]"
+                "[resourceId('Microsoft.Resources/deployments', variables('labHostVmDeploymentName'))]"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -385,7 +300,7 @@
                         "value": "[parameters('labHostVmName')]"
                     },
                     "customScriptExtensionName": {
-                        "value": "hci-lab-configuration"
+                        "value": "[variables('customScriptExtensionName')]"
                     },
                     "fileUris": {
                         "value": "[variables('customScriptParams').createVolume.fileUris]"
@@ -398,7 +313,6 @@
         },
 
         // Download ISO files.
-
         {
             "name": "[variables('customScriptParams').downloadIso.deploymentName]",
             "type": "Microsoft.Resources/deployments",
@@ -420,7 +334,7 @@
                         "value": "[parameters('labHostVmName')]"
                     },
                     "customScriptExtensionName": {
-                        "value": "hci-lab-configuration"
+                        "value": "[variables('customScriptExtensionName')]"
                     },
                     "fileUris": {
                         "value": "[variables('customScriptParams').downloadIso.fileUris]"
@@ -433,7 +347,6 @@
         },
 
         // Install Windows Admin Center.
-
         {
             "name": "[variables('customScriptParams').installWac.deploymentName]",
             "type": "Microsoft.Resources/deployments",
@@ -455,36 +368,13 @@
                         "value": "[parameters('labHostVmName')]"
                     },
                     "customScriptExtensionName": {
-                        "value": "hci-lab-configuration"
+                        "value": "[variables('customScriptExtensionName')]"
                     },
                     "fileUris": {
                         "value": "[variables('customScriptParams').installWac.fileUris]"
                     },
                     "commandToExecute": {
                         "value": "[variables('customScriptParams').installWac.commandToExecute]"
-                    }
-                }
-            }
-        },
-
-        // Storage account for the HCI cluster witness.
-
-        {
-            "name": "cloud-witness-storage-account",
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2021-04-01",
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('cloudWitnessStorageAccountLinkedTemplateUri')]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "location": {
-                        "value": "[variables('location')]"
-                    },
-                    "clusterWitnessStorageAccountName": {
-                        "value": "[variables('cloudWitnessStorageAccountName')]"
                     }
                 }
             }
@@ -495,9 +385,9 @@
             "type": "string",
             "value": "[parameters('adminUserName')]"
         },
-        "fqdn": {
-            "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))).dnsSettings.fqdn]",
-            "type": "string"
+        "vmPublicIpFqdn": {
+            "type": "string",
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('labHostVmDeploymentName'))).outputs.fqdn.value]"
         }
     }
 }
