@@ -8,17 +8,25 @@
                 "description": "The location for the storage account resource."
             }
         },
-        "clusterWitnessStorageAccountName": {
+        "storageAccountNamePrefix": {
             "type": "string",
             "metadata": {
-                "description": "The storage account name for Cloud Witness."
+                "description": "The storage account name prefix for Cloud Witness."
+            }
+        },
+        "uniqueString": {
+            "type": "string",
+            "metadata": {
+                "description": "The string for uniqueness."
             }
         }
     },
-    "variables": {},
+    "variables": {
+        "storageAccountName": "[format('{0}{1}', toLower(parameters('storageAccountNamePrefix')), toLower(parameters('uniqueString')))]"
+    },
     "resources": [
         {
-            "name": "[parameters('clusterWitnessStorageAccountName')]",
+            "name": "[variables('storageAccountName')]",
             "type": "Microsoft.Storage/storageAccounts",
             "apiVersion": "2022-05-01",
             "location": "[parameters('location')]",
@@ -62,11 +70,11 @@
             }
         },
         {
-            "name": "[format('{0}/default', parameters('clusterWitnessStorageAccountName'))]",
+            "name": "[format('{0}/default', variables('storageAccountName'))]",
             "type": "Microsoft.Storage/storageAccounts/blobServices",
             "apiVersion": "2022-05-01",
             "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts', parameters('clusterWitnessStorageAccountName'))]"
+                "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
             ],
             "properties": {
                 "restorePolicy": {
@@ -85,11 +93,11 @@
             }
         },
         {
-            "name": "[format('{0}/default', parameters('clusterWitnessStorageAccountName'))]",
+            "name": "[format('{0}/default', variables('storageAccountName'))]",
             "type": "Microsoft.Storage/storageAccounts/fileservices",
             "apiVersion": "2022-05-01",
             "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts', parameters('clusterWitnessStorageAccountName'))]"
+                "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
             ],
             "properties": {
                 "shareDeleteRetentionPolicy": {
@@ -98,5 +106,10 @@
             }
         }
     ],
-    "outputs": {}
+    "outputs": {
+        "storageAccountName": {
+            "type": "string",
+            "value": "[variables('storageAccountName')]"
+        }
+    }
 }
