@@ -5,7 +5,7 @@
         "location": {
             "type": "string",
             "metadata": {
-                "description": "The location for the custom script extension resource."
+                "description": "The location for the storage account resource."
             }
         },
         "clusterWitnessStorageAccountName": {
