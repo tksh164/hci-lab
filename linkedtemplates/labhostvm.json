@@ -1,0 +1,250 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string",
+            "metadata": {
+                "description": "The location for the custom script extension resource."
+            }
+        },
+        "vmName": {
+            "type": "string",
+            "metadata": {
+                "description": "The lab hosting virtual machine name."
+            }
+        },
+        "adminUserName": {
+            "type": "string",
+            "metadata": {
+                "description": "The administrator user name."
+            }
+        },
+        "adminPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "The administrator password. The password must have 3 of the following: 1 lower case character, 1 upper case character, 1 number, and 1 special character. And the password must be between 12 and 123 characters long."
+            }
+        },
+        "vmSize": {
+            "type": "string",
+            "metadata": {
+                "description": "The lab hosting virtual machine size."
+            }
+        },
+        "osDiskType": {
+            "type": "string",
+            "metadata": {
+                "description": "The Storage type of the lab hosting virtual machine's OS disk."
+            }
+        },
+        "dataDiskType": {
+            "type": "string",
+            "metadata": {
+                "description": "The Storage type of the lab hosting virtual machine's data disk."
+            }
+        },
+        "dataDiskSize": {
+            "type": "int",
+            "metadata": {
+                "description": "The size of the individual data disks in GiB."
+            }
+        },
+        "isHaveEligibleWindowsServerLicense": {
+            "type": "bool",
+            "metadata": {
+                "description": "By specifying True, you confirm you have an eligible Windows Server license with Software Assurance or Windows Server subscription to apply this Azure Hybrid Benefit. You can read more about compliance here: http://go.microsoft.com/fwlink/?LinkId=859786"
+            }
+        },
+        "base64EncodedConfigParameters": {
+            "type": "string",
+            "metadata": {
+                "description": "THe base64 encode user data for the lab hosting virtual machine."
+            }
+        },
+        "uniqueString": {
+            "type": "string",
+            "metadata": {
+                "description": "The string for uniqueness."
+            }
+        }
+    },
+    "variables": {
+        // Virtual network
+
+        "virtualNetworkName": "hcilab-vnet",
+        "virtualNetworkNameAddressPrefix": "10.0.0.0/16",
+        "subnetName": "default",
+        "subnetAddressPrefix": "10.0.0.0/24",
+        "subnetNetworkSecurityGroupName": "[format('{0}-{1}-nsg', variables('virtualNetworkName'), variables('subnetName'))]",
+
+        // Virtual machine
+
+        "dataDisksCount": 8,
+        "networkInterfaceName": "[format('{0}-nic1', parameters('vmName'))]",
+        "privateIPAddress": "10.0.0.4",
+        "publicIpAddressName": "[format('{0}-ip1', parameters('vmName'))]",
+        "dnsNameForPublicIP": "[toLower(format('{0}-{1}-{2}', resourceGroup().name, parameters('vmName'), toLower(parameters('uniqueString'))))]"
+    },
+    "resources": [
+        // Network security group for the subnet.
+
+        {
+            "name": "[variables('subnetNetworkSecurityGroupName')]",
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2020-11-01",
+            "location": "[parameters('location')]",
+            "properties": {
+                "securityRules": []
+            }
+        },
+
+        // Virtual network.
+
+        {
+            "name": "[variables('virtualNetworkName')]",
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2020-11-01",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', variables('subnetNetworkSecurityGroupName'))]"
+            ],
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[variables('virtualNetworkNameAddressPrefix')]"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "[variables('subnetName')]",
+                        "properties": {
+                            "addressPrefix": "[variables('subnetAddressPrefix')]",
+                            "networkSecurityGroup": {
+                                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('subnetNetworkSecurityGroupName'))]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+
+        // Lab hosting virtual machine.
+
+        {
+            "name": "[variables('publicIpAddressName')]",
+            "type": "Microsoft.Network/publicIpAddresses",
+            "apiVersion": "2020-11-01",
+            "location": "[parameters('location')]",
+            "sku": {
+                "name": "Standard"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "Static",
+                "dnsSettings": {
+                    "domainNameLabel": "[variables('dnsNameForPublicIP')]"
+                }
+            }
+        },
+        {
+            "name": "[variables('networkInterfaceName')]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2020-11-01",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
+                "[resourceId('Microsoft.Network/publicIpAddresses', variables('publicIpAddressName'))]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetName'))]"
+                            },
+                            "privateIPAllocationMethod": "Static",
+                            "privateIPAddress": "[variables('privateIPAddress')]",
+                            "publicIpAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIpAddresses', variables('publicIpAddressName'))]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "[parameters('vmName')]",
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2021-11-01",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfaceName'))]"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[parameters('vmSize')]"
+                },
+                "osProfile": {
+                    "computerName": "[parameters('vmName')]",
+                    "adminUsername": "[parameters('adminUserName')]",
+                    "adminPassword": "[parameters('adminPassword')]",
+                    "windowsConfiguration": {
+                        "provisionVmAgent": true
+                    }
+                },
+                "licenseType": "[if(parameters('isHaveEligibleWindowsServerLicense'), 'Windows_Server', 'None')]",
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfaceName'))]"
+                        }
+                    ]
+                },
+                "storageProfile": {
+                    "osDisk": {
+                        "name": "[format('{0}-osdisk', parameters('vmName'))]",
+                        "createOption": "FromImage",
+                        "managedDisk": {
+                            "storageAccountType": "[parameters('osDiskType')]"
+                        }
+                    },
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "2022-datacenter-azure-edition-smalldisk",
+                        "version": "latest"
+                    },
+                    "copy": [
+                        {
+                            "name": "dataDisks",
+                            "count": "[variables('dataDisksCount')]",
+                            "input": {
+                                "name": "[format('{0}-datadisk{1}', parameters('vmName'), copyIndex('dataDisks'))]",
+                                "diskSizeGB": "[parameters('dataDiskSize')]",
+                                "lun": "[copyIndex('dataDisks')]",
+                                "createOption": "Empty",
+                                "caching": "None",
+                                "managedDisk": {
+                                    "storageAccountType": "[parameters('dataDiskType')]"
+                                }
+                            }
+                        }
+                    ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": true
+                    }
+                },
+                "userData": "[parameters('base64EncodedConfigParameters')]"
+            }
+        }
+    ],
+    "outputs": {
+        "fqdn": {
+            "type": "string",
+            "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))).dnsSettings.fqdn]"
+        }
+    }
+}
