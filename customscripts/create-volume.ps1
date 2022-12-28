@@ -12,15 +12,29 @@ $configParams
 
 # Create a storage pool.
 
-New-StoragePool -FriendlyName $configParams.labHostStorage.storagePoolName -StorageSubSystemFriendlyName '*storage*' -PhysicalDisks (Get-PhysicalDisk -CanPool $true)
-if ((Get-StoragePool -FriendlyName $configParams.labHostStorage.storagePoolName -ErrorAction SilentlyContinue).OperationalStatus -ne 'OK') {
+$params = @{
+    FriendlyName                 = $configParams.labHostStorage.storagePoolName
+    StorageSubSystemFriendlyName = '*storage*'
+    PhysicalDisks                = Get-PhysicalDisk -CanPool $true
+}
+New-StoragePool @params
+if ((Get-StoragePool -FriendlyName $params.FriendlyName -ErrorAction SilentlyContinue).OperationalStatus -ne 'OK') {
     throw 'Storage pool creation failed.'
 }
 
 # Create a volume.
 
-New-Volume -StoragePoolFriendlyName $configParams.labHostStorage.storagePoolName -FileSystem NTFS -AllocationUnitSize 64KB -ResiliencySettingName Simple -UseMaximumSize -DriveLetter $configParams.labHostStorage.driveLetter -FriendlyName $configParams.labHostStorage.volumeLabel
-if ((Get-Volume -DriveLetter $configParams.labHostStorage.driveLetter -ErrorAction SilentlyContinue).OperationalStatus -ne 'OK') {
+$params = @{
+    StoragePoolFriendlyName = $configParams.labHostStorage.storagePoolName
+    FileSystem              = 'NTFS'
+    AllocationUnitSize      = 64KB
+    ResiliencySettingName   = 'Simple'
+    UseMaximumSize          = $true
+    DriveLetter             = $configParams.labHostStorage.driveLetter
+    FriendlyName            = $configParams.labHostStorage.volumeLabel
+}
+New-Volume @params
+if ((Get-Volume -DriveLetter $params.DriveLetter -ErrorAction SilentlyContinue).OperationalStatus -ne 'OK') {
     throw 'Volume creation failed.'
 }
 
