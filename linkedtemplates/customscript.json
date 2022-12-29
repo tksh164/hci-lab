@@ -14,7 +14,7 @@
                 "description": "The name of the parent virtual machine resource."
             }
         },
-        "customScriptExtensionName": {
+        "extensionName": {
             "type": "string",
             "metadata": {
                 "description": "The name of the custom script extension resource."
@@ -37,7 +37,7 @@
     "variables": {},
     "resources": [
         {
-            "name": "[format('{0}/{1}', parameters('parentVmResourceName'), parameters('customScriptExtensionName'))]",
+            "name": "[format('{0}/{1}', parameters('parentVmResourceName'), parameters('extensionName'))]",
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "apiVersion": "2022-08-01",
             "location": "[parameters('location')]",
@@ -58,7 +58,7 @@
     "outputs": {
         "instanceView": {
             "type": "object",
-            "value": "[reference(resourceId('Microsoft.Compute/virtualMachines/extensions', parameters('parentVmResourceName'), parameters('customScriptExtensionName'))).instanceView]"
+            "value": "[reference(resourceId('Microsoft.Compute/virtualMachines/extensions', parameters('parentVmResourceName'), parameters('extensionName'))).instanceView]"
         }
     }
 }
