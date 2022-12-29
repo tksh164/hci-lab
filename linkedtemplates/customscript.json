@@ -28,7 +28,7 @@
             }
         },
         "commandToExecute": {
-            "type": "string",
+            "type": "securestring",
             "metadata": {
                 "description": "The command-line to execute the custom script."
             }
