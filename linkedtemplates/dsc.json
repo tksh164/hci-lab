@@ -1,0 +1,74 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string",
+            "metadata": {
+                "description": "The location for the DSC extension resource."
+            }
+        },
+        "parentVmResourceName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the parent virtual machine resource."
+            }
+        },
+        "extensionName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the DSC extension resource."
+            }
+        },
+        "zipUri": {
+            "type": "string",
+            "metadata": {
+                "description": "The URI of custom scripts."
+            }
+        },
+        "scriptName": {
+            "type": "string",
+            "metadata": {
+                "description": "The command-line to execute the custom script."
+            }
+        },
+        "functionName": {
+            "type": "string",
+            "metadata": {
+                "description": "The command-line to execute the custom script."
+            }
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "name": "[format('{0}/{1}', parameters('parentVmResourceName'), parameters('extensionName'))]",
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "apiVersion": "2022-03-01",
+            "location": "[parameters('location')]",
+            "properties": {
+                "publisher": "Microsoft.Powershell",
+                "type": "DSC",
+                "typeHandlerVersion": "2.83",
+                "autoUpgradeMinorVersion": true,
+                "suppressFailures": false,
+                "settings": {
+                    "wmfVersion": "latest",
+                    "configuration": {
+                        "url": "[parameters('zipUri')]",
+                        "script": "[parameters('scriptName')]",
+                        "function": "[parameters('functionName')]"
+                    },
+                    "configurationArguments": {}
+                },
+                "protectedSettings": {}
+            }
+        }
+    ],
+    "outputs": {
+        "instanceView": {
+            "type": "object",
+            "value": "[reference(resourceId('Microsoft.Compute/virtualMachines/extensions', parameters('parentVmResourceName'), parameters('extensionName'))).instanceView]"
+        }
+    }
+}
