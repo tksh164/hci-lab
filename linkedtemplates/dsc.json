@@ -23,19 +23,19 @@
         "zipUri": {
             "type": "string",
             "metadata": {
-                "description": "The URI of custom scripts."
+                "description": "The URI of the DSC zip package file."
             }
         },
         "scriptName": {
             "type": "string",
             "metadata": {
-                "description": "The command-line to execute the custom script."
+                "description": "The DSC configuration script file name."
             }
         },
         "functionName": {
             "type": "string",
             "metadata": {
-                "description": "The command-line to execute the custom script."
+                "description": "The DSC configuration name."
             }
         }
     },
