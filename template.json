@@ -150,6 +150,18 @@
         "labHostVmDeploymentName": "vm-and-vnet",
         "labHostVmLinkedTemplateUri": "[uri(variables('repoUriBase'), 'linkedtemplates/labhostvm.json')]",
 
+        // Key Vault
+
+        "keyVaultDeploymentName": "key-vault",
+        "keyVaultLinkedTemplateUri": "[uri(variables('repoUriBase'), 'linkedtemplates/keyvault.json')]",
+        "keyVaultName": "[format('hcilab-kv-{0}', toLower(variables('uniqueString')))]",
+        "secretName": "AdminPassword",
+
+        // Key Vault RBAC
+
+        "keyVaultRbacDeploymentName": "key-vault-rbac",
+        "keyVaultRbacLinkedTemplateUri": "[uri(variables('repoUriBase'), 'linkedtemplates/keyvault-rbac.json')]",
+
         // Storage account for Cloud Witness
 
         "cloudWitnessStorageAccountDeploymentName": "cloud-witness-storage-account",
@@ -228,6 +240,10 @@
         // Configuration parameters
 
         "configParameters": {
+            "keyVault": {
+                "name": "[variables('keyVaultName')]",
+                "secretName": "[variables('secretName')]"
+            },
             "labHostStorage": {
                 "storagePoolName": "hcisandboxpool",
                 "driveLetter": "V",
@@ -297,6 +313,63 @@
                     },
                     "uniqueString": {
                         "value": "[variables('uniqueString')]"
+                    }
+                }
+            }
+        },
+
+        // Key Vault
+        {
+            "name": "[variables('keyVaultDeploymentName')]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2021-04-01",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('keyVaultLinkedTemplateUri')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
+                    "keyVaultName": {
+                        "value": "[variables('keyVaultName')]"
+                    },
+                    "secretName": {
+                        "value": "[variables('secretName')]"
+                    },
+                    "secretContent": {
+                        "value": "[parameters('adminPassword')]"
+                    }
+                }
+            }
+        },
+
+        // Key Vault RBAC
+        {
+            "name": "[variables('keyVaultRbacDeploymentName')]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2021-04-01",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', variables('labHostVmDeploymentName'))]",
+                "[resourceId('Microsoft.Resources/deployments', variables('keyVaultDeploymentName'))]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('keyVaultRbacLinkedTemplateUri')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "keyVaultName": {
+                        "value": "[variables('keyVaultName')]"
+                    },
+                    "servicePrincipalId": {
+                        "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('labHostVmDeploymentName'))).outputs.principalId.value]"
+                    },
+                    "roleDefinitionId": {
+                        "value": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')]"  // Key Vault Secrets User
                     }
                 }
             }
