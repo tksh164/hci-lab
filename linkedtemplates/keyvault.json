@@ -1,0 +1,69 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string",
+            "metadata": {
+                "description": "The location for the Key Vault resource."
+            }
+        },
+        "keyVaultName": {
+            "type": "string",
+            "metadata": {
+                "description": "The Key Vault name."
+            }
+        },
+        "secretName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the secret."
+            }
+        },
+        "secretContent": {
+            "type": "securestring",
+            "metadata": {
+                "description": "The content of the secret."
+            }
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "name": "[parameters('keyVaultName')]",
+            "type": "Microsoft.KeyVault/vaults",
+            "apiVersion": "2022-07-01",
+            "location": "[parameters('location')]",
+            "properties": {
+                "sku": {
+                    "name": "Standard",
+                    "family": "A"
+                },
+                "tenantId": "[tenant().tenantId]",
+                "enableSoftDelete": false,
+                "enabledForDeployment": false,
+                "enabledForTemplateDeployment": false,
+                "enabledForDiskEncryption": false,
+                "enableRbacAuthorization": true,
+                "accessPolicies": [],
+                "publicNetworkAccess": "Enabled",
+                "networkAcls": {
+                    "defaultAction": "allow",
+                    "bypass": "AzureServices"
+                }
+            }
+        },
+        {
+            "name": "[format('{0}/{1}', parameters('keyVaultName'), parameters('secretName'))]",
+            "type": "Microsoft.KeyVault/vaults/secrets",
+            "apiVersion": "2022-07-01",
+            "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]"
+            ],
+            "properties": {
+                "value": "[parameters('secretContent')]"
+            }
+        }
+    ],
+    "outputs": {}
+}
