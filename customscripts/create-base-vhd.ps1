@@ -2,6 +2,8 @@
 param ()
 
 $ErrorActionPreference = [System.Management.Automation.ActionPreference]::Stop
+$WarningPreference = [System.Management.Automation.ActionPreference]::Continue
+$VerbosePreference = [System.Management.Automation.ActionPreference]::Continue
 $ProgressPreference = [System.Management.Automation.ActionPreference]::SilentlyContinue
 
 function CreateVhdFileFromIso
