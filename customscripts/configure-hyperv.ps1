@@ -1,10 +1,10 @@
 [CmdletBinding()]
 param ()
 
-$ErrorActionPreference = [System.Management.Automation.ActionPreference]::Stop
-$WarningPreference = [System.Management.Automation.ActionPreference]::Continue
-$VerbosePreference = [System.Management.Automation.ActionPreference]::Continue
-$ProgressPreference = [System.Management.Automation.ActionPreference]::SilentlyContinue
+$ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
+$WarningPreference = [Management.Automation.ActionPreference]::Continue
+$VerbosePreference = [Management.Automation.ActionPreference]::Continue
+$ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
 Import-Module -Name '.\common.psm1' -Force
 
