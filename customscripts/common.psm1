@@ -42,7 +42,7 @@ function GetSecret
             Authorization = ('Bearer {0}' -f $accessToken)
         }
     }
-    (Invoke-RestMethod @params).value
+    ConvertTo-SecureString -String (Invoke-RestMethod @params).value -AsPlainText -Force
 }
 
 function DownloadFile
