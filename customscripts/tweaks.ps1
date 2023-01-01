@@ -9,7 +9,7 @@ $ProgressPreference = [System.Management.Automation.ActionPreference]::SilentlyC
 Import-Module -Name '.\common.psm1' -Force
 
 $configParams = GetConfigParameters
-Start-Transcript -OutputDirectory $configParams.folderPath.transcript
+Start-Transcript -OutputDirectory $configParams.labHost.folderPath.transcript
 $configParams | ConvertTo-Json -Depth 16
 
 # Stop Server Manager launch at logon.

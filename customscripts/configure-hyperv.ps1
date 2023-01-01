@@ -9,38 +9,38 @@ $ProgressPreference = [System.Management.Automation.ActionPreference]::SilentlyC
 Import-Module -Name '.\common.psm1' -Force
 
 $configParams = GetConfigParameters
-Start-Transcript -OutputDirectory $configParams.folderPath.transcript
+Start-Transcript -OutputDirectory $configParams.labHost.folderPath.transcript
 $configParams | ConvertTo-Json -Depth 16
 
 # Set Hyper-V host settings.
 $params = @{
-    VirtualMachinePath        = $configParams.folderPath.vm
-    VirtualHardDiskPath       = $configParams.folderPath.vhd
+    VirtualMachinePath        = $configParams.labHost.folderPath.vm
+    VirtualHardDiskPath       = $configParams.labHost.folderPath.vhd
     EnableEnhancedSessionMode = $true
 }
 Set-VMHost @params
 
 # Create a NAT vSwitch.
 $params = @{
-    Name        = $configParams.natOnLabHost.vSwitchName
+    Name        = $configParams.labHost.vSwitch.nat.name
     SwitchType  = 'Internal'
 }
 New-VMSwitch @params
 
-# Assign an IP address to the NAT vSwitch network interface.
-$params= @{
-    InterfaceIndex = (Get-NetAdapter | Where-Object { $_.Name -match $configParams.natOnLabHost.vSwitchName }).ifIndex
-    AddressFamily  = 'IPv4'
-    IPAddress      = $configParams.natOnLabHost.hostIpAddress
-    PrefixLength   = $configParams.natOnLabHost.hostPrefixLength
-}
-New-NetIPAddress @params
-
 # Create a network NAT.
 $params = @{
-    Name                             = $configParams.natOnLabHost.vSwitchName
-    InternalIPInterfaceAddressPrefix = $configParams.natOnLabHost.subnet
+    Name                             = $configParams.labHost.vSwitch.nat.name
+    InternalIPInterfaceAddressPrefix = $configParams.labHost.vSwitch.nat.subnet
 }
 New-NetNat @params
+
+# Assign an IP address to the NAT vSwitch network interface.
+$params= @{
+    InterfaceIndex = (Get-NetAdapter | Where-Object { $_.Name -match $configParams.labHost.vSwitch.nat.name }).ifIndex
+    AddressFamily  = 'IPv4'
+    IPAddress      = $configParams.labHost.vSwitch.nat.hostIpAddress
+    PrefixLength   = $configParams.labHost.vSwitch.nat.hostPrefixLength
+}
+New-NetIPAddress @params
 
 Stop-Transcript

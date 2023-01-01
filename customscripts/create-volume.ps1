@@ -9,13 +9,13 @@ $ProgressPreference = [System.Management.Automation.ActionPreference]::SilentlyC
 Import-Module -Name '.\common.psm1' -Force
 
 $configParams = GetConfigParameters
-Start-Transcript -OutputDirectory $configParams.folderPath.transcript
+Start-Transcript -OutputDirectory $configParams.labHost.folderPath.transcript
 $configParams | ConvertTo-Json -Depth 16
 
 # Create a storage pool.
 
 $params = @{
-    FriendlyName                 = $configParams.labHostStorage.storagePoolName
+    FriendlyName                 = $configParams.labHost.storage.poolName
     StorageSubSystemFriendlyName = '*storage*'
     PhysicalDisks                = Get-PhysicalDisk -CanPool $true
 }
@@ -27,13 +27,13 @@ if ((Get-StoragePool -FriendlyName $params.FriendlyName -ErrorAction SilentlyCon
 # Create a volume.
 
 $params = @{
-    StoragePoolFriendlyName = $configParams.labHostStorage.storagePoolName
+    StoragePoolFriendlyName = $configParams.labHost.storage.poolName
     FileSystem              = 'NTFS'
     AllocationUnitSize      = 64KB
     ResiliencySettingName   = 'Simple'
     UseMaximumSize          = $true
-    DriveLetter             = $configParams.labHostStorage.driveLetter
-    FriendlyName            = $configParams.labHostStorage.volumeLabel
+    DriveLetter             = $configParams.labHost.storage.driveLetter
+    FriendlyName            = $configParams.labHost.storage.volumeLabel
 }
 New-Volume @params
 if ((Get-Volume -DriveLetter $params.DriveLetter -ErrorAction SilentlyContinue).OperationalStatus -ne 'OK') {
@@ -42,7 +42,7 @@ if ((Get-Volume -DriveLetter $params.DriveLetter -ErrorAction SilentlyContinue).
 
 # Set Defender exclusions.
 
-$exclusionPath = $configParams.labHostStorage.driveLetter + ':\'
+$exclusionPath = $configParams.labHost.storage.driveLetter + ':\'
 Add-MpPreference -ExclusionPath $exclusionPath
 if ((Get-MpPreference).ExclusionPath -notcontains $exclusionPath) {
     throw 'Defender exclusion setting failed.'
@@ -50,8 +50,8 @@ if ((Get-MpPreference).ExclusionPath -notcontains $exclusionPath) {
 
 # Create the folder structure on the volume.
 
-New-Item -ItemType Directory -Path $configParams.folderPath.temp -Force
-New-Item -ItemType Directory -Path $configParams.folderPath.vhd -Force
-New-Item -ItemType Directory -Path $configParams.folderPath.vm -Force
+New-Item -ItemType Directory -Path $configParams.labHost.folderPath.temp -Force
+New-Item -ItemType Directory -Path $configParams.labHost.folderPath.vhd -Force
+New-Item -ItemType Directory -Path $configParams.labHost.folderPath.vm -Force
 
 Stop-Transcript

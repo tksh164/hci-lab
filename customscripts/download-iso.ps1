@@ -9,7 +9,7 @@ $ProgressPreference = [System.Management.Automation.ActionPreference]::SilentlyC
 Import-Module -Name '.\common.psm1' -Force
 
 $configParams = GetConfigParameters
-Start-Transcript -OutputDirectory $configParams.folderPath.transcript
+Start-Transcript -OutputDirectory $configParams.labHost.folderPath.transcript
 $configParams | ConvertTo-Json -Depth 16
 
 $isoUris = @{
@@ -32,22 +32,22 @@ $isoUris = @{
 }
 
 # Create the download folder if it does not exist.
-New-Item -ItemType Directory -Path $configParams.folderPath.temp -Force
+New-Item -ItemType Directory -Path $configParams.labHost.folderPath.temp -Force
 
 # Download the ISO file.
 $params = @{
-    SourceUri      = $isoUris[$configParams.hciNode.operatingSystem][$configParams.hciNode.culture]
-    DownloadFolder = $configParams.folderPath.temp
-    FileNameToSave = '{0}_{1}.iso' -f $configParams.hciNode.operatingSystem, $configParams.hciNode.culture
+    SourceUri      = $isoUris[$configParams.hciNode.operatingSystem][$configParams.guestOS.culture]
+    DownloadFolder = $configParams.labHost.folderPath.temp
+    FileNameToSave = '{0}_{1}.iso' -f $configParams.hciNode.operatingSystem, $configParams.guestOS.culture
 }
 DownloadFile @params
 
 if ($configParams.hciNode.operatingSystem -ne 'ws2022') {
     # The Windows Server 2022 ISO is always needed for the domain controller VM.
     $params = @{
-        SourceUri      = $isoUris['ws2022'][$configParams.hciNode.culture]
-        DownloadFolder = $configParams.folderPath.temp
-        FileNameToSave = '{0}_{1}.iso' -f 'ws2022', $configParams.hciNode.culture
+        SourceUri      = $isoUris['ws2022'][$configParams.guestOS.culture]
+        DownloadFolder = $configParams.labHost.folderPath.temp
+        FileNameToSave = '{0}_{1}.iso' -f 'ws2022', $configParams.guestOS.culture
     }
     DownloadFile @params
 }

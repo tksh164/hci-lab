@@ -9,7 +9,7 @@ $ProgressPreference = [System.Management.Automation.ActionPreference]::SilentlyC
 Import-Module -Name '.\common.psm1' -Force
 
 $configParams = GetConfigParameters
-Start-Transcript -OutputDirectory $configParams.folderPath.transcript
+Start-Transcript -OutputDirectory $configParams.labHost.folderPath.transcript
 $configParams | ConvertTo-Json -Depth 16
 
 function CreateVhdFileFromIso
@@ -49,15 +49,15 @@ function CreateVhdFileFromIso
 }
 
 # Create the temp folder if it does not exist.
-New-Item -ItemType Directory -Path $configParams.folderPath.temp -Force
+New-Item -ItemType Directory -Path $configParams.labHost.folderPath.temp -Force
 
 # Create the VHD folder if it does not exist.
-New-Item -ItemType Directory -Path $configParams.folderPath.vhd -Force
+New-Item -ItemType Directory -Path $configParams.labHost.folderPath.vhd -Force
 
 # Download the Convert-WindowsImage.ps1.
 $params = @{
     SourceUri      = 'https://raw.githubusercontent.com/x0nn/Convert-WindowsImage/main/Convert-WindowsImage.ps1'
-    DownloadFolder = $configParams.folderPath.temp
+    DownloadFolder = $configParams.labHost.folderPath.temp
     FileNameToSave = 'Convert-WindowsImage.ps1'
 }
 $convertWimScriptFile = DownloadFile @params
@@ -67,24 +67,24 @@ $convertWimScriptFile
 Import-Module -Name $convertWimScriptFile.FullName
 
 $params = @{
-    IsoFolder       = $configParams.folderPath.temp
-    VhdFolder       = $configParams.folderPath.vhd
+    IsoFolder       = $configParams.labHost.folderPath.temp
+    VhdFolder       = $configParams.labHost.folderPath.vhd
     OperatingSystem = $configParams.hciNode.operatingSystem
-    Culture         = $configParams.hciNode.culture
+    Culture         = $configParams.guestOS.culture
     ImageIndex      = $configParams.hciNode.imageIndex
-    WorkFolder      = $configParams.folderPath.temp
+    WorkFolder      = $configParams.labHost.folderPath.temp
 }
 CreateVhdFileFromIso @params
 
 if ($configParams.hciNode.operatingSystem -ne 'ws2022') {
     # The Windows Server 2022 VHD is always needed for the domain controller VM.
     $params = @{
-        IsoFolder       = $configParams.folderPath.temp
-        VhdFolder       = $configParams.folderPath.vhd
+        IsoFolder       = $configParams.labHost.folderPath.temp
+        VhdFolder       = $configParams.labHost.folderPath.vhd
         OperatingSystem = 'ws2022'
-        Culture         = $configParams.hciNode.culture
+        Culture         = $configParams.guestOS.culture
         ImageIndex      = 4  # Datacenter with Desktop Experience
-        WorkFolder      = $configParams.folderPath.temp
+        WorkFolder      = $configParams.labHost.folderPath.temp
     }
     CreateVhdFileFromIso @params
 }
