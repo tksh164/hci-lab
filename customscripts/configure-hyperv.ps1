@@ -6,7 +6,7 @@ $WarningPreference = [System.Management.Automation.ActionPreference]::Continue
 $VerbosePreference = [System.Management.Automation.ActionPreference]::Continue
 $ProgressPreference = [System.Management.Automation.ActionPreference]::SilentlyContinue
 
-Import-Module -Name '.\common.psm1'
+Import-Module -Name '.\common.psm1' -Force
 
 $configParams = GetConfigParameters
 Start-Transcript -OutputDirectory $configParams.folderPath.transcript

@@ -6,6 +6,12 @@ $WarningPreference = [System.Management.Automation.ActionPreference]::Continue
 $VerbosePreference = [System.Management.Automation.ActionPreference]::Continue
 $ProgressPreference = [System.Management.Automation.ActionPreference]::SilentlyContinue
 
+Import-Module -Name '.\common.psm1' -Force
+
+$configParams = GetConfigParameters
+Start-Transcript -OutputDirectory $configParams.folderPath.transcript
+$configParams | ConvertTo-Json -Depth 16
+
 function CreateVhdFileFromIso
 {
     param (
@@ -41,12 +47,6 @@ function CreateVhdFileFromIso
     }
     Convert-WindowsImage @params
 }
-
-Import-Module -Name '.\common.psm1'
-
-$configParams = GetConfigParameters
-Start-Transcript -OutputDirectory $configParams.folderPath.transcript
-$configParams | ConvertTo-Json -Depth 16
 
 # Create the temp folder if it does not exist.
 New-Item -ItemType Directory -Path $configParams.folderPath.temp -Force
