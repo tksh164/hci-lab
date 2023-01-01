@@ -38,7 +38,7 @@ New-NetNat @params
 $params= @{
     InterfaceIndex = (Get-NetAdapter | Where-Object { $_.Name -match $configParams.labHost.vSwitch.nat.name }).ifIndex
     AddressFamily  = 'IPv4'
-    IPAddress      = $configParams.labHost.vSwitch.nat.hostIpAddress
+    IPAddress      = $configParams.labHost.vSwitch.nat.hostIPAddress
     PrefixLength   = $configParams.labHost.vSwitch.nat.hostPrefixLength
 }
 New-NetIPAddress @params
