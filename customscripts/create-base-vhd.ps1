@@ -6,7 +6,7 @@ $WarningPreference = [Management.Automation.ActionPreference]::Continue
 $VerbosePreference = [Management.Automation.ActionPreference]::Continue
 $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
-Import-Module -Name '.\common.psm1' -Force
+Import-Module -Name '.\shared.psm1' -Force
 
 $configParams = GetConfigParameters
 Start-Transcript -OutputDirectory $configParams.labHost.folderPath.transcript
