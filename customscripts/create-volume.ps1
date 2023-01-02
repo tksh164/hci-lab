@@ -51,6 +51,7 @@ if ((Get-MpPreference).ExclusionPath -notcontains $exclusionPath) {
 # Create the folder structure on the volume.
 
 New-Item -ItemType Directory -Path $configParams.labHost.folderPath.temp -Force
+New-Item -ItemType Directory -Path $configParams.labHost.folderPath.updates -Force
 New-Item -ItemType Directory -Path $configParams.labHost.folderPath.vhd -Force
 New-Item -ItemType Directory -Path $configParams.labHost.folderPath.vm -Force
 
