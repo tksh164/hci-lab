@@ -43,6 +43,7 @@ function CreateVhdFileFromIso
         DiskLayout    = 'UEFI'
         SizeBytes     = 127GB
         TempDirectory = $WorkFolder
+        Passthru      = $true
         Verbose       = $true
     }
     Convert-WindowsImage @params
