@@ -31,7 +31,10 @@ function CreateVhdFileFromIso
         [int] $ImageIndex,
 
         [Parameter(Mandatory = $true)]
-        [string] $WorkFolder
+        [string] $WorkFolder,
+
+        [Parameter(Mandatory = $false)]
+        [string[]] $UpdatePackage = @()
     )
 
     $params = @{
@@ -45,6 +48,9 @@ function CreateVhdFileFromIso
         TempDirectory = $WorkFolder
         Passthru      = $true
         Verbose       = $true
+    }
+    if ($UpdatePackage.Length -ne 0) {
+        $params.Package = $UpdatePackage | Sort-Object
     }
     Convert-WindowsImage @params
 }
@@ -65,8 +71,9 @@ $convertWimScriptFile = DownloadFile @params
 $convertWimScriptFile
 
 # Import the Convert-WindowsImage.ps1.
-Import-Module -Name $convertWimScriptFile.FullName
+Import-Module -Name $convertWimScriptFile.FullName -Force
 
+$updatesFolderPath = [IO.Path]::Combine($configParams.labHost.folderPath.updates, $configParams.hciNode.operatingSystem)
 $params = @{
     IsoFolder       = $configParams.labHost.folderPath.temp
     VhdFolder       = $configParams.labHost.folderPath.vhd
@@ -75,10 +82,14 @@ $params = @{
     ImageIndex      = $configParams.hciNode.imageIndex
     WorkFolder      = $configParams.labHost.folderPath.temp
 }
+if (Test-Path -PathType Container -LiteralPath $updatesFolderPath) {
+    $params.UpdatePackage = Get-ChildItem -LiteralPath $updatesFolderPath | Select-Object -ExpandProperty 'FullName'
+}
 CreateVhdFileFromIso @params
 
 if ($configParams.hciNode.operatingSystem -ne 'ws2022') {
     # The Windows Server 2022 VHD is always needed for the domain controller VM.
+    $updatesFolderPath = [IO.Path]::Combine($configParams.labHost.folderPath.updates, 'ws2022')
     $params = @{
         IsoFolder       = $configParams.labHost.folderPath.temp
         VhdFolder       = $configParams.labHost.folderPath.vhd
@@ -86,6 +97,9 @@ if ($configParams.hciNode.operatingSystem -ne 'ws2022') {
         Culture         = $configParams.guestOS.culture
         ImageIndex      = 4  # Datacenter with Desktop Experience
         WorkFolder      = $configParams.labHost.folderPath.temp
+    }
+    if (Test-Path -PathType Container -LiteralPath $updatesFolderPath) {
+        $params.UpdatePackage = Get-ChildItem -LiteralPath $updatesFolderPath | Select-Object -ExpandProperty 'FullName'
     }
     CreateVhdFileFromIso @params
 }
