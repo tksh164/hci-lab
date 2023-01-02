@@ -12,48 +12,7 @@ $configParams = GetConfigParameters
 Start-Transcript -OutputDirectory $configParams.labHost.folderPath.transcript
 $configParams | ConvertTo-Json -Depth 16
 
-function GetEncodedAdminPasswordForUnattendAnswerFile
-{
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory = $true)]
-        [securestring] $Password
-    )
-
-    [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes(([Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($Password))) + 'AdministratorPassword'))
-}
-
-function InjectUnattendAnswerFile
-{
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory = $true)]
-        [string] $VhdPath,
-
-        [Parameter(Mandatory = $true)]
-        [string] $UnattendAnswerFileContent
-    )
-
-    $vhdMountPath = 'C:\tempmount'
-
-    Write-Verbose -Message 'Mouting the VHD...'
-
-    New-Item -ItemType Directory -Path $vhdMountPath -Force
-    Mount-WindowsImage -Path $vhdMountPath -Index 1 -ImagePath $VhdPath
-    
-    Write-Verbose -Message 'Create the unattend answer file in the VHD...'
-    
-    $pantherPath = [IO.Path]::Combine($vhdMountPath, 'Windows', 'Panther')
-    New-Item -ItemType Directory -Path $pantherPath -Force
-    Set-Content -Path ([IO.Path]::Combine($pantherPath, 'unattend.xml')) -Value $UnattendAnswerFileContent -Force
-    
-    Write-Verbose -Message 'Dismouting the VHD...'
-    
-    Dismount-WindowsImage -Path $vhdMountPath -Save
-    Remove-Item $vhdMountPath
-}
-
-function WaitingForReadyToVM
+function WaitingForReadyToDC
 {
     [CmdletBinding()]
     param (
@@ -68,15 +27,19 @@ function WaitingForReadyToVM
     )
 
     $params = @{
-        VMName      = $VMName
-        Credential  = $Credential
-        ScriptBlock = { 'ready' }
-        ErrorAction = [Management.Automation.ActionPreference]::SilentlyContinue
+        VMName       = $VMName
+        Credential   = $Credential
+        ArgumentList = $VMName  # The DC's computer name is the same as the VM name. It's specified in the unattend.xml.
+        ScriptBlock  = {
+            $dcComputerName = $args[0]
+            (Get-ADDomainController -Server $dcComputerName).Enabled
+        }
+        ErrorAction  = [Management.Automation.ActionPreference]::SilentlyContinue
     }
-    while ((Invoke-Command @params) -ne 'ready') {
+    while ((Invoke-Command @params) -ne $true) {
         Start-Sleep -Seconds $CheckInternal
         Write-Verbose -Message 'Waiting...'
-    }    
+    }
 }
 
 $vmName = $configParams.addsDC.vmName
@@ -161,7 +124,7 @@ $unattendAnswerFileContent = @'
 </unattend>
 '@ -f $encodedAdminPassword, $configParams.guestOS.culture, $vmName
 
-Write-Verbose -Message 'Injecting the unattend answer file...'
+Write-Verbose -Message 'Injecting the unattend answer file to the VM...'
 InjectUnattendAnswerFile -VhdPath $vmOSDiskVhd.Path -UnattendAnswerFileContent $unattendAnswerFileContent
 
 Write-Verbose -Message 'Starting the VM...'
@@ -170,10 +133,7 @@ Start-VM -Name $vmName
 Write-Verbose -Message 'Waiting for ready to the VM...'
 $params = @{
     TypeName     = 'System.Management.Automation.PSCredential'
-    ArgumentList = @(
-        'Administrator',
-        $adminPassword
-    )
+    ArgumentList = 'Administrator', $adminPassword
 }
 $localAdminCredential = New-Object @params
 WaitingForReadyToVM -VMName $vmName -Credential $localAdminCredential
@@ -236,28 +196,8 @@ Write-Verbose -Message 'Starting the VM...'
 Start-VM -Name $vmName
 
 Write-Verbose -Message 'Waiting for ready to the domain controller...'
-$params = @{
-    TypeName     = 'System.Management.Automation.PSCredential'
-    ArgumentList = @(
-        ('{0}\Administrator' -f $configParams.addsDC.domainFqdn),
-        $adminPassword
-    )
-}
-$domainAdminCredential = New-Object @params
-$params = @{
-    VMName       = $vmName
-    Credential   = $domainAdminCredential
-    ArgumentList = $vmName  # The DC's computer name is the same as the VM name. It's specified in the unattend.xml.
-    ScriptBlock  = {
-        $dcComputerName = $args[0]
-        (Get-ADDomainController -Server $dcComputerName).Enabled
-    }
-    ErrorAction  = [Management.Automation.ActionPreference]::SilentlyContinue
-}
-while ((Invoke-Command @params) -ne $true) {
-    Start-Sleep -Seconds 5
-    Write-Verbose -Message 'Waiting...'
-}
+$domainAdminCredential = CreateDomainCredential -DomainFqdn $configParams.addsDC.domainFqdn -Password $adminPassword
+WaitingForReadyToDC -VMName $vmName -Credential $domainAdminCredential
 
 Write-Verbose -Message 'The AD DS Domain Controller VM creation has been completed.'
 
