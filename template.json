@@ -257,6 +257,7 @@
                 "folderPath": {
                     "transcript": "C:\\temp",
                     "temp": "V:\\temp",
+                    "updates": "V:\\temp\\updates",
                     "vhd": "V:\\vhd",
                     "vm": "V:\\vm"
                 },
@@ -270,7 +271,8 @@
                 }
             },
             "guestOS": {
-                "culture": "en-us"
+                "culture": "en-us",
+                "applyUpdates": true
             },
             "addsDC": {
                 "vmName": "hcilab-dc",
