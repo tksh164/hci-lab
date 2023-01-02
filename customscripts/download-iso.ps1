@@ -34,7 +34,7 @@ $isoUris = @{
 # Create the download folder if it does not exist.
 New-Item -ItemType Directory -Path $configParams.labHost.folderPath.temp -Force
 
-# Download the ISO file.
+Write-Verbose -Message 'Downloading the ISO file...'
 $params = @{
     SourceUri      = $isoUris[$configParams.hciNode.operatingSystem][$configParams.guestOS.culture]
     DownloadFolder = $configParams.labHost.folderPath.temp
@@ -44,6 +44,7 @@ DownloadFile @params
 
 if ($configParams.hciNode.operatingSystem -ne 'ws2022') {
     # The Windows Server 2022 ISO is always needed for the domain controller VM.
+    Write-Verbose -Message 'Downloading Windows Server 2022 ISO file...'
     $params = @{
         SourceUri      = $isoUris['ws2022'][$configParams.guestOS.culture]
         DownloadFolder = $configParams.labHost.folderPath.temp
