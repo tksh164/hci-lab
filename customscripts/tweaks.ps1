@@ -21,4 +21,6 @@ Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotPopW
 # Hide the Network Location wizard. All networks will be Public.
 New-Item -ItemType Directory -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -Name 'NewNetworkWindowOff'
 
+Write-Verbose -Message 'Some tweaks have been completed.'
+
 Stop-Transcript

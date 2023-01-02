@@ -49,4 +49,6 @@ $shortcut.Description = 'Windows Admin Center for the lab environment.'
 $shortcut.IconLocation = 'shell32.dll,34'
 $shortcut.Save()
 
+Write-Verbose -Message 'The WAC installation has been completed.'
+
 Stop-Transcript

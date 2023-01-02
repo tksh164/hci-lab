@@ -43,4 +43,6 @@ $params= @{
 }
 New-NetIPAddress @params
 
+Write-Verbose -Message 'The Hyper-V configuration has been completed.'
+
 Stop-Transcript

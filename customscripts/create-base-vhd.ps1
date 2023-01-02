@@ -89,4 +89,6 @@ if ($configParams.hciNode.operatingSystem -ne 'ws2022') {
     CreateVhdFileFromIso @params
 }
 
+Write-Verbose -Message 'The base VHDs creation has been completed.'
+
 Stop-Transcript

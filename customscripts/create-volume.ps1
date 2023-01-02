@@ -54,4 +54,6 @@ New-Item -ItemType Directory -Path $configParams.labHost.folderPath.temp -Force
 New-Item -ItemType Directory -Path $configParams.labHost.folderPath.vhd -Force
 New-Item -ItemType Directory -Path $configParams.labHost.folderPath.vm -Force
 
+Write-Verbose -Message 'The volume creation has been completed.'
+
 Stop-Transcript

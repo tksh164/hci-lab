@@ -52,4 +52,6 @@ if ($configParams.hciNode.operatingSystem -ne 'ws2022') {
     DownloadFile @params
 }
 
+Write-Verbose -Message 'The ISO download has been completed.'
+
 Stop-Transcript
