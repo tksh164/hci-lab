@@ -178,7 +178,7 @@ $params = @{
 $localAdminCredential = New-Object @params
 WaitingForReadyToVM -VMName $vmName -Credential $localAdminCredential
 
-Write-Verbose -Message 'Installing roles and features to the VM...'
+Write-Verbose -Message 'Configuring the new VM...'
 Invoke-Command -VMName $vmName -Credential $localAdminCredential -ArgumentList $configParams, $adminPassword -ScriptBlock {
     $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
     $WarningPreference = [Management.Automation.ActionPreference]::Continue
