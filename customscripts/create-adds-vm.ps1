@@ -259,6 +259,6 @@ while ((Invoke-Command @params) -ne $true) {
     Write-Verbose -Message 'Waiting...'
 }
 
-Write-Verbose -Message 'The AD DS VM creation has been completed.'
+Write-Verbose -Message 'The AD DS Domain Controller VM creation has been completed.'
 
 Stop-Transcript
