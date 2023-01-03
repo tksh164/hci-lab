@@ -42,6 +42,7 @@ function DownloadUpdates
     # OS: https://support.microsoft.com/en-us/topic/e1caa597-00c5-4ab9-9f3e-8212fe80b2ee
     # .NET: https://support.microsoft.com/en-us/topic/f61ae6ae-6f7a-493f-84d3-42ae1ebff494
     #
+
     $updates = @{
         'as22h2' = @(
             'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/updt/2022/12/windows10.0-kb5022553-x64_06fa4af116114f39709a1404a318e1f7fa644e5d.msu',
