@@ -280,7 +280,7 @@
             },
             "guestOS": {
                 "culture": "en-us",
-                "applyUpdates": true
+                "applyUpdates": false
             },
             "addsDC": {
                 "vmName": "hcilab-dc",
