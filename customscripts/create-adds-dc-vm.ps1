@@ -43,20 +43,19 @@ function WaitingForReadyToDC
 }
 
 $vmName = $configParams.addsDC.vmName
-$vmStorePath = [IO.Path]::Combine($configParams.labHost.folderPath.vm, $vmName)
 
 Write-Verbose -Message 'Creating the OS disk for the VM...'
 $params = @{
     Differencing = $true
     ParentPath   = [IO.Path]::Combine($configParams.labHost.folderPath.vhd, ('{0}_{1}.vhdx' -f 'ws2022', $configParams.guestOS.culture))
-    Path         = [IO.Path]::Combine($vmStorePath, 'osdisk.vhdx')
+    Path         = [IO.Path]::Combine($configParams.labHost.folderPath.vm, $vmName, 'osdisk.vhdx')
 }
 $vmOSDiskVhd = New-VHD  @params
 
 Write-Verbose -Message 'Creating the VM...'
 $params = @{
     Name       = $vmName
-    Path       = $vmStorePath
+    Path       = $configParams.labHost.folderPath.vm
     VHDPath    = $vmOSDiskVhd.Path
     Generation = 2
 }
