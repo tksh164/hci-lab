@@ -236,6 +236,14 @@
                     "[uri(variables('customScriptBaseUri'), 'shared.psm1')]"
                 ],
                 "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\create-wac-vm.ps1"
+            },
+            "createHciNodeVm": {
+                "deploymentName": "hci-node-vm-creation",
+                "fileUris": [
+                    "[uri(variables('customScriptBaseUri'), 'create-hci-node-vm.ps1')]",
+                    "[uri(variables('customScriptBaseUri'), 'shared.psm1')]"
+                ],
+                "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\create-hci-node-vm.ps1"
             }
         },
 
@@ -309,7 +317,29 @@
             },
             "hciNode": {
                 "operatingSystem": "as22h2",
-                "imageIndex": 1
+                "imageIndex": 1,
+                "nodeCount": 2,
+                "nodeCountOffset": 1,
+                "vmName": "hcinode{0}",
+                "netAdapter": {
+                    "management": {
+                        "name": "Management",
+                        "ipAddress": "192.168.0.1{0}",
+                        "prefixLength": 24,
+                        "defaultGateway": "192.168.0.1",
+                        "dnsServerAddresses": [ "192.168.0.4" ]
+                    },
+                    "storage1": {
+                        "name": "Storage1",
+                        "ipAddress": "172.16.1.1{0}",
+                        "prefixLength": 24
+                    },
+                    "storage2": {
+                        "name": "Storage2",
+                        "ipAddress": "172.16.2.1{0}",
+                        "prefixLength": 24
+                    }
+                }
             },
             "keyVault": {
                 "name": "[variables('keyVaultName')]",
@@ -755,6 +785,40 @@
                     },
                     "commandToExecute": {
                         "value": "[variables('customScriptParams').createWacVm.commandToExecute]"
+                    }
+                }
+            }
+        },
+
+        // Create HCI node VMs.
+        {
+            "name": "[variables('customScriptParams').createHciNodeVm.deploymentName]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2021-04-01",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', variables('customScriptParams').createWacVm.deploymentName)]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('customScriptLinkedTemplateUri')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
+                    "parentVmResourceName": {
+                        "value": "[parameters('labHostVmName')]"
+                    },
+                    "extensionName": {
+                        "value": "[variables('customScriptExtensionName')]"
+                    },
+                    "fileUris": {
+                        "value": "[variables('customScriptParams').createHciNodeVm.fileUris]"
+                    },
+                    "commandToExecute": {
+                        "value": "[variables('customScriptParams').createHciNodeVm.commandToExecute]"
                     }
                 }
             }
