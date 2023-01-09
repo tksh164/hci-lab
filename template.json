@@ -283,7 +283,7 @@
                 "applyUpdates": false
             },
             "addsDC": {
-                "vmName": "hcilab-dc",
+                "vmName": "dc",
                 "netAdapter": {
                     "management": {
                         "name": "Management",
@@ -296,7 +296,7 @@
                 "domainFqdn": "hci.local"
             },
             "wac": {
-                "vmName": "hcilab-wac",
+                "vmName": "wac",
                 "netAdapter": {
                     "management": {
                         "name": "Management",
