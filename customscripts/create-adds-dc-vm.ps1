@@ -126,8 +126,17 @@ $unattendAnswerFileContent = @'
 Write-Verbose -Message 'Injecting the unattend answer file to the VM...'
 InjectUnattendAnswerFile -VhdPath $vmOSDiskVhd.Path -UnattendAnswerFileContent $unattendAnswerFileContent
 
+Write-Verbose -Message 'Installing the roles and features to the VHD...'
+$features = @(
+    'AD-Domain-Services'
+)
+Install-WindowsFeature -Vhd $vmOSDiskVhd.Path -Name $features -IncludeManagementTools
+
 Write-Verbose -Message 'Starting the VM...'
-Start-VM -Name $vmName
+while ((Start-VM -Name $vmName -Passthru -ErrorAction SilentlyContinue) -eq $null) {
+    Write-Verbose -Message ('[{0}] Will retry start the VM. Waiting for unmount the VHD...' -f $vmName)
+    Start-Sleep -Seconds 5
+}
 
 Write-Verbose -Message 'Waiting for ready to the VM...'
 $params = @{
@@ -173,9 +182,6 @@ Invoke-Command -VMName $vmName -Credential $localAdminCredential -ArgumentList $
     Write-Verbose -Message 'Setting the DNS configuration on the network adapter...'
     Get-NetAdapter -Name $configParams.addsDC.netAdapter.management.name |
         Set-DnsClientServerAddress -ServerAddresses $configParams.addsDC.netAdapter.management.dnsServerAddresses
-
-    Write-Verbose -Message 'Installing the roles and features...'
-    Install-WindowsFeature -Name 'AD-Domain-Services' -IncludeManagementTools
 
     Write-Verbose -Message 'Installing AD DS (Create a new forest)...'
     $params = @{
