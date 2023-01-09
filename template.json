@@ -291,7 +291,7 @@
                 "applyUpdates": false
             },
             "addsDC": {
-                "vmName": "dc",
+                "vmName": "addsdc",
                 "netAdapter": {
                     "management": {
                         "name": "Management",
