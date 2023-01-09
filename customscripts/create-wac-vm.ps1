@@ -96,8 +96,23 @@ $unattendAnswerFileContent = @'
 Write-Verbose -Message 'Injecting the unattend answer file to the VM...'
 InjectUnattendAnswerFile -VhdPath $vmOSDiskVhd.Path -UnattendAnswerFileContent $unattendAnswerFileContent
 
+Write-Verbose -Message 'Installing the roles and features to the VHD...'
+$features = @(
+    'RSAT-ADDS-Tools',
+    'RSAT-AD-AdminCenter',
+    'RSAT-AD-PowerShell',
+    'RSAT-Clustering-Mgmt',
+    'RSAT-Clustering-PowerShell',
+    'Hyper-V-Tools',
+    'Hyper-V-PowerShell'
+)
+Install-WindowsFeature -Vhd $vmOSDiskVhd.Path -Name $features
+
 Write-Verbose -Message 'Starting the VM...'
-Start-VM -Name $vmName
+while ((Start-VM -Name $vmName -Passthru -ErrorAction SilentlyContinue) -eq $null) {
+    Write-Verbose -Message ('[{0}] Will retry start the VM. Waiting for unmount the VHD...' -f $vmName)
+    Start-Sleep -Seconds 5
+}
 
 Write-Verbose -Message 'Waiting for ready to the VM...'
 $params = @{
@@ -157,18 +172,6 @@ Invoke-Command -VMName $vmName -Credential $localAdminCredential -ArgumentList $
     Write-Verbose -Message 'Setting the DNS configuration on the network adapter...'
     Get-NetAdapter -Name $configParams.wac.netAdapter.management.name |
         Set-DnsClientServerAddress -ServerAddresses $configParams.wac.netAdapter.management.dnsServerAddresses
-
-    Write-Verbose -Message 'Installing the roles and features...'
-    $features = @(
-        'RSAT-ADDS-Tools',
-        'RSAT-AD-AdminCenter',
-        'RSAT-AD-PowerShell',
-        'RSAT-Clustering-Mgmt',
-        'RSAT-Clustering-PowerShell',
-        'Hyper-V-Tools',
-        'Hyper-V-PowerShell'
-    )
-    Install-WindowsFeature -Name $features
 
     Write-Verbose -Message 'Installing Windows Admin Center...'
     $msiArgs = @(
