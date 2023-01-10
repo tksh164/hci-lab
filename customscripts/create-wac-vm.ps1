@@ -138,30 +138,37 @@ $psSession = New-PSSession -VMName $vmName -Credential $localAdminCredential
 Copy-Item -ToSession $psSession -Path $wacInstallerFile.FullName -Destination $wacInstallerFilePathInVM
 
 'Configuring the new VM...' | WriteLog -Context $vmName
-Invoke-Command -VMName $vmName -Credential $localAdminCredential -ArgumentList $configParams, $wacInstallerFilePathInVM -ScriptBlock {
+$params = @{
+    VMName       = $vmName
+    Credential   = $localAdminCredential
+    ArgumentList = ${function:WriteLog}, $vmName, $configParams, $wacInstallerFilePathInVM
+}
+Invoke-Command @params -ScriptBlock {
     $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
     $WarningPreference = [Management.Automation.ActionPreference]::Continue
     $VerbosePreference = [Management.Automation.ActionPreference]::Continue
     $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
-    $configParams = $args[0]
-    $wacInstallerFilePath = $args[1]
+    $WriteLog = [scriptblock]::Create($args[0])
+    $vmName = $args[1]
+    $configParams = $args[2]
+    $wacInstallerFilePath = $args[3]
 
-    'Stop Server Manager launch at logon.' | WriteLog -Context $vmName
+    'Stop Server Manager launch at logon.' | &$WriteLog -Context $vmName
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotOpenServerManagerAtLogon' -Value 1
 
-    'Stop Windows Admin Center popup at Server Manager launch.' | WriteLog -Context $vmName
+    'Stop Windows Admin Center popup at Server Manager launch.' | &$WriteLog -Context $vmName
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotPopWACConsoleAtSMLaunch' -Value 1
 
-    'Hide the Network Location wizard. All networks will be Public.' | WriteLog -Context $vmName
+    'Hide the Network Location wizard. All networks will be Public.' | &$WriteLog -Context $vmName
     New-Item -ItemType Directory -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -Name 'NewNetworkWindowOff'
 
-    'Renaming the network adapters...' | WriteLog -Context $vmName
+    'Renaming the network adapters...' | &$WriteLog -Context $vmName
     Get-NetAdapterAdvancedProperty -RegistryKeyword 'HyperVNetworkAdapterName' | ForEach-Object -Process {
         Rename-NetAdapter -Name $_.Name -NewName $_.DisplayValue
     }
 
-    'Setting the IP configuration on the network adapter...' | WriteLog -Context $vmName
+    'Setting the IP configuration on the network adapter...' | &$WriteLog -Context $vmName
     $params = @{
         AddressFamily  = 'IPv4'
         IPAddress      = $configParams.wac.netAdapter.management.ipAddress
@@ -170,11 +177,11 @@ Invoke-Command -VMName $vmName -Credential $localAdminCredential -ArgumentList $
     }
     Get-NetAdapter -Name $configParams.wac.netAdapter.management.name | New-NetIPAddress @params
     
-    'Setting the DNS configuration on the network adapter...' | WriteLog -Context $vmName
+    'Setting the DNS configuration on the network adapter...' | &$WriteLog -Context $vmName
     Get-NetAdapter -Name $configParams.wac.netAdapter.management.name |
         Set-DnsClientServerAddress -ServerAddresses $configParams.wac.netAdapter.management.dnsServerAddresses
 
-    'Installing Windows Admin Center...' | WriteLog -Context $vmName
+    'Installing Windows Admin Center...' | &$WriteLog -Context $vmName
     $msiArgs = @(
         '/i',
         ('"{0}"' -f $wacInstallerFilePath),
@@ -191,7 +198,7 @@ Invoke-Command -VMName $vmName -Credential $localAdminCredential -ArgumentList $
     }
     Remove-Item -LiteralPath $wacInstallerFilePath -Force
 
-    'Creating shortcut for Windows Admin Center on the desktop....' | WriteLog -Context $vmName
+    'Creating shortcut for Windows Admin Center on the desktop....' | &$WriteLog -Context $vmName
     $wshShell = New-Object -ComObject 'WScript.Shell'
     $shortcut = $wshShell.CreateShortcut('C:\Users\Public\Desktop\Windows Admin Center.lnk')
     $shortcut.TargetPath = 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'

@@ -189,31 +189,37 @@ foreach ($nodeConfig in $hciNodeConfigs) {
     }
     $localAdminCredential = New-Object @params
 
-    Invoke-Command -VMName $nodeConfig.VMName -Credential $localAdminCredential -ArgumentList $nodeConfig -ScriptBlock {
+    $params = @{
+        VMName       = $nodeConfig.VMName
+        Credential   = $localAdminCredential
+        ArgumentList = ${function:WriteLog}, $nodeConfig
+    }
+    Invoke-Command @params -ScriptBlock {
         $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
         $WarningPreference = [Management.Automation.ActionPreference]::Continue
         $VerbosePreference = [Management.Automation.ActionPreference]::Continue
         $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
     
-        $nodeConfig = $args[0]
+        $WriteLog = [scriptblock]::Create($args[0])
+        $nodeConfig = $args[1]
 
         if ($nodeConfig.OperatingSystem -eq 'ws2022') {
-            'Stop Server Manager launch at logon.' | WriteLog -Context $nodeConfig.VMName
+            'Stop Server Manager launch at logon.' | &$WriteLog -Context $nodeConfig.VMName
             Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotOpenServerManagerAtLogon' -Value 1
         
-            'Stop Windows Admin Center popup at Server Manager launch.' | WriteLog -Context $nodeConfig.VMName
+            'Stop Windows Admin Center popup at Server Manager launch.' | &$WriteLog -Context $nodeConfig.VMName
             Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotPopWACConsoleAtSMLaunch' -Value 1
         
-            'Hide the Network Location wizard. All networks will be Public.' | WriteLog -Context $nodeConfig.VMName
+            'Hide the Network Location wizard. All networks will be Public.' | &$WriteLog -Context $nodeConfig.VMName
             New-Item -ItemType Directory -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -Name 'NewNetworkWindowOff'
         }
     
-        'Renaming the network adapters...' | WriteLog -Context $nodeConfig.VMName
+        'Renaming the network adapters...' | &$WriteLog -Context $nodeConfig.VMName
         Get-NetAdapterAdvancedProperty -RegistryKeyword 'HyperVNetworkAdapterName' | ForEach-Object -Process {
             Rename-NetAdapter -Name $_.Name -NewName $_.DisplayValue
         }
     
-        'Setting the IP configuration on the network adapter...' | WriteLog -Context $nodeConfig.VMName
+        'Setting the IP configuration on the network adapter...' | &$WriteLog -Context $nodeConfig.VMName
 
         # Management
         $params = @{
@@ -224,7 +230,7 @@ foreach ($nodeConfig in $hciNodeConfigs) {
         }
         Get-NetAdapter -Name $nodeConfig.NetAdapter.Management.Name | New-NetIPAddress @params
 
-        'Setting the DNS configuration on the network adapter...' | WriteLog -Context $nodeConfig.VMName
+        'Setting the DNS configuration on the network adapter...' | &$WriteLog -Context $nodeConfig.VMName
         Get-NetAdapter -Name $nodeConfig.NetAdapter.Management.Name |
             Set-DnsClientServerAddress -ServerAddresses $nodeConfig.NetAdapter.Management.DnsServerAddresses
     
@@ -245,7 +251,7 @@ foreach ($nodeConfig in $hciNodeConfigs) {
         Get-NetAdapter -Name $nodeConfig.NetAdapter.Storage2.Name | New-NetIPAddress @params
     }
 
-    'Joining the VM the AD domain...' | WriteLog -Context $nodeConfig.VMName
+    'Joining the VM the AD domain...' | &$WriteLog -Context $nodeConfig.VMName
     $domainAdminCredential = CreateDomainCredential -DomainFqdn $configParams.addsDC.domainFqdn -Password $nodeConfig.AdminPassword
     $params = @{
         VMName                = $nodeConfig.VMName
@@ -255,10 +261,10 @@ foreach ($nodeConfig in $hciNodeConfigs) {
     }
     JoinVMToADDomain @params
     
-    'Stopping the VM...' | WriteLog -Context $nodeConfig.VMName
+    'Stopping the VM...' | &$WriteLog -Context $nodeConfig.VMName
     Stop-VM -Name $nodeConfig.VMName
     
-    'Starting the VM...' | WriteLog -Context $nodeConfig.VMName
+    'Starting the VM...' | &$WriteLog -Context $nodeConfig.VMName
     Start-VM -Name $nodeConfig.VMName
 }
 
