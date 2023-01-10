@@ -251,7 +251,7 @@ foreach ($nodeConfig in $hciNodeConfigs) {
         Get-NetAdapter -Name $nodeConfig.NetAdapter.Storage2.Name | New-NetIPAddress @params
     }
 
-    'Joining the VM the AD domain...' | &$WriteLog -Context $nodeConfig.VMName
+    'Joining the VM the AD domain...' | WriteLog -Context $nodeConfig.VMName
     $domainAdminCredential = CreateDomainCredential -DomainFqdn $configParams.addsDC.domainFqdn -Password $nodeConfig.AdminPassword
     $params = @{
         VMName                = $nodeConfig.VMName
@@ -261,10 +261,10 @@ foreach ($nodeConfig in $hciNodeConfigs) {
     }
     JoinVMToADDomain @params
     
-    'Stopping the VM...' | &$WriteLog -Context $nodeConfig.VMName
+    'Stopping the VM...' | WriteLog -Context $nodeConfig.VMName
     Stop-VM -Name $nodeConfig.VMName
     
-    'Starting the VM...' | &$WriteLog -Context $nodeConfig.VMName
+    'Starting the VM...' | WriteLog -Context $nodeConfig.VMName
     Start-VM -Name $nodeConfig.VMName
 }
 
