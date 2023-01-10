@@ -14,7 +14,7 @@ $configParams | ConvertTo-Json -Depth 16
 
 $vmName = $configParams.wac.vmName
 
-WriteLog -Context $env:ComputerName -Message 'Creating the OS disk for the VM...'
+WriteLog -Context $vmName -Message 'Creating the OS disk for the VM...'
 
 $params = @{
     Differencing = $true
@@ -23,7 +23,7 @@ $params = @{
 }
 $vmOSDiskVhd = New-VHD  @params
 
-WriteLog -Context $env:ComputerName -Message 'Creating the VM...'
+WriteLog -Context $vmName -Message 'Creating the VM...'
 $params = @{
     Name       = $vmName
     Path       = $configParams.labHost.folderPath.vm
@@ -32,10 +32,10 @@ $params = @{
 }
 New-VM @params
 
-WriteLog -Context $env:ComputerName -Message 'Setting the VM''s processor configuration...'
+WriteLog -Context $vmName -Message 'Setting the VM''s processor configuration...'
 Set-VMProcessor -VMName $vmName -Count 4
 
-WriteLog -Context $env:ComputerName -Message 'Setting the VM''s memory configuration...'
+WriteLog -Context $vmName -Message 'Setting the VM''s memory configuration...'
 $params = @{
     VMName               = $vmName
     StartupBytes         = 6GB
@@ -45,7 +45,7 @@ $params = @{
 }
 Set-VMMemory @params
 
-WriteLog -Context $env:ComputerName -Message 'Setting the VM''s network adapter configuration...'
+WriteLog -Context $vmName -Message 'Setting the VM''s network adapter configuration...'
 Get-VMNetworkAdapter -VMName $vmName | Remove-VMNetworkAdapter
 $params = @{
     VMName       = $vmName
@@ -55,7 +55,7 @@ $params = @{
 }
 Add-VMNetworkAdapter @params
 
-WriteLog -Context $env:ComputerName -Message 'Generating the unattend answer XML...'
+WriteLog -Context $vmName -Message 'Generating the unattend answer XML...'
 $adminPassword = GetSecret -KeyVaultName $configParams.keyVault.name -SecretName $configParams.keyVault.secretName
 $encodedAdminPassword = GetEncodedAdminPasswordForUnattendAnswerFile -Password $adminPassword
 $unattendAnswerFileContent = @'
@@ -94,10 +94,10 @@ $unattendAnswerFileContent = @'
 </unattend>
 '@ -f $encodedAdminPassword, $configParams.guestOS.culture, $vmName
 
-WriteLog -Context $env:ComputerName -Message 'Injecting the unattend answer file to the VM...'
+WriteLog -Context $vmName -Message 'Injecting the unattend answer file to the VM...'
 InjectUnattendAnswerFile -VhdPath $vmOSDiskVhd.Path -UnattendAnswerFileContent $unattendAnswerFileContent
 
-WriteLog -Context $env:ComputerName -Message 'Installing the roles and features to the VHD...'
+WriteLog -Context $vmName -Message 'Installing the roles and features to the VHD...'
 $features = @(
     'RSAT-ADDS-Tools',
     'RSAT-AD-AdminCenter',
@@ -109,13 +109,13 @@ $features = @(
 )
 Install-WindowsFeature -Vhd $vmOSDiskVhd.Path -Name $features
 
-WriteLog -Context $env:ComputerName -Message 'Starting the VM...'
+WriteLog -Context $vmName -Message 'Starting the VM...'
 while ((Start-VM -Name $vmName -Passthru -ErrorAction SilentlyContinue) -eq $null) {
     WriteLog -Context $vmName -Message 'Will retry start the VM. Waiting for unmount the VHD...'
     Start-Sleep -Seconds 5
 }
 
-WriteLog -Context $env:ComputerName -Message 'Waiting for ready to the VM...'
+WriteLog -Context $vmName -Message 'Waiting for ready to the VM...'
 $params = @{
     TypeName     = 'System.Management.Automation.PSCredential'
     ArgumentList = 'Administrator', $adminPassword
@@ -123,7 +123,7 @@ $params = @{
 $localAdminCredential = New-Object @params
 WaitingForReadyToVM -VMName $vmName -Credential $localAdminCredential
 
-WriteLog -Context $env:ComputerName -Message 'Downloading the Windows Admin Center installer...'
+WriteLog -Context $vmName -Message 'Downloading the Windows Admin Center installer...'
 $params = @{
     SourceUri      = 'https://aka.ms/WACDownload'
     DownloadFolder = $configParams.labHost.folderPath.temp
@@ -132,12 +132,12 @@ $params = @{
 $wacInstallerFile = DownloadFile @params
 $wacInstallerFile
 
-WriteLog -Context $env:ComputerName -Message 'Copying the Windows Admin Center installer into the VM...'
+WriteLog -Context $vmName -Message 'Copying the Windows Admin Center installer into the VM...'
 $wacInstallerFilePathInVM = [IO.Path]::Combine('C:\Windows\Temp', [IO.Path]::GetFileName($wacInstallerFile.FullName))
 $psSession = New-PSSession -VMName $vmName -Credential $localAdminCredential
 Copy-Item -ToSession $psSession -Path $wacInstallerFile.FullName -Destination $wacInstallerFilePathInVM
 
-WriteLog -Context $env:ComputerName -Message 'Configuring the new VM...'
+WriteLog -Context $vmName -Message 'Configuring the new VM...'
 Invoke-Command -VMName $vmName -Credential $localAdminCredential -ArgumentList $configParams, $wacInstallerFilePathInVM -ScriptBlock {
     $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
     $WarningPreference = [Management.Automation.ActionPreference]::Continue
@@ -147,21 +147,21 @@ Invoke-Command -VMName $vmName -Credential $localAdminCredential -ArgumentList $
     $configParams = $args[0]
     $wacInstallerFilePath = $args[1]
 
-    WriteLog -Context $env:ComputerName -Message 'Stop Server Manager launch at logon.'
+    WriteLog -Context $vmName -Message 'Stop Server Manager launch at logon.'
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotOpenServerManagerAtLogon' -Value 1
 
-    WriteLog -Context $env:ComputerName -Message 'Stop Windows Admin Center popup at Server Manager launch.'
+    WriteLog -Context $vmName -Message 'Stop Windows Admin Center popup at Server Manager launch.'
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotPopWACConsoleAtSMLaunch' -Value 1
 
-    WriteLog -Context $env:ComputerName -Message 'Hide the Network Location wizard. All networks will be Public.'
+    WriteLog -Context $vmName -Message 'Hide the Network Location wizard. All networks will be Public.'
     New-Item -ItemType Directory -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -Name 'NewNetworkWindowOff'
 
-    WriteLog -Context $env:ComputerName -Message 'Renaming the network adapters...'
+    WriteLog -Context $vmName -Message 'Renaming the network adapters...'
     Get-NetAdapterAdvancedProperty -RegistryKeyword 'HyperVNetworkAdapterName' | ForEach-Object -Process {
         Rename-NetAdapter -Name $_.Name -NewName $_.DisplayValue
     }
 
-    WriteLog -Context $env:ComputerName -Message 'Setting the IP configuration on the network adapter...'
+    WriteLog -Context $vmName -Message 'Setting the IP configuration on the network adapter...'
     $params = @{
         AddressFamily  = 'IPv4'
         IPAddress      = $configParams.wac.netAdapter.management.ipAddress
@@ -170,11 +170,11 @@ Invoke-Command -VMName $vmName -Credential $localAdminCredential -ArgumentList $
     }
     Get-NetAdapter -Name $configParams.wac.netAdapter.management.name | New-NetIPAddress @params
     
-    WriteLog -Context $env:ComputerName -Message 'Setting the DNS configuration on the network adapter...'
+    WriteLog -Context $vmName -Message 'Setting the DNS configuration on the network adapter...'
     Get-NetAdapter -Name $configParams.wac.netAdapter.management.name |
         Set-DnsClientServerAddress -ServerAddresses $configParams.wac.netAdapter.management.dnsServerAddresses
 
-    WriteLog -Context $env:ComputerName -Message 'Installing Windows Admin Center...'
+    WriteLog -Context $vmName -Message 'Installing Windows Admin Center...'
     $msiArgs = @(
         '/i',
         ('"{0}"' -f $wacInstallerFilePath),
@@ -191,7 +191,7 @@ Invoke-Command -VMName $vmName -Credential $localAdminCredential -ArgumentList $
     }
     Remove-Item -LiteralPath $wacInstallerFilePath -Force
 
-    WriteLog -Context $env:ComputerName -Message 'Creating shortcut for Windows Admin Center on the desktop....'
+    WriteLog -Context $vmName -Message 'Creating shortcut for Windows Admin Center on the desktop....'
     $wshShell = New-Object -ComObject 'WScript.Shell'
     $shortcut = $wshShell.CreateShortcut('C:\Users\Public\Desktop\Windows Admin Center.lnk')
     $shortcut.TargetPath = 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
@@ -201,7 +201,7 @@ Invoke-Command -VMName $vmName -Credential $localAdminCredential -ArgumentList $
     $shortcut.Save()
 }
 
-WriteLog -Context $env:ComputerName -Message 'Joining the VM to the AD domain...'
+WriteLog -Context $vmName -Message 'Joining the VM to the AD domain...'
 $domainAdminCredential = CreateDomainCredential -DomainFqdn $configParams.addsDC.domainFqdn -Password $adminPassword
 $params = @{
     VMName                = $vmName
@@ -211,15 +211,15 @@ $params = @{
 }
 JoinVMToADDomain @params
 
-WriteLog -Context $env:ComputerName -Message 'Stopping the VM...'
+WriteLog -Context $vmName -Message 'Stopping the VM...'
 Stop-VM -Name $vmName
 
-WriteLog -Context $env:ComputerName -Message 'Starting the VM...'
+WriteLog -Context $vmName -Message 'Starting the VM...'
 Start-VM -Name $vmName
 
-WriteLog -Context $env:ComputerName -Message 'Waiting for ready to the VM...'
+WriteLog -Context $vmName -Message 'Waiting for ready to the VM...'
 WaitingForReadyToVM -VMName $vmName -Credential $domainAdminCredential
 
-WriteLog -Context $env:ComputerName -Message 'The WAC VM creation has been completed.'
+WriteLog -Context $vmName -Message 'The WAC VM creation has been completed.'
 
 Stop-Transcript
