@@ -38,13 +38,13 @@ function WaitingForReadyToDC
     }
     while ((Invoke-Command @params) -ne $true) {
         Start-Sleep -Seconds $CheckInternal
-        Write-Verbose -Message 'Waiting...'
+        WriteLog -Context $VMName -Message 'Waiting...'
     }
 }
 
 $vmName = $configParams.addsDC.vmName
 
-Write-Verbose -Message 'Creating the OS disk for the VM...'
+WriteLog -Context $vmName -Message 'Creating the OS disk for the VM...'
 $params = @{
     Differencing = $true
     ParentPath   = [IO.Path]::Combine($configParams.labHost.folderPath.vhd, ('{0}_{1}.vhdx' -f 'ws2022', $configParams.guestOS.culture))
@@ -52,7 +52,7 @@ $params = @{
 }
 $vmOSDiskVhd = New-VHD  @params
 
-Write-Verbose -Message 'Creating the VM...'
+WriteLog -Context $vmName -Message 'Creating the VM...'
 $params = @{
     Name       = $vmName
     Path       = $configParams.labHost.folderPath.vm
@@ -61,10 +61,10 @@ $params = @{
 }
 New-VM @params
 
-Write-Verbose -Message 'Setting the VM''s processor configuration...'
+WriteLog -Context $vmName -Message 'Setting the VM''s processor configuration...'
 Set-VMProcessor -VMName $vmName -Count 2
 
-Write-Verbose -Message 'Setting the VM''s memory configuration...'
+WriteLog -Context $vmName -Message 'Setting the VM''s memory configuration...'
 $params = @{
     VMName               = $vmName
     StartupBytes         = 2GB
@@ -74,7 +74,7 @@ $params = @{
 }
 Set-VMMemory @params
 
-Write-Verbose -Message 'Setting the VM''s network adapter configuration...'
+WriteLog -Context $vmName -Message 'Setting the VM''s network adapter configuration...'
 Get-VMNetworkAdapter -VMName $vmName | Remove-VMNetworkAdapter
 $params = @{
     VMName       = $vmName
@@ -84,7 +84,7 @@ $params = @{
 }
 Add-VMNetworkAdapter @params
 
-Write-Verbose -Message 'Generating the unattend answer XML...'
+WriteLog -Context $vmName -Message 'Generating the unattend answer XML...'
 $adminPassword = GetSecret -KeyVaultName $configParams.keyVault.name -SecretName $configParams.keyVault.secretName
 $encodedAdminPassword = GetEncodedAdminPasswordForUnattendAnswerFile -Password $adminPassword
 $unattendAnswerFileContent = @'
@@ -123,22 +123,22 @@ $unattendAnswerFileContent = @'
 </unattend>
 '@ -f $encodedAdminPassword, $configParams.guestOS.culture, $vmName
 
-Write-Verbose -Message 'Injecting the unattend answer file to the VM...'
+WriteLog -Context $vmName -Message 'Injecting the unattend answer file to the VM...'
 InjectUnattendAnswerFile -VhdPath $vmOSDiskVhd.Path -UnattendAnswerFileContent $unattendAnswerFileContent
 
-Write-Verbose -Message 'Installing the roles and features to the VHD...'
+WriteLog -Context $vmName -Message 'Installing the roles and features to the VHD...'
 $features = @(
     'AD-Domain-Services'
 )
 Install-WindowsFeature -Vhd $vmOSDiskVhd.Path -Name $features -IncludeManagementTools
 
-Write-Verbose -Message 'Starting the VM...'
+WriteLog -Context $vmName -Message 'Starting the VM...'
 while ((Start-VM -Name $vmName -Passthru -ErrorAction SilentlyContinue) -eq $null) {
-    Write-Verbose -Message ('[{0}] Will retry start the VM. Waiting for unmount the VHD...' -f $vmName)
+    WriteLog -Context $vmName -Message 'Will retry start the VM. Waiting for unmount the VHD...'
     Start-Sleep -Seconds 5
 }
 
-Write-Verbose -Message 'Waiting for ready to the VM...'
+WriteLog -Context $vmName -Message 'Waiting for ready to the VM...'
 $params = @{
     TypeName     = 'System.Management.Automation.PSCredential'
     ArgumentList = 'Administrator', $adminPassword
@@ -146,7 +146,7 @@ $params = @{
 $localAdminCredential = New-Object @params
 WaitingForReadyToVM -VMName $vmName -Credential $localAdminCredential
 
-Write-Verbose -Message 'Configuring the new VM...'
+WriteLog -Context $vmName -Message 'Configuring the new VM...'
 Invoke-Command -VMName $vmName -Credential $localAdminCredential -ArgumentList $configParams, $adminPassword -ScriptBlock {
     $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
     $WarningPreference = [Management.Automation.ActionPreference]::Continue
@@ -156,21 +156,21 @@ Invoke-Command -VMName $vmName -Credential $localAdminCredential -ArgumentList $
     $configParams = $args[0]
     $adminPassword = $args[1]
 
-    Write-Verbose -Message 'Stop Server Manager launch at logon.'
+    WriteLog -Context $vmName -Message 'Stop Server Manager launch at logon.'
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotOpenServerManagerAtLogon' -Value 1
 
-    Write-Verbose -Message 'Stop Windows Admin Center popup at Server Manager launch.'
+    WriteLog -Context $vmName -Message 'Stop Windows Admin Center popup at Server Manager launch.'
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotPopWACConsoleAtSMLaunch' -Value 1
 
-    Write-Verbose -Message 'Hide the Network Location wizard. All networks will be Public.'
+    WriteLog -Context $vmName -Message 'Hide the Network Location wizard. All networks will be Public.'
     New-Item -ItemType Directory -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -Name 'NewNetworkWindowOff'
 
-    Write-Verbose -Message 'Renaming the network adapters...'
+    WriteLog -Context $vmName -Message 'Renaming the network adapters...'
     Get-NetAdapterAdvancedProperty -RegistryKeyword 'HyperVNetworkAdapterName' | ForEach-Object -Process {
         Rename-NetAdapter -Name $_.Name -NewName $_.DisplayValue
     }
 
-    Write-Verbose -Message 'Setting the IP configuration on the network adapter...'
+    WriteLog -Context $vmName -Message 'Setting the IP configuration on the network adapter...'
     $params = @{
         AddressFamily  = 'IPv4'
         IPAddress      = $configParams.addsDC.netAdapter.management.ipAddress
@@ -179,11 +179,11 @@ Invoke-Command -VMName $vmName -Credential $localAdminCredential -ArgumentList $
     }
     Get-NetAdapter -Name $configParams.addsDC.netAdapter.management.name | New-NetIPAddress @params
     
-    Write-Verbose -Message 'Setting the DNS configuration on the network adapter...'
+    WriteLog -Context $vmName -Message 'Setting the DNS configuration on the network adapter...'
     Get-NetAdapter -Name $configParams.addsDC.netAdapter.management.name |
         Set-DnsClientServerAddress -ServerAddresses $configParams.addsDC.netAdapter.management.dnsServerAddresses
 
-    Write-Verbose -Message 'Installing AD DS (Create a new forest)...'
+    WriteLog -Context $vmName -Message 'Installing AD DS (Create a new forest)...'
     $params = @{
         DomainName                    = $configParams.addsDC.domainFqdn
         InstallDns                    = $true
@@ -194,16 +194,16 @@ Invoke-Command -VMName $vmName -Credential $localAdminCredential -ArgumentList $
     Install-ADDSForest @params
 }
 
-Write-Verbose -Message 'Stopping the VM...'
+WriteLog -Context $vmName -Message 'Stopping the VM...'
 Stop-VM -Name $vmName
 
-Write-Verbose -Message 'Starting the VM...'
+WriteLog -Context $vmName -Message 'Starting the VM...'
 Start-VM -Name $vmName
 
-Write-Verbose -Message 'Waiting for ready to the domain controller...'
+WriteLog -Context $vmName -Message 'Waiting for ready to the domain controller...'
 $domainAdminCredential = CreateDomainCredential -DomainFqdn $configParams.addsDC.domainFqdn -Password $adminPassword
 WaitingForReadyToDC -VMName $vmName -Credential $domainAdminCredential
 
-Write-Verbose -Message 'The AD DS Domain Controller VM creation has been completed.'
+WriteLog -Context $vmName -Message 'The AD DS Domain Controller VM creation has been completed.'
 
 Stop-Transcript

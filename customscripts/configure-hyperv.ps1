@@ -12,7 +12,7 @@ $configParams = GetConfigParameters
 Start-Transcript -OutputDirectory $configParams.labHost.folderPath.transcript
 $configParams | ConvertTo-Json -Depth 16
 
-# Set Hyper-V host settings.
+WriteLog -Context $env:ComputerName -Message 'Set Hyper-V host settings...'
 $params = @{
     VirtualMachinePath        = $configParams.labHost.folderPath.vm
     VirtualHardDiskPath       = $configParams.labHost.folderPath.vhd
@@ -20,21 +20,21 @@ $params = @{
 }
 Set-VMHost @params
 
-# Create a NAT vSwitch.
+WriteLog -Context $env:ComputerName -Message 'Creating a NAT vSwitch...'
 $params = @{
     Name        = $configParams.labHost.vSwitch.nat.name
     SwitchType  = 'Internal'
 }
 New-VMSwitch @params
 
-# Create a network NAT.
+WriteLog -Context $env:ComputerName -Message 'Creating a network NAT...'
 $params = @{
     Name                             = $configParams.labHost.vSwitch.nat.name
     InternalIPInterfaceAddressPrefix = $configParams.labHost.vSwitch.nat.subnet
 }
 New-NetNat @params
 
-# Assign an IP address to the NAT vSwitch network interface.
+WriteLog -Context $env:ComputerName -Message 'Assigning an IP address to the NAT vSwitch network interface...'
 $params= @{
     InterfaceIndex = (Get-NetAdapter | Where-Object { $_.Name -match $configParams.labHost.vSwitch.nat.name }).ifIndex
     AddressFamily  = 'IPv4'
@@ -43,6 +43,6 @@ $params= @{
 }
 New-NetIPAddress @params
 
-Write-Verbose -Message 'The Hyper-V configuration has been completed.'
+WriteLog -Context $env:ComputerName -Message 'The Hyper-V configuration has been completed.'
 
 Stop-Transcript

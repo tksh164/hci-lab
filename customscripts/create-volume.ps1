@@ -12,8 +12,7 @@ $configParams = GetConfigParameters
 Start-Transcript -OutputDirectory $configParams.labHost.folderPath.transcript
 $configParams | ConvertTo-Json -Depth 16
 
-# Create a storage pool.
-
+WriteLog -Context $env:ComputerName -Message 'Creating a storage pool...'
 $params = @{
     FriendlyName                 = $configParams.labHost.storage.poolName
     StorageSubSystemFriendlyName = '*storage*'
@@ -24,8 +23,7 @@ if ((Get-StoragePool -FriendlyName $params.FriendlyName -ErrorAction SilentlyCon
     throw 'Storage pool creation failed.'
 }
 
-# Create a volume.
-
+WriteLog -Context $env:ComputerName -Message 'Creating a volume...'
 $params = @{
     StoragePoolFriendlyName = $configParams.labHost.storage.poolName
     FileSystem              = 'NTFS'
@@ -40,21 +38,19 @@ if ((Get-Volume -DriveLetter $params.DriveLetter -ErrorAction SilentlyContinue).
     throw 'Volume creation failed.'
 }
 
-# Set Defender exclusions.
-
+WriteLog -Context $env:ComputerName -Message 'Setting Defender exclusions...'
 $exclusionPath = $configParams.labHost.storage.driveLetter + ':\'
 Add-MpPreference -ExclusionPath $exclusionPath
 if ((Get-MpPreference).ExclusionPath -notcontains $exclusionPath) {
     throw 'Defender exclusion setting failed.'
 }
 
-# Create the folder structure on the volume.
-
+WriteLog -Context $env:ComputerName -Message 'Creating the folder structure on the volume...'
 New-Item -ItemType Directory -Path $configParams.labHost.folderPath.temp -Force
 New-Item -ItemType Directory -Path $configParams.labHost.folderPath.updates -Force
 New-Item -ItemType Directory -Path $configParams.labHost.folderPath.vhd -Force
 New-Item -ItemType Directory -Path $configParams.labHost.folderPath.vm -Force
 
-Write-Verbose -Message 'The volume creation has been completed.'
+WriteLog -Context $env:ComputerName -Message 'The volume creation has been completed.'
 
 Stop-Transcript

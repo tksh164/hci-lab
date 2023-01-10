@@ -1,3 +1,29 @@
+function WriteLog
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, Position = 0)]
+        [string] $Context,
+
+        [Parameter(Mandatory = $true, Position = 1, ValueFromPipeline)]
+        [string] $Message,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateSet('Verbose', 'Warning', 'Error', 'Debug', 'Otput', 'Host')]
+        [string] $Type = 'Verbose'
+    )
+
+    $builtMessage = '{0} [{1}] {2}' -f [DateTime]::Now.ToString('yyyy-MM-ddTHH:mm:ss'), $Context, $Message
+    switch ($Type) {
+        'Warning' { Write-Warning -Message $builtMessage }
+        'Error'   { Write-Error -Message $builtMessage }
+        'Debug'   { Write-Debug -Message $builtMessage }
+        'Otput'   { Write-Output -InputObject $builtMessage }
+        'Host'    { Write-Host -Object $builtMessage }
+        default   { Write-Verbose -Message $builtMessage }
+    }
+}
+
 function GetConfigParameters
 {
     [CmdletBinding()]

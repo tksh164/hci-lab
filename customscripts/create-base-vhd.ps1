@@ -55,13 +55,13 @@ function CreateVhdFileFromIso
     Convert-WindowsImage @params
 }
 
-# Create the temp folder if it does not exist.
+WriteLog -Context $env:ComputerName -Message 'Creating the temp folder if it does not exist...'
 New-Item -ItemType Directory -Path $configParams.labHost.folderPath.temp -Force
 
-# Create the VHD folder if it does not exist.
+WriteLog -Context $env:ComputerName -Message 'Creating the VHD folder if it does not exist...'
 New-Item -ItemType Directory -Path $configParams.labHost.folderPath.vhd -Force
 
-# Download the Convert-WindowsImage.ps1.
+WriteLog -Context $env:ComputerName -Message 'Downloading the Convert-WindowsImage.ps1...'
 $params = @{
     SourceUri      = 'https://raw.githubusercontent.com/x0nn/Convert-WindowsImage/main/Convert-WindowsImage.ps1'
     DownloadFolder = $configParams.labHost.folderPath.temp
@@ -70,7 +70,7 @@ $params = @{
 $convertWimScriptFile = DownloadFile @params
 $convertWimScriptFile
 
-# Import the Convert-WindowsImage.ps1.
+WriteLog -Context $env:ComputerName -Message 'Importing the Convert-WindowsImage.ps1...'
 Import-Module -Name $convertWimScriptFile.FullName -Force
 
 $updatesFolderPath = [IO.Path]::Combine($configParams.labHost.folderPath.updates, $configParams.hciNode.operatingSystem)
@@ -104,6 +104,6 @@ if ($configParams.hciNode.operatingSystem -ne 'ws2022') {
     CreateVhdFileFromIso @params
 }
 
-Write-Verbose -Message 'The base VHDs creation has been completed.'
+WriteLog -Context $env:ComputerName -Message 'The base VHDs creation has been completed.'
 
 Stop-Transcript

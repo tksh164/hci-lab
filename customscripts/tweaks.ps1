@@ -12,15 +12,15 @@ $configParams = GetConfigParameters
 Start-Transcript -OutputDirectory $configParams.labHost.folderPath.transcript
 $configParams | ConvertTo-Json -Depth 16
 
-# Stop Server Manager launch at logon.
+WriteLog -Context $env:ComputerName -Message 'Stop Server Manager launch at logon.'
 Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotOpenServerManagerAtLogon' -Value 1
 
-# Stop Windows Admin Center popup at Server Manager launch.
+WriteLog -Context $env:ComputerName -Message 'Stop Windows Admin Center popup at Server Manager launch.'
 Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotPopWACConsoleAtSMLaunch' -Value 1
 
-# Hide the Network Location wizard. All networks will be Public.
+WriteLog -Context $env:ComputerName -Message 'Hide the Network Location wizard. All networks will be Public.'
 New-Item -ItemType Directory -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -Name 'NewNetworkWindowOff'
 
-Write-Verbose -Message 'Some tweaks have been completed.'
+WriteLog -Context $env:ComputerName -Message 'Some tweaks have been completed.'
 
 Stop-Transcript

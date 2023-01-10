@@ -55,15 +55,15 @@ function DownloadIso
 # Create the download folder if it does not exist.
 New-Item -ItemType Directory -Path $configParams.labHost.folderPath.temp -Force
 
-Write-Verbose -Message 'Downloading the ISO file...'
+WriteLog -Context $env:ComputerName -Message 'Downloading the ISO file...'
 DownloadIso -OperatingSystem $configParams.hciNode.operatingSystem -Culture $configParams.guestOS.culture -DownloadFolderPath $configParams.labHost.folderPath.temp
 
 if ($configParams.hciNode.operatingSystem -ne 'ws2022') {
     # The Windows Server 2022 ISO is always needed for the domain controller VM.
-    Write-Verbose -Message 'Downloading Windows Server 2022 ISO file...'
+    WriteLog -Context $env:ComputerName -Message 'Downloading Windows Server 2022 ISO file...'
     DownloadIso -OperatingSystem 'ws2022' -Culture $configParams.guestOS.culture -DownloadFolderPath $configParams.labHost.folderPath.temp
 }
 
-Write-Verbose -Message 'The ISO download has been completed.'
+WriteLog -Context $env:ComputerName -Message 'The ISO download has been completed.'
 
 Stop-Transcript
