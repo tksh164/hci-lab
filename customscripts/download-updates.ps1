@@ -81,14 +81,14 @@ if (-not $configParams.guestOS.applyUpdates) { return }
 # Create the updates folder if it does not exist.
 New-Item -ItemType Directory -Path $configParams.labHost.folderPath.updates -Force
 
-WriteLog -Context $env:ComputerName -Message 'Downloading updates...'
+'Downloading updates...' | WriteLog -Context $env:ComputerName
 DownloadUpdates -OperatingSystem $configParams.hciNode.operatingSystem -DownloadFolderBasePath $configParams.labHost.folderPath.updates
 
 if ($configParams.hciNode.operatingSystem -ne 'ws2022') {
-    WriteLog -Context $env:ComputerName -Message 'Downloading Windows Server 2022 updates...'
+    'Downloading Windows Server 2022 updates...' | WriteLog -Context $env:ComputerName
     DownloadUpdates -OperatingSystem 'ws2022' -DownloadFolderBasePath $configParams.labHost.folderPath.updates
 }
 
-WriteLog -Context $env:ComputerName -Message 'The updates download has been completed.'
+'The updates download has been completed.' | WriteLog -Context $env:ComputerName
 
 Stop-Transcript

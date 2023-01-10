@@ -12,7 +12,7 @@ $configParams = GetConfigParameters
 Start-Transcript -OutputDirectory $configParams.labHost.folderPath.transcript
 $configParams | ConvertTo-Json -Depth 16
 
-WriteLog -Context $env:ComputerName -Message 'Creating the HCI node VMs configuraton...'
+'Creating the HCI node VMs configuraton...' | WriteLog -Context $env:ComputerName
 
 $adminPassword = GetSecret -KeyVaultName $configParams.keyVault.name -SecretName $configParams.keyVault.secretName
 
@@ -50,7 +50,7 @@ for ($i = 0; $i -lt $configParams.hciNode.nodeCount; $i++) {
 $hciNodeConfigs | ConvertTo-Json -Depth 16
 
 foreach ($nodeConfig in $hciNodeConfigs) {
-    WriteLog -Context $nodeConfig.VMName -Message 'Creating the OS disk...'
+    'Creating the OS disk...' | WriteLog -Context $nodeConfig.VMName
     $params = @{
         Differencing = $true
         ParentPath   = [IO.Path]::Combine($configParams.labHost.folderPath.vhd, ('{0}_{1}.vhdx' -f $nodeConfig.OperatingSystem, $nodeConfig.GuestOSCulture))
@@ -58,7 +58,7 @@ foreach ($nodeConfig in $hciNodeConfigs) {
     }
     $vmOSDiskVhd = New-VHD  @params
 
-    WriteLog -Context $nodeConfig.VMName -Message 'Creating the VM...'
+    'Creating the VM...' | WriteLog -Context $nodeConfig.VMName
     $params = @{
         Name       = $nodeConfig.VMName
         Path       = $configParams.labHost.folderPath.vm
@@ -67,10 +67,10 @@ foreach ($nodeConfig in $hciNodeConfigs) {
     }
     New-VM @params
     
-    WriteLog -Context $nodeConfig.VMName -Message 'Setting processor configuration...'
+    'Setting processor configuration...' | WriteLog -Context $nodeConfig.VMName
     Set-VMProcessor -VMName $nodeConfig.VMName -Count 8 -ExposeVirtualizationExtensions $true
 
-    WriteLog -Context $nodeConfig.VMName -Message 'Setting memory configuration...'
+    'Setting memory configuration...' | WriteLog -Context $nodeConfig.VMName
     $params = @{
         VMName               = $nodeConfig.VMName
         StartupBytes         = 54GB
@@ -80,7 +80,7 @@ foreach ($nodeConfig in $hciNodeConfigs) {
     }
     Set-VMMemory @params
     
-    WriteLog -Context $nodeConfig.VMName -Message 'Setting network adapter configuration...'
+    'Setting network adapter configuration...' | WriteLog -Context $nodeConfig.VMName
     Get-VMNetworkAdapter -VMName $nodeConfig.VMName | Remove-VMNetworkAdapter
 
     # Management
@@ -110,7 +110,7 @@ foreach ($nodeConfig in $hciNodeConfigs) {
     }
     Add-VMNetworkAdapter @params
 
-    WriteLog -Context $nodeConfig.VMName -Message 'Generating the unattend answer XML...'
+    'Generating the unattend answer XML...' | WriteLog -Context $nodeConfig.VMName
     $encodedAdminPassword = GetEncodedAdminPasswordForUnattendAnswerFile -Password $nodeConfig.AdminPassword
     $unattendAnswerFileContent = @'
     <?xml version="1.0" encoding="utf-8"?>
@@ -148,10 +148,10 @@ foreach ($nodeConfig in $hciNodeConfigs) {
     </unattend>
 '@ -f $encodedAdminPassword, $configParams.guestOS.culture, $nodeConfig.VMName
 
-    WriteLog -Context $nodeConfig.VMName -Message 'Injecting the unattend answer file to the VHD...'
+    'Injecting the unattend answer file to the VHD...' | WriteLog -Context $nodeConfig.VMName
     InjectUnattendAnswerFile -VhdPath $vmOSDiskVhd.Path -UnattendAnswerFileContent $unattendAnswerFileContent
 
-    WriteLog -Context $nodeConfig.VMName -Message 'Installing the roles and features to the VHD...'
+    'Installing the roles and features to the VHD...' | WriteLog -Context $nodeConfig.VMName
     $features = @(
         'Hyper-V',  # Note: https://twitter.com/pronichkin/status/1294308601276719104
         'Failover-Clustering',
@@ -163,15 +163,15 @@ foreach ($nodeConfig in $hciNodeConfigs) {
     )
     Install-WindowsFeature -Vhd $vmOSDiskVhd.Path -Name $features
 
-    WriteLog -Context $nodeConfig.VMName -Message 'Starting the VM...'
+    'Starting the VM...' | WriteLog -Context $nodeConfig.VMName
     while ((Start-VM -Name $nodeConfig.VMName -Passthru -ErrorAction SilentlyContinue) -eq $null) {
-        WriteLog -Context $nodeConfig.VMName -Message 'Will retry start the VM. Waiting for unmount the VHD...'
+        'Will retry start the VM. Waiting for unmount the VHD...' | WriteLog -Context $nodeConfig.VMName
         Start-Sleep -Seconds 5
     }
 }
 
 foreach ($nodeConfig in $hciNodeConfigs) {
-    WriteLog -Context $nodeConfig.VMName -Message 'Waiting for ready to the VM...'
+    'Waiting for ready to the VM...' | WriteLog -Context $nodeConfig.VMName
     $params = @{
         TypeName     = 'System.Management.Automation.PSCredential'
         ArgumentList = 'Administrator', $nodeConfig.AdminPassword
@@ -181,7 +181,7 @@ foreach ($nodeConfig in $hciNodeConfigs) {
 }
 
 foreach ($nodeConfig in $hciNodeConfigs) {
-    WriteLog -Context $nodeConfig.VMName -Message 'Configuring the VM...'
+    'Configuring the VM...' | WriteLog -Context $nodeConfig.VMName
 
     $params = @{
         TypeName     = 'System.Management.Automation.PSCredential'
@@ -198,22 +198,22 @@ foreach ($nodeConfig in $hciNodeConfigs) {
         $nodeConfig = $args[0]
 
         if ($nodeConfig.OperatingSystem -eq 'ws2022') {
-            WriteLog -Context $nodeConfig.VMName -Message 'Stop Server Manager launch at logon.'
+            'Stop Server Manager launch at logon.' | WriteLog -Context $nodeConfig.VMName
             Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotOpenServerManagerAtLogon' -Value 1
         
-            WriteLog -Context $nodeConfig.VMName -Message 'Stop Windows Admin Center popup at Server Manager launch.'
+            'Stop Windows Admin Center popup at Server Manager launch.' | WriteLog -Context $nodeConfig.VMName
             Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotPopWACConsoleAtSMLaunch' -Value 1
         
-            WriteLog -Context $nodeConfig.VMName -Message 'Hide the Network Location wizard. All networks will be Public.'
+            'Hide the Network Location wizard. All networks will be Public.' | WriteLog -Context $nodeConfig.VMName
             New-Item -ItemType Directory -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -Name 'NewNetworkWindowOff'
         }
     
-        WriteLog -Context $nodeConfig.VMName -Message 'Renaming the network adapters...'
+        'Renaming the network adapters...' | WriteLog -Context $nodeConfig.VMName
         Get-NetAdapterAdvancedProperty -RegistryKeyword 'HyperVNetworkAdapterName' | ForEach-Object -Process {
             Rename-NetAdapter -Name $_.Name -NewName $_.DisplayValue
         }
     
-        WriteLog -Context $nodeConfig.VMName -Message 'Setting the IP configuration on the network adapter...'
+        'Setting the IP configuration on the network adapter...' | WriteLog -Context $nodeConfig.VMName
 
         # Management
         $params = @{
@@ -224,7 +224,7 @@ foreach ($nodeConfig in $hciNodeConfigs) {
         }
         Get-NetAdapter -Name $nodeConfig.NetAdapter.Management.Name | New-NetIPAddress @params
 
-        WriteLog -Context $nodeConfig.VMName -Message 'Setting the DNS configuration on the network adapter...'
+        'Setting the DNS configuration on the network adapter...' | WriteLog -Context $nodeConfig.VMName
         Get-NetAdapter -Name $nodeConfig.NetAdapter.Management.Name |
             Set-DnsClientServerAddress -ServerAddresses $nodeConfig.NetAdapter.Management.DnsServerAddresses
     
@@ -245,7 +245,7 @@ foreach ($nodeConfig in $hciNodeConfigs) {
         Get-NetAdapter -Name $nodeConfig.NetAdapter.Storage2.Name | New-NetIPAddress @params
     }
 
-    WriteLog -Context $nodeConfig.VMName -Message 'Joining the VM the AD domain...'
+    'Joining the VM the AD domain...' | WriteLog -Context $nodeConfig.VMName
     $domainAdminCredential = CreateDomainCredential -DomainFqdn $configParams.addsDC.domainFqdn -Password $nodeConfig.AdminPassword
     $params = @{
         VMName                = $nodeConfig.VMName
@@ -255,19 +255,19 @@ foreach ($nodeConfig in $hciNodeConfigs) {
     }
     JoinVMToADDomain @params
     
-    WriteLog -Context $nodeConfig.VMName -Message 'Stopping the VM...'
+    'Stopping the VM...' | WriteLog -Context $nodeConfig.VMName
     Stop-VM -Name $nodeConfig.VMName
     
-    WriteLog -Context $nodeConfig.VMName -Message 'Starting the VM...'
+    'Starting the VM...' | WriteLog -Context $nodeConfig.VMName
     Start-VM -Name $nodeConfig.VMName
 }
 
 foreach ($nodeConfig in $hciNodeConfigs) {
-    WriteLog -Context $nodeConfig.VMName -Message 'Waiting for ready to the VM...'
+    'Waiting for ready to the VM...' | WriteLog -Context $nodeConfig.VMName
     $domainAdminCredential = CreateDomainCredential -DomainFqdn $configParams.addsDC.domainFqdn -Password $nodeConfig.AdminPassword
     WaitingForReadyToVM -VMName $nodeConfig.VMName -Credential $domainAdminCredential
 }
 
-WriteLog -Context $env:ComputerName -Message 'The HCI node VMs creation has been completed.'
+'The HCI node VMs creation has been completed.' | WriteLog -Context $env:ComputerName
 
 Stop-Transcript

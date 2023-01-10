@@ -12,7 +12,7 @@ $configParams = GetConfigParameters
 Start-Transcript -OutputDirectory $configParams.labHost.folderPath.transcript
 $configParams | ConvertTo-Json -Depth 16
 
-WriteLog -Context $env:ComputerName -Message 'Creating a storage pool...'
+'Creating a storage pool...' | WriteLog -Context $env:ComputerName
 $params = @{
     FriendlyName                 = $configParams.labHost.storage.poolName
     StorageSubSystemFriendlyName = '*storage*'
@@ -23,7 +23,7 @@ if ((Get-StoragePool -FriendlyName $params.FriendlyName -ErrorAction SilentlyCon
     throw 'Storage pool creation failed.'
 }
 
-WriteLog -Context $env:ComputerName -Message 'Creating a volume...'
+'Creating a volume...' | WriteLog -Context $env:ComputerName
 $params = @{
     StoragePoolFriendlyName = $configParams.labHost.storage.poolName
     FileSystem              = 'NTFS'
@@ -38,19 +38,19 @@ if ((Get-Volume -DriveLetter $params.DriveLetter -ErrorAction SilentlyContinue).
     throw 'Volume creation failed.'
 }
 
-WriteLog -Context $env:ComputerName -Message 'Setting Defender exclusions...'
+'Setting Defender exclusions...' | WriteLog -Context $env:ComputerName
 $exclusionPath = $configParams.labHost.storage.driveLetter + ':\'
 Add-MpPreference -ExclusionPath $exclusionPath
 if ((Get-MpPreference).ExclusionPath -notcontains $exclusionPath) {
     throw 'Defender exclusion setting failed.'
 }
 
-WriteLog -Context $env:ComputerName -Message 'Creating the folder structure on the volume...'
+'Creating the folder structure on the volume...' | WriteLog -Context $env:ComputerName
 New-Item -ItemType Directory -Path $configParams.labHost.folderPath.temp -Force
 New-Item -ItemType Directory -Path $configParams.labHost.folderPath.updates -Force
 New-Item -ItemType Directory -Path $configParams.labHost.folderPath.vhd -Force
 New-Item -ItemType Directory -Path $configParams.labHost.folderPath.vm -Force
 
-WriteLog -Context $env:ComputerName -Message 'The volume creation has been completed.'
+'The volume creation has been completed.' | WriteLog -Context $env:ComputerName
 
 Stop-Transcript
