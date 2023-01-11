@@ -98,10 +98,7 @@ $features = @(
 Install-WindowsFeature -Vhd $vmOSDiskVhd.Path -Name $features -IncludeManagementTools
 
 'Starting the VM...' | WriteLog -Context $vmName
-while ((Start-VM -Name $vmName -Passthru -ErrorAction SilentlyContinue) -eq $null) {
-    'Will retry start the VM. Waiting for unmount the VHD...' | WriteLog -Context $vmName
-    Start-Sleep -Seconds 5
-}
+WaitingForStartingVM -VMName $vmName
 
 'Waiting for ready to the VM...' | WriteLog -Context $vmName
 $params = @{

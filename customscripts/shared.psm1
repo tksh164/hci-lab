@@ -170,6 +170,23 @@ function InjectUnattendAnswerFile
     Remove-Item $vhdMountPath
 }
 
+function WaitingForStartingVM
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $VMName,
+
+        [Parameter(Mandatory = $false)]
+        [int] $CheckInternal = 5
+    )
+
+    while ((Start-VM -Name $VMName -Passthru -ErrorAction SilentlyContinue) -eq $null) {
+        'Will retry start the VM. Waiting for unmount the VHD...' | WriteLog -Context $VMName
+        Start-Sleep -Seconds $CheckInternal
+    }
+}
+
 function WaitingForReadyToVM
 {
     [CmdletBinding()]

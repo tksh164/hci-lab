@@ -129,10 +129,7 @@ foreach ($nodeConfig in $hciNodeConfigs) {
     Install-WindowsFeature -Vhd $vmOSDiskVhd.Path -Name $features
 
     'Starting the VM...' | WriteLog -Context $nodeConfig.VMName
-    while ((Start-VM -Name $nodeConfig.VMName -Passthru -ErrorAction SilentlyContinue) -eq $null) {
-        'Will retry start the VM. Waiting for unmount the VHD...' | WriteLog -Context $nodeConfig.VMName
-        Start-Sleep -Seconds 5
-    }
+    WaitingForStartingVM -VMName $nodeConfig.VMName
 }
 
 foreach ($nodeConfig in $hciNodeConfigs) {
