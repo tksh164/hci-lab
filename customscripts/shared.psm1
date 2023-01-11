@@ -156,16 +156,16 @@ function InjectUnattendAnswerFile
 
     $vhdMountPath = 'C:\tempmount'
 
-    'Mouting the VHD...' | WriteLog -Context 'shared'
+    'Mouting the VHD...' | WriteLog -Context $VhdPath
     New-Item -ItemType Directory -Path $vhdMountPath -Force
     Mount-WindowsImage -Path $vhdMountPath -Index 1 -ImagePath $VhdPath
 
-    'Create the unattend answer file in the VHD...' | WriteLog -Context 'shared'
+    'Create the unattend answer file in the VHD...' | WriteLog -Context $VhdPath
     $pantherPath = [IO.Path]::Combine($vhdMountPath, 'Windows', 'Panther')
     New-Item -ItemType Directory -Path $pantherPath -Force
     Set-Content -Path ([IO.Path]::Combine($pantherPath, 'unattend.xml')) -Value $UnattendAnswerFileContent -Force
 
-    'Dismouting the VHD...' | WriteLog -Context 'shared'
+    'Dismouting the VHD...' | WriteLog -Context $VhdPath
     Dismount-WindowsImage -Path $vhdMountPath -Save
     Remove-Item $vhdMountPath
 }
@@ -209,7 +209,7 @@ function WaitingForReadyToVM
     }
     while ((Invoke-Command @params) -ne 'ready') {
         Start-Sleep -Seconds $CheckInternal
-        'Waiting...' | WriteLog -Context 'shared'
+        'Waiting...' | WriteLog -Context $VMName
     }    
 }
 
