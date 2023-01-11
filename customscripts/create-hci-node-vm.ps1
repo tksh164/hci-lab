@@ -111,42 +111,7 @@ foreach ($nodeConfig in $hciNodeConfigs) {
     Add-VMNetworkAdapter @params
 
     'Generating the unattend answer XML...' | WriteLog -Context $nodeConfig.VMName
-    $encodedAdminPassword = GetEncodedAdminPasswordForUnattendAnswerFile -Password $nodeConfig.AdminPassword
-    $unattendAnswerFileContent = @'
-    <?xml version="1.0" encoding="utf-8"?>
-    <unattend xmlns="urn:schemas-microsoft-com:unattend">
-        <servicing></servicing>
-        <settings pass="oobeSystem">
-            <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-                <UserAccounts>
-                    <AdministratorPassword>
-                        <Value>{0}</Value>
-                        <PlainText>false</PlainText>
-                    </AdministratorPassword>
-                </UserAccounts>
-                <OOBE>
-                    <SkipMachineOOBE>true</SkipMachineOOBE>
-                    <SkipUserOOBE>true</SkipUserOOBE>
-                </OOBE>
-            </component>
-        </settings>
-        <settings pass="specialize">
-            <component name="Microsoft-Windows-International-Core" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-                <InputLocale>{1}</InputLocale>
-                <SystemLocale>{1}</SystemLocale>
-                <UILanguage>{1}</UILanguage>
-                <UserLocale>{1}</UserLocale>
-            </component>
-            <component name="Microsoft-Windows-TerminalServices-LocalSessionManager" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-                <fDenyTSConnections>false</fDenyTSConnections>
-            </component>
-            <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-                <ComputerName>{2}</ComputerName>
-                <TimeZone>UTC</TimeZone>
-            </component>
-        </settings>
-    </unattend>
-'@ -f $encodedAdminPassword, $configParams.guestOS.culture, $nodeConfig.VMName
+    $unattendAnswerFileContent = GetUnattendAnswerFileContent -ComputerName $nodeConfig.VMName -Password $nodeConfig.AdminPassword -Culture $configParams.guestOS.culture
 
     'Injecting the unattend answer file to the VHD...' | WriteLog -Context $nodeConfig.VMName
     InjectUnattendAnswerFile -VhdPath $vmOSDiskVhd.Path -UnattendAnswerFileContent $unattendAnswerFileContent
