@@ -71,12 +71,18 @@ foreach ($nodeConfig in $hciNodeConfigs) {
     Set-VMProcessor -VMName $nodeConfig.VMName -Count 8 -ExposeVirtualizationExtensions $true
 
     'Setting memory configuration...' | WriteLog -Context $nodeConfig.VMName
+    $totalRam = (Get-ComputerInfo).OsTotalVisibleMemorySize * 1KB
+    $labHostRam = 6GB
+    $addsDcVMRam = (Get-VM -Name 'addsdc').MemoryStartup
+    $wacVMRam = (Get-VM -Name 'wac').MemoryStartup
+    # StartupBytes should be a multiple of 2 MB (2 * 1024 * 1024 bytes).
+    $hciNodeRam = [Math]::Floor((($totalRam - $labHostRam - $addsDcVMRam - $wacVMRam) / $configParams.hciNode.nodeCount) / 2MB) * 2MB
     $params = @{
         VMName               = $nodeConfig.VMName
-        StartupBytes         = 54GB
+        StartupBytes         = $hciNodeRam
         DynamicMemoryEnabled = $true
         MinimumBytes         = 512MB
-        MaximumBytes         = 54GB
+        MaximumBytes         = $hciNodeRam
     }
     Set-VMMemory @params
     
