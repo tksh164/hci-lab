@@ -12,11 +12,17 @@ $configParams = GetConfigParameters
 Start-Transcript -OutputDirectory $configParams.labHost.folderPath.transcript
 $configParams | ConvertTo-Json -Depth 16
 
-function CreateVhdFileFromIso
+function CreateVhdFileFromIsoJobParameter
 {
     param (
         [Parameter(Mandatory = $true)]
+        [string] $ModulePath,
+
+        [Parameter(Mandatory = $true)]
         [string] $IsoFolder,
+
+        [Parameter(Mandatory = $true)]
+        [string] $UpdatesFolder,
 
         [Parameter(Mandatory = $true)]
         [string] $VhdFolder,
@@ -31,26 +37,47 @@ function CreateVhdFileFromIso
         [int] $ImageIndex,
 
         [Parameter(Mandatory = $true)]
-        [string] $WorkFolder,
-
-        [Parameter(Mandatory = $false)]
-        [string[]] $UpdatePackage = @()
+        [string] $WorkFolder
     )
 
+    $jobParams = @{
+        ModulePath      = $ModulePath
+        IsoFolder       = $IsoFolder
+        VhdFolder       = $VhdFolder
+        OperatingSystem = $OperatingSystem
+        Culture         = $Culture
+        ImageIndex      = $ImageIndex
+        WorkFolder      = $WorkFolder
+        UpdatePackage   = @()
+    }
+
+    $updatesFolderPath = [IO.Path]::Combine($UpdatesFolder, $OperatingSystem)
+    if (Test-Path -PathType Container -LiteralPath $updatesFolderPath) {
+        $jobParams.UpdatePackage += Get-ChildItem -LiteralPath $updatesFolderPath | Select-Object -ExpandProperty 'FullName'
+    }
+    
+    $jobParams
+}
+
+function CreateVhdFileFromIsoAsJob
+{
+    $jobParams = $args[0]
+    Import-Module -Name $jobParams.ModulePath -Force
+
     $params = @{
-        SourcePath    = [IO.Path]::Combine($IsoFolder, ('{0}_{1}.iso' -f $OperatingSystem, $Culture))
-        Edition       = $ImageIndex
-        VHDPath       = [IO.Path]::Combine($VhdFolder, ('{0}_{1}.vhdx' -f $OperatingSystem, $Culture))
+        SourcePath    = [IO.Path]::Combine($jobParams.IsoFolder, ('{0}_{1}.iso' -f $jobParams.OperatingSystem, $jobParams.Culture))
+        Edition       = $jobParams.ImageIndex
+        VHDPath       = [IO.Path]::Combine($jobParams.VhdFolder, ('{0}_{1}.vhdx' -f $jobParams.OperatingSystem, $jobParams.Culture))
         VHDFormat     = 'VHDX'
         IsFixed       = $false
         DiskLayout    = 'UEFI'
         SizeBytes     = 127GB
-        TempDirectory = $WorkFolder
+        TempDirectory = $jobParams.WorkFolder
         Passthru      = $true
         Verbose       = $true
     }
-    if ($UpdatePackage.Length -ne 0) {
-        $params.Package = $UpdatePackage | Sort-Object
+    if ($jobParams.UpdatePackage.Count -ne 0) {
+        $params.Package = $jobParams.UpdatePackage | Sort-Object
     }
     Convert-WindowsImage @params
 }
@@ -70,39 +97,43 @@ $params = @{
 $convertWimScriptFile = DownloadFile @params
 $convertWimScriptFile
 
-'Importing the Convert-WindowsImage.ps1...' | WriteLog -Context $env:ComputerName
-Import-Module -Name $convertWimScriptFile.FullName -Force
+'Creating the base VHD creation jobs.' | WriteLog -Context $env:ComputerName
+$jobs = @()
 
-$updatesFolderPath = [IO.Path]::Combine($configParams.labHost.folderPath.updates, $configParams.hciNode.operatingSystem)
 $params = @{
+    ModulePath      = $convertWimScriptFile.FullName
     IsoFolder       = $configParams.labHost.folderPath.temp
+    UpdatesFolder   = $configParams.labHost.folderPath.updates
     VhdFolder       = $configParams.labHost.folderPath.vhd
     OperatingSystem = $configParams.hciNode.operatingSystem
     Culture         = $configParams.guestOS.culture
     ImageIndex      = $configParams.hciNode.imageIndex
     WorkFolder      = $configParams.labHost.folderPath.temp
 }
-if (Test-Path -PathType Container -LiteralPath $updatesFolderPath) {
-    $params.UpdatePackage = Get-ChildItem -LiteralPath $updatesFolderPath | Select-Object -ExpandProperty 'FullName'
-}
-CreateVhdFileFromIso @params
+$jobParams = CreateVhdFileFromIsoJobParameter @params
+$jobs += Start-Job -ArgumentList $jobParams -ScriptBlock ${function:CreateVhdFileFromIsoAsJob}
 
 if ($configParams.hciNode.operatingSystem -ne 'ws2022') {
     # The Windows Server 2022 VHD is always needed for the domain controller VM.
-    $updatesFolderPath = [IO.Path]::Combine($configParams.labHost.folderPath.updates, 'ws2022')
     $params = @{
+        ModulePath      = $convertWimScriptFile.FullName
         IsoFolder       = $configParams.labHost.folderPath.temp
+        UpdatesFolder   = $configParams.labHost.folderPath.updates
         VhdFolder       = $configParams.labHost.folderPath.vhd
         OperatingSystem = 'ws2022'
         Culture         = $configParams.guestOS.culture
         ImageIndex      = 4  # Datacenter with Desktop Experience
         WorkFolder      = $configParams.labHost.folderPath.temp
     }
-    if (Test-Path -PathType Container -LiteralPath $updatesFolderPath) {
-        $params.UpdatePackage = Get-ChildItem -LiteralPath $updatesFolderPath | Select-Object -ExpandProperty 'FullName'
-    }
-    CreateVhdFileFromIso @params
+    $jobParams = CreateVhdFileFromIsoJobParameter @params
+    $jobs += Start-Job -ArgumentList $jobParams -ScriptBlock ${function:CreateVhdFileFromIsoAsJob}
 }
+
+'Waiting for the base VHD creation jobs.' | WriteLog -Context $env:ComputerName
+$jobs | Format-Table -Property Id, Name, PSJobTypeName, State, HasMoreData, Location, PSBeginTime, PSEndTime, InstanceId
+$jobs | Wait-Job
+$jobs | Format-Table -Property Id, Name, PSJobTypeName, State, HasMoreData, Location, PSBeginTime, PSEndTime, InstanceId
+$jobs | Receive-Job
 
 'The base VHDs creation has been completed.' | WriteLog -Context $env:ComputerName
 
