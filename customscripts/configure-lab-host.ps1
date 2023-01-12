@@ -12,41 +12,6 @@ $configParams = GetConfigParameters
 Start-Transcript -OutputDirectory $configParams.labHost.folderPath.transcript
 $configParams | ConvertTo-Json -Depth 16
 
-# Hyper-V
-
-'Configuring Hyper-V host settings...' | WriteLog -Context $env:ComputerName
-$params = @{
-    VirtualMachinePath        = $configParams.labHost.folderPath.vm
-    VirtualHardDiskPath       = $configParams.labHost.folderPath.vhd
-    EnableEnhancedSessionMode = $true
-}
-Set-VMHost @params
-
-'Creating a NAT vSwitch...' | WriteLog -Context $env:ComputerName
-$params = @{
-    Name        = $configParams.labHost.vSwitch.nat.name
-    SwitchType  = 'Internal'
-}
-New-VMSwitch @params
-
-'Creating a network NAT...' | WriteLog -Context $env:ComputerName
-$params = @{
-    Name                             = $configParams.labHost.vSwitch.nat.name
-    InternalIPInterfaceAddressPrefix = $configParams.labHost.vSwitch.nat.subnet
-}
-New-NetNat @params
-
-'Assigning an IP address to the NAT vSwitch network interface...' | WriteLog -Context $env:ComputerName
-$params= @{
-    InterfaceIndex = (Get-NetAdapter | Where-Object { $_.Name -match $configParams.labHost.vSwitch.nat.name }).ifIndex
-    AddressFamily  = 'IPv4'
-    IPAddress      = $configParams.labHost.vSwitch.nat.hostIPAddress
-    PrefixLength   = $configParams.labHost.vSwitch.nat.hostPrefixLength
-}
-New-NetIPAddress @params
-
-'The Hyper-V configuration has been completed.' | WriteLog -Context $env:ComputerName
-
 # Volume
 
 'Creating a storage pool...' | WriteLog -Context $env:ComputerName
@@ -89,6 +54,41 @@ New-Item -ItemType Directory -Path $configParams.labHost.folderPath.vhd -Force
 New-Item -ItemType Directory -Path $configParams.labHost.folderPath.vm -Force
 
 'The volume creation has been completed.' | WriteLog -Context $env:ComputerName
+
+# Hyper-V
+
+'Configuring Hyper-V host settings...' | WriteLog -Context $env:ComputerName
+$params = @{
+    VirtualMachinePath        = $configParams.labHost.folderPath.vm
+    VirtualHardDiskPath       = $configParams.labHost.folderPath.vhd
+    EnableEnhancedSessionMode = $true
+}
+Set-VMHost @params
+
+'Creating a NAT vSwitch...' | WriteLog -Context $env:ComputerName
+$params = @{
+    Name        = $configParams.labHost.vSwitch.nat.name
+    SwitchType  = 'Internal'
+}
+New-VMSwitch @params
+
+'Creating a network NAT...' | WriteLog -Context $env:ComputerName
+$params = @{
+    Name                             = $configParams.labHost.vSwitch.nat.name
+    InternalIPInterfaceAddressPrefix = $configParams.labHost.vSwitch.nat.subnet
+}
+New-NetNat @params
+
+'Assigning an IP address to the NAT vSwitch network interface...' | WriteLog -Context $env:ComputerName
+$params= @{
+    InterfaceIndex = (Get-NetAdapter | Where-Object { $_.Name -match $configParams.labHost.vSwitch.nat.name }).ifIndex
+    AddressFamily  = 'IPv4'
+    IPAddress      = $configParams.labHost.vSwitch.nat.hostIPAddress
+    PrefixLength   = $configParams.labHost.vSwitch.nat.hostPrefixLength
+}
+New-NetIPAddress @params
+
+'The Hyper-V configuration has been completed.' | WriteLog -Context $env:ComputerName
 
 # Tweaks
 
