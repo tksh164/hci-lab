@@ -167,6 +167,20 @@
         "cloudWitnessStorageAccountDeploymentName": "cloud-witness-storage-account",
         "cloudWitnessStorageAccountLinkedTemplateUri": "[uri(variables('repoUriBase'), 'linkedtemplates/cloudwitness.json')]",
 
+        // DSC extension
+
+        "dscLinkedTemplateUri": "[uri(variables('repoUriBase'), 'linkedtemplates/dsc.json')]",
+        "dscBaseUri": "[uri(variables('repoUriBase'), 'dsc/')]",  // Must end with "/".
+        "dscExtensionName": "hci-lab-configuration-dsc",
+        "dscParams": {
+            "installRolesFeatures": {
+                "deploymentName": "roles-and-features-installation",
+                "zipUri": "[uri(variables('dscBaseUri'), 'install-roles-and-features.zip')]",
+                "scriptName": "install-roles-and-features.ps1",
+                "functionName": "install-roles-and-features"
+            }
+        },
+
         // Custom script extension
 
         "customScriptLinkedTemplateUri": "[uri(variables('repoUriBase'), 'linkedtemplates/customscript.json')]",
@@ -244,20 +258,6 @@
                     "[uri(variables('customScriptBaseUri'), 'shared.psm1')]"
                 ],
                 "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\create-hci-node-vm.ps1"
-            }
-        },
-
-        // DSC extension
-
-        "dscLinkedTemplateUri": "[uri(variables('repoUriBase'), 'linkedtemplates/dsc.json')]",
-        "dscBaseUri": "[uri(variables('repoUriBase'), 'dsc/')]",  // Must end with "/".
-        "dscExtensionName": "hci-lab-configuration-dsc",
-        "dscParams": {
-            "installRolesFeatures": {
-                "deploymentName": "roles-and-features-installation",
-                "zipUri": "[uri(variables('dscBaseUri'), 'install-roles-and-features.zip')]",
-                "scriptName": "install-roles-and-features.ps1",
-                "functionName": "install-roles-and-features"
             }
         },
 
