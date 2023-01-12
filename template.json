@@ -479,13 +479,50 @@
             }
         },
 
+        // Install roles and features.
+        {
+            "name": "[variables('dscParams').installRolesFeatures.deploymentName]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2021-04-01",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', variables('labHostVmDeploymentName'))]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('dscLinkedTemplateUri')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
+                    "parentVmResourceName": {
+                        "value": "[parameters('labHostVmName')]"
+                    },
+                    "extensionName": {
+                        "value": "[variables('dscExtensionName')]"
+                    },
+                    "zipUri": {
+                        "value": "[variables('dscParams').installRolesFeatures.zipUri]"
+                    },
+                    "scriptName": {
+                        "value": "[variables('dscParams').installRolesFeatures.scriptName]"
+                    },
+                    "functionName": {
+                        "value": "[variables('dscParams').installRolesFeatures.functionName]"
+                    }
+                }
+            }
+        },
+
         // Tweaks.
         {
             "name": "[variables('customScriptParams').tweaks.deploymentName]",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2021-04-01",
             "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', variables('labHostVmDeploymentName'))]"
+                "[resourceId('Microsoft.Resources/deployments', variables('dscParams').installRolesFeatures.deploymentName)]"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -651,50 +688,13 @@
             }
         },
 
-        // Install roles and features.
-        {
-            "name": "[variables('dscParams').installRolesFeatures.deploymentName]",
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2021-04-01",
-            "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', variables('customScriptParams').createBaseVhd.deploymentName)]"
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('dscLinkedTemplateUri')]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "location": {
-                        "value": "[variables('location')]"
-                    },
-                    "parentVmResourceName": {
-                        "value": "[parameters('labHostVmName')]"
-                    },
-                    "extensionName": {
-                        "value": "[variables('dscExtensionName')]"
-                    },
-                    "zipUri": {
-                        "value": "[variables('dscParams').installRolesFeatures.zipUri]"
-                    },
-                    "scriptName": {
-                        "value": "[variables('dscParams').installRolesFeatures.scriptName]"
-                    },
-                    "functionName": {
-                        "value": "[variables('dscParams').installRolesFeatures.functionName]"
-                    }
-                }
-            }
-        },
-
         // Configure Hyper-V settings.
         {
             "name": "[variables('customScriptParams').configureHyperV.deploymentName]",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2021-04-01",
             "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', variables('dscParams').installRolesFeatures.deploymentName)]"
+                "[resourceId('Microsoft.Resources/deployments', variables('customScriptParams').createBaseVhd.deploymentName)]"
             ],
             "properties": {
                 "mode": "Incremental",
