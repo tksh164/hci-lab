@@ -195,21 +195,13 @@
                 ],
                 "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\configure-lab-host.ps1"
             },
-            "downloadIso": {
-                "deploymentName": "iso-download",
+            "downloadIsoUpdates": {
+                "deploymentName": "iso-and-updates-download",
                 "fileUris": [
-                    "[uri(variables('customScriptBaseUri'), 'download-iso.ps1')]",
+                    "[uri(variables('customScriptBaseUri'), 'download-iso-updates.ps1')]",
                     "[uri(variables('customScriptBaseUri'), 'shared.psm1')]"
                 ],
-                "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\download-iso.ps1"
-            },
-            "downloadUpdate": {
-                "deploymentName": "updates-download",
-                "fileUris": [
-                    "[uri(variables('customScriptBaseUri'), 'download-updates.ps1')]",
-                    "[uri(variables('customScriptBaseUri'), 'shared.psm1')]"
-                ],
-                "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\download-updates.ps1"
+                "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\download-iso-updates.ps1"
             },
             "createBaseVhd": {
                 "deploymentName": "base-vhd-creation",
@@ -534,9 +526,9 @@
             }
         },
 
-        // Download ISO files.
+        // Download ISO files and updates.
         {
-            "name": "[variables('customScriptParams').downloadIso.deploymentName]",
+            "name": "[variables('customScriptParams').downloadIsoUpdates.deploymentName]",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2021-04-01",
             "dependsOn": [
@@ -559,45 +551,10 @@
                         "value": "[variables('customScriptExtensionName')]"
                     },
                     "fileUris": {
-                        "value": "[variables('customScriptParams').downloadIso.fileUris]"
+                        "value": "[variables('customScriptParams').downloadIsoUpdates.fileUris]"
                     },
                     "commandToExecute": {
-                        "value": "[variables('customScriptParams').downloadIso.commandToExecute]"
-                    }
-                }
-            }
-        },
-
-        // Download updates.
-        {
-            "condition": "[variables('configParameters').guestOS.applyUpdates]",
-            "name": "[variables('customScriptParams').downloadUpdate.deploymentName]",
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2021-04-01",
-            "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', variables('customScriptParams').downloadIso.deploymentName)]"
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('customScriptLinkedTemplateUri')]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "location": {
-                        "value": "[variables('location')]"
-                    },
-                    "parentVmResourceName": {
-                        "value": "[parameters('labHostVmName')]"
-                    },
-                    "extensionName": {
-                        "value": "[variables('customScriptExtensionName')]"
-                    },
-                    "fileUris": {
-                        "value": "[variables('customScriptParams').downloadUpdate.fileUris]"
-                    },
-                    "commandToExecute": {
-                        "value": "[variables('customScriptParams').downloadUpdate.commandToExecute]"
+                        "value": "[variables('customScriptParams').downloadIsoUpdates.commandToExecute]"
                     }
                 }
             }
@@ -609,8 +566,7 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2021-04-01",
             "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', variables('customScriptParams').downloadIso.deploymentName)]",
-                "[resourceId('Microsoft.Resources/deployments', variables('customScriptParams').downloadUpdate.deploymentName)]"
+                "[resourceId('Microsoft.Resources/deployments', variables('customScriptParams').downloadIsoUpdates.deploymentName)]"
             ],
             "properties": {
                 "mode": "Incremental",
