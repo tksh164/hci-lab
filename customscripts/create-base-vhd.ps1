@@ -37,7 +37,10 @@ function CreateVhdFileFromIsoJobParameter
         [int] $ImageIndex,
 
         [Parameter(Mandatory = $true)]
-        [string] $WorkFolder
+        [string] $WorkFolder,
+
+        [Parameter(Mandatory = $true)]
+        [string] $LogFolder
     )
 
     $jobParams = @{
@@ -49,6 +52,7 @@ function CreateVhdFileFromIsoJobParameter
         ImageIndex      = $ImageIndex
         WorkFolder      = $WorkFolder
         UpdatePackage   = @()
+        LogFolder       = $LogFolder
     }
 
     $updatesFolderPath = [IO.Path]::Combine($UpdatesFolder, $OperatingSystem)
@@ -82,30 +86,47 @@ function CreateVhdFileFromIsoAsJob
     }
     $vhd = Convert-WindowsImage @params
 
-    # Optimize the VHD file.
-
     $dismExePath = Join-Path -Path $env:windir -ChildPath 'System32\dism.exe' -Resolve
     $vhdDisk = Mount-VHD -Path $vhd.ImagePath -Passthru | Get-Disk
     $vhdPartition = $vhdDisk | Get-Partition | Where-Object -Property IsHidden -EQ $false | Select-Object -First 1
-    $volumeRootPath = '{0}:\' -f $vhdPartition.DriveLetter
+    $volumeRootPath = '{0}:\\' -f $vhdPartition.DriveLetter  # Use \\ with intent because \ is meaning escape character in dism.
 
+    # Cleanup the VHD file.
     $params = @{
-        FilePath     = $dismExePath
-        ArgumentList = ('/Image:{0}' -f $volumeRootPath), '/Cleanup-Image', '/StartComponentCleanup', '/ResetBase'
-        NoNewWindow  = $true
-        Wait         = $true
-        PassThru     = $true
-        Verbose      = $true
+        FilePath               = $dismExePath
+        ArgumentList           = @(
+            ('/Image:"{0}"' -f $volumeRootPath),
+            '/Cleanup-Image',
+            '/StartComponentCleanup',
+            '/ResetBase',
+            '/LogLevel:3',
+            ('/LogPath:"{0}"' -f [IO.Path]::Combine($jobParams.LogFolder, ('{0}_{1}-cleanup-dism.txt' -f $jobParams.OperatingSystem, $jobParams.Culture)))
+        )
+        RedirectStandardOutput = [IO.Path]::Combine($jobParams.LogFolder, ('{0}_{1}-cleanup-stdout.txt' -f $jobParams.OperatingSystem, $jobParams.Culture))
+        RedirectStandardError  = [IO.Path]::Combine($jobParams.LogFolder, ('{0}_{1}-cleanup-stderr.txt' -f $jobParams.OperatingSystem, $jobParams.Culture))
+        NoNewWindow            = $true
+        Wait                   = $true
+        PassThru               = $true
+        Verbose                = $true
     }
     Start-Process @params
 
+    # Optimize the VHD file.
     $params = @{
-        FilePath     = $dismExePath
-        ArgumentList = ('/Image:{0}' -f $volumeRootPath), '/Optimize-Image', '/Boot'
-        NoNewWindow  = $true
-        Wait         = $true
-        PassThru     = $true
-        Verbose      = $true
+        FilePath               = $dismExePath
+        ArgumentList           = @(
+            ('/Image:"{0}"' -f $volumeRootPath),
+            '/Optimize-Image',
+            '/Boot',
+            '/LogLevel:3',
+            ('/LogPath:"{0}"' -f [IO.Path]::Combine($jobParams.LogFolder, ('{0}_{1}-optimize-dism.txt' -f $jobParams.OperatingSystem, $jobParams.Culture)))
+        )
+        RedirectStandardOutput = [IO.Path]::Combine($jobParams.LogFolder, ('{0}_{1}-optimize-stdout.txt' -f $jobParams.OperatingSystem, $jobParams.Culture))
+        RedirectStandardError  = [IO.Path]::Combine($jobParams.LogFolder, ('{0}_{1}-optimize-stderr.txt' -f $jobParams.OperatingSystem, $jobParams.Culture))
+        NoNewWindow            = $true
+        Wait                   = $true
+        PassThru               = $true
+        Verbose                = $true
     }
     Start-Process @params
 
@@ -139,6 +160,7 @@ $params = @{
     Culture         = $configParams.guestOS.culture
     ImageIndex      = $configParams.hciNode.imageIndex
     WorkFolder      = $configParams.labHost.folderPath.temp
+    LogFolder       = $configParams.labHost.folderPath.transcript
 }
 $jobParams = CreateVhdFileFromIsoJobParameter @params
 $jobs += Start-Job -ArgumentList $jobParams -ScriptBlock ${function:CreateVhdFileFromIsoAsJob}
@@ -154,15 +176,16 @@ if ($configParams.hciNode.operatingSystem -ne 'ws2022') {
         Culture         = $configParams.guestOS.culture
         ImageIndex      = 4  # Datacenter with Desktop Experience
         WorkFolder      = $configParams.labHost.folderPath.temp
+        LogFolder       = $configParams.labHost.folderPath.transcript
     }
     $jobParams = CreateVhdFileFromIsoJobParameter @params
     $jobs += Start-Job -ArgumentList $jobParams -ScriptBlock ${function:CreateVhdFileFromIsoAsJob}
 }
 
 'Waiting for the base VHD creation jobs.' | WriteLog -Context $env:ComputerName
-$jobs | Format-Table -Property Id, Name, PSJobTypeName, State, HasMoreData, Location, PSBeginTime, PSEndTime, InstanceId
+$jobs | Format-Table -Property Id, Name, PSJobTypeName, State, HasMoreData, Location, PSBeginTime, PSEndTime
 $jobs | Wait-Job
-$jobs | Format-Table -Property Id, Name, PSJobTypeName, State, HasMoreData, Location, PSBeginTime, PSEndTime, InstanceId
+$jobs | Format-Table -Property Id, Name, PSJobTypeName, State, HasMoreData, Location, PSBeginTime, PSEndTime
 $jobs | Receive-Job
 
 'The base VHDs creation has been completed.' | WriteLog -Context $env:ComputerName
