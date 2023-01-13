@@ -64,6 +64,7 @@ function CreateVhdFileFromIsoAsJob
     $jobParams = $args[0]
     Import-Module -Name $jobParams.ModulePath -Force
 
+    # Create a VHD file.
     $params = @{
         SourcePath    = [IO.Path]::Combine($jobParams.IsoFolder, ('{0}_{1}.iso' -f $jobParams.OperatingSystem, $jobParams.Culture))
         Edition       = $jobParams.ImageIndex
@@ -79,7 +80,36 @@ function CreateVhdFileFromIsoAsJob
     if ($jobParams.UpdatePackage.Count -ne 0) {
         $params.Package = $jobParams.UpdatePackage | Sort-Object
     }
-    Convert-WindowsImage @params
+    $vhd = Convert-WindowsImage @params
+
+    # Optimize the VHD file.
+
+    $dismExePath = Join-Path -Path $env:windir -ChildPath 'System32\dism.exe' -Resolve
+    $vhdDisk = Mount-VHD -Path $vhd.ImagePath -Passthru | Get-Disk
+    $vhdPartition = $vhdDisk | Get-Partition | Where-Object -Property IsHidden -EQ $false | Select-Object -First 1
+    $volumeRootPath = '{0}:\' -f $vhdPartition.DriveLetter
+
+    $params = @{
+        FilePath     = $dismExePath
+        ArgumentList = ('/Image:{0}' -f $volumeRootPath), '/Cleanup-Image', '/StartComponentCleanup', '/ResetBase'
+        NoNewWindow  = $true
+        Wait         = $true
+        PassThru     = $true
+        Verbose      = $true
+    }
+    Start-Process @params
+
+    $params = @{
+        FilePath     = $dismExePath
+        ArgumentList = ('/Image:{0}' -f $volumeRootPath), '/Optimize-Image', '/Boot'
+        NoNewWindow  = $true
+        Wait         = $true
+        PassThru     = $true
+        Verbose      = $true
+    }
+    Start-Process @params
+
+    Dismount-VHD -DiskNumber $vhdDisk.DiskNumber
 }
 
 'Creating the temp folder if it does not exist...' | WriteLog -Context $env:ComputerName
