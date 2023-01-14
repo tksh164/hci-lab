@@ -9,7 +9,7 @@ $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 Import-Module -Name '.\shared.psm1' -Force
 
 $configParams = GetConfigParameters
-Start-Transcript -OutputDirectory $configParams.labHost.folderPath.transcript
+Start-Transcript -OutputDirectory $configParams.labHost.folderPath.log
 $configParams | ConvertTo-Json -Depth 16
 
 function BuildParameterForCreateBaseVhdFromIsoAsJob
@@ -169,7 +169,7 @@ $params = @{
     ImageIndex           = $configParams.hciNode.osImage.index
     Culture              = $configParams.guestOS.culture
     WorkFolder           = $configParams.labHost.folderPath.temp
-    LogFolder            = $configParams.labHost.folderPath.transcript
+    LogFolder            = $configParams.labHost.folderPath.log
 }
 $jobParams = BuildParameterForCreateBaseVhdFromIsoAsJob @params
 $jobs += Start-Job -ArgumentList $jobParams -ScriptBlock ${function:CreateBaseVhdFromIsoAsJob}
@@ -186,7 +186,7 @@ if (-not (($configParams.hciNode.osImage.sku -eq 'ws2022') -and ($configParams.h
         ImageIndex           = 4  # Datacenter with Desktop Experience
         Culture              = $configParams.guestOS.culture
         WorkFolder           = $configParams.labHost.folderPath.temp
-        LogFolder            = $configParams.labHost.folderPath.transcript
+        LogFolder            = $configParams.labHost.folderPath.log
     }
     $jobParams = BuildParameterForCreateBaseVhdFromIsoAsJob @params
     $jobs += Start-Job -ArgumentList $jobParams -ScriptBlock ${function:CreateBaseVhdFromIsoAsJob}
