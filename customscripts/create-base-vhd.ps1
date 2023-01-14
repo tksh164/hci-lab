@@ -16,7 +16,10 @@ function CreateVhdFileFromIsoJobParameter
 {
     param (
         [Parameter(Mandatory = $true)]
-        [string] $ModulePath,
+        [string] $SharedModulePath,
+
+        [Parameter(Mandatory = $true)]
+        [string] $ConvertWimModulePath,
 
         [Parameter(Mandatory = $true)]
         [string] $IsoFolder,
@@ -44,15 +47,16 @@ function CreateVhdFileFromIsoJobParameter
     )
 
     $jobParams = @{
-        ModulePath      = $ModulePath
-        IsoFolder       = $IsoFolder
-        VhdFolder       = $VhdFolder
-        OperatingSystem = $OperatingSystem
-        ImageIndex      = $ImageIndex
-        Culture         = $Culture
-        WorkFolder      = $WorkFolder
-        UpdatePackage   = @()
-        LogFolder       = $LogFolder
+        SharedModulePath     = $SharedModulePath
+        ConvertWimModulePath = $ConvertWimModulePath
+        IsoFolder            = $IsoFolder
+        VhdFolder            = $VhdFolder
+        OperatingSystem      = $OperatingSystem
+        ImageIndex           = $ImageIndex
+        Culture              = $Culture
+        WorkFolder           = $WorkFolder
+        UpdatePackage        = @()
+        LogFolder            = $LogFolder
     }
 
     $updatesFolderPath = [IO.Path]::Combine($UpdatesFolder, $OperatingSystem)
@@ -66,7 +70,8 @@ function CreateVhdFileFromIsoJobParameter
 function CreateVhdFileFromIsoAsJob
 {
     $jobParams = $args[0]
-    Import-Module -Name $jobParams.ModulePath -Force
+    Import-Module -Name $jobParams.SharedModulePath -Force
+    Import-Module -Name $jobParams.ConvertWimModulePath -Force
 
     # Create a VHD file.
     $params = @{
@@ -155,15 +160,16 @@ $convertWimScriptFile
 $jobs = @()
 
 $params = @{
-    ModulePath      = $convertWimScriptFile.FullName
-    IsoFolder       = $configParams.labHost.folderPath.temp
-    UpdatesFolder   = $configParams.labHost.folderPath.updates
-    VhdFolder       = $configParams.labHost.folderPath.vhd
-    OperatingSystem = $configParams.hciNode.operatingSystem
-    ImageIndex      = $configParams.hciNode.imageIndex
-    Culture         = $configParams.guestOS.culture
-    WorkFolder      = $configParams.labHost.folderPath.temp
-    LogFolder       = $configParams.labHost.folderPath.transcript
+    SharedModulePath     = (Get-Module -Name 'shared').Path
+    ConvertWimModulePath = $convertWimScriptFile.FullName
+    IsoFolder            = $configParams.labHost.folderPath.temp
+    UpdatesFolder        = $configParams.labHost.folderPath.updates
+    VhdFolder            = $configParams.labHost.folderPath.vhd
+    OperatingSystem      = $configParams.hciNode.operatingSystem
+    ImageIndex           = $configParams.hciNode.imageIndex
+    Culture              = $configParams.guestOS.culture
+    WorkFolder           = $configParams.labHost.folderPath.temp
+    LogFolder            = $configParams.labHost.folderPath.transcript
 }
 $jobParams = CreateVhdFileFromIsoJobParameter @params
 $jobs += Start-Job -ArgumentList $jobParams -ScriptBlock ${function:CreateVhdFileFromIsoAsJob}
@@ -171,15 +177,16 @@ $jobs += Start-Job -ArgumentList $jobParams -ScriptBlock ${function:CreateVhdFil
 # Windows Server 2022 with Desktop Experience VHD is always used for the domain controller and Windows Admin Center VMs.
 if (-not (($configParams.hciNode.operatingSystem -eq 'ws2022') -and ($configParams.hciNode.imageIndex -eq 4))) {
     $params = @{
-        ModulePath      = $convertWimScriptFile.FullName
-        IsoFolder       = $configParams.labHost.folderPath.temp
-        UpdatesFolder   = $configParams.labHost.folderPath.updates
-        VhdFolder       = $configParams.labHost.folderPath.vhd
-        OperatingSystem = 'ws2022'
-        ImageIndex      = 4  # Datacenter with Desktop Experience
-        Culture         = $configParams.guestOS.culture
-        WorkFolder      = $configParams.labHost.folderPath.temp
-        LogFolder       = $configParams.labHost.folderPath.transcript
+        SharedModulePath     = (Get-Module -Name 'shared').Path
+        ConvertWimModulePath = $convertWimScriptFile.FullName
+        IsoFolder            = $configParams.labHost.folderPath.temp
+        UpdatesFolder        = $configParams.labHost.folderPath.updates
+        VhdFolder            = $configParams.labHost.folderPath.vhd
+        OperatingSystem      = 'ws2022'
+        ImageIndex           = 4  # Datacenter with Desktop Experience
+        Culture              = $configParams.guestOS.culture
+        WorkFolder           = $configParams.labHost.folderPath.temp
+        LogFolder            = $configParams.labHost.folderPath.transcript
     }
     $jobParams = CreateVhdFileFromIsoJobParameter @params
     $jobs += Start-Job -ArgumentList $jobParams -ScriptBlock ${function:CreateVhdFileFromIsoAsJob}
