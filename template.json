@@ -259,6 +259,7 @@
                     "vhd": "V:\\vhd",
                     "vm": "V:\\vm"
                 },
+                "reservedRamBytes": 6442450944,
                 "vSwitch": {
                     "nat": {
                         "name": "LabHostNAT",

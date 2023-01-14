@@ -39,14 +39,16 @@ function ComputeHciNodeRamBytes
 
 'Creating the HCI node VMs configuraton...' | WriteLog -Context $env:ComputerName
 
+$parentVhdPath = [IO.Path]::Combine($configParams.labHost.folderPath.vhd, (BuildBaseVhdFileName -OperatingSystem $configParams.hciNode.osImage.sku -ImageIndex $configParams.hciNode.osImage.index -Culture $configParams.guestOS.culture))
+$ramBytes = ComputeHciNodeRamBytes -NodeCount $configParams.hciNode.nodeCount -LabHostReservedRamBytes $configParams.labHost.reservedRamBytes -AddsDcVMName $configParams.addsDC.vmName -WacVMName $configParams.wac.vmName
 $adminPassword = GetSecret -KeyVaultName $configParams.keyVault.name -SecretName $configParams.keyVault.secretName
 
 $hciNodeConfigs = @()
 for ($i = 0; $i -lt $configParams.hciNode.nodeCount; $i++) {
     $hciNodeConfigs += @{
         VMName          = $configParams.hciNode.vmName -f ($configParams.hciNode.nodeCountOffset + $i)
-        ParentVhdPath   = [IO.Path]::Combine($configParams.labHost.folderPath.vhd, (BuildBaseVhdFileName -OperatingSystem $configParams.hciNode.osImage.sku -ImageIndex $configParams.hciNode.osImage.index -Culture $configParams.guestOS.culture))
-        RamBytes        = ComputeHciNodeRamBytes -NodeCount $configParams.hciNode.nodeCount -LabHostReservedRamBytes 6GB -AddsDcVMName $configParams.addsDC.vmName -WacVMName $configParams.wac.vmName
+        ParentVhdPath   = $parentVhdPath
+        RamBytes        = $ramBytes
         OperatingSystem = $configParams.hciNode.osImage.sku
         ImageIndex      = $configParams.hciNode.osImage.index
         AdminPassword   = $adminPassword
