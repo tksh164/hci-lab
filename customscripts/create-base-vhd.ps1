@@ -31,10 +31,10 @@ function CreateVhdFileFromIsoJobParameter
         [string] $OperatingSystem,
 
         [Parameter(Mandatory = $true)]
-        [string] $Culture,
+        [int] $ImageIndex,
 
         [Parameter(Mandatory = $true)]
-        [int] $ImageIndex,
+        [string] $Culture,
 
         [Parameter(Mandatory = $true)]
         [string] $WorkFolder,
@@ -48,8 +48,8 @@ function CreateVhdFileFromIsoJobParameter
         IsoFolder       = $IsoFolder
         VhdFolder       = $VhdFolder
         OperatingSystem = $OperatingSystem
-        Culture         = $Culture
         ImageIndex      = $ImageIndex
+        Culture         = $Culture
         WorkFolder      = $WorkFolder
         UpdatePackage   = @()
         LogFolder       = $LogFolder
@@ -70,9 +70,9 @@ function CreateVhdFileFromIsoAsJob
 
     # Create a VHD file.
     $params = @{
-        SourcePath    = [IO.Path]::Combine($jobParams.IsoFolder, ('{0}_{1}.iso' -f $jobParams.OperatingSystem, $jobParams.Culture))
+        SourcePath    = [IO.Path]::Combine($jobParams.IsoFolder, (BuildIsoFileName -OperatingSystem $jobParams.OperatingSystem -Culture $jobParams.Culture))
         Edition       = $jobParams.ImageIndex
-        VHDPath       = [IO.Path]::Combine($jobParams.VhdFolder, ('{0}_{1}.vhdx' -f $jobParams.OperatingSystem, $jobParams.Culture))
+        VHDPath       = [IO.Path]::Combine($jobParams.VhdFolder, (BuildBaseVhdFileName -OperatingSystem $jobParams.OperatingSystem -ImageIndex $jobParams.ImageIndex -Culture $jobParams.Culture))
         VHDFormat     = 'VHDX'
         IsFixed       = $false
         DiskLayout    = 'UEFI'
@@ -160,24 +160,24 @@ $params = @{
     UpdatesFolder   = $configParams.labHost.folderPath.updates
     VhdFolder       = $configParams.labHost.folderPath.vhd
     OperatingSystem = $configParams.hciNode.operatingSystem
-    Culture         = $configParams.guestOS.culture
     ImageIndex      = $configParams.hciNode.imageIndex
+    Culture         = $configParams.guestOS.culture
     WorkFolder      = $configParams.labHost.folderPath.temp
     LogFolder       = $configParams.labHost.folderPath.transcript
 }
 $jobParams = CreateVhdFileFromIsoJobParameter @params
 $jobs += Start-Job -ArgumentList $jobParams -ScriptBlock ${function:CreateVhdFileFromIsoAsJob}
 
-if ($configParams.hciNode.operatingSystem -ne 'ws2022') {
-    # The Windows Server 2022 VHD is always needed for the domain controller VM.
+# Windows Server 2022 with Desktop Experience VHD is always needed for the domain controller and Windows Admin Center VMs.
+if (-not (($configParams.hciNode.operatingSystem -eq 'ws2022') -and ($configParams.hciNode.imageIndex -eq 4))) {
     $params = @{
         ModulePath      = $convertWimScriptFile.FullName
         IsoFolder       = $configParams.labHost.folderPath.temp
         UpdatesFolder   = $configParams.labHost.folderPath.updates
         VhdFolder       = $configParams.labHost.folderPath.vhd
         OperatingSystem = 'ws2022'
-        Culture         = $configParams.guestOS.culture
         ImageIndex      = 4  # Datacenter with Desktop Experience
+        Culture         = $configParams.guestOS.culture
         WorkFolder      = $configParams.labHost.folderPath.temp
         LogFolder       = $configParams.labHost.folderPath.transcript
     }

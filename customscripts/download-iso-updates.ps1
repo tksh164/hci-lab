@@ -47,7 +47,7 @@ function DownloadIso
     $params = @{
         SourceUri      = $isoUris[$OperatingSystem][$Culture]
         DownloadFolder = $DownloadFolderPath
-        FileNameToSave = '{0}_{1}.iso' -f $OperatingSystem, $Culture
+        FileNameToSave = (BuildIsoFileName -OperatingSystem $OperatingSystem -Culture $Culture)
     }
     DownloadFile @params
 }

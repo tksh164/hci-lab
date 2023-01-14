@@ -90,6 +90,37 @@ function DownloadFile
     Get-Item -LiteralPath $destinationFilePath
 }
 
+function BuildIsoFileName
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $OperatingSystem,
+
+        [Parameter(Mandatory = $true)]
+        [string] $Culture
+    )
+
+    '{0}_{1}.iso' -f $OperatingSystem, $Culture
+}
+
+function BuildBaseVhdFileName
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $OperatingSystem,
+
+        [Parameter(Mandatory = $true)]
+        [int] $ImageIndex,
+
+        [Parameter(Mandatory = $true)]
+        [string] $Culture
+    )
+
+    '{0}_{1}_{2}.vhdx' -f $OperatingSystem, $ImageIndex, $Culture
+}
+
 function GetUnattendAnswerFileContent
 {
     [CmdletBinding()]

@@ -21,7 +21,8 @@ for ($i = 0; $i -lt $configParams.hciNode.nodeCount; $i++) {
     $hciNodeConfigs += @{
         VMName          = $configParams.hciNode.vmName -f ($configParams.hciNode.nodeCountOffset + $i)
         OperatingSystem = $configParams.hciNode.operatingSystem
-        GuestOSCulture  = $configParams.guestOS.culture
+        ImageIndex      = $configParams.hciNode.imageIndex
+        ParentVhdPath   = [IO.Path]::Combine($configParams.labHost.folderPath.vhd, (BuildBaseVhdFileName -OperatingSystem $configParams.hciNode.operatingSystem -ImageIndex $configParams.hciNode.imageIndex -Culture $configParams.guestOS.culture))
         AdminPassword   = $adminPassword
         NetAdapter      = @{
             Management = @{
@@ -53,7 +54,7 @@ foreach ($nodeConfig in $hciNodeConfigs) {
     'Creating the OS disk...' | WriteLog -Context $nodeConfig.VMName
     $params = @{
         Differencing = $true
-        ParentPath   = [IO.Path]::Combine($configParams.labHost.folderPath.vhd, ('{0}_{1}.vhdx' -f $nodeConfig.OperatingSystem, $nodeConfig.GuestOSCulture))
+        ParentPath   = $nodeConfig.ParentVhdPath
         Path         = [IO.Path]::Combine($configParams.labHost.folderPath.vm, $nodeConfig.VMName, 'osdisk.vhdx')
     }
     $vmOSDiskVhd = New-VHD  @params
@@ -171,7 +172,8 @@ foreach ($nodeConfig in $hciNodeConfigs) {
         $WriteLog = [scriptblock]::Create($args[0])
         $nodeConfig = $args[1]
 
-        if ($nodeConfig.OperatingSystem -eq 'ws2022') {
+        # If the HCI node OS is Windows Server 2022 with Desktop Experience.
+        if (($nodeConfig.OperatingSystem -eq 'ws2022') -and ($nodeConfig.ImageIndex -eq 4)) {
             'Stop Server Manager launch at logon.' | &$WriteLog -Context $nodeConfig.VMName
             Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotOpenServerManagerAtLogon' -Value 1
         

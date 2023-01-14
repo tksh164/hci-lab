@@ -47,7 +47,7 @@ $vmName = $configParams.addsDC.vmName
 'Creating the OS disk for the VM...' | WriteLog -Context $vmName
 $params = @{
     Differencing = $true
-    ParentPath   = [IO.Path]::Combine($configParams.labHost.folderPath.vhd, ('{0}_{1}.vhdx' -f 'ws2022', $configParams.guestOS.culture))
+    ParentPath   = [IO.Path]::Combine($configParams.labHost.folderPath.vhd, (BuildBaseVhdFileName -OperatingSystem 'ws2022' -ImageIndex 4 -Culture $configParams.guestOS.culture))
     Path         = [IO.Path]::Combine($configParams.labHost.folderPath.vm, $vmName, 'osdisk.vhdx')
 }
 $vmOSDiskVhd = New-VHD  @params
