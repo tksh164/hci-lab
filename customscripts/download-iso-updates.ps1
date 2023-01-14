@@ -85,18 +85,18 @@ function DownloadUpdates
 
     $updates = @{
         'as22h2' = @(
-            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/updt/2022/12/windows10.0-kb5022553-x64_06fa4af116114f39709a1404a318e1f7fa644e5d.msu',
+            'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2023/01/windows10.0-kb5022291-x64_7a517cbbe1288fd246efebc6089d0a4d91818c0e.msu',
             'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2022/10/windows10.0-kb5020877-x64-ndp48_f16f6550da2375d2d9c2ffb0ca61e399d303766d.msu'
         )
         'as21h2' = @(
-            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/updt/2022/12/windows10.0-kb5022553-x64_06fa4af116114f39709a1404a318e1f7fa644e5d.msu',
+            'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2023/01/windows10.0-kb5022291-x64_7a517cbbe1288fd246efebc6089d0a4d91818c0e.msu',
             'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2022/10/windows10.0-kb5020877-x64-ndp48_f16f6550da2375d2d9c2ffb0ca61e399d303766d.msu'
         )
         'as20h2' = @(
             # Need to apply SSU before applying updates.
         )
         'ws2022' = @(
-            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/updt/2022/12/windows10.0-kb5022553-x64_06fa4af116114f39709a1404a318e1f7fa644e5d.msu',
+            'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2023/01/windows10.0-kb5022291-x64_7a517cbbe1288fd246efebc6089d0a4d91818c0e.msu',
             'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2022/10/windows10.0-kb5020877-x64-ndp48_f16f6550da2375d2d9c2ffb0ca61e399d303766d.msu',
             'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2022/12/windows10.0-kb5020883-x64-ndp481_e73af78018fcd37145c3ff4fd6b94dc0d46070fc.msu'
         )
