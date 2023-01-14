@@ -78,13 +78,14 @@ function CreateVhdFileFromIsoAsJob
         DiskLayout    = 'UEFI'
         SizeBytes     = 127GB
         TempDirectory = $jobParams.WorkFolder
-        Passthru      = $true
+        #Passthru      = $true
         Verbose       = $true
     }
     if ($jobParams.UpdatePackage.Count -ne 0) {
         $params.Package = $jobParams.UpdatePackage | Sort-Object
     }
-    $vhd = Convert-WindowsImage @params
+    Convert-WindowsImage @params
+    #$vhd = Convert-WindowsImage @params
 
     <#
     $dismExePath = Join-Path -Path $env:windir -ChildPath 'System32\dism.exe' -Resolve
