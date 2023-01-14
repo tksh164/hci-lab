@@ -20,7 +20,7 @@ function ComputeHciNodeRamBytes
         [int] $NodeCount,
 
         [Parameter(Mandatory = $true)]
-        [int] $LabHostReservedRamBytes,
+        [long] $LabHostReservedRamBytes,
 
         [Parameter(Mandatory = $true)]
         [string] $AddsDcVMName,
