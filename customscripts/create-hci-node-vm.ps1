@@ -12,6 +12,31 @@ $configParams = GetConfigParameters
 Start-Transcript -OutputDirectory $configParams.labHost.folderPath.transcript
 $configParams | ConvertTo-Json -Depth 16
 
+function ComputeHciNodeRamBytes
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [int] $NodeCount,
+
+        [Parameter(Mandatory = $true)]
+        [int] $LabHostReservedRamBytes,
+
+        [Parameter(Mandatory = $true)]
+        [string] $AddsDcVMName,
+
+        [Parameter(Mandatory = $true)]
+        [string] $WacVMName
+    )
+
+    $totalRamBytes = (Get-ComputerInfo).OsTotalVisibleMemorySize * 1KB
+    $addsDcVMRamBytes = (Get-VM -Name $AddsDcVMName).MemoryStartup
+    $wacVMRamBytes = (Get-VM -Name $WacVMName).MemoryStartup
+
+    # StartupBytes should be a multiple of 2 MB (2 * 1024 * 1024 bytes).
+    [Math]::Floor((($totalRamBytes - $LabHostReservedRamBytes - $addsDcVMRamBytes - $wacVMRamBytes) / $NodeCount) / 2MB) * 2MB
+}
+
 'Creating the HCI node VMs configuraton...' | WriteLog -Context $env:ComputerName
 
 $adminPassword = GetSecret -KeyVaultName $configParams.keyVault.name -SecretName $configParams.keyVault.secretName
@@ -20,9 +45,10 @@ $hciNodeConfigs = @()
 for ($i = 0; $i -lt $configParams.hciNode.nodeCount; $i++) {
     $hciNodeConfigs += @{
         VMName          = $configParams.hciNode.vmName -f ($configParams.hciNode.nodeCountOffset + $i)
+        ParentVhdPath   = [IO.Path]::Combine($configParams.labHost.folderPath.vhd, (BuildBaseVhdFileName -OperatingSystem $configParams.hciNode.operatingSystem -ImageIndex $configParams.hciNode.imageIndex -Culture $configParams.guestOS.culture))
+        RamBytes        = (ComputeHciNodeRamBytes -NodeCount $configParams.hciNode.nodeCount -LabHostReservedRamBytes 6GB -AddsDcVMName $configParams.addsDC.vmName -WacVMName $configParams.wac.vmName)
         OperatingSystem = $configParams.hciNode.operatingSystem
         ImageIndex      = $configParams.hciNode.imageIndex
-        ParentVhdPath   = [IO.Path]::Combine($configParams.labHost.folderPath.vhd, (BuildBaseVhdFileName -OperatingSystem $configParams.hciNode.operatingSystem -ImageIndex $configParams.hciNode.imageIndex -Culture $configParams.guestOS.culture))
         AdminPassword   = $adminPassword
         NetAdapter      = @{
             Management = @{
@@ -72,18 +98,12 @@ foreach ($nodeConfig in $hciNodeConfigs) {
     Set-VMProcessor -VMName $nodeConfig.VMName -Count 8 -ExposeVirtualizationExtensions $true
 
     'Setting memory configuration...' | WriteLog -Context $nodeConfig.VMName
-    $totalRam = (Get-ComputerInfo).OsTotalVisibleMemorySize * 1KB
-    $labHostRam = 6GB
-    $addsDcVMRam = (Get-VM -Name 'addsdc').MemoryStartup
-    $wacVMRam = (Get-VM -Name 'wac').MemoryStartup
-    # StartupBytes should be a multiple of 2 MB (2 * 1024 * 1024 bytes).
-    $hciNodeRam = [Math]::Floor((($totalRam - $labHostRam - $addsDcVMRam - $wacVMRam) / $configParams.hciNode.nodeCount) / 2MB) * 2MB
     $params = @{
         VMName               = $nodeConfig.VMName
-        StartupBytes         = $hciNodeRam
+        StartupBytes         = $nodeConfig.RamBytes
         DynamicMemoryEnabled = $true
         MinimumBytes         = 512MB
-        MaximumBytes         = $hciNodeRam
+        MaximumBytes         = $nodeConfig.RamBytes
     }
     Set-VMMemory @params
     
