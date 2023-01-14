@@ -28,8 +28,8 @@ if ((Get-StoragePool -FriendlyName $params.FriendlyName -ErrorAction SilentlyCon
 'Creating a volume...' | WriteLog -Context $env:ComputerName
 $params = @{
     StoragePoolFriendlyName = $configParams.labHost.storage.poolName
-    FileSystem              = 'NTFS'
-    AllocationUnitSize      = 64KB
+    FileSystem              = 'ReFS'
+    AllocationUnitSize      = 4KB
     ResiliencySettingName   = 'Simple'
     UseMaximumSize          = $true
     DriveLetter             = $configParams.labHost.storage.driveLetter
