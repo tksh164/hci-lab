@@ -118,6 +118,15 @@ $shortcut.Arguments = '/v:{0}' -f $configParams.wac.netAdapter.management.ipAddr
 $shortcut.Description = 'Windows Admin Center VM provides management access to your lab environment.'
 $shortcut.Save()
 
+'Creating shortcut for Windows Admin Center on the desktop....' | WriteLog -Context $env:ComputerName
+$wshShell = New-Object -ComObject 'WScript.Shell'
+$shortcut = $wshShell.CreateShortcut('C:\Users\Public\Desktop\Windows Admin Center.lnk')
+$shortcut.TargetPath = 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
+$shortcut.Arguments = 'https://{0}' -f $configParams.wac.netAdapter.management.ipAddress
+$shortcut.Description = 'Windows Admin Center for the lab environment.'
+$shortcut.IconLocation = 'imageres.dll,1'
+$shortcut.Save()
+
 'Some tweaks have been completed.' | WriteLog -Context $env:ComputerName
 
 Stop-Transcript
