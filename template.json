@@ -178,6 +178,12 @@
                 "zipUri": "[uri(variables('dscBaseUri'), 'install-roles-and-features.zip')]",
                 "scriptName": "install-roles-and-features.ps1",
                 "functionName": "install-roles-and-features"
+            },
+            "rebootLabHost": {
+                "deploymentName": "lab-host-reboot-before-vm-creation",
+                "zipUri": "[uri(variables('dscBaseUri'), 'reboot.zip')]",
+                "scriptName": "reboot.ps1",
+                "functionName": "reboot"
             }
         },
 
@@ -594,13 +600,50 @@
             }
         },
 
+        // Reboot the lab host.
+        {
+            "name": "[variables('dscParams').rebootLabHost.deploymentName]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2021-04-01",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', variables('customScriptParams').createBaseVhd.deploymentName)]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('dscLinkedTemplateUri')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
+                    "parentVmResourceName": {
+                        "value": "[parameters('labHostVmName')]"
+                    },
+                    "extensionName": {
+                        "value": "[variables('dscExtensionName')]"
+                    },
+                    "zipUri": {
+                        "value": "[variables('dscParams').rebootLabHost.zipUri]"
+                    },
+                    "scriptName": {
+                        "value": "[variables('dscParams').rebootLabHost.scriptName]"
+                    },
+                    "functionName": {
+                        "value": "[variables('dscParams').rebootLabHost.functionName]"
+                    }
+                }
+            }
+        },
+
         // Create AD DS DC VM.
         {
             "name": "[variables('customScriptParams').createAddsDcVm.deploymentName]",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2021-04-01",
             "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', variables('customScriptParams').createBaseVhd.deploymentName)]"
+                "[resourceId('Microsoft.Resources/deployments', variables('dscParams').rebootLabHost.deploymentName)]"
             ],
             "properties": {
                 "mode": "Incremental",
