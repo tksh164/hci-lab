@@ -168,7 +168,7 @@ $params = @{
 $jobParams = CreateVhdFileFromIsoJobParameter @params
 $jobs += Start-Job -ArgumentList $jobParams -ScriptBlock ${function:CreateVhdFileFromIsoAsJob}
 
-# Windows Server 2022 with Desktop Experience VHD is always needed for the domain controller and Windows Admin Center VMs.
+# Windows Server 2022 with Desktop Experience VHD is always used for the domain controller and Windows Admin Center VMs.
 if (-not (($configParams.hciNode.operatingSystem -eq 'ws2022') -and ($configParams.hciNode.imageIndex -eq 4))) {
     $params = @{
         ModulePath      = $convertWimScriptFile.FullName
