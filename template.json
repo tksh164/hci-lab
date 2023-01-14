@@ -298,8 +298,10 @@
                 }
             },
             "hciNode": {
-                "operatingSystem": "as22h2",
-                "imageIndex": 1,
+                "osImage": {
+                    "sku": "as22h2",
+                    "index": 1
+                },
                 "nodeCount": 2,
                 "nodeCountOffset": 1,
                 "vmName": "hcinode{0:00}",

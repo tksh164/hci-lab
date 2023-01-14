@@ -121,10 +121,10 @@ function DownloadUpdates
 New-Item -ItemType Directory -Path $configParams.labHost.folderPath.temp -Force
 
 'Downloading the ISO file...' | WriteLog -Context $env:ComputerName
-DownloadIso -OperatingSystem $configParams.hciNode.operatingSystem -Culture $configParams.guestOS.culture -DownloadFolderPath $configParams.labHost.folderPath.temp
+DownloadIso -OperatingSystem $configParams.hciNode.osImage.sku -Culture $configParams.guestOS.culture -DownloadFolderPath $configParams.labHost.folderPath.temp
 
 # The Windows Server 2022 ISO is always needed for the domain controller VM.
-if ($configParams.hciNode.operatingSystem -ne 'ws2022') {
+if ($configParams.hciNode.osImage.sku -ne 'ws2022') {
     'Downloading Windows Server 2022 ISO file...' | WriteLog -Context $env:ComputerName
     DownloadIso -OperatingSystem 'ws2022' -Culture $configParams.guestOS.culture -DownloadFolderPath $configParams.labHost.folderPath.temp
 }
@@ -139,9 +139,9 @@ if ($configParams.guestOS.applyUpdates) {
     New-Item -ItemType Directory -Path $configParams.labHost.folderPath.updates -Force
     
     'Downloading updates...' | WriteLog -Context $env:ComputerName
-    DownloadUpdates -OperatingSystem $configParams.hciNode.operatingSystem -DownloadFolderBasePath $configParams.labHost.folderPath.updates
+    DownloadUpdates -OperatingSystem $configParams.hciNode.osImage.sku -DownloadFolderBasePath $configParams.labHost.folderPath.updates
     
-    if ($configParams.hciNode.operatingSystem -ne 'ws2022') {
+    if ($configParams.hciNode.osImage.sku -ne 'ws2022') {
         'Downloading Windows Server 2022 updates...' | WriteLog -Context $env:ComputerName
         DownloadUpdates -OperatingSystem 'ws2022' -DownloadFolderBasePath $configParams.labHost.folderPath.updates
     }
