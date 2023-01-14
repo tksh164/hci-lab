@@ -302,7 +302,7 @@
                 "imageIndex": 1,
                 "nodeCount": 2,
                 "nodeCountOffset": 1,
-                "vmName": "hcinode{0}",
+                "vmName": "hcinode{0:00}",
                 "netAdapter": {
                     "management": {
                         "name": "Management",
