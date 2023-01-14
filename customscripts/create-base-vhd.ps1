@@ -86,6 +86,7 @@ function CreateVhdFileFromIsoAsJob
     }
     $vhd = Convert-WindowsImage @params
 
+    <#
     $dismExePath = Join-Path -Path $env:windir -ChildPath 'System32\dism.exe' -Resolve
     $vhdDisk = Mount-VHD -Path $vhd.ImagePath -Passthru | Get-Disk
     $vhdPartition = $vhdDisk | Get-Partition | Where-Object -Property IsHidden -EQ $false | Select-Object -First 1
@@ -131,6 +132,7 @@ function CreateVhdFileFromIsoAsJob
     Start-Process @params
 
     Dismount-VHD -DiskNumber $vhdDisk.DiskNumber
+    #>
 }
 
 'Creating the temp folder if it does not exist...' | WriteLog -Context $env:ComputerName
