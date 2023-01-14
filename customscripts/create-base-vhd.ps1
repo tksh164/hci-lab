@@ -12,7 +12,7 @@ $configParams = GetConfigParameters
 Start-Transcript -OutputDirectory $configParams.labHost.folderPath.transcript
 $configParams | ConvertTo-Json -Depth 16
 
-function CreateVhdFileFromIsoJobParameter
+function BuildParameterForCreateBaseVhdFromIsoAsJob
 {
     param (
         [Parameter(Mandatory = $true)]
@@ -67,7 +67,7 @@ function CreateVhdFileFromIsoJobParameter
     $jobParams
 }
 
-function CreateVhdFileFromIsoAsJob
+function CreateBaseVhdFromIsoAsJob
 {
     $jobParams = $args[0]
     Import-Module -Name $jobParams.SharedModulePath -Force
@@ -171,8 +171,8 @@ $params = @{
     WorkFolder           = $configParams.labHost.folderPath.temp
     LogFolder            = $configParams.labHost.folderPath.transcript
 }
-$jobParams = CreateVhdFileFromIsoJobParameter @params
-$jobs += Start-Job -ArgumentList $jobParams -ScriptBlock ${function:CreateVhdFileFromIsoAsJob}
+$jobParams = BuildParameterForCreateBaseVhdFromIsoAsJob @params
+$jobs += Start-Job -ArgumentList $jobParams -ScriptBlock ${function:CreateBaseVhdFromIsoAsJob}
 
 # Windows Server 2022 with Desktop Experience VHD is always used for the domain controller and Windows Admin Center VMs.
 if (-not (($configParams.hciNode.operatingSystem -eq 'ws2022') -and ($configParams.hciNode.imageIndex -eq 4))) {
@@ -188,8 +188,8 @@ if (-not (($configParams.hciNode.operatingSystem -eq 'ws2022') -and ($configPara
         WorkFolder           = $configParams.labHost.folderPath.temp
         LogFolder            = $configParams.labHost.folderPath.transcript
     }
-    $jobParams = CreateVhdFileFromIsoJobParameter @params
-    $jobs += Start-Job -ArgumentList $jobParams -ScriptBlock ${function:CreateVhdFileFromIsoAsJob}
+    $jobParams = BuildParameterForCreateBaseVhdFromIsoAsJob @params
+    $jobs += Start-Job -ArgumentList $jobParams -ScriptBlock ${function:CreateBaseVhdFromIsoAsJob}
 }
 
 'Waiting for the base VHD creation jobs.' | WriteLog -Context $env:ComputerName
