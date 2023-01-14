@@ -154,7 +154,7 @@ Invoke-Command @params -ScriptBlock {
 
     'Installing AD DS (Creating a new forest)...' | &$WriteLog -Context $vmName
     $params = @{
-        DomainName                    = $configParams.addsDC.domainFqdn
+        DomainName                    = $configParams.addsDomain.fqdn
         InstallDns                    = $true
         SafeModeAdministratorPassword = $adminPassword
         NoRebootOnCompletion          = $true
@@ -170,7 +170,7 @@ Stop-VM -Name $vmName
 Start-VM -Name $vmName
 
 'Waiting for ready to the domain controller...' | WriteLog -Context $vmName
-$domainAdminCredential = CreateDomainCredential -DomainFqdn $configParams.addsDC.domainFqdn -Password $adminPassword
+$domainAdminCredential = CreateDomainCredential -DomainFqdn $configParams.addsDomain.fqdn -Password $adminPassword
 WaitingForReadyToDC -VMName $vmName -Credential $domainAdminCredential
 
 'The AD DS Domain Controller VM creation has been completed.' | WriteLog -Context $vmName

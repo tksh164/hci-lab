@@ -272,6 +272,9 @@
                 "culture": "en-us",
                 "applyUpdates": false
             },
+            "addsDomain": {
+                "fqdn": "hci.local"
+            },
             "addsDC": {
                 "vmName": "addsdc",
                 "netAdapter": {
@@ -282,8 +285,7 @@
                         "defaultGateway": "192.168.0.1",
                         "dnsServerAddresses": [ "168.63.129.16" ]
                     }
-                },
-                "domainFqdn": "hci.local"
+                }
             },
             "wac": {
                 "vmName": "wac",

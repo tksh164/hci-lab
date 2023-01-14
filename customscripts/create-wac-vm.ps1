@@ -171,11 +171,11 @@ Invoke-Command @params -ScriptBlock {
 }
 
 'Joining the VM to the AD domain...' | WriteLog -Context $vmName
-$domainAdminCredential = CreateDomainCredential -DomainFqdn $configParams.addsDC.domainFqdn -Password $adminPassword
+$domainAdminCredential = CreateDomainCredential -DomainFqdn $configParams.addsDomain.fqdn -Password $adminPassword
 $params = @{
     VMName                = $vmName
     LocalAdminCredential  = $localAdminCredential
-    DomainFqdn            = $configParams.addsDC.domainFqdn
+    DomainFqdn            = $configParams.addsDomain.fqdn
     DomainAdminCredential = $domainAdminCredential
 }
 JoinVMToADDomain @params

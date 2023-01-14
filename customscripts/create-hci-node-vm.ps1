@@ -242,11 +242,11 @@ foreach ($nodeConfig in $hciNodeConfigs) {
     }
 
     'Joining the VM the AD domain...' | WriteLog -Context $nodeConfig.VMName
-    $domainAdminCredential = CreateDomainCredential -DomainFqdn $configParams.addsDC.domainFqdn -Password $nodeConfig.AdminPassword
+    $domainAdminCredential = CreateDomainCredential -DomainFqdn $configParams.addsDomain.fqdn -Password $nodeConfig.AdminPassword
     $params = @{
         VMName                = $nodeConfig.VMName
         LocalAdminCredential  = $localAdminCredential
-        DomainFqdn            = $configParams.addsDC.domainFqdn
+        DomainFqdn            = $configParams.addsDomain.fqdn
         DomainAdminCredential = $domainAdminCredential
     }
     JoinVMToADDomain @params
@@ -260,7 +260,7 @@ foreach ($nodeConfig in $hciNodeConfigs) {
 
 foreach ($nodeConfig in $hciNodeConfigs) {
     'Waiting for ready to the VM...' | WriteLog -Context $nodeConfig.VMName
-    $domainAdminCredential = CreateDomainCredential -DomainFqdn $configParams.addsDC.domainFqdn -Password $nodeConfig.AdminPassword
+    $domainAdminCredential = CreateDomainCredential -DomainFqdn $configParams.addsDomain.fqdn -Password $nodeConfig.AdminPassword
     WaitingForReadyToVM -VMName $nodeConfig.VMName -Credential $domainAdminCredential
 }
 
