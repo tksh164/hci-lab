@@ -46,7 +46,7 @@ $adminPassword = GetSecret -KeyVaultName $configParams.keyVault.name -SecretName
 $hciNodeConfigs = @()
 for ($i = 0; $i -lt $configParams.hciNode.nodeCount; $i++) {
     $hciNodeConfigs += @{
-        VMName          = $configParams.hciNode.vmName -f ($configParams.hciNode.nodeCountOffset + $i)
+        VMName          = $configParams.hciNode.vmName -f ($configParams.hciNode.vmNameOffset + $i)
         ParentVhdPath   = $parentVhdPath
         RamBytes        = $ramBytes
         OperatingSystem = $configParams.hciNode.osImage.sku
@@ -56,7 +56,7 @@ for ($i = 0; $i -lt $configParams.hciNode.nodeCount; $i++) {
             Management = @{
                 Name               = $configParams.hciNode.netAdapter.management.name
                 VSwitchName        = $configParams.labHost.vSwitch.nat.name
-                IPAddress          = $configParams.hciNode.netAdapter.management.ipAddress -f ($configParams.hciNode.nodeCountOffset + $i)
+                IPAddress          = $configParams.hciNode.netAdapter.management.ipAddress -f ($configParams.hciNode.netAdapter.ipAddressOffset + $i)
                 PrefixLength       = $configParams.hciNode.netAdapter.management.prefixLength
                 DefaultGateway     = $configParams.hciNode.netAdapter.management.defaultGateway
                 DnsServerAddresses = $configParams.hciNode.netAdapter.management.dnsServerAddresses
@@ -64,13 +64,13 @@ for ($i = 0; $i -lt $configParams.hciNode.nodeCount; $i++) {
             Storage1 = @{
                 Name         = $configParams.hciNode.netAdapter.storage1.name
                 VSwitchName  = $configParams.labHost.vSwitch.nat.name
-                IPAddress    = $configParams.hciNode.netAdapter.storage1.ipAddress -f ($configParams.hciNode.nodeCountOffset + $i)
+                IPAddress    = $configParams.hciNode.netAdapter.storage1.ipAddress -f ($configParams.hciNode.netAdapter.ipAddressOffset + $i)
                 PrefixLength = $configParams.hciNode.netAdapter.storage1.prefixLength
             }
             Storage2 = @{
                 Name         = $configParams.hciNode.netAdapter.storage2.name
                 VSwitchName  = $configParams.labHost.vSwitch.nat.name
-                IPAddress    = $configParams.hciNode.netAdapter.storage2.ipAddress -f ($configParams.hciNode.nodeCountOffset + $i)
+                IPAddress    = $configParams.hciNode.netAdapter.storage2.ipAddress -f ($configParams.hciNode.netAdapter.ipAddressOffset + $i)
                 PrefixLength = $configParams.hciNode.netAdapter.storage2.prefixLength
             }
         }

@@ -306,24 +306,25 @@
                     "index": 1
                 },
                 "nodeCount": 2,
-                "nodeCountOffset": 1,
-                "vmName": "hcinode{0:00}",
+                "vmNameOffset": 1,
+                "vmName": "hcinode{0:00}",  // vmNameOffset + ZeroBasedNodeIndex
                 "netAdapter": {
+                    "ipAddressOffset": 11,
                     "management": {
                         "name": "Management",
-                        "ipAddress": "192.168.0.1{0}",
+                        "ipAddress": "192.168.0.{0}",  // ipAddressOffset + ZeroBasedNodeIndex
                         "prefixLength": 24,
                         "defaultGateway": "192.168.0.1",
                         "dnsServerAddresses": [ "192.168.0.4" ]
                     },
                     "storage1": {
                         "name": "Storage1",
-                        "ipAddress": "172.16.1.1{0}",
+                        "ipAddress": "172.16.1.{0}",  // ipAddressOffset + ZeroBasedNodeIndex
                         "prefixLength": 24
                     },
                     "storage2": {
                         "name": "Storage2",
-                        "ipAddress": "172.16.2.1{0}",
+                        "ipAddress": "172.16.2.{0}",  // ipAddressOffset + ZeroBasedNodeIndex
                         "prefixLength": 24
                     }
                 }
