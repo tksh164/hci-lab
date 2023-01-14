@@ -166,7 +166,7 @@ Invoke-Command @params -ScriptBlock {
     $shortcut.TargetPath = 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
     $shortcut.Arguments = 'https://{0}' -f $env:ComputerName
     $shortcut.Description = 'Windows Admin Center for the lab environment.'
-    $shortcut.IconLocation = 'shell32.dll,34'
+    $shortcut.IconLocation = 'imageres.dll,1'
     $shortcut.Save()
 }
 
