@@ -101,6 +101,23 @@ Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotPopW
 'Setting to hide the Network Location wizard. All networks will be Public.' | WriteLog -Context $env:ComputerName
 New-Item -ItemType Directory -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -Name 'NewNetworkWindowOff'
 
+'Creating shortcut for Hyper-V Manager on the desktop....' | &$WriteLog -Context $vmName
+$wshShell = New-Object -ComObject 'WScript.Shell'
+$shortcut = $wshShell.CreateShortcut('C:\Users\Public\Desktop\Hyper-V Manager.lnk')
+$shortcut.TargetPath = '%windir%\System32\mmc.exe'
+$shortcut.Arguments = '"%windir%\System32\virtmgmt.msc"'
+$shortcut.Description = 'Hyper-V Manager provides management access to your virtualization platform.'
+$shortcut.IconLocation = '%ProgramFiles%\Hyper-V\SnapInAbout.dll,0'
+$shortcut.Save()
+
+'Creating shortcut for Windows Admin Center VM on the desktop....' | &$WriteLog -Context $vmName
+$wshShell = New-Object -ComObject 'WScript.Shell'
+$shortcut = $wshShell.CreateShortcut('C:\Users\Public\Desktop\Windows Admin Center VM.lnk')
+$shortcut.TargetPath = '%windir%\System32\mstsc.exe'
+$shortcut.Arguments = '/v:{0}' -f $configParams.wac.netAdapter.management.ipAddress
+$shortcut.Description = 'Windows Admin Center VM provides management access to your lab environment.'
+$shortcut.Save()
+
 'Some tweaks have been completed.' | WriteLog -Context $env:ComputerName
 
 Stop-Transcript
