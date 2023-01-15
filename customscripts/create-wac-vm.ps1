@@ -113,7 +113,7 @@ $params = @{
 $wacCret = New-SelfSignedCertificate @params | Move-Item -Destination 'Cert:\LocalMachine\Root' -PassThru
 
 'Exporting the Windows Admin Center certificate...' | WriteLog -Context $vmName
-$wacPfxFilePathOnLabHost = [IO.Path]::Combine($configParams.labHost.folderPath.temp, $vmName, 'wac.pfx')
+$wacPfxFilePathOnLabHost = [IO.Path]::Combine($configParams.labHost.folderPath.temp, 'wac.pfx')
 $wacCret | Export-PfxCertificate -FilePath $wacPfxFilePathOnLabHost -Password $adminPassword
 
 $psSession = New-PSSession -VMName $vmName -Credential $localAdminCredential
