@@ -180,6 +180,7 @@ Invoke-Command @params -ScriptBlock {
 
     'Importing Windows Admin Center certificate...' | &$WriteLog -Context $vmName
     $wacCert = Import-PfxCertificate -CertStoreLocation 'Cert:\LocalMachine\Root' -FilePath $wacPfxFilePathInVM -Password $wacPfxPassword -Exportable
+    Remove-Item -LiteralPath $wacPfxFilePathInVM -Force
 
     'Installing Windows Admin Center...' | &$WriteLog -Context $vmName
     $msiArgs = @(
