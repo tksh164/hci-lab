@@ -99,17 +99,13 @@ $params = @{
     CertStoreLocation = 'Cert:\LocalMachine\My'
     Subject           = 'CN=Windows Admin Center for HCI lab'
     FriendlyName      = 'Windows Admin Center for HCI lab'
-    Type              = [Microsoft.CertificateServices.Commands.CertificateType]::SSLServerAuthentication
+    Type              = 'SSLServerAuthentication'
     HashAlgorithm     = 'sha512'
     NotBefore         = (Get-Date)::Now
     NotAfter          = (Get-Date).AddYears(1)
-    KeyUsage          = @(
-        [Microsoft.CertificateServices.Commands.KeyUsage]::DigitalSignature,
-        [Microsoft.CertificateServices.Commands.KeyUsage]::KeyEncipherment,
-        [Microsoft.CertificateServices.Commands.KeyUsage]::DataEncipherment
-    )
+    KeyUsage          = 'DigitalSignature', 'KeyEncipherment', 'DataEncipherment'
     TextExtension     = @(
-        '2.5.29.37={text}1.3.6.1.5.5.7.3.1',
+        '2.5.29.37={text}1.3.6.1.5.5.7.3.1',  # Server Authentication
         ('2.5.29.17={{text}}DNS={0}' -f $vmName)
     )
     KeyExportPolicy   = [Microsoft.CertificateServices.Commands.KeyExportPolicy]::ExportableEncrypted
