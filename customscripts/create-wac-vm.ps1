@@ -174,8 +174,10 @@ Invoke-Command @params -ScriptBlock {
     Get-NetAdapter -Name $configParams.wac.netAdapter.management.name |
         Set-DnsClientServerAddress -ServerAddresses $configParams.wac.netAdapter.management.dnsServerAddresses
 
+    # Import required to Root and My both stores.
     'Importing Windows Admin Center certificate...' | &$WriteLog -Context $vmName
-    $wacCert = Import-PfxCertificate -CertStoreLocation 'Cert:\LocalMachine\Root' -FilePath $wacPfxFilePathInVM -Password $wacPfxPassword -Exportable
+    Import-PfxCertificate -CertStoreLocation 'Cert:\LocalMachine\Root' -FilePath $wacPfxFilePathInVM -Password $wacPfxPassword -Exportable
+    $wacCert = Import-PfxCertificate -CertStoreLocation 'Cert:\LocalMachine\My' -FilePath $wacPfxFilePathInVM -Password $wacPfxPassword -Exportable
     Remove-Item -LiteralPath $wacPfxFilePathInVM -Force
 
     'Installing Windows Admin Center...' | &$WriteLog -Context $vmName
@@ -184,7 +186,7 @@ Invoke-Command @params -ScriptBlock {
         ('"{0}"' -f $wacInstallerFilePath),
         '/qn',
         '/L*v',
-        '"C:\Windows\Temp\wac-install-log.txt"'
+        '"C:\Windows\Temp\wac-install-log.txt"',
         'SME_PORT=443',
         ('SME_THUMBPRINT={0}' -f $wacCert.Thumbprint),
         'SSL_CERTIFICATE_OPTION=installed'
