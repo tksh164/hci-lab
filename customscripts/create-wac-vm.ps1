@@ -110,7 +110,7 @@ $params = @{
     )
     TextExtension     = @(
         '2.5.29.37={text}1.3.6.1.5.5.7.3.1',
-        '2.5.29.17={text}DNS=wac'
+        ('2.5.29.17={{text}}DNS={0}' -f $vmName)
     )
     KeyExportPolicy   = [Microsoft.CertificateServices.Commands.KeyExportPolicy]::ExportableEncrypted
 }
