@@ -101,6 +101,7 @@ $params = @{
     FriendlyName      = 'Windows Admin Center for HCI lab'
     Type              = 'SSLServerAuthentication'
     HashAlgorithm     = 'sha512'
+    KeyExportPolicy   = 'ExportableEncrypted'
     NotBefore         = (Get-Date)::Now
     NotAfter          = (Get-Date).AddYears(1)
     KeyUsage          = 'DigitalSignature', 'KeyEncipherment', 'DataEncipherment'
@@ -108,7 +109,6 @@ $params = @{
         '2.5.29.37={text}1.3.6.1.5.5.7.3.1',  # Server Authentication
         ('2.5.29.17={{text}}DNS={0}' -f $vmName)
     )
-    KeyExportPolicy   = [Microsoft.CertificateServices.Commands.KeyExportPolicy]::ExportableEncrypted
 }
 $wacCret = New-SelfSignedCertificate @params | Move-Item -Destination 'Cert:\LocalMachine\Root' -PassThru
 
