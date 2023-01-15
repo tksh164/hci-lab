@@ -94,16 +94,49 @@ $params = @{
 $wacInstallerFile = DownloadFile @params
 $wacInstallerFile
 
+'Creating a new SSL server authentication certificate for Windows Admin Center...' | WriteLog -Context $vmName
+$params = @{
+    CertStoreLocation = 'Cert:\LocalMachine\My'
+    Subject           = 'CN=Windows Admin Center for HCI lab'
+    FriendlyName      = 'Windows Admin Center for HCI lab'
+    Type              = [Microsoft.CertificateServices.Commands.CertificateType]::SSLServerAuthentication
+    HashAlgorithm     = 'sha512'
+    NotBefore         = (Get-Date)::Now
+    NotAfter          = (Get-Date).AddYears(1)
+    KeyUsage          = @(
+        [Microsoft.CertificateServices.Commands.KeyUsage]::DigitalSignature,
+        [Microsoft.CertificateServices.Commands.KeyUsage]::KeyEncipherment,
+        [Microsoft.CertificateServices.Commands.KeyUsage]::DataEncipherment
+    )
+    TextExtension     = @(
+        '2.5.29.37={text}1.3.6.1.5.5.7.3.1',
+        '2.5.29.17={text}DNS=wac'
+    )
+    KeyExportPolicy   = [Microsoft.CertificateServices.Commands.KeyExportPolicy]::ExportableEncrypted
+}
+$wacCret = New-SelfSignedCertificate @params | Move-Item -Destination 'Cert:\LocalMachine\Root' -PassThru
+
+'Exporting the Windows Admin Center certificate...' | WriteLog -Context $vmName
+$wacPfxFilePathOnLabHost = [IO.Path]::Combine($configParams.labHost.folderPath.temp, $vmName, 'wac.pfx')
+$wacCret | Export-PfxCertificate -FilePath $wacPfxFilePathOnLabHost -Password $adminPassword
+
+$psSession = New-PSSession -VMName $vmName -Credential $localAdminCredential
+
 'Copying the Windows Admin Center installer into the VM...' | WriteLog -Context $vmName
 $wacInstallerFilePathInVM = [IO.Path]::Combine('C:\Windows\Temp', [IO.Path]::GetFileName($wacInstallerFile.FullName))
-$psSession = New-PSSession -VMName $vmName -Credential $localAdminCredential
 Copy-Item -ToSession $psSession -Path $wacInstallerFile.FullName -Destination $wacInstallerFilePathInVM
+
+'Copying the Windows Admin Center certificate into the VM...' | WriteLog -Context $vmName
+$wacPfxFilePathInVM = [IO.Path]::Combine('C:\Windows\Temp', [IO.Path]::GetFileName($wacPfxFilePathOnLabHost))
+Copy-Item -ToSession $psSession -Path $wacPfxFilePathOnLabHost -Destination $wacPfxFilePathInVM
+
+$psSession | Remove-PSSession
 
 'Configuring the new VM...' | WriteLog -Context $vmName
 $params = @{
     VMName       = $vmName
     Credential   = $localAdminCredential
-    ArgumentList = ${function:WriteLog}, $vmName, $configParams, $wacInstallerFilePathInVM
+    ArgumentList = ${function:WriteLog}, $vmName, $configParams, $wacPfxFilePathInVM, $adminPassword, $wacInstallerFilePathInVM
 }
 Invoke-Command @params -ScriptBlock {
     $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
@@ -114,7 +147,9 @@ Invoke-Command @params -ScriptBlock {
     $WriteLog = [scriptblock]::Create($args[0])
     $vmName = $args[1]
     $configParams = $args[2]
-    $wacInstallerFilePath = $args[3]
+    $wacPfxFilePathInVM = $args[3]
+    $wacPfxPassword = $args[4]
+    $wacInstallerFilePath = $args[5]
 
     'Stop Server Manager launch at logon.' | &$WriteLog -Context $vmName
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotOpenServerManagerAtLogon' -Value 1
@@ -143,6 +178,9 @@ Invoke-Command @params -ScriptBlock {
     Get-NetAdapter -Name $configParams.wac.netAdapter.management.name |
         Set-DnsClientServerAddress -ServerAddresses $configParams.wac.netAdapter.management.dnsServerAddresses
 
+    'Importing Windows Admin Center certificate...' | &$WriteLog -Context $vmName
+    $wacCert = Import-PfxCertificate -CertStoreLocation 'Cert:\LocalMachine\Root' -FilePath $wacPfxFilePathInVM -Password $wacPfxPassword -Exportable
+
     'Installing Windows Admin Center...' | &$WriteLog -Context $vmName
     $msiArgs = @(
         '/i',
@@ -151,7 +189,9 @@ Invoke-Command @params -ScriptBlock {
         '/L*v',
         '"C:\Windows\Temp\wac-install-log.txt"'
         'SME_PORT=443',
-        'SSL_CERTIFICATE_OPTION=generate'
+        ('SME_THUMBPRINT={0}' -f $wacCert.Thumbprint),
+        'SSL_CERTIFICATE_OPTION=installed'
+        #'SSL_CERTIFICATE_OPTION=generate'
     )
     $result = Start-Process -FilePath 'msiexec.exe' -ArgumentList $msiArgs -Wait -PassThru
     $result | Format-List -Property '*'
