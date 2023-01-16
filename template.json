@@ -130,6 +130,64 @@
                 "description": "By specifying True, you confirm you have an eligible Windows Server license with Software Assurance or Windows Server subscription to apply this Azure Hybrid Benefit. You can read more about compliance here: http://go.microsoft.com/fwlink/?LinkId=859786"
             }
         },
+        "labVmOsCulture": {
+            "type": "string",
+            "defaultValue": "en-us",
+            "allowedValues": [
+                "en-us",
+                "ja-jp"
+            ],
+            "metadata": {
+                "description": "The operating system's culture of the lab virtual machines. This affects such as language and input method of the operating system."
+            }
+        },
+        "isInstallUpdatesToLabVm": {
+            "type": "bool",
+            "defaultValue": false,
+            "metadata": {
+                "description": "By specifying True, operating system's updates will be installed during the deployment."
+            }
+        },
+        "hciNodeOsImageSku": {
+            "type": "string",
+            "defaultValue": "as22h2",
+            "allowedValues": [
+                "as22h2",  // Azure Stack HCI 22H2
+                "as21h2",  // Azure Stack HCI 21H2
+                "as20h2",  // Azure Stack HCI 20H2
+                "ws2022"   // Windows Server 2022
+            ],
+            "metadata": {
+                "description": "The operating system for the HCI node virtual machines."
+            }
+        },
+        "hciNodeOsImageIndex": {
+            "type": "int",
+            "defaultValue": 1,
+            "allowedValues": [
+                1,  // For Azure Stack HCI and Windows Server 2022 Server Core
+                4   // For Windows Server 2022 with Desktop Experience
+            ],
+            "metadata": {
+                "description": "The image index of the operating system for the HCI node virtual machines."
+            }
+        },
+        "hciNodeCount": {
+            "type": "int",
+            "defaultValue": 2,
+            "minValue": 2,
+            "maxValue": 8,
+            "metadata": {
+                "description": "Number of HCI nodes to deploy."
+            }
+        },
+        "addsDomainFqdn": {
+            "type": "string",
+            "defaultValue": "hci.local",
+            "metadata": {
+                "description": "The Active Direcory Domain Services domain FQDN."
+            }
+        },
         "salt": {
             "type": "string",
             "defaultValue": "[utcNow()]",
@@ -270,11 +328,11 @@
                 }
             },
             "guestOS": {
-                "culture": "en-us",
-                "applyUpdates": false
+                "culture": "[parameters('labVmOsCulture')]",
+                "applyUpdates": "[parameters('isInstallUpdatesToLabVm')]"
             },
             "addsDomain": {
-                "fqdn": "hci.local"
+                "fqdn": "[parameters('addsDomainFqdn')]"
             },
             "addsDC": {
                 "vmName": "addsdc",
@@ -302,10 +360,10 @@
             },
             "hciNode": {
                 "osImage": {
-                    "sku": "as22h2",
-                    "index": 1
+                    "sku": "[parameters('hciNodeOsImageSku')]",
+                    "index": "[parameters('hciNodeOsImageIndex')]"
                 },
-                "nodeCount": 2,
+                "nodeCount": "[parameters('hciNodeCount')]",
                 "vmNameOffset": 1,
                 "vmName": "hcinode{0:00}",  // vmNameOffset + ZeroBasedNodeIndex
                 "netAdapter": {
