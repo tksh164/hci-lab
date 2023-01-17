@@ -130,6 +130,27 @@
                 "description": "By specifying True, you confirm you have an eligible Windows Server license with Software Assurance or Windows Server subscription to apply this Azure Hybrid Benefit. You can read more about compliance here: http://go.microsoft.com/fwlink/?LinkId=859786"
             }
         },
+        "isAutoshutdownEnabled": {
+            "type": "bool",
+            "defaultValue": true,
+            "metadata": {
+                "description": "By specifying True, will be auto-shutdown configured."
+            }
+        },
+        "autoshutdownTime": {
+            "type": "string",
+            "defaultValue": "22:00",
+            "metadata": {
+                "description": "The auto-shutdown time."
+            }
+        },
+        "autoshutdownTimeZone": {
+            "type": "string",
+            "defaultValue": "UTC",
+            "metadata": {
+                "description": "The time zone for auto-shutdown time."
+            }
+        },
         "labVmOsCulture": {
             "type": "string",
             "defaultValue": "en-us",
@@ -435,6 +456,15 @@
                     },
                     "base64EncodedConfigParameters": {
                         "value": "[base64(string(variables('configParameters')))]"
+                    },
+                    "isAutoshutdownEnabled": {
+                        "value": "[parameters('isAutoshutdownEnabled')]"
+                    },
+                    "autoshutdownTime": {
+                        "value": "[parameters('autoshutdownTime')]"
+                    },
+                    "autoshutdownTimeZone": {
+                        "value": "[parameters('autoshutdownTimeZone')]"
                     },
                     "uniqueString": {
                         "value": "[variables('uniqueString')]"
