@@ -62,6 +62,24 @@
                 "description": "THe base64 encode user data for the lab hosting virtual machine."
             }
         },
+        "isAutoshutdownEnabled": {
+            "type": "bool",
+            "metadata": {
+                "description": "description"
+            }
+        },
+        "autoshutdownTime": {
+            "type": "string",
+            "metadata": {
+                "description": "description"
+            }
+        },
+        "autoshutdownTimeZone": {
+            "type": "string",
+            "metadata": {
+                "description": "description"
+            }
+        },
         "uniqueString": {
             "type": "string",
             "metadata": {
@@ -241,6 +259,25 @@
             },
             "identity": {
                 "type": "SystemAssigned"
+            }
+        },
+        {
+            "condition": "[parameters('isAutoshutdownEnabled')]",
+            "name": "[concat('shutdown-computevm-', parameters('vmName'))]",
+            "type": "Microsoft.DevTestLab/schedules",
+            "apiVersion": "2018-09-15",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachines', parameters('vmName'))]"
+            ],
+            "properties": {
+                "status": "[if(parameters('isAutoshutdownEnabled'), 'Enabled', 'Disabled')]",
+                "taskType": "ComputeVmShutdownTask",
+                "dailyRecurrence": {
+                    "time": "[parameters('autoshutdownTime')]"
+                },
+                "timeZoneId": "[parameters('autoshutdownTimeZone')]",
+                "targetResourceId": "[resourceId('Microsoft.Compute/virtualMachines', parameters('vmName'))]"
             }
         }
     ],
