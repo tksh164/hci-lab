@@ -81,9 +81,9 @@ $hciNodeConfigs | ConvertTo-Json -Depth 16
 foreach ($nodeConfig in $hciNodeConfigs) {
     'Creating the OS disk...' | WriteLog -Context $nodeConfig.VMName
     $params = @{
+        Path         = [IO.Path]::Combine($configParams.labHost.folderPath.vm, $nodeConfig.VMName, 'osdisk.vhdx')
         Differencing = $true
         ParentPath   = $nodeConfig.ParentVhdPath
-        Path         = [IO.Path]::Combine($configParams.labHost.folderPath.vm, $nodeConfig.VMName, 'osdisk.vhdx')
     }
     $vmOSDiskVhd = New-VHD  @params
 
@@ -138,6 +138,17 @@ foreach ($nodeConfig in $hciNodeConfigs) {
         DeviceNaming = 'On'
     }
     Add-VMNetworkAdapter @params
+
+    'Creating the data disks...' | WriteLog -Context $nodeConfig.VMName
+    for ($diskIndex = 0; $diskIndex -lt 6; $diskIndex++) {
+        $params = @{
+            Path      = [IO.Path]::Combine($configParams.labHost.folderPath.vm, $nodeConfig.VMName, ('datadisk{0}.vhdx' -f ($diskIndex + 1)))
+            Dynamic   = $true
+            SizeBytes = 100GB
+        }
+        $vmDataDiskVhd = New-VHD @params
+        Add-VMHardDiskDrive -VMName $nodeConfig.VMName -Path $vmDataDiskVhd.Path -Passthru
+    }
 
     'Generating the unattend answer XML...' | WriteLog -Context $nodeConfig.VMName
     $unattendAnswerFileContent = GetUnattendAnswerFileContent -ComputerName $nodeConfig.VMName -Password $nodeConfig.AdminPassword -Culture $configParams.guestOS.culture
