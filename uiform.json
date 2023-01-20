@@ -1,0 +1,1258 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2021-09-09/uiFormDefinition.schema.json#",
+    "view": {
+        "kind": "Form",
+        "properties": {
+            "title": "HCI lab environment on a single Azure Virtual machine",
+            "steps": [
+                {
+                    "name": "basics",
+                    "label": "Basics",
+                    "description": "This template will deploy a HCI lab environment on a single Azure Virtual machine.",
+                    "elements": [
+                        {
+                            "name": "resourceScope",
+                            "type": "Microsoft.Common.ResourceScope",
+                            "location": {
+                                "label": "Region",
+                                "toolTip": "Specify the region to deploy the lab environment.",
+                                "resourceTypes": [
+                                    "microsoft.resources/resourcegroups"
+                                ]
+                            }
+                        },
+                        {
+                            "name": "vmName",
+                            "type": "Microsoft.Common.TextBox",
+                            "visible": true,
+                            "multiLine": false,
+                            "label": "Lab host VM name",
+                            "toolTip": "Specify the lab host virtual machine name. The name used as the Azure resource identifier, and in guest computer name.",
+                            "constraints": {
+                                "required": true,
+                                "validations": [
+                                    {
+                                        "regex": "^(?!\\-.+$)(?!.+\\-$)[a-zA-Z0-9\\-]+$",
+                                        "message": "Virtual machine names can contain all alphanumeric characters and special character '-', also, not begin with '-' and not end with '-'."
+                                    },
+                                    {
+                                        "regex": "^.{1,15}$",
+                                        "message": "Virtual machine name must be between 1 and 15 characters long."
+                                    }
+                                ]
+                            },
+                            "placeholder": "e.g. hcilab-vm1",
+                            "defaultValue": "hcilab-vm1"
+                        },
+                        {
+                            "name": "vmSize",
+                            "type": "Microsoft.Compute.SizeSelector",
+                            "visible": true,
+                            "label": "Size",
+                            "toolTip": "Specify the VM size for the lab host VM.",
+                            "scope": {
+                                "subscriptionId": "[steps('basics').resourceScope.subscription.subscriptionId]",
+                                "location": "[steps('basics').resourceScope.location.name]"
+                            },
+                            "osPlatform": "Windows",
+                            "imageReference": {
+                                "publisher": "MicrosoftWindowsServer",
+                                "offer": "WindowsServer",
+                                "sku": "2022-datacenter-azure-edition-smalldisk"
+                            },
+                            "count": 1,
+                            "options": {
+                                "hideDiskTypeFilter": false
+                            },
+                            "constraints": {
+                                "allowedSizes": [
+                                    "Standard_D16s_v3",
+                                    "Standard_D32s_v3",
+                                    "Standard_D64s_v3",
+                                    "Standard_D16s_v4",
+                                    "Standard_D32s_v4",
+                                    "Standard_D64s_v4",
+                                    "Standard_D16d_v4",
+                                    "Standard_D32d_v4",
+                                    "Standard_D64d_v4",
+                                    "Standard_D16ds_v4",
+                                    "Standard_D32ds_v4",
+                                    "Standard_D64ds_v4",
+                                    "Standard_E8s_v3",
+                                    "Standard_E16s_v3",
+                                    "Standard_E16-4s_v3",
+                                    "Standard_E16-8s_v3",
+                                    "Standard_E20s_v3",
+                                    "Standard_E32s_v3",
+                                    "Standard_E32-8s_v3",
+                                    "Standard_E32-16s_v3",
+                                    "Standard_E48s_v3",
+                                    "Standard_E64s_v3",
+                                    "Standard_E64-16s_v3",
+                                    "Standard_E64-32s_v3",
+                                    "Standard_E8s_v4",
+                                    "Standard_E16s_v4",
+                                    "Standard_E16s_v5",
+                                    "Standard_E16-8s_v4",
+                                    "Standard_E20s_v4",
+                                    "Standard_E32s_v4",
+                                    "Standard_E32-8s_v4",
+                                    "Standard_E32-16s_v4",
+                                    "Standard_E48s_v4",
+                                    "Standard_E64s_v4",
+                                    "Standard_E64-16s_v4",
+                                    "Standard_E64-32s_v4",
+                                    "Standard_E8d_v4",
+                                    "Standard_E16d_v4",
+                                    "Standard_E20d_v4",
+                                    "Standard_E32d_v4",
+                                    "Standard_E48d_v4",
+                                    "Standard_E64d_v4",
+                                    "Standard_E8ds_v4",
+                                    "Standard_E16ds_v4",
+                                    "Standard_E20ds_v4",
+                                    "Standard_E32ds_v4",
+                                    "Standard_E48ds_v4",
+                                    "Standard_E64ds_v4",
+                                    "Standard_E64-16ds_v4",
+                                    "Standard_E64-32ds_v4"
+                                ]
+                            },
+                            "recommendedSizes": [
+                                "Standard_E16s_v5"
+                            ]
+                        },
+                        {
+                            "name": "vmSizeInfo",
+                            "type": "Microsoft.Common.InfoBox",
+                            "visible": true,
+                            "options": {
+                                "style": "Info",
+                                "text": "<strong>Strongly recommend 128 GiB RAM or more</strong> if you deploy hybrid services on your HCI cluster. Because this lab<br>deploys multiple Hyper-V VMs such as AD DS DC, management server, HCI nodes on a single Azure Virtual machine."
+                            }
+                        },
+                        {
+                            "name": "adminAccountSection",
+                            "type": "Microsoft.Common.Section",
+                            "visible": true,
+                            "label": "Administrator account",
+                            "elements": [
+                                {
+                                    "name": "adminAccountSectionText",
+                                    "type": "Microsoft.Common.TextBlock",
+                                    "visible": true,
+                                    "options": {
+                                        "text": "Specify the administrator account credentials. The credentials are used for the local administrator account and the domain administrator account in the lab environment."
+                                    }
+                                },
+                                {
+                                    "name": "adminUserName",
+                                    "type": "Microsoft.Compute.UserNameTextBox",
+                                    "visible": true,
+                                    "label": "Username",
+                                    "toolTip": "Specify the administrator username.",
+                                    "osPlatform": "Windows",
+                                    "constraints": {
+                                        "required": true
+                                    }
+                                },
+                                {
+                                    "name": "adminPassword",
+                                    "type": "Microsoft.Compute.CredentialsCombo",
+                                    "visible": true,
+                                    "label": {
+                                        "password": "Password",
+                                        "confirmPassword": "Confirm password"
+                                    },
+                                    "toolTip": {
+                                        "password": "Specify the administrator password."
+                                    },
+                                    "osPlatform": "Windows",
+                                    "constraints": {
+                                        "required": true
+                                    },
+                                    "options": {
+                                        "hideConfirmation": false
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "azureHybridBenefitSection",
+                            "type": "Microsoft.Common.Section",
+                            "visible": true,
+                            "label": "Azure Hybrid Benefit",
+                            "elements": [
+                                {
+                                    "name": "azureHybridBenefitSectionText",
+                                    "type": "Microsoft.Common.TextBlock",
+                                    "visible": true,
+                                    "options": {
+                                        "text": "Save up to 49% with a license you already own using Azure Hybrid Benefit.",
+                                        "link": {
+                                            "label": "Learn more",
+                                            "uri": "https://docs.microsoft.com/azure/virtual-machines/windows/hybrid-use-benefit-licensing"
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "isUseExistingWindowsServerLicense",
+                                    "type": "Microsoft.Common.CheckBox",
+                                    "label": "Would you like to use an existing Windows Server license?",
+                                    "visible": true,
+                                    "defaultValue": false,
+                                    "constraints": {
+                                        "required": false
+                                    }
+                                },
+                                {
+                                    "name": "haveEligibleWindowsServerLicense",
+                                    "type": "Microsoft.Common.CheckBox",
+                                    "label": "I confirm I have an eligible Windows Server license with Software Assurance or Windows Server subscription to apply this Azure Hybrid Benefit.",
+                                    "visible": "[steps('basics').azureHybridBenefitSection.isUseExistingWindowsServerLicense]",
+                                    "defaultValue": false,
+                                    "constraints": {
+                                        "required": true,
+                                        "validationMessage": "Please confirm."
+                                    }
+                                },
+                                {
+                                    "name": "azureHybridBenefitSectionText2",
+                                    "type": "Microsoft.Common.TextBlock",
+                                    "visible": true,
+                                    "options": {
+                                        "text": "",
+                                        "link": {
+                                            "label": "Review Azure hybrid benefit compliance",
+                                            "uri": "http://go.microsoft.com/fwlink/?LinkId=859786"
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "deploymentTimeInfo",
+                            "type": "Microsoft.Common.InfoBox",
+                            "visible": true,
+                            "options": {
+                                "style": "Info",
+                                "text": "Deployment will take <strong>about 40 to 90 minutes</strong> depending on your deployment options."
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "labHostVmDetails",
+                    "label": "Lab host VM details",
+                    "description": "Configure details for your lab host VM.",
+                    "elements": [
+                        {
+                            "name": "diskSection",
+                            "type": "Microsoft.Common.Section",
+                            "visible": true,
+                            "label": "Disks",
+                            "elements": [
+                                {
+                                    "name": "osDiskType",
+                                    "type": "Microsoft.Common.DropDown",
+                                    "visible": true,
+                                    "multiselect": false,
+                                    "selectAll": false,
+                                    "filter": false,
+                                    "multiLine": true,
+                                    "label": "OS disk type",
+                                    "toolTip": "You can choose between Azure managed disks types to support your workload or scenario.",
+                                    "placeholder": "Select the OS disk type...",
+                                    "defaultDescription": "---",
+                                    "filterPlaceholder": "Filter OS disk types...",
+                                    "defaultValue": "Standard SSD (LRS)",
+                                    "constraints": {
+                                        "required": true,
+                                        "allowedValues": [
+                                            {
+                                                "label": "Premium SSD (LRS)",
+                                                "value": "Premium_LRS",
+                                                "description": "Best for production and performance sensitive workloads. Locally-redundant storage (data is replicated within a single datacenter)."
+                                            },
+                                            {
+                                                "label": "Standard SSD (LRS)",
+                                                "value": "StandardSSD_LRS",
+                                                "description": "Best for web servers, lightly used enterprise applications and dev/test. Locally-redundant storage (data is replicated within a single datacenter)."
+                                            },
+                                            {
+                                                "label": "Standard HDD (LRS)",
+                                                "value": "Standard_LRS",
+                                                "description": "Best for backup, non-critical, and infrequent access. Locally-redundant storage (data is replicated within a single datacenter)."
+                                            }
+                                        ]
+                                    }
+                                },
+                                {
+                                    "name": "dataDiskType",
+                                    "type": "Microsoft.Common.DropDown",
+                                    "visible": true,
+                                    "multiselect": false,
+                                    "selectAll": false,
+                                    "filter": false,
+                                    "multiLine": true,
+                                    "label": "Data disk type",
+                                    "toolTip": "You can choose between Azure managed disks types to support your workload or scenario.",
+                                    "placeholder": "Select the data disk type...",
+                                    "defaultDescription": "---",
+                                    "filterPlaceholder": "Filter data disk types...",
+                                    "defaultValue": "Standard SSD (LRS)",
+                                    "constraints": {
+                                        "required": true,
+                                        "allowedValues": [
+                                            {
+                                                "label": "Premium SSD (LRS)",
+                                                "value": "Premium_LRS",
+                                                "description": "Best for production and performance sensitive workloads. Locally-redundant storage (data is replicated within a single datacenter)."
+                                            },
+                                            {
+                                                "label": "Standard SSD (LRS)",
+                                                "value": "StandardSSD_LRS",
+                                                "description": "Best for web servers, lightly used enterprise applications and dev/test. Locally-redundant storage (data is replicated within a single datacenter)."
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "dataVolumeSection",
+                            "type": "Microsoft.Common.Section",
+                            "visible": true,
+                            "label": "Data volume",
+                            "elements": [
+                                {
+                                    "name": "dataDiskSize",
+                                    "type": "Microsoft.Common.DropDown",
+                                    "visible": true,
+                                    "multiselect": false,
+                                    "selectAll": false,
+                                    "filter": false,
+                                    "multiLine": true,
+                                    "label": "Data volume capacity",
+                                    "toolTip": "Data volume capacity on the lab host virtual machine. All lab assets and artifacts such as VMs, VHDs, ISOs are stored on the volume.",
+                                    "placeholder": "Select the data disk size...",
+                                    "defaultDescription": "---",
+                                    "filterPlaceholder": "Filter data disk sizes...",
+                                    "defaultValue": "503 GB (64 GiB x 8 disks)",
+                                    "constraints": {
+                                        "required": true,
+                                        "allowedValues": [
+                                            {
+                                                "label": "247 GB (32 GiB x 8 disks)",
+                                                "value": 32,
+                                                "description": "For just trying to deploy a HCI cluster only. Not enough to try any hybrid services such as Azure Arc resource bridge, AKS hybrid, etc."
+                                            },
+                                            {
+                                                "label": "503 GB (64 GiB x 8 disks)",
+                                                "value": 64,
+                                                "description": "For just trying a single hybrid service on your HCI cluster at a time. Not enough to try multiple hybrid services on your HCI cluster at once."
+                                            },
+                                            {
+                                                "label": "1015 GiB (128 GiB x 8 disks)",
+                                                "value": 128,
+                                                "description": "For just trying a few hybrid services on your HCI cluster at a time. Not enough to try multiple hybrid services on your HCI cluster at once."
+                                            },
+                                            {
+                                                "label": "2039 GiB (256 GiB x 8 disks)",
+                                                "value": 256,
+                                                "description": "Enough to try multiple hybrid services simultaneously on your HCI cluster."
+                                            },
+                                            {
+                                                "label": "4087 GiB (512 GiB x 8 disks)",
+                                                "value": 512,
+                                                "description": "Enough to try multiple hybrid services simultaneously on your HCI cluster."
+                                            },
+                                            {
+                                                "label": "8183 GiB (1024 GiB x 8 disks)",
+                                                "value": 1024,
+                                                "description": "Enough to try multiple hybrid services simultaneously on your HCI cluster."
+                                            }
+                                        ]
+                                    }
+                                },
+                                {
+                                    "name": "dataVolumeSizeInfo",
+                                    "type": "Microsoft.Common.InfoBox",
+                                    "visible": true,
+                                    "options": {
+                                        "style": "Info",
+                                        "text": "Data volume capacity cannot change after complete deployment."
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "autoshutdownSection",
+                            "type": "Microsoft.Common.Section",
+                            "visible": true,
+                            "label": "Auto-shutdown",
+                            "elements": [
+                                {
+                                    "name": "isAutoshutdownEnabled",
+                                    "type": "Microsoft.Common.CheckBox",
+                                    "label": "Enable auto-shutdown",
+                                    "visible": true,
+                                    "toolTip": "Configures your virtual machine to automatically shutdown daily.",
+                                    "defaultValue": false,
+                                    "constraints": {
+                                        "required": false
+                                    }
+                                },
+                                {
+                                    "name": "shutdownTime",
+                                    "type": "Microsoft.Common.DropDown",
+                                    "visible": "[steps('labHostVmDetails').autoshutdownSection.isAutoshutdownEnabled]",
+                                    "multiselect": false,
+                                    "selectAll": false,
+                                    "filter": true,
+                                    "multiLine": false,
+                                    "label": "Shutdown time",
+                                    "toolTip": "Configures the time when the virtual machine shuts down daily.",
+                                    "placeholder": "",
+                                    "defaultDescription": "---",
+                                    "filterPlaceholder": "Filter items...",
+                                    "defaultValue": "10:00 PM (22:00)",
+                                    "constraints": {
+                                        "required": true,
+                                        "allowedValues": [
+                                            {
+                                                "label": "12:00 AM (00:00)",
+                                                "value": "00:00"
+                                            },
+                                            {
+                                                "label": "12:30 AM (00:30)",
+                                                "value": "00:30"
+                                            },
+                                            {
+                                                "label": "01:00 AM (01:00)",
+                                                "value": "01:00"
+                                            },
+                                            {
+                                                "label": "01:30 AM (01:30)",
+                                                "value": "01:30"
+                                            },
+                                            {
+                                                "label": "02:00 AM (02:00)",
+                                                "value": "02:00"
+                                            },
+                                            {
+                                                "label": "02:30 AM (02:30)",
+                                                "value": "02:30"
+                                            },
+                                            {
+                                                "label": "03:00 AM (03:00)",
+                                                "value": "03:00"
+                                            },
+                                            {
+                                                "label": "03:30 AM (03:30)",
+                                                "value": "03:30"
+                                            },
+                                            {
+                                                "label": "04:00 AM (04:00)",
+                                                "value": "04:00"
+                                            },
+                                            {
+                                                "label": "04:30 AM (04:30)",
+                                                "value": "04:30"
+                                            },
+                                            {
+                                                "label": "05:00 AM (05:00)",
+                                                "value": "05:00"
+                                            },
+                                            {
+                                                "label": "05:30 AM (05:30)",
+                                                "value": "05:30"
+                                            },
+                                            {
+                                                "label": "06:00 AM (06:00)",
+                                                "value": "06:00"
+                                            },
+                                            {
+                                                "label": "06:30 AM (06:30)",
+                                                "value": "06:30"
+                                            },
+                                            {
+                                                "label": "07:00 AM (07:00)",
+                                                "value": "07:00"
+                                            },
+                                            {
+                                                "label": "07:30 AM (07:30)",
+                                                "value": "07:30"
+                                            },
+                                            {
+                                                "label": "08:00 AM (08:00)",
+                                                "value": "08:00"
+                                            },
+                                            {
+                                                "label": "08:30 AM (08:30)",
+                                                "value": "08:30"
+                                            },
+                                            {
+                                                "label": "09:00 AM (09:00)",
+                                                "value": "09:00"
+                                            },
+                                            {
+                                                "label": "09:30 AM (09:30)",
+                                                "value": "09:30"
+                                            },
+                                            {
+                                                "label": "10:00 AM (10:00)",
+                                                "value": "10:00"
+                                            },
+                                            {
+                                                "label": "10:30 AM (10:30)",
+                                                "value": "10:30"
+                                            },
+                                            {
+                                                "label": "11:00 AM (11:00)",
+                                                "value": "11:00 AM (11:00)"
+                                            },
+                                            {
+                                                "label": "11:30 AM (11:30)",
+                                                "value": "11:30"
+                                            },
+                                            {
+                                                "label": "12:00 PM (12:00)",
+                                                "value": "12:00"
+                                            },
+                                            {
+                                                "label": "12:30 PM (12:30)",
+                                                "value": "12:30"
+                                            },
+                                            {
+                                                "label": "01:00 PM (13:00)",
+                                                "value": "13:00"
+                                            },
+                                            {
+                                                "label": "01:30 PM (13:30)",
+                                                "value": "13:30"
+                                            },
+                                            {
+                                                "label": "02:00 PM (14:00)",
+                                                "value": "14:00"
+                                            },
+                                            {
+                                                "label": "02:30 PM (14:30)",
+                                                "value": "14:30"
+                                            },
+                                            {
+                                                "label": "03:00 PM (15:00)",
+                                                "value": "15:00"
+                                            },
+                                            {
+                                                "label": "03:30 PM (15:30)",
+                                                "value": "15:30"
+                                            },
+                                            {
+                                                "label": "04:00 PM (16:00)",
+                                                "value": "16:00"
+                                            },
+                                            {
+                                                "label": "04:30 PM (16:30)",
+                                                "value": "16:30"
+                                            },
+                                            {
+                                                "label": "05:00 PM (17:00)",
+                                                "value": "17:00"
+                                            },
+                                            {
+                                                "label": "05:30 PM (17:30)",
+                                                "value": "17:30"
+                                            },
+                                            {
+                                                "label": "06:00 PM (18:00)",
+                                                "value": "18:00"
+                                            },
+                                            {
+                                                "label": "06:30 PM (18:30)",
+                                                "value": "18:30"
+                                            },
+                                            {
+                                                "label": "07:00 PM (19:00)",
+                                                "value": "19:00"
+                                            },
+                                            {
+                                                "label": "07:30 PM (19:30)",
+                                                "value": "19:30"
+                                            },
+                                            {
+                                                "label": "08:00 PM (20:00)",
+                                                "value": "20:00"
+                                            },
+                                            {
+                                                "label": "08:30 PM (20:30)",
+                                                "value": "20:30"
+                                            },
+                                            {
+                                                "label": "09:00 PM (21:00)",
+                                                "value": "21:00"
+                                            },
+                                            {
+                                                "label": "09:30 PM (21:30)",
+                                                "value": "21:30"
+                                            },
+                                            {
+                                                "label": "10:00 PM (22:00)",
+                                                "value": "22:00"
+                                            },
+                                            {
+                                                "label": "10:30 PM (22:30)",
+                                                "value": "22:30"
+                                            },
+                                            {
+                                                "label": "11:00 PM (23:00)",
+                                                "value": "23:00"
+                                            },
+                                            {
+                                                "label": "11:30 PM (23:30)",
+                                                "value": "23:30"
+                                            }
+                                        ]
+                                    }
+                                },
+                                {
+                                    "name": "shutdownTimeZone",
+                                    "type": "Microsoft.Common.DropDown",
+                                    "visible": "[steps('labHostVmDetails').autoshutdownSection.isAutoshutdownEnabled]",
+                                    "multiselect": false,
+                                    "selectAll": false,
+                                    "filter": true,
+                                    "multiLine": false,
+                                    "label": "Time zone",
+                                    "toolTip": "Configures the time zone in which the auto-shutdown time is.",
+                                    "placeholder": "",
+                                    "defaultDescription": "---",
+                                    "filterPlaceholder": "Filter timezones...",
+                                    "defaultValue": "(UTC) Coordinated Universal Time",
+                                    "constraints": {
+                                        "required": true,
+                                        "allowedValues": [
+                                            {
+                                                "label": "(UTC-12:00) International Date Line West",
+                                                "value": "Dateline Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC-11:00) Coordinated Universal Time-11",
+                                                "value": "UTC-11"
+                                            },
+                                            {
+                                                "label": "(UTC-10:00) Hawaii",
+                                                "value": "Hawaiian Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC-09:00) Alaska",
+                                                "value": "Alaskan Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC-08:00) Baja California",
+                                                "value": "Pacific Standard Time (Mexico)"
+                                            },
+                                            {
+                                                "label": "(UTC-08:00) Pacific Time (US &amp; Canada)",
+                                                "value": "Pacific Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC-07:00) Arizona",
+                                                "value": "US Mountain Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC-07:00) Chihuahua, La Paz, Mazatlan",
+                                                "value": "Mountain Standard Time (Mexico)"
+                                            },
+                                            {
+                                                "label": "(UTC-07:00) Mountain Time (US &amp; Canada)",
+                                                "value": "Mountain Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC-06:00) Central America",
+                                                "value": "Central America Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC-06:00) Central Time (US &amp; Canada)",
+                                                "value": "Central Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC-06:00) Guadalajara, Mexico City, Monterrey",
+                                                "value": "Central Standard Time (Mexico)"
+                                            },
+                                            {
+                                                "label": "(UTC-06:00) Saskatchewan",
+                                                "value": "Canada Central Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC-05:00) Bogota, Lima, Quito, Rio Branco",
+                                                "value": "SA Pacific Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC-05:00) Chetumal",
+                                                "value": "Eastern Standard Time (Mexico)"
+                                            },
+                                            {
+                                                "label": "(UTC-05:00) Eastern Time (US &amp; Canada)",
+                                                "value": "Eastern Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC-05:00) Indiana (East)",
+                                                "value": "US Eastern Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC-04:30) Caracas",
+                                                "value": "Venezuela Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC-04:00) Asuncion",
+                                                "value": "Paraguay Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC-04:00) Atlantic Time (Canada)",
+                                                "value": "Atlantic Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC-04:00) Cuiaba",
+                                                "value": "Central Brazilian Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC-04:00) Georgetown, La Paz, Manaus, San Juan",
+                                                "value": "SA Western Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC-03:30) Newfoundland",
+                                                "value": "Newfoundland Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC-03:00) Brasilia",
+                                                "value": "E. South America Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC-03:00) Cayenne, Fortaleza",
+                                                "value": "SA Eastern Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC-03:00) City of Buenos Aires",
+                                                "value": "Argentina Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC-03:00) Greenland",
+                                                "value": "Greenland Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC-03:00) Montevideo",
+                                                "value": "Montevideo Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC-03:00) Salvador",
+                                                "value": "Bahia Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC-03:00) Santiago",
+                                                "value": "Pacific SA Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC-02:00) Coordinated Universal Time-02",
+                                                "value": "UTC-02"
+                                            },
+                                            {
+                                                "label": "(UTC-01:00) Azores",
+                                                "value": "Azores Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC-01:00) Cabo Verde Is.",
+                                                "value": "Cape Verde Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC) Casablanca",
+                                                "value": "Morocco Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC) Coordinated Universal Time",
+                                                "value": "UTC"
+                                            },
+                                            {
+                                                "label": "(UTC) Dublin, Edinburgh, Lisbon, London",
+                                                "value": "GMT Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC) Monrovia, Reykjavik",
+                                                "value": "Greenwich Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+01:00) Amsterdam, Berlin, Bern, Rome, Stockholm, Vienna",
+                                                "value": "W. Europe Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+01:00) Belgrade, Bratislava, Budapest, Ljubljana, Prague",
+                                                "value": "Central Europe Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+01:00) Brussels, Copenhagen, Madrid, Paris",
+                                                "value": "Romance Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+01:00) Sarajevo, Skopje, Warsaw, Zagreb",
+                                                "value": "Central European Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+01:00) West Central Africa",
+                                                "value": "W. Central Africa Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+01:00) Windhoek",
+                                                "value": "Namibia Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+02:00) Amman",
+                                                "value": "Jordan Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+02:00) Athens, Bucharest",
+                                                "value": "GTB Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+02:00) Beirut",
+                                                "value": "Middle East Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+02:00) Cairo",
+                                                "value": "Egypt Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+02:00) Damascus",
+                                                "value": "Syria Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+02:00) E. Europe",
+                                                "value": "E. Europe Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+02:00) Harare, Pretoria",
+                                                "value": "South Africa Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+02:00) Helsinki, Kyiv, Riga, Sofia, Tallinn, Vilnius",
+                                                "value": "FLE Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+02:00) Istanbul",
+                                                "value": "Turkey Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+02:00) Jerusalem",
+                                                "value": "Israel Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+02:00) Kaliningrad (RTZ 1)",
+                                                "value": "Kaliningrad Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+02:00) Tripoli",
+                                                "value": "Libya Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+03:00) Baghdad",
+                                                "value": "Arabic Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+03:00) Kuwait, Riyadh",
+                                                "value": "Arab Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+03:00) Minsk",
+                                                "value": "Belarus Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+03:00) Moscow, St. Petersburg, Volgograd (RTZ 2)",
+                                                "value": "Russian Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+03:00) Nairobi",
+                                                "value": "E. Africa Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+03:30) Tehran",
+                                                "value": "Iran Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+04:00) Abu Dhabi, Muscat",
+                                                "value": "Arabian Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+04:00) Baku",
+                                                "value": "Azerbaijan Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+04:00) Izhevsk, Samara (RTZ 3)",
+                                                "value": "Russia Time Zone 3"
+                                            },
+                                            {
+                                                "label": "(UTC+04:00) Port Louis",
+                                                "value": "Mauritius Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+04:00) Tbilisi",
+                                                "value": "Georgian Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+04:00) Yerevan",
+                                                "value": "Caucasus Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+04:30) Kabul",
+                                                "value": "Afghanistan Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+05:00) Ashgabat, Toshkent",
+                                                "value": "West Asia Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+05:00) Ekaterinburg (RTZ 4)",
+                                                "value": "Ekaterinburg Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+05:00) Islamabad, Karachi",
+                                                "value": "Pakistan Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+05:30) Chennai, Kolkata, Mumbai, New Delhi",
+                                                "value": "India Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+05:30) Sri Jayawardenepura",
+                                                "value": "Sri Lanka Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+05:45) Kathmandu",
+                                                "value": "Nepal Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+06:00) Astana",
+                                                "value": "Central Asia Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+06:00) Dhaka",
+                                                "value": "Bangladesh Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+06:00) Novosibirsk (RTZ 5)",
+                                                "value": "N. Central Asia Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+06:30) Yangon (Rangoon)",
+                                                "value": "Myanmar Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+07:00) Bangkok, Hanoi, Jakarta",
+                                                "value": "SE Asia Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+07:00) Krasnoyarsk (RTZ 6)",
+                                                "value": "North Asia Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+08:00) Beijing, Chongqing, Hong Kong, Urumqi",
+                                                "value": "China Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+08:00) Irkutsk (RTZ 7)",
+                                                "value": "North Asia East Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+08:00) Kuala Lumpur, Singapore",
+                                                "value": "Singapore Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+08:00) Perth",
+                                                "value": "W. Australia Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+08:00) Taipei",
+                                                "value": "Taipei Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+08:00) Ulaanbaatar",
+                                                "value": "Ulaanbaatar Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+09:00) Osaka, Sapporo, Tokyo",
+                                                "value": "Tokyo Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+09:00) Seoul",
+                                                "value": "Korea Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+09:00) Yakutsk (RTZ 8)",
+                                                "value": "Yakutsk Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+09:30) Adelaide",
+                                                "value": "Cen. Australia Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+09:30) Darwin",
+                                                "value": "AUS Central Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+10:00) Brisbane",
+                                                "value": "E. Australia Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+10:00) Canberra, Melbourne, Sydney",
+                                                "value": "AUS Eastern Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+10:00) Guam, Port Moresby",
+                                                "value": "West Pacific Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+10:00) Hobart",
+                                                "value": "Tasmania Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+10:00) Magadan",
+                                                "value": "Magadan Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+10:00) Vladivostok, Magadan (RTZ 9)",
+                                                "value": "Vladivostok Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+11:00) Chokurdakh (RTZ 10)",
+                                                "value": "Russia Time Zone 10"
+                                            },
+                                            {
+                                                "label": "(UTC+11:00) Solomon Is., New Caledonia",
+                                                "value": "Central Pacific Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+12:00) Anadyr, Petropavlovsk-Kamchatsky (RTZ 11)",
+                                                "value": "Russia Time Zone 11"
+                                            },
+                                            {
+                                                "label": "(UTC+12:00) Auckland, Wellington",
+                                                "value": "New Zealand Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+12:00) Coordinated Universal Time+12",
+                                                "value": "UTC+12"
+                                            },
+                                            {
+                                                "label": "(UTC+12:00) Fiji",
+                                                "value": "Fiji Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+13:00) Nuku'alofa",
+                                                "value": "Tonga Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+13:00) Samoa",
+                                                "value": "Samoa Standard Time"
+                                            },
+                                            {
+                                                "label": "(UTC+14:00) Kiritimati Island",
+                                                "value": "Line Islands Standard Time"
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "labConfiguration",
+                    "label": "Lab configuration",
+                    "description": "Configure your lab environment details.",
+                    "elements": [
+                        {
+                            "name": "generalSection",
+                            "type": "Microsoft.Common.Section",
+                            "visible": true,
+                            "label": "General",
+                            "elements": [
+                                {
+                                    "name": "culture",
+                                    "type": "Microsoft.Common.DropDown",
+                                    "visible": true,
+                                    "multiselect": false,
+                                    "selectAll": false,
+                                    "filter": false,
+                                    "multiLine": false,
+                                    "label": "Culture",
+                                    "toolTip": "The operating system's culture of VMs in the lab environment. This affects such as language and input method of the operating system.",
+                                    "placeholder": "Select the culture...",
+                                    "defaultDescription": "---",
+                                    "filterPlaceholder": "Filter culture...",
+                                    "defaultValue": "English (en-US)",
+                                    "constraints": {
+                                        "required": true,
+                                        "allowedValues": [
+                                            {
+                                                "label": "English (en-US)",
+                                                "value": "en-us"
+                                            },
+                                            {
+                                                "label": "Japanese (ja-JP)",
+                                                "value": "ja-jp"
+                                            }
+                                        ]
+                                    }
+                                },
+                                {
+                                    "name": "isInstallUpdatesToLabVm",
+                                    "type": "Microsoft.Common.CheckBox",
+                                    "label": "Install OS updates to lab VMs during deployment?",
+                                    "visible": true,
+                                    "toolTip": "By checked, operating system's updates will be installed to lab VMs during the deployment.",
+                                    "defaultValue": false,
+                                    "constraints": {
+                                        "required": false
+                                    }
+                                },
+                                {
+                                    "name": "updatesInstallationInfo",
+                                    "type": "Microsoft.Common.InfoBox",
+                                    "visible": "[steps('labConfiguration').generalSection.isInstallUpdatesToLabVm]",
+                                    "options": {
+                                        "style": "Info",
+                                        "text": "Will increase deployment time if install OS updates to lab virtual machines during deployment."
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "hciNodeSection",
+                            "type": "Microsoft.Common.Section",
+                            "visible": true,
+                            "label": "HCI node",
+                            "elements": [
+                                {
+                                    "name": "hciNodeOperatingSystem",
+                                    "type": "Microsoft.Common.DropDown",
+                                    "visible": true,
+                                    "multiselect": false,
+                                    "selectAll": false,
+                                    "filter": true,
+                                    "multiLine": true,
+                                    "label": "Operating system",
+                                    "toolTip": "The operating system for the HCI nodes.",
+                                    "placeholder": "Select the HCI node's operating system...",
+                                    "defaultDescription": "---",
+                                    "filterPlaceholder": "Filter HCI node's operating systems...",
+                                    "defaultValue": "Azure Stack HCI, version 22H2",
+                                    "constraints": {
+                                        "required": true,
+                                        "allowedValues": [
+                                            {
+                                                "label": "Azure Stack HCI, version 22H2",
+                                                "description": "Azure Stack HCI, version 22H2. The latest Azure Stack HCI release.",
+                                                "value": {
+                                                    "sku": "as22h2",
+                                                    "imageIndex": 1
+                                                }
+                                            },
+                                            {
+                                                "label": "Azure Stack HCI, version 21H2",
+                                                "description": "Azure Stack HCI, version 21H2.",
+                                                "value": {
+                                                    "sku": "as21h2",
+                                                    "imageIndex": 1
+                                                }
+                                            },
+                                            {
+                                                "label": "Azure Stack HCI, version 20H2",
+                                                "description": "Azure Stack HCI, version 20H2.",
+                                                "value": {
+                                                    "sku": "as20h2",
+                                                    "imageIndex": 1
+                                                }
+                                            },
+                                            {
+                                                "label": "Windows Server 2022 Datacenter Evaluation (Desktop Experience)",
+                                                "description": "Windows Server 2022 Datacenter Evaluation with Desktop Experience.",
+                                                "value": {
+                                                    "sku": "ws2022",
+                                                    "imageIndex": 4
+                                                }
+                                            }
+                                        ]
+                                    }
+                                },
+                                {
+                                    "name": "hciNodeCount",
+                                    "type": "Microsoft.Common.Slider",
+                                    "visible": true,
+                                    "label": "HCI node count",
+                                    "subLabel": "nodes",
+                                    "toolTip": "Pick the HCI node count to deploy.",
+                                    "showStepMarkers": true,
+                                    "constraints": {
+                                        "required": true
+                                    },
+                                    "min": 2,
+                                    "max": 8,
+                                    "defaultValue": 2
+                                }
+                            ]
+                        },
+                        {
+                            "name": "addsSection",
+                            "type": "Microsoft.Common.Section",
+                            "visible": true,
+                            "label": "Active Directory Domain Services (AD DS)",
+                            "elements": [
+                                {
+                                    "name": "domainName",
+                                    "type": "Microsoft.Common.TextBox",
+                                    "visible": true,
+                                    "multiLine": false,
+                                    "label": "AD DS domain FQDN",
+                                    "toolTip": "Specify the AD DS domain FQDN for the lab environment.",
+                                    "placeholder": "e.g. hci.local",
+                                    "defaultValue": "hci.local",
+                                    "constraints": {
+                                        "required": true,
+                                        "validations": [
+                                            {
+                                                "regex": "^(?!-)[A-Za-z0-9-]+([\\-\\.]{1}[a-z0-9]+)*\\.[A-Za-z]{2,6}$",
+                                                "message": "Invalid domain name."
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        "outputs": {
+            "kind": "ResourceGroup",
+            "resourceGroupId": "[steps('basics').resourceScope.resourceGroup.id]",
+            "location": "[steps('basics').resourceScope.location.name]",
+            "parameters": {
+                "adminUserName": "[steps('basics').adminAccountSection.adminUserName]",
+                "adminPassword": "[steps('basics').adminAccountSection.adminPassword]",
+                "labHostVmName": "[steps('basics').vmName]",
+                "labHostVmSize": "[steps('basics').vmSize]",
+                "labHostVmOsDiskType": "[steps('labHostVmDetails').diskSection.osDiskType]",
+                "labHostVmDataDiskType": "[steps('labHostVmDetails').diskSection.dataDiskType]",
+                "labHostVmDataDiskSize": "[steps('labHostVmDetails').dataVolumeSection.dataDiskSize]",
+                "isHaveEligibleWindowsServerLicense": "[steps('basics').azureHybridBenefitSection.haveEligibleWindowsServerLicense]",
+                "isAutoshutdownEnabled": "[steps('labHostVmDetails').autoshutdownSection.isAutoshutdownEnabled]",
+                "autoshutdownTime": "[steps('labHostVmDetails').autoshutdownSection.shutdownTime]",
+                "autoshutdownTimeZone": "[steps('labHostVmDetails').autoshutdownSection.shutdownTimeZone]",
+                "labVmOsCulture": "[steps('labConfiguration').generalSection.culture]",
+                "isInstallUpdatesToLabVm": "[steps('labConfiguration').generalSection.isInstallUpdatesToLabVm]",
+                "hciNodeOsSku": "[steps('labConfiguration').hciNodeSection.hciNodeOperatingSystem.sku]",
+                "hciNodeOsImageIndex": "[steps('labConfiguration').hciNodeSection.hciNodeOperatingSystem.imageIndex]",
+                "hciNodeCount": "[steps('labConfiguration').hciNodeSection.hciNodeCount]",
+                "addsDomainFqdn": "[steps('labConfiguration').addsSection.domainName]"
+            }
+        }
+    }
+}
