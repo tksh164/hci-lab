@@ -39,7 +39,7 @@ function ComputeHciNodeRamBytes
 
 'Creating the HCI node VMs configuraton...' | WriteLog -Context $env:ComputerName
 
-$parentVhdPath = [IO.Path]::Combine($configParams.labHost.folderPath.vhd, (BuildBaseVhdFileName -OperatingSystem $configParams.hciNode.osImage.sku -ImageIndex $configParams.hciNode.osImage.index -Culture $configParams.guestOS.culture))
+$parentVhdPath = [IO.Path]::Combine($configParams.labHost.folderPath.vhd, (BuildBaseVhdFileName -OperatingSystem $configParams.hciNode.operatingSystem.sku -ImageIndex $configParams.hciNode.operatingSystem.imageIndex -Culture $configParams.guestOS.culture))
 $ramBytes = ComputeHciNodeRamBytes -NodeCount $configParams.hciNode.nodeCount -LabHostReservedRamBytes $configParams.labHost.reservedRamBytes -AddsDcVMName $configParams.addsDC.vmName -WacVMName $configParams.wac.vmName
 $adminPassword = GetSecret -KeyVaultName $configParams.keyVault.name -SecretName $configParams.keyVault.secretName
 
@@ -49,8 +49,8 @@ for ($i = 0; $i -lt $configParams.hciNode.nodeCount; $i++) {
         VMName          = $configParams.hciNode.vmName -f ($configParams.hciNode.vmNameOffset + $i)
         ParentVhdPath   = $parentVhdPath
         RamBytes        = $ramBytes
-        OperatingSystem = $configParams.hciNode.osImage.sku
-        ImageIndex      = $configParams.hciNode.osImage.index
+        OperatingSystem = $configParams.hciNode.operatingSystem.sku
+        ImageIndex      = $configParams.hciNode.operatingSystem.imageIndex
         AdminPassword   = $adminPassword
         NetAdapter      = @{
             Management = @{

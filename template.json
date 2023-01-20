@@ -169,7 +169,7 @@
                 "description": "By specifying True, operating system's updates will be installed during the deployment."
             }
         },
-        "hciNodeOsImageSku": {
+        "hciNodeOsSku": {
             "type": "string",
             "defaultValue": "as22h2",
             "allowedValues": [
@@ -380,9 +380,9 @@
                 }
             },
             "hciNode": {
-                "osImage": {
-                    "sku": "[parameters('hciNodeOsImageSku')]",
-                    "index": "[parameters('hciNodeOsImageIndex')]"
+                "operatingSystem": {
+                    "sku": "[parameters('hciNodeOsSku')]",
+                    "imageIndex": "[parameters('hciNodeOsImageIndex')]"
                 },
                 "nodeCount": "[parameters('hciNodeCount')]",
                 "vmNameOffset": 1,

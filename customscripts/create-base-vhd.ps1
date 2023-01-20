@@ -165,8 +165,8 @@ $params = @{
     IsoFolder            = $configParams.labHost.folderPath.temp
     UpdatesFolder        = $configParams.labHost.folderPath.updates
     VhdFolder            = $configParams.labHost.folderPath.vhd
-    OperatingSystem      = $configParams.hciNode.osImage.sku
-    ImageIndex           = $configParams.hciNode.osImage.index
+    OperatingSystem      = $configParams.hciNode.operatingSystem.sku
+    ImageIndex           = $configParams.hciNode.operatingSystem.imageIndex
     Culture              = $configParams.guestOS.culture
     WorkFolder           = $configParams.labHost.folderPath.temp
     LogFolder            = $configParams.labHost.folderPath.log
@@ -175,7 +175,7 @@ $jobParams = BuildParameterForCreateBaseVhdFromIsoAsJob @params
 $jobs += Start-Job -ArgumentList $jobParams -ScriptBlock ${function:CreateBaseVhdFromIsoAsJob}
 
 # Windows Server 2022 with Desktop Experience VHD is always used for the domain controller and Windows Admin Center VMs.
-if (-not (($configParams.hciNode.osImage.sku -eq 'ws2022') -and ($configParams.hciNode.osImage.index -eq 4))) {
+if (-not (($configParams.hciNode.operatingSystem.sku -eq 'ws2022') -and ($configParams.hciNode.operatingSystem.imageIndex -eq 4))) {
     $params = @{
         SharedModulePath     = (Get-Module -Name 'shared').Path
         ConvertWimModulePath = $convertWimScriptFile.FullName
