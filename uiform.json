@@ -1236,7 +1236,7 @@
             "location": "[steps('basics').resourceScope.location.name]",
             "parameters": {
                 "adminUserName": "[steps('basics').adminAccountSection.adminUserName]",
-                "adminPassword": "[steps('basics').adminAccountSection.adminPassword]",
+                "adminPassword": "[steps('basics').adminAccountSection.adminPassword.password]",
                 "labHostVmName": "[steps('basics').vmName]",
                 "labHostVmSize": "[steps('basics').vmSize]",
                 "labHostVmOsDiskType": "[steps('labHostVmDetails').diskSection.osDiskType]",
