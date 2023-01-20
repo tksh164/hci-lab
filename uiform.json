@@ -331,7 +331,7 @@
                                     "visible": true,
                                     "multiselect": false,
                                     "selectAll": false,
-                                    "filter": false,
+                                    "filter": true,
                                     "multiLine": true,
                                     "label": "Data volume capacity",
                                     "toolTip": "Data volume capacity on the lab host virtual machine. All lab assets and artifacts such as VMs, VHDs, ISOs are stored on the volume.",
