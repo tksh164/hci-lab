@@ -18,4 +18,4 @@ TBW
 
 ## License
 
-- The custom script `create-base-vhd.ps1` downloads `Convert-WindowsImage.ps1` from [x0nn/Convert-WindowsImage](https://github.com/x0nn/Convert-WindowsImage) and use it during the deployment. `Convert-WindowsImage.ps1` licensed under the GPLv3-License. See [here](https://github.com/x0nn/Convert-WindowsImage#license) for details.
+- The custom script `create-base-vhd.ps1` in this template downloads `Convert-WindowsImage.ps1` from [x0nn/Convert-WindowsImage](https://github.com/x0nn/Convert-WindowsImage) and uses it during the deployment. `Convert-WindowsImage.ps1` licensed under the GPLv3-License. See [here](https://github.com/x0nn/Convert-WindowsImage#license) for details.
