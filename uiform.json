@@ -326,6 +326,14 @@
                             "label": "Data volume",
                             "elements": [
                                 {
+                                    "name": "dataVolumeSectionText",
+                                    "type": "Microsoft.Common.TextBlock",
+                                    "visible": true,
+                                    "options": {
+                                        "text": "All lab assets and artifacts such as VMs, VHDs, ISOs are stored in a single data volume on the lab host virtual machine. The data volume capacity cannot change after complete deployment."
+                                    }
+                                },
+                                {
                                     "name": "dataDiskSize",
                                     "type": "Microsoft.Common.DropDown",
                                     "visible": true,
@@ -334,7 +342,7 @@
                                     "filter": true,
                                     "multiLine": true,
                                     "label": "Data volume capacity",
-                                    "toolTip": "Data volume capacity on the lab host virtual machine. All lab assets and artifacts such as VMs, VHDs, ISOs are stored on the volume.",
+                                    "toolTip": "Data volume capacity on the lab host virtual machine.",
                                     "placeholder": "Select the data disk size...",
                                     "defaultDescription": "---",
                                     "filterPlaceholder": "Filter data disk sizes...",
@@ -374,15 +382,6 @@
                                             }
                                         ]
                                     }
-                                },
-                                {
-                                    "name": "dataVolumeSizeInfo",
-                                    "type": "Microsoft.Common.InfoBox",
-                                    "visible": true,
-                                    "options": {
-                                        "style": "Info",
-                                        "text": "Data volume capacity cannot change after complete deployment."
-                                    }
                                 }
                             ]
                         },
@@ -411,7 +410,7 @@
                                     "selectAll": false,
                                     "filter": true,
                                     "multiLine": false,
-                                    "label": "Shutdown time",
+                                    "label": "Scheduled shutdown time",
                                     "toolTip": "Configures the time when the virtual machine shuts down daily.",
                                     "placeholder": "",
                                     "defaultDescription": "---",
@@ -1072,7 +1071,7 @@
                             "name": "generalSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
-                            "label": "General",
+                            "label": "Common configuration for lab virtual machines",
                             "elements": [
                                 {
                                     "name": "culture",
@@ -1083,7 +1082,7 @@
                                     "filter": false,
                                     "multiLine": false,
                                     "label": "Culture",
-                                    "toolTip": "The operating system's culture of VMs in the lab environment. This affects such as language and input method of the operating system.",
+                                    "toolTip": "Culture affects such as display language and input method of the operating system for lab virtual machines.",
                                     "placeholder": "Select the culture...",
                                     "defaultDescription": "---",
                                     "filterPlaceholder": "Filter culture...",
@@ -1105,7 +1104,7 @@
                                 {
                                     "name": "isInstallUpdatesToLabVm",
                                     "type": "Microsoft.Common.CheckBox",
-                                    "label": "Install OS updates to lab VMs during deployment?",
+                                    "label": "Install OS updates to lab virtual machines during deployment?",
                                     "visible": true,
                                     "toolTip": "By checked, operating system's updates will be installed to lab VMs during the deployment.",
                                     "defaultValue": false,
@@ -1186,7 +1185,7 @@
                                     "name": "hciNodeCount",
                                     "type": "Microsoft.Common.Slider",
                                     "visible": true,
-                                    "label": "HCI node count",
+                                    "label": "Node count",
                                     "subLabel": "nodes",
                                     "toolTip": "Pick the HCI node count to deploy.",
                                     "showStepMarkers": true,
