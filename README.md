@@ -4,7 +4,7 @@
 
 ## Template overview
 
-This template deploys a HCI lab environment using Azure Stack HCI or Windows Server 2022.
+This template deploys an HCI lab environment with Azure Stack HCI or Windows Server 2022.
 
 ## Notes
 
