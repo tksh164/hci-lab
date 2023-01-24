@@ -4,11 +4,7 @@
 
 ## Template overview
 
-TBW
-
-### Deployment
-
-TBW
+This template deploys a HCI lab environment using Azure Stack HCI or Windows Server 2022.
 
 ## Notes
 
