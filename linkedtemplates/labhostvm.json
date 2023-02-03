@@ -194,7 +194,7 @@
         {
             "name": "[parameters('vmName')]",
             "type": "Microsoft.Compute/virtualMachines",
-            "apiVersion": "2021-11-01",
+            "apiVersion": "2022-08-01",
             "location": "[parameters('location')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfaceName'))]"
@@ -222,10 +222,12 @@
                 "storageProfile": {
                     "osDisk": {
                         "name": "[format('{0}-osdisk', parameters('vmName'))]",
-                        "createOption": "FromImage",
                         "managedDisk": {
                             "storageAccountType": "[parameters('osDiskType')]"
-                        }
+                        },
+                        "createOption": "FromImage",
+                        "caching": "ReadWrite",
+                        "deleteOption": "Delete"
                     },
                     "imageReference": {
                         "publisher": "MicrosoftWindowsServer",
@@ -239,13 +241,14 @@
                             "count": "[variables('dataDisksCount')]",
                             "input": {
                                 "name": "[format('{0}-datadisk{1}', parameters('vmName'), copyIndex('dataDisks'))]",
-                                "diskSizeGB": "[parameters('dataDiskSize')]",
                                 "lun": "[copyIndex('dataDisks')]",
-                                "createOption": "Empty",
-                                "caching": "None",
                                 "managedDisk": {
                                     "storageAccountType": "[parameters('dataDiskType')]"
-                                }
+                                },
+                                "diskSizeGB": "[parameters('dataDiskSize')]",
+                                "createOption": "Empty",
+                                "caching": "ReadOnly",
+                                "deleteOption": "Delete"
                             }
                         }
                     ]
