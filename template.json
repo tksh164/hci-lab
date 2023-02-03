@@ -132,7 +132,7 @@
         },
         "isAutoshutdownEnabled": {
             "type": "bool",
-            "defaultValue": false,
+            "defaultValue": true,
             "metadata": {
                 "description": "By specifying True, will be auto-shutdown configured."
             }
