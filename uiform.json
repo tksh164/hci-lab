@@ -28,6 +28,8 @@
                             "multiLine": false,
                             "label": "Lab host VM name",
                             "toolTip": "Specify the lab host virtual machine name. The name used as the Azure resource identifier, and in guest computer name.",
+                            "placeholder": "e.g. hcilab-vm1",
+                            "defaultValue": "hcilab-vm1",
                             "constraints": {
                                 "required": true,
                                 "validations": [
@@ -36,13 +38,15 @@
                                         "message": "Virtual machine names can contain all alphanumeric characters and special character '-', also, not begin with '-' and not end with '-'."
                                     },
                                     {
+                                        "regex": "(?!^\\d+$)^.+$",
+                                        "message": "Virtual machine name cannot contain only numbers."
+                                    },
+                                    {
                                         "regex": "^.{1,15}$",
                                         "message": "Virtual machine name must be between 1 and 15 characters long."
                                     }
                                 ]
-                            },
-                            "placeholder": "e.g. hcilab-vm1",
-                            "defaultValue": "hcilab-vm1"
+                            }
                         },
                         {
                             "name": "vmSize",
