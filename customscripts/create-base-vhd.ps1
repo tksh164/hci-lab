@@ -79,7 +79,6 @@ function CreateBaseVhdFromIsoAsJob
         Edition       = $jobParams.ImageIndex
         VHDPath       = [IO.Path]::Combine($jobParams.VhdFolder, (BuildBaseVhdFileName -OperatingSystem $jobParams.OperatingSystem -ImageIndex $jobParams.ImageIndex -Culture $jobParams.Culture))
         VHDFormat     = 'VHDX'
-        IsFixed       = $false
         DiskLayout    = 'UEFI'
         SizeBytes     = 40GB
         TempDirectory = $jobParams.WorkFolder
@@ -149,7 +148,7 @@ New-Item -ItemType Directory -Path $configParams.labHost.folderPath.vhd -Force
 
 'Downloading the Convert-WindowsImage.ps1...' | WriteLog -Context $env:ComputerName
 $params = @{
-    SourceUri      = 'https://raw.githubusercontent.com/x0nn/Convert-WindowsImage/main/Convert-WindowsImage.ps1'
+    SourceUri      = 'https://raw.githubusercontent.com/microsoft/MSLab/master/Tools/Convert-WindowsImage.ps1'
     DownloadFolder = $configParams.labHost.folderPath.temp
     FileNameToSave = 'Convert-WindowsImage.ps1'
 }
