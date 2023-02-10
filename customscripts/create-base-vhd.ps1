@@ -12,7 +12,7 @@ $configParams = GetConfigParameters
 Start-Transcript -OutputDirectory $configParams.labHost.folderPath.log
 $configParams | ConvertTo-Json -Depth 16
 
-function BuildParameterForCreateBaseVhdFromIsoAsJob
+function CreateJobParameters
 {
     param (
         [Parameter(Mandatory = $true)]
@@ -111,7 +111,7 @@ $params = @{
 $hciNodeVhdJobParams = @{
     Name         = 'HCI node VHD'
     ScriptBlock  = ${function:CreateBaseVhdFromIsoAsJob}
-    ArgumentList = BuildParameterForCreateBaseVhdFromIsoAsJob @params
+    ArgumentList = CreateJobParameters @params
 }
 
 $params = @{
@@ -127,7 +127,7 @@ $params = @{
 $addsDcVhdJobParams = @{
     Name         = 'ADDS DC VHD'
     ScriptBlock  = ${function:CreateBaseVhdFromIsoAsJob}
-    ArgumentList = BuildParameterForCreateBaseVhdFromIsoAsJob @params
+    ArgumentList = CreateJobParameters @params
 }
 
 $params = @{
@@ -143,7 +143,7 @@ $params = @{
 $wacVhdJobParams = @{
     Name         = 'WAC VHD'
     ScriptBlock  = ${function:CreateBaseVhdFromIsoAsJob}
-    ArgumentList = BuildParameterForCreateBaseVhdFromIsoAsJob @params
+    ArgumentList = CreateJobParameters @params
 }
 
 # NOTE: Only one VHD file can create from the same single ISO file. The second VHD creation will fail if create
