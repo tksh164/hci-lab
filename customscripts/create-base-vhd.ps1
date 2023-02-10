@@ -37,10 +37,7 @@ function BuildParameterForCreateBaseVhdFromIsoAsJob
         [string] $Culture,
 
         [Parameter(Mandatory = $true)]
-        [string] $WorkFolder#,
-
-        #[Parameter(Mandatory = $true)]
-        #[string] $LogFolder
+        [string] $WorkFolder
     )
 
     $jobParams = @{
@@ -68,7 +65,6 @@ function CreateBaseVhdFromIsoAsJob
     $jobParams = $args[0]
     Import-Module -Name $jobParams.ImportModules -Force
 
-    # Create a VHD file.
     $params = @{
         SourcePath    = [IO.Path]::Combine($jobParams.IsoFolder, (BuildIsoFileName -OperatingSystem $jobParams.OperatingSystem -Culture $jobParams.Culture))
         Edition       = $jobParams.ImageIndex
@@ -77,62 +73,12 @@ function CreateBaseVhdFromIsoAsJob
         DiskLayout    = 'UEFI'
         SizeBytes     = 40GB
         TempDirectory = $jobParams.WorkFolder
-        #Passthru      = $true
         Verbose       = $true
     }
     if ($jobParams.UpdatePackage.Count -ne 0) {
         $params.Package = $jobParams.UpdatePackage | Sort-Object
     }
     Convert-WindowsImage @params
-    #$vhd = Convert-WindowsImage @params
-
-    <#
-    $dismExePath = Join-Path -Path $env:windir -ChildPath 'System32\dism.exe' -Resolve
-    $vhdDisk = Mount-VHD -Path $vhd.ImagePath -Passthru | Get-Disk
-    $vhdPartition = $vhdDisk | Get-Partition | Where-Object -Property IsHidden -EQ $false | Select-Object -First 1
-    $volumeRootPath = '{0}:\\' -f $vhdPartition.DriveLetter  # Use \\ with intent because \ is meaning escape character in dism.
-
-    # Cleanup the VHD file.
-    $params = @{
-        FilePath               = $dismExePath
-        ArgumentList           = @(
-            ('/Image:"{0}"' -f $volumeRootPath),
-            '/Cleanup-Image',
-            '/StartComponentCleanup',
-            '/ResetBase',
-            '/LogLevel:3',
-            ('/LogPath:"{0}"' -f [IO.Path]::Combine($jobParams.LogFolder, ('{0}_{1}-cleanup-dism.txt' -f $jobParams.OperatingSystem, $jobParams.Culture)))
-        )
-        RedirectStandardOutput = [IO.Path]::Combine($jobParams.LogFolder, ('{0}_{1}-cleanup-stdout.txt' -f $jobParams.OperatingSystem, $jobParams.Culture))
-        RedirectStandardError  = [IO.Path]::Combine($jobParams.LogFolder, ('{0}_{1}-cleanup-stderr.txt' -f $jobParams.OperatingSystem, $jobParams.Culture))
-        NoNewWindow            = $true
-        Wait                   = $true
-        PassThru               = $true
-        Verbose                = $true
-    }
-    Start-Process @params
-
-    # Optimize the VHD file.
-    $params = @{
-        FilePath               = $dismExePath
-        ArgumentList           = @(
-            ('/Image:"{0}"' -f $volumeRootPath),
-            '/Optimize-Image',
-            '/Boot',
-            '/LogLevel:3',
-            ('/LogPath:"{0}"' -f [IO.Path]::Combine($jobParams.LogFolder, ('{0}_{1}-optimize-dism.txt' -f $jobParams.OperatingSystem, $jobParams.Culture)))
-        )
-        RedirectStandardOutput = [IO.Path]::Combine($jobParams.LogFolder, ('{0}_{1}-optimize-stdout.txt' -f $jobParams.OperatingSystem, $jobParams.Culture))
-        RedirectStandardError  = [IO.Path]::Combine($jobParams.LogFolder, ('{0}_{1}-optimize-stderr.txt' -f $jobParams.OperatingSystem, $jobParams.Culture))
-        NoNewWindow            = $true
-        Wait                   = $true
-        PassThru               = $true
-        Verbose                = $true
-    }
-    Start-Process @params
-
-    Dismount-VHD -DiskNumber $vhdDisk.DiskNumber
-    #>
 }
 
 'Creating the temp folder if it does not exist...' | WriteLog -Context $env:ComputerName
@@ -161,7 +107,6 @@ $params = @{
     ImageIndex      = $configParams.hciNode.operatingSystem.imageIndex
     Culture         = $configParams.guestOS.culture
     WorkFolder      = $configParams.labHost.folderPath.temp
-    #LogFolder      = $configParams.labHost.folderPath.log
 }
 $hciNodeVhdJobParams = @{
     Name         = 'HCI node VHD'
@@ -178,7 +123,6 @@ $params = @{
     ImageIndex      = 3  # Datacenter (Server Core)
     Culture         = $configParams.guestOS.culture
     WorkFolder      = $configParams.labHost.folderPath.temp
-    #LogFolder      = $configParams.labHost.folderPath.log
 }
 $addsDcVhdJobParams = @{
     Name         = 'ADDS DC VHD'
@@ -195,7 +139,6 @@ $params = @{
     ImageIndex      = 4  # Datacenter with Desktop Experience
     Culture         = $configParams.guestOS.culture
     WorkFolder      = $configParams.labHost.folderPath.temp
-    #LogFolder      = $configParams.labHost.folderPath.log
 }
 $wacVhdJobParams = @{
     Name         = 'WAC VHD'
