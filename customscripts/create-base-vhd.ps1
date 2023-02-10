@@ -49,7 +49,6 @@ function BuildParameterForCreateBaseVhdFromIsoAsJob
         Culture              = $Culture
         WorkFolder           = $WorkFolder
         UpdatePackage        = @()
-        LogFolder            = $LogFolder
     }
 
     $updatesFolderPath = [IO.Path]::Combine($UpdatesFolder, $OperatingSystem)
