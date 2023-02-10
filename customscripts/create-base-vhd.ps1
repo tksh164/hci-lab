@@ -51,6 +51,7 @@ function BuildParameterForCreateBaseVhdFromIsoAsJob
         UpdatePackage        = @()
     }
 
+    # Add update package paths if the update packages exist.
     $updatesFolderPath = [IO.Path]::Combine($UpdatesFolder, $OperatingSystem)
     if (Test-Path -PathType Container -LiteralPath $updatesFolderPath) {
         $jobParams.UpdatePackage += Get-ChildItem -LiteralPath $updatesFolderPath | Select-Object -ExpandProperty 'FullName'
