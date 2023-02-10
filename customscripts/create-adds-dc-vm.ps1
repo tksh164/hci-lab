@@ -45,9 +45,10 @@ function WaitingForReadyToDC
 $vmName = $configParams.addsDC.vmName
 
 'Creating the OS disk for the VM...' | WriteLog -Context $vmName
+$imageIndex = 3  # Datacenter (Server Core)
 $params = @{
     Differencing = $true
-    ParentPath   = [IO.Path]::Combine($configParams.labHost.folderPath.vhd, (BuildBaseVhdFileName -OperatingSystem 'ws2022' -ImageIndex 4 -Culture $configParams.guestOS.culture))
+    ParentPath   = [IO.Path]::Combine($configParams.labHost.folderPath.vhd, (BuildBaseVhdFileName -OperatingSystem 'ws2022' -ImageIndex $imageIndex -Culture $configParams.guestOS.culture))
     Path         = [IO.Path]::Combine($configParams.labHost.folderPath.vm, $vmName, 'osdisk.vhdx')
 }
 $vmOSDiskVhd = New-VHD  @params
