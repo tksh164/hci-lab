@@ -16,10 +16,7 @@ function BuildParameterForCreateBaseVhdFromIsoAsJob
 {
     param (
         [Parameter(Mandatory = $true)]
-        [string] $SharedModulePath,
-
-        [Parameter(Mandatory = $true)]
-        [string] $ConvertWimModulePath,
+        [string[]] $ImportModules,
 
         [Parameter(Mandatory = $true)]
         [string] $IsoFolder,
@@ -40,15 +37,14 @@ function BuildParameterForCreateBaseVhdFromIsoAsJob
         [string] $Culture,
 
         [Parameter(Mandatory = $true)]
-        [string] $WorkFolder,
+        [string] $WorkFolder#,
 
-        [Parameter(Mandatory = $true)]
-        [string] $LogFolder
+        #[Parameter(Mandatory = $true)]
+        #[string] $LogFolder
     )
 
     $jobParams = @{
-        SharedModulePath     = $SharedModulePath
-        ConvertWimModulePath = $ConvertWimModulePath
+        ImportModules        = $ImportModules
         IsoFolder            = $IsoFolder
         VhdFolder            = $VhdFolder
         OperatingSystem      = $OperatingSystem
@@ -70,8 +66,7 @@ function BuildParameterForCreateBaseVhdFromIsoAsJob
 function CreateBaseVhdFromIsoAsJob
 {
     $jobParams = $args[0]
-    Import-Module -Name $jobParams.SharedModulePath -Force
-    Import-Module -Name $jobParams.ConvertWimModulePath -Force
+    Import-Module -Name $jobParams.ImportModules -Force
 
     # Create a VHD file.
     $params = @{
@@ -156,46 +151,82 @@ $convertWimScriptFile = DownloadFile @params
 $convertWimScriptFile
 
 'Creating the base VHD creation jobs.' | WriteLog -Context $env:ComputerName
-$jobs = @()
 
 $params = @{
-    SharedModulePath     = (Get-Module -Name 'shared').Path
-    ConvertWimModulePath = $convertWimScriptFile.FullName
-    IsoFolder            = $configParams.labHost.folderPath.temp
-    UpdatesFolder        = $configParams.labHost.folderPath.updates
-    VhdFolder            = $configParams.labHost.folderPath.vhd
-    OperatingSystem      = $configParams.hciNode.operatingSystem.sku
-    ImageIndex           = $configParams.hciNode.operatingSystem.imageIndex
-    Culture              = $configParams.guestOS.culture
-    WorkFolder           = $configParams.labHost.folderPath.temp
-    LogFolder            = $configParams.labHost.folderPath.log
+    ImportModules   = (Get-Module -Name 'shared').Path, $convertWimScriptFile.FullName
+    IsoFolder       = $configParams.labHost.folderPath.temp
+    UpdatesFolder   = $configParams.labHost.folderPath.updates
+    VhdFolder       = $configParams.labHost.folderPath.vhd
+    OperatingSystem = $configParams.hciNode.operatingSystem.sku
+    ImageIndex      = $configParams.hciNode.operatingSystem.imageIndex
+    Culture         = $configParams.guestOS.culture
+    WorkFolder      = $configParams.labHost.folderPath.temp
+    #LogFolder      = $configParams.labHost.folderPath.log
 }
-$jobParams = BuildParameterForCreateBaseVhdFromIsoAsJob @params
-$jobs += Start-Job -ArgumentList $jobParams -ScriptBlock ${function:CreateBaseVhdFromIsoAsJob}
+$hciNodeVhdJobParams = @{
+    Name         = 'HCI node VHD'
+    ScriptBlock  = ${function:CreateBaseVhdFromIsoAsJob}
+    ArgumentList = BuildParameterForCreateBaseVhdFromIsoAsJob @params
+}
 
-# Windows Server 2022 with Desktop Experience VHD is always used for the domain controller and Windows Admin Center VMs.
-if (-not (($configParams.hciNode.operatingSystem.sku -eq 'ws2022') -and ($configParams.hciNode.operatingSystem.imageIndex -eq 4))) {
-    $params = @{
-        SharedModulePath     = (Get-Module -Name 'shared').Path
-        ConvertWimModulePath = $convertWimScriptFile.FullName
-        IsoFolder            = $configParams.labHost.folderPath.temp
-        UpdatesFolder        = $configParams.labHost.folderPath.updates
-        VhdFolder            = $configParams.labHost.folderPath.vhd
-        OperatingSystem      = 'ws2022'
-        ImageIndex           = 4  # Datacenter with Desktop Experience
-        Culture              = $configParams.guestOS.culture
-        WorkFolder           = $configParams.labHost.folderPath.temp
-        LogFolder            = $configParams.labHost.folderPath.log
+$params = @{
+    ImportModules   = (Get-Module -Name 'shared').Path, $convertWimScriptFile.FullName
+    IsoFolder       = $configParams.labHost.folderPath.temp
+    UpdatesFolder   = $configParams.labHost.folderPath.updates
+    VhdFolder       = $configParams.labHost.folderPath.vhd
+    OperatingSystem = 'ws2022'
+    ImageIndex      = 3  # Datacenter (Server Core)
+    Culture         = $configParams.guestOS.culture
+    WorkFolder      = $configParams.labHost.folderPath.temp
+    #LogFolder      = $configParams.labHost.folderPath.log
+}
+$addsDcVhdJobParams = @{
+    Name         = 'ADDS DC VHD'
+    ScriptBlock  = ${function:CreateBaseVhdFromIsoAsJob}
+    ArgumentList = BuildParameterForCreateBaseVhdFromIsoAsJob @params
+}
+
+$params = @{
+    ImportModules   = (Get-Module -Name 'shared').Path, $convertWimScriptFile.FullName
+    IsoFolder       = $configParams.labHost.folderPath.temp
+    UpdatesFolder   = $configParams.labHost.folderPath.updates
+    VhdFolder       = $configParams.labHost.folderPath.vhd
+    OperatingSystem = 'ws2022'
+    ImageIndex      = 4  # Datacenter with Desktop Experience
+    Culture         = $configParams.guestOS.culture
+    WorkFolder      = $configParams.labHost.folderPath.temp
+    #LogFolder      = $configParams.labHost.folderPath.log
+}
+$wacVhdJobParams = @{
+    Name         = 'WAC VHD'
+    ScriptBlock  = ${function:CreateBaseVhdFromIsoAsJob}
+    ArgumentList = BuildParameterForCreateBaseVhdFromIsoAsJob @params
+}
+
+# NOTE: Only one VHD file can create from the same single ISO file. The second VHD creation will fail if create
+# multiple VHDs from the same single ISO because the ISO unmount when finish first one.
+$batches = @(@(), @(), @())
+if ($configParams.hciNode.operatingSystem.sku -ne 'ws2022') {
+    $batches[0] = @($hciNodeVhdJobParams, $addsDcVhdJobParams)
+    $batches[1] = @($wacVhdJobParams)
+}
+else {
+    $batches[0] = @($hciNodeVhdJobParams)
+    $batches[1] = @($addsDcVhdJobParams)
+    $batches[2] = @($wacVhdJobParams)
+}
+
+for ($i = 0; $i -lt $batches.Length; $i++) {
+    ('Waiting for the base VHD creation jobs in batch {0}...' -f ($i + 1)) | WriteLog -Context $env:ComputerName
+    $jobs = @()
+    foreach ($params in $batches[$i]) {
+        $jobs += Start-Job @params
     }
-    $jobParams = BuildParameterForCreateBaseVhdFromIsoAsJob @params
-    $jobs += Start-Job -ArgumentList $jobParams -ScriptBlock ${function:CreateBaseVhdFromIsoAsJob}
+    $jobs | Format-Table -Property Id, Name, PSJobTypeName, State, HasMoreData, Location, PSBeginTime, PSEndTime
+    $jobs | Wait-Job
+    $jobs | Receive-Job
+    $jobs | Format-Table -Property Id, Name, PSJobTypeName, State, HasMoreData, Location, PSBeginTime, PSEndTime
 }
-
-'Waiting for the base VHD creation jobs.' | WriteLog -Context $env:ComputerName
-$jobs | Format-Table -Property Id, Name, PSJobTypeName, State, HasMoreData, Location, PSBeginTime, PSEndTime
-$jobs | Wait-Job
-$jobs | Format-Table -Property Id, Name, PSJobTypeName, State, HasMoreData, Location, PSBeginTime, PSEndTime
-$jobs | Receive-Job
 
 'The base VHDs creation has been completed.' | WriteLog -Context $env:ComputerName
 
