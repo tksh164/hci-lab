@@ -98,10 +98,18 @@ function BuildIsoFileName
         [string] $OperatingSystem,
 
         [Parameter(Mandatory = $true)]
-        [string] $Culture
+        [string] $Culture,
+
+        [Parameter(Mandatory = $false)]
+        [string] $Suffix
     )
 
-    '{0}_{1}.iso' -f $OperatingSystem, $Culture
+    if ($PSBoundParameters.Keys.Contains('Suffix')) {
+        '{0}_{1}_{2}.iso' -f $OperatingSystem, $Culture, $Suffix
+    }
+    else {
+        '{0}_{1}.iso' -f $OperatingSystem, $Culture
+    }
 }
 
 function BuildBaseVhdFileName
