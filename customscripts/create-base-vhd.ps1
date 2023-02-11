@@ -77,7 +77,7 @@ function CreateBaseVhdFromIsoAsJob
         VHDPath       = $jobParams.VhdPath
         VHDFormat     = 'VHDX'
         DiskLayout    = 'UEFI'
-        SizeBytes     = 25GB
+        SizeBytes     = 40GB
         TempDirectory = $jobParams.WorkFolder
         Verbose       = $true
     }
