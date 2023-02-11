@@ -12,7 +12,7 @@ $configParams = GetConfigParameters
 Start-Transcript -OutputDirectory $configParams.labHost.folderPath.log
 $configParams | ConvertTo-Json -Depth 16
 
-function ComputeHciNodeRamBytes
+function CalculateHciNodeRamBytes
 {
     [CmdletBinding()]
     param (
@@ -40,7 +40,7 @@ function ComputeHciNodeRamBytes
 'Creating the HCI node VMs configuraton...' | WriteLog -Context $env:ComputerName
 
 $parentVhdPath = [IO.Path]::Combine($configParams.labHost.folderPath.vhd, (BuildBaseVhdFileName -OperatingSystem $configParams.hciNode.operatingSystem.sku -ImageIndex $configParams.hciNode.operatingSystem.imageIndex -Culture $configParams.guestOS.culture))
-$ramBytes = ComputeHciNodeRamBytes -NodeCount $configParams.hciNode.nodeCount -LabHostReservedRamBytes $configParams.labHost.reservedRamBytes -AddsDcVMName $configParams.addsDC.vmName -WacVMName $configParams.wac.vmName
+$ramBytes = CalculateHciNodeRamBytes -NodeCount $configParams.hciNode.nodeCount -LabHostReservedRamBytes $configParams.labHost.reservedRamBytes -AddsDcVMName $configParams.addsDC.vmName -WacVMName $configParams.wac.vmName
 $adminPassword = GetSecret -KeyVaultName $configParams.keyVault.name -SecretName $configParams.keyVault.secretName
 
 $hciNodeConfigs = @()
