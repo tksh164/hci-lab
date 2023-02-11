@@ -46,13 +46,14 @@ $adminPassword = GetSecret -KeyVaultName $configParams.keyVault.name -SecretName
 $hciNodeConfigs = @()
 for ($i = 0; $i -lt $configParams.hciNode.nodeCount; $i++) {
     $hciNodeConfigs += @{
-        VMName          = $configParams.hciNode.vmName -f ($configParams.hciNode.vmNameOffset + $i)
-        ParentVhdPath   = $parentVhdPath
-        RamBytes        = $ramBytes
-        OperatingSystem = $configParams.hciNode.operatingSystem.sku
-        ImageIndex      = $configParams.hciNode.operatingSystem.imageIndex
-        AdminPassword   = $adminPassword
-        NetAdapter      = @{
+        VMName            = $configParams.hciNode.vmName -f ($configParams.hciNode.vmNameOffset + $i)
+        ParentVhdPath     = $parentVhdPath
+        RamBytes          = $ramBytes
+        OperatingSystem   = $configParams.hciNode.operatingSystem.sku
+        ImageIndex        = $configParams.hciNode.operatingSystem.imageIndex
+        AdminPassword     = $adminPassword
+        DataDiskSizeBytes = $configParams.hciNode.dataDiskSizeBytes
+        NetAdapter        = @{
             Management = @{
                 Name               = $configParams.hciNode.netAdapter.management.name
                 VSwitchName        = $configParams.labHost.vSwitch.nat.name
@@ -144,7 +145,7 @@ foreach ($nodeConfig in $hciNodeConfigs) {
         $params = @{
             Path      = [IO.Path]::Combine($configParams.labHost.folderPath.vm, $nodeConfig.VMName, ('datadisk{0}.vhdx' -f ($diskIndex + 1)))
             Dynamic   = $true
-            SizeBytes = 100GB
+            SizeBytes = $nodeConfig.DataDiskSizeBytes
         }
         $vmDataDiskVhd = New-VHD @params
         Add-VMHardDiskDrive -VMName $nodeConfig.VMName -Path $vmDataDiskVhd.Path -Passthru
