@@ -125,7 +125,7 @@ $params = @{
 }
 $jobs += Start-Job -Name 'HCI node' -ScriptBlock ${function:CreateBaseVhdFromIsoAsJob} -ArgumentList (BuildJobParameters @params)
 
-if (($configParams.hciNode.operatingSystem.sku -ne 'ws2022') -and ($configParams.hciNode.operatingSystem.imageIndex -ne 3)) {
+if (-not (($configParams.hciNode.operatingSystem.sku -eq 'ws2022') -and ($configParams.hciNode.operatingSystem.imageIndex -eq 3))) {
     # Use the Windows Server Server Core VHD for AD DS domain controller always.
     $params = @{
         ImportModules   = (Get-Module -Name 'shared').Path, $convertWimScriptFile.FullName
@@ -140,7 +140,7 @@ if (($configParams.hciNode.operatingSystem.sku -ne 'ws2022') -and ($configParams
     $jobs += Start-Job -Name 'WS Server Core' -ScriptBlock ${function:CreateBaseVhdFromIsoAsJob} -ArgumentList (BuildJobParameters @params)
 }
 
-if (($configParams.hciNode.operatingSystem.sku -ne 'ws2022') -and ($configParams.hciNode.operatingSystem.imageIndex -ne 4)) {
+if (-not (($configParams.hciNode.operatingSystem.sku -eq 'ws2022') -and ($configParams.hciNode.operatingSystem.imageIndex -eq 4))) {
     # Use the Windows Server with Desktop Experience VHD for Windows Admin Center always.
     $params = @{
         ImportModules     = (Get-Module -Name 'shared').Path, $convertWimScriptFile.FullName
