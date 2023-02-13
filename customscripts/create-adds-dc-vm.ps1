@@ -9,7 +9,7 @@ $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 Import-Module -Name '.\shared.psm1' -Force
 
 $configParams = GetConfigParameters
-Start-Transcript -OutputDirectory $configParams.labHost.folderPath.log
+Start-ScriptTranscript -OutputDirectory $configParams.labHost.folderPath.log -ScriptName $MyInvocation.MyCommand.Name
 $configParams | ConvertTo-Json -Depth 16
 
 function WaitingForReadyToDC
@@ -176,4 +176,4 @@ WaitingForReadyToDC -VMName $vmName -Credential $domainAdminCredential
 
 'The AD DS Domain Controller VM creation has been completed.' | WriteLog -Context $vmName
 
-Stop-Transcript
+Stop-ScriptTranscript

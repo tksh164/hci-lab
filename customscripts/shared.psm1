@@ -1,3 +1,25 @@
+function Start-ScriptTranscript
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $OutputDirectory,
+
+        [Parameter(Mandatory = $true)]
+        [string] $ScriptName
+    )
+    $transcriptFileName = '{0:yyyyMMdd-HHmmss}_{1}_{2}.txt' -f [DateTime]::Now, $env:ComputerName, [IO.Path]::GetFileNameWithoutExtension($ScriptName)
+    $transcriptFilePath = [IO.Path]::Combine($OutputDirectory, $transcriptFileName)
+    Start-Transcript -LiteralPath $transcriptFilePath -Append -IncludeInvocationHeader
+}
+
+function Stop-ScriptTranscript
+{
+    [CmdletBinding()]
+    param ()
+    Stop-Transcript
+}
+
 function WriteLog
 {
     [CmdletBinding()]

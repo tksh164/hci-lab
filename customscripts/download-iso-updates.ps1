@@ -9,7 +9,7 @@ $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 Import-Module -Name '.\shared.psm1' -Force
 
 $configParams = GetConfigParameters
-Start-Transcript -OutputDirectory $configParams.labHost.folderPath.log
+Start-ScriptTranscript -OutputDirectory $configParams.labHost.folderPath.log -ScriptName $MyInvocation.MyCommand.Name
 $configParams | ConvertTo-Json -Depth 16
 
 function DownloadIso
@@ -152,4 +152,4 @@ else {
     'Skipped download of updates due to applyUpdates not set.' | WriteLog -Context $env:ComputerName
 }
 
-Stop-Transcript
+Stop-ScriptTranscript
