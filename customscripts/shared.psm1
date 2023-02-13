@@ -13,7 +13,7 @@ function WriteLog
         [string] $Type = 'Verbose'
     )
 
-    $builtMessage = '{0} [{1}] {2}' -f [DateTime]::Now.ToString('yyyy-MM-ddTHH:mm:ss'), $Context, $Message
+    $builtMessage = '[{0}] [{1}] {2}' -f [DateTime]::Now.ToString('yyyy-MM-dd HH:mm:ss'), $Context, $Message
     switch ($Type) {
         'Warning' { Write-Warning -Message $builtMessage }
         'Error'   { Write-Error -Message $builtMessage }
