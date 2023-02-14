@@ -157,8 +157,7 @@ if (-not (($configParams.hciNode.operatingSystem.sku -eq 'ws2022') -and ($config
 }
 
 $jobs | Format-Table -Property Id, Name, PSJobTypeName, State, HasMoreData, Location, PSBeginTime, PSEndTime
-$jobs | Wait-Job
-$jobs | Receive-Job
+$jobs | Receive-Job -Wait
 $jobs | Format-Table -Property Id, Name, PSJobTypeName, State, HasMoreData, Location, PSBeginTime, PSEndTime
 
 Remove-Item -LiteralPath $ws2022TempIsoFilePath -Force
