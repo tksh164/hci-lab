@@ -78,7 +78,7 @@ function DownloadUpdates
     # OS: https://support.microsoft.com/en-us/topic/64c79b7f-d536-015d-b8dd-575f01090efd
     # .NET: 
     #
-    # Windows Server
+    # Windows Server 2022
     # OS: https://support.microsoft.com/en-us/topic/e1caa597-00c5-4ab9-9f3e-8212fe80b2ee
     # .NET: https://support.microsoft.com/en-us/topic/f61ae6ae-6f7a-493f-84d3-42ae1ebff494
     #
