@@ -1167,8 +1167,8 @@
                                                 }
                                             },
                                             {
-                                                "label": "Azure Stack HCI, version 20H2",
-                                                "description": "Azure Stack HCI, version 20H2.",
+                                                "label": "Azure Stack HCI, version 20H2 (End of Service)",
+                                                "description": "Azure Stack HCI, version 20H2. This version reached end of service on December 13, 2022.",
                                                 "value": {
                                                     "sku": "as20h2",
                                                     "imageIndex": 1
