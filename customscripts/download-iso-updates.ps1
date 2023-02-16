@@ -85,20 +85,34 @@ function DownloadUpdates
 
     $updates = @{
         'as22h2' = @(
-            'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2023/01/windows10.0-kb5022291-x64_7a517cbbe1288fd246efebc6089d0a4d91818c0e.msu',
-            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2022/10/windows10.0-kb5020877-x64-ndp48_f16f6550da2375d2d9c2ffb0ca61e399d303766d.msu'
+            # OS
+            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2023/02/windows10.0-kb5022842-x64_708d02971c761091c9d978a18588a315c3817343.msu',
+            # .NET Framework
+            'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2022/12/windows10.0-kb5022507-x64-ndp48_c738ff11f6b74c8b1e9db4c66676df651b32d8ef.msu'
         )
         'as21h2' = @(
-            'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2023/01/windows10.0-kb5022291-x64_7a517cbbe1288fd246efebc6089d0a4d91818c0e.msu',
-            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2022/10/windows10.0-kb5020877-x64-ndp48_f16f6550da2375d2d9c2ffb0ca61e399d303766d.msu'
+            # OS
+            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2023/02/windows10.0-kb5022842-x64_708d02971c761091c9d978a18588a315c3817343.msu',
+            # .NET Framework
+            'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2023/01/windows10.0-kb5022501-x64-ndp481_f609707b45c8dd6d6b97c3cec996200d97e95fac.msu',
+            'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2022/12/windows10.0-kb5022507-x64-ndp48_c738ff11f6b74c8b1e9db4c66676df651b32d8ef.msu',
+            # OS - KB5012170
+            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2022/08/windows10.0-kb5012170-x64_a9d0e4a03991230936232ace729f8f9de3bbfa7f.msu'
         )
         'as20h2' = @(
-            # Need to apply SSU before applying updates.
+            # Servicing stack update
+            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2022/11/windows10.0-kb5020804-x64_e879f9925911b6700f51a276cf2a9f48436b46e9.msu',
+            # OS
+            'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2022/12/windows10.0-kb5021236-x64_1794df60ae269c4a70627301bdcc9d48f0fe179f.msu'
         )
         'ws2022' = @(
-            'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2023/01/windows10.0-kb5022291-x64_7a517cbbe1288fd246efebc6089d0a4d91818c0e.msu',
-            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2022/10/windows10.0-kb5020877-x64-ndp48_f16f6550da2375d2d9c2ffb0ca61e399d303766d.msu',
-            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2022/12/windows10.0-kb5020883-x64-ndp481_e73af78018fcd37145c3ff4fd6b94dc0d46070fc.msu'
+            # OS
+            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2023/02/windows10.0-kb5022842-x64_708d02971c761091c9d978a18588a315c3817343.msu',
+            # .NET Framework
+            'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2023/01/windows10.0-kb5022501-x64-ndp481_f609707b45c8dd6d6b97c3cec996200d97e95fac.msu',
+            'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2022/12/windows10.0-kb5022507-x64-ndp48_c738ff11f6b74c8b1e9db4c66676df651b32d8ef.msu',
+            # OS - KB5012170
+            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2022/08/windows10.0-kb5012170-x64_a9d0e4a03991230936232ace729f8f9de3bbfa7f.msu'
         )
     }
 
