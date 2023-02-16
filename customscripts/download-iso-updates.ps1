@@ -105,11 +105,11 @@ function DownloadUpdates
     $downloadFolderPath = [IO.Path]::Combine($DownloadFolderBasePath, $OperatingSystem)
     New-Item -ItemType Directory -Path $downloadFolderPath -Force
 
-    $updates[$OperatingSystem] | ForEach-Object -Process {
+    for ($i = 0; $i -lt $updates[$OperatingSystem].Length; $i++) {
         $params = @{
-            SourceUri      = $_
+            SourceUri      = $updates[$OperatingSystem][$i]
             DownloadFolder = $downloadFolderPath
-            FileNameToSave = [IO.Path]::GetFileName([uri]($_))
+            FileNameToSave = '{0}_{1}' -f $i, [IO.Path]::GetFileName([uri]($updates[$OperatingSystem][$i]))  # Prepend the index due to order for applying.
         }
         DownloadFile @params
     }
