@@ -156,9 +156,9 @@ if (-not (($configParams.hciNode.operatingSystem.sku -eq 'ws2022') -and ($config
     $jobs += Start-Job -Name 'WS Desktop Experience' -ScriptBlock ${function:CreateBaseVhdFromIsoAsJob} -ArgumentList (BuildJobParameters @params)
 }
 
-$jobs | Format-Table -Property Id, Name, PSJobTypeName, State, HasMoreData, Location, PSBeginTime, PSEndTime
+$jobs | Format-Table -Property Id, Name, State, HasMoreData, PSBeginTime, PSEndTime
 $jobs | Receive-Job -Wait
-$jobs | Format-Table -Property Id, Name, PSJobTypeName, State, HasMoreData, Location, PSBeginTime, PSEndTime
+$jobs | Format-Table -Property Id, Name, State, HasMoreData, PSBeginTime, PSEndTime
 
 Remove-Item -LiteralPath $ws2022TempIsoFilePath -Force
 
