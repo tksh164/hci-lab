@@ -199,6 +199,26 @@ Invoke-Command @params -ScriptBlock {
     }
     Remove-Item -LiteralPath $wacInstallerFilePath -Force
 
+    'Updating Windows Admin Center extensions...' | &$WriteLog -Context $vmName
+
+    # Create a log file for WAC extension update.
+    $wacExtensionUpdateLogFolder = New-Item -ItemType Directory -Path 'C:\Temp' -Force
+    $wacExtensionUpdateLogFilePath = [IO.Path]::Combine($wacExtensionUpdateLogFolder.FullName, 'wac-extension-update-{0:yyyyMMddHHmmss}.log' -f [DateTime]::Now)
+    New-Item -ItemType File -Path $wacExtensionUpdateLogFilePath -Force
+
+    $wacPSModulePath = [IO.Path]::Combine($env:ProgramFiles, 'Windows Admin Center\PowerShell\Modules\ExtensionTools\ExtensionTools.psm1')
+    Import-Module -Name $wacPSModulePath -Force
+
+    # Update each non-up-to-date WAC extension.
+    [Uri] $gatewayEndpointUri = 'https://{0}' -f $env:ComputerName
+    Get-Extension -GatewayEndpoint $gatewayEndpointUri |
+        Where-Object -Property 'isLatestVersion' -EQ $false |
+        ForEach-Object -Process {
+            $wacExtension = $_
+            Update-Extension -GatewayEndpoint $gatewayEndpointUri -ExtensionId $wacExtension.id -Verbose |
+                Out-File -LiteralPath $wacExtensionUpdateLogFilePath -Append -Encoding utf8 -Force
+        }
+
     'Setting Windows Integrated Authentication registry for Windows Admin Center...' | &$WriteLog -Context $vmName
     New-Item -ItemType Directory -Path 'HKLM:\SOFTWARE\Policies\Microsoft' -Name 'Edge' -Force
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Edge' -Name 'AuthServerAllowlist' -Value 'wac'
