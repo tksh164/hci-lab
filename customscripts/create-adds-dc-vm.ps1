@@ -68,7 +68,7 @@ Set-VMProcessor -VMName $vmName -Count 2
 'Setting the VM''s memory configuration...' | WriteLog -Context $vmName
 $params = @{
     VMName               = $vmName
-    StartupBytes         = 2GB
+    StartupBytes         = 1GB
     DynamicMemoryEnabled = $true
     MinimumBytes         = 512MB
     MaximumBytes         = 2GB
