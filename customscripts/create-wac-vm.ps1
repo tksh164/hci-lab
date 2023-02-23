@@ -199,7 +199,11 @@ Invoke-Command @params -ScriptBlock {
     }
     Remove-Item -LiteralPath $wacInstallerFilePath -Force
 
-    'Creating shortcut for Windows Admin Center on the desktop....' | &$WriteLog -Context $vmName
+    'Setting Windows Integrated Authentication registry for Windows Admin Center...' | &$WriteLog -Context $vmName
+    New-Item -ItemType Directory -Path 'HKLM:\SOFTWARE\Policies\Microsoft' -Name 'Edge' -Force
+    Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Edge' -Name 'AuthServerAllowlist' -Value 'wac'
+
+    'Creating shortcut for Windows Admin Center on the desktop...' | &$WriteLog -Context $vmName
     $wshShell = New-Object -ComObject 'WScript.Shell'
     $shortcut = $wshShell.CreateShortcut('C:\Users\Public\Desktop\Windows Admin Center.lnk')
     $shortcut.TargetPath = 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
