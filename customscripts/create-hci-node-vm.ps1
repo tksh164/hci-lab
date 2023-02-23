@@ -30,8 +30,8 @@ function CalculateHciNodeRamBytes
     )
 
     $totalRamBytes = (Get-ComputerInfo).OsTotalVisibleMemorySize * 1KB
-    $addsDcVMRamBytes = (Get-VM -Name $AddsDcVMName).MemoryStartup
-    $wacVMRamBytes = (Get-VM -Name $WacVMName).MemoryStartup
+    $addsDcVMRamBytes = (Get-VM -Name $AddsDcVMName).MemoryMaximum
+    $wacVMRamBytes = (Get-VM -Name $WacVMName).MemoryMaximum
 
     # StartupBytes should be a multiple of 2 MB (2 * 1024 * 1024 bytes).
     [Math]::Floor((($totalRamBytes - $LabHostReservedRamBytes - $addsDcVMRamBytes - $wacVMRamBytes) / $NodeCount) / 2MB) * 2MB
