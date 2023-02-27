@@ -8,9 +8,9 @@ $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
 Import-Module -Name '.\shared.psm1' -Force
 
-$configParams = GetConfigParameters
-Start-ScriptTranscript -OutputDirectory $configParams.labHost.folderPath.log -ScriptName $MyInvocation.MyCommand.Name
-$configParams | ConvertTo-Json -Depth 16
+$labConfig = GetConfigParameters
+Start-ScriptTranscript -OutputDirectory $labConfig.labHost.folderPath.log -ScriptName $MyInvocation.MyCommand.Name
+$labConfig | ConvertTo-Json -Depth 16
 
 function CalculateHciNodeRamBytes
 {
@@ -39,40 +39,40 @@ function CalculateHciNodeRamBytes
 
 'Creating the HCI node VMs configuraton...' | WriteLog -Context $env:ComputerName
 
-$parentVhdPath = [IO.Path]::Combine($configParams.labHost.folderPath.vhd, (BuildBaseVhdFileName -OperatingSystem $configParams.hciNode.operatingSystem.sku -ImageIndex $configParams.hciNode.operatingSystem.imageIndex -Culture $configParams.guestOS.culture))
-$ramBytes = CalculateHciNodeRamBytes -NodeCount $configParams.hciNode.nodeCount -LabHostReservedRamBytes $configParams.labHost.reservedRamBytes -AddsDcVMName $configParams.addsDC.vmName -WacVMName $configParams.wac.vmName
-$adminPassword = GetSecret -KeyVaultName $configParams.keyVault.name -SecretName $configParams.keyVault.secretName
+$parentVhdPath = [IO.Path]::Combine($labConfig.labHost.folderPath.vhd, (BuildBaseVhdFileName -OperatingSystem $labConfig.hciNode.operatingSystem.sku -ImageIndex $labConfig.hciNode.operatingSystem.imageIndex -Culture $labConfig.guestOS.culture))
+$ramBytes = CalculateHciNodeRamBytes -NodeCount $labConfig.hciNode.nodeCount -LabHostReservedRamBytes $labConfig.labHost.reservedRamBytes -AddsDcVMName $labConfig.addsDC.vmName -WacVMName $labConfig.wac.vmName
+$adminPassword = GetSecret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName
 
 $hciNodeConfigs = @()
-for ($i = 0; $i -lt $configParams.hciNode.nodeCount; $i++) {
+for ($i = 0; $i -lt $labConfig.hciNode.nodeCount; $i++) {
     $hciNodeConfigs += @{
-        VMName            = $configParams.hciNode.vmName -f ($configParams.hciNode.vmNameOffset + $i)
+        VMName            = $labConfig.hciNode.vmName -f ($labConfig.hciNode.vmNameOffset + $i)
         ParentVhdPath     = $parentVhdPath
         RamBytes          = $ramBytes
-        OperatingSystem   = $configParams.hciNode.operatingSystem.sku
-        ImageIndex        = $configParams.hciNode.operatingSystem.imageIndex
+        OperatingSystem   = $labConfig.hciNode.operatingSystem.sku
+        ImageIndex        = $labConfig.hciNode.operatingSystem.imageIndex
         AdminPassword     = $adminPassword
-        DataDiskSizeBytes = $configParams.hciNode.dataDiskSizeBytes
+        DataDiskSizeBytes = $labConfig.hciNode.dataDiskSizeBytes
         NetAdapter        = @{
             Management = @{
-                Name               = $configParams.hciNode.netAdapter.management.name
-                VSwitchName        = $configParams.labHost.vSwitch.nat.name
-                IPAddress          = $configParams.hciNode.netAdapter.management.ipAddress -f ($configParams.hciNode.netAdapter.ipAddressOffset + $i)
-                PrefixLength       = $configParams.hciNode.netAdapter.management.prefixLength
-                DefaultGateway     = $configParams.hciNode.netAdapter.management.defaultGateway
-                DnsServerAddresses = $configParams.hciNode.netAdapter.management.dnsServerAddresses
+                Name               = $labConfig.hciNode.netAdapter.management.name
+                VSwitchName        = $labConfig.labHost.vSwitch.nat.name
+                IPAddress          = $labConfig.hciNode.netAdapter.management.ipAddress -f ($labConfig.hciNode.netAdapter.ipAddressOffset + $i)
+                PrefixLength       = $labConfig.hciNode.netAdapter.management.prefixLength
+                DefaultGateway     = $labConfig.hciNode.netAdapter.management.defaultGateway
+                DnsServerAddresses = $labConfig.hciNode.netAdapter.management.dnsServerAddresses
             }
             Storage1 = @{
-                Name         = $configParams.hciNode.netAdapter.storage1.name
-                VSwitchName  = $configParams.labHost.vSwitch.nat.name
-                IPAddress    = $configParams.hciNode.netAdapter.storage1.ipAddress -f ($configParams.hciNode.netAdapter.ipAddressOffset + $i)
-                PrefixLength = $configParams.hciNode.netAdapter.storage1.prefixLength
+                Name         = $labConfig.hciNode.netAdapter.storage1.name
+                VSwitchName  = $labConfig.labHost.vSwitch.nat.name
+                IPAddress    = $labConfig.hciNode.netAdapter.storage1.ipAddress -f ($labConfig.hciNode.netAdapter.ipAddressOffset + $i)
+                PrefixLength = $labConfig.hciNode.netAdapter.storage1.prefixLength
             }
             Storage2 = @{
-                Name         = $configParams.hciNode.netAdapter.storage2.name
-                VSwitchName  = $configParams.labHost.vSwitch.nat.name
-                IPAddress    = $configParams.hciNode.netAdapter.storage2.ipAddress -f ($configParams.hciNode.netAdapter.ipAddressOffset + $i)
-                PrefixLength = $configParams.hciNode.netAdapter.storage2.prefixLength
+                Name         = $labConfig.hciNode.netAdapter.storage2.name
+                VSwitchName  = $labConfig.labHost.vSwitch.nat.name
+                IPAddress    = $labConfig.hciNode.netAdapter.storage2.ipAddress -f ($labConfig.hciNode.netAdapter.ipAddressOffset + $i)
+                PrefixLength = $labConfig.hciNode.netAdapter.storage2.prefixLength
             }
         }
     }
@@ -82,7 +82,7 @@ $hciNodeConfigs | ConvertTo-Json -Depth 16
 foreach ($nodeConfig in $hciNodeConfigs) {
     'Creating the OS disk...' | WriteLog -Context $nodeConfig.VMName
     $params = @{
-        Path         = [IO.Path]::Combine($configParams.labHost.folderPath.vm, $nodeConfig.VMName, 'osdisk.vhdx')
+        Path         = [IO.Path]::Combine($labConfig.labHost.folderPath.vm, $nodeConfig.VMName, 'osdisk.vhdx')
         Differencing = $true
         ParentPath   = $nodeConfig.ParentVhdPath
     }
@@ -91,7 +91,7 @@ foreach ($nodeConfig in $hciNodeConfigs) {
     'Creating the VM...' | WriteLog -Context $nodeConfig.VMName
     $params = @{
         Name       = $nodeConfig.VMName
-        Path       = $configParams.labHost.folderPath.vm
+        Path       = $labConfig.labHost.folderPath.vm
         VHDPath    = $vmOSDiskVhd.Path
         Generation = 2
     }
@@ -143,7 +143,7 @@ foreach ($nodeConfig in $hciNodeConfigs) {
     'Creating the data disks...' | WriteLog -Context $nodeConfig.VMName
     for ($diskIndex = 0; $diskIndex -lt 6; $diskIndex++) {
         $params = @{
-            Path      = [IO.Path]::Combine($configParams.labHost.folderPath.vm, $nodeConfig.VMName, ('datadisk{0}.vhdx' -f ($diskIndex + 1)))
+            Path      = [IO.Path]::Combine($labConfig.labHost.folderPath.vm, $nodeConfig.VMName, ('datadisk{0}.vhdx' -f ($diskIndex + 1)))
             Dynamic   = $true
             SizeBytes = $nodeConfig.DataDiskSizeBytes
         }
@@ -152,7 +152,7 @@ foreach ($nodeConfig in $hciNodeConfigs) {
     }
 
     'Generating the unattend answer XML...' | WriteLog -Context $nodeConfig.VMName
-    $unattendAnswerFileContent = GetUnattendAnswerFileContent -ComputerName $nodeConfig.VMName -Password $nodeConfig.AdminPassword -Culture $configParams.guestOS.culture
+    $unattendAnswerFileContent = GetUnattendAnswerFileContent -ComputerName $nodeConfig.VMName -Password $nodeConfig.AdminPassword -Culture $labConfig.guestOS.culture
 
     'Injecting the unattend answer file to the VHD...' | WriteLog -Context $nodeConfig.VMName
     InjectUnattendAnswerFile -VhdPath $vmOSDiskVhd.Path -UnattendAnswerFileContent $unattendAnswerFileContent
@@ -256,11 +256,11 @@ foreach ($nodeConfig in $hciNodeConfigs) {
     }
 
     'Joining the VM the AD domain...' | WriteLog -Context $nodeConfig.VMName
-    $domainAdminCredential = CreateDomainCredential -DomainFqdn $configParams.addsDomain.fqdn -Password $nodeConfig.AdminPassword
+    $domainAdminCredential = CreateDomainCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $nodeConfig.AdminPassword
     $params = @{
         VMName                = $nodeConfig.VMName
         LocalAdminCredential  = $localAdminCredential
-        DomainFqdn            = $configParams.addsDomain.fqdn
+        DomainFqdn            = $labConfig.addsDomain.fqdn
         DomainAdminCredential = $domainAdminCredential
     }
     JoinVMToADDomain @params
@@ -274,7 +274,7 @@ foreach ($nodeConfig in $hciNodeConfigs) {
 
 foreach ($nodeConfig in $hciNodeConfigs) {
     'Waiting for ready to the VM...' | WriteLog -Context $nodeConfig.VMName
-    $domainAdminCredential = CreateDomainCredential -DomainFqdn $configParams.addsDomain.fqdn -Password $nodeConfig.AdminPassword
+    $domainAdminCredential = CreateDomainCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $nodeConfig.AdminPassword
     WaitingForReadyToVM -VMName $nodeConfig.VMName -Credential $domainAdminCredential
 }
 

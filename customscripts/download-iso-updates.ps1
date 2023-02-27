@@ -8,9 +8,9 @@ $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
 Import-Module -Name '.\shared.psm1' -Force
 
-$configParams = GetConfigParameters
-Start-ScriptTranscript -OutputDirectory $configParams.labHost.folderPath.log -ScriptName $MyInvocation.MyCommand.Name
-$configParams | ConvertTo-Json -Depth 16
+$labConfig = GetConfigParameters
+Start-ScriptTranscript -OutputDirectory $labConfig.labHost.folderPath.log -ScriptName $MyInvocation.MyCommand.Name
+$labConfig | ConvertTo-Json -Depth 16
 
 function DownloadIso
 {
@@ -132,15 +132,15 @@ function DownloadUpdates
 # ISO
 
 'Creating the download folder if it does not exist...' | WriteLog -Context $env:ComputerName
-New-Item -ItemType Directory -Path $configParams.labHost.folderPath.temp -Force
+New-Item -ItemType Directory -Path $labConfig.labHost.folderPath.temp -Force
 
 'Downloading the ISO file...' | WriteLog -Context $env:ComputerName
-DownloadIso -OperatingSystem $configParams.hciNode.operatingSystem.sku -Culture $configParams.guestOS.culture -DownloadFolderPath $configParams.labHost.folderPath.temp
+DownloadIso -OperatingSystem $labConfig.hciNode.operatingSystem.sku -Culture $labConfig.guestOS.culture -DownloadFolderPath $labConfig.labHost.folderPath.temp
 
 # The Windows Server 2022 ISO is always needed for the domain controller VM.
-if ($configParams.hciNode.operatingSystem.sku -ne 'ws2022') {
+if ($labConfig.hciNode.operatingSystem.sku -ne 'ws2022') {
     'Downloading Windows Server 2022 ISO file...' | WriteLog -Context $env:ComputerName
-    DownloadIso -OperatingSystem 'ws2022' -Culture $configParams.guestOS.culture -DownloadFolderPath $configParams.labHost.folderPath.temp
+    DownloadIso -OperatingSystem 'ws2022' -Culture $labConfig.guestOS.culture -DownloadFolderPath $labConfig.labHost.folderPath.temp
 }
 
 'The ISO download has been completed.' | WriteLog -Context $env:ComputerName
@@ -148,16 +148,16 @@ if ($configParams.hciNode.operatingSystem.sku -ne 'ws2022') {
 # Updates
 
 # Download the updates if the flag was true only.
-if ($configParams.guestOS.applyUpdates) {
+if ($labConfig.guestOS.applyUpdates) {
     'Creating the updates folder if it does not exist...' | WriteLog -Context $env:ComputerName
-    New-Item -ItemType Directory -Path $configParams.labHost.folderPath.updates -Force
+    New-Item -ItemType Directory -Path $labConfig.labHost.folderPath.updates -Force
     
     'Downloading updates...' | WriteLog -Context $env:ComputerName
-    DownloadUpdates -OperatingSystem $configParams.hciNode.operatingSystem.sku -DownloadFolderBasePath $configParams.labHost.folderPath.updates
+    DownloadUpdates -OperatingSystem $labConfig.hciNode.operatingSystem.sku -DownloadFolderBasePath $labConfig.labHost.folderPath.updates
     
-    if ($configParams.hciNode.operatingSystem.sku -ne 'ws2022') {
+    if ($labConfig.hciNode.operatingSystem.sku -ne 'ws2022') {
         'Downloading Windows Server 2022 updates...' | WriteLog -Context $env:ComputerName
-        DownloadUpdates -OperatingSystem 'ws2022' -DownloadFolderBasePath $configParams.labHost.folderPath.updates
+        DownloadUpdates -OperatingSystem 'ws2022' -DownloadFolderBasePath $labConfig.labHost.folderPath.updates
     }
 
     'The updates download has been completed.' | WriteLog -Context $env:ComputerName

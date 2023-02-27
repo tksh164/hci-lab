@@ -8,25 +8,25 @@ $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
 Import-Module -Name '.\shared.psm1' -Force
 
-$configParams = GetConfigParameters
-Start-ScriptTranscript -OutputDirectory $configParams.labHost.folderPath.log -ScriptName $MyInvocation.MyCommand.Name
-$configParams | ConvertTo-Json -Depth 16
+$labConfig = GetConfigParameters
+Start-ScriptTranscript -OutputDirectory $labConfig.labHost.folderPath.log -ScriptName $MyInvocation.MyCommand.Name
+$labConfig | ConvertTo-Json -Depth 16
 
-$vmName = $configParams.wac.vmName
+$vmName = $labConfig.wac.vmName
 
 'Creating the OS disk for the VM...' | WriteLog -Context $vmName
 $imageIndex = 4  # Datacenter with Desktop Experience
 $params = @{
     Differencing = $true
-    ParentPath   = [IO.Path]::Combine($configParams.labHost.folderPath.vhd, (BuildBaseVhdFileName -OperatingSystem 'ws2022' -ImageIndex $imageIndex -Culture $configParams.guestOS.culture))
-    Path         = [IO.Path]::Combine($configParams.labHost.folderPath.vm, $vmName, 'osdisk.vhdx')
+    ParentPath   = [IO.Path]::Combine($labConfig.labHost.folderPath.vhd, (BuildBaseVhdFileName -OperatingSystem 'ws2022' -ImageIndex $imageIndex -Culture $labConfig.guestOS.culture))
+    Path         = [IO.Path]::Combine($labConfig.labHost.folderPath.vm, $vmName, 'osdisk.vhdx')
 }
 $vmOSDiskVhd = New-VHD  @params
 
 'Creating the VM...' | WriteLog -Context $vmName
 $params = @{
     Name       = $vmName
-    Path       = $configParams.labHost.folderPath.vm
+    Path       = $labConfig.labHost.folderPath.vm
     VHDPath    = $vmOSDiskVhd.Path
     Generation = 2
 }
@@ -49,15 +49,15 @@ Set-VMMemory @params
 Get-VMNetworkAdapter -VMName $vmName | Remove-VMNetworkAdapter
 $params = @{
     VMName       = $vmName
-    Name         = $configParams.wac.netAdapter.management.name
-    SwitchName   = $configParams.labHost.vSwitch.nat.name
+    Name         = $labConfig.wac.netAdapter.management.name
+    SwitchName   = $labConfig.labHost.vSwitch.nat.name
     DeviceNaming = 'On'
 }
 Add-VMNetworkAdapter @params
 
 'Generating the unattend answer XML...' | WriteLog -Context $vmName
-$adminPassword = GetSecret -KeyVaultName $configParams.keyVault.name -SecretName $configParams.keyVault.secretName
-$unattendAnswerFileContent = GetUnattendAnswerFileContent -ComputerName $vmName -Password $adminPassword -Culture $configParams.guestOS.culture
+$adminPassword = GetSecret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName
+$unattendAnswerFileContent = GetUnattendAnswerFileContent -ComputerName $vmName -Password $adminPassword -Culture $labConfig.guestOS.culture
 
 'Injecting the unattend answer file to the VM...' | WriteLog -Context $vmName
 InjectUnattendAnswerFile -VhdPath $vmOSDiskVhd.Path -UnattendAnswerFileContent $unattendAnswerFileContent
@@ -88,7 +88,7 @@ WaitingForReadyToVM -VMName $vmName -Credential $localAdminCredential
 'Downloading the Windows Admin Center installer...' | WriteLog -Context $vmName
 $params = @{
     SourceUri      = 'https://aka.ms/WACDownload'
-    DownloadFolder = $configParams.labHost.folderPath.temp
+    DownloadFolder = $labConfig.labHost.folderPath.temp
     FileNameToSave = 'WindowsAdminCenter.msi'
 }
 $wacInstallerFile = DownloadFile @params
@@ -113,7 +113,7 @@ $params = @{
 $wacCret = New-SelfSignedCertificate @params | Move-Item -Destination 'Cert:\LocalMachine\Root' -PassThru
 
 'Exporting the Windows Admin Center certificate...' | WriteLog -Context $vmName
-$wacPfxFilePathOnLabHost = [IO.Path]::Combine($configParams.labHost.folderPath.temp, 'wac.pfx')
+$wacPfxFilePathOnLabHost = [IO.Path]::Combine($labConfig.labHost.folderPath.temp, 'wac.pfx')
 $wacCret | Export-PfxCertificate -FilePath $wacPfxFilePathOnLabHost -Password $adminPassword
 
 $psSession = New-PSSession -VMName $vmName -Credential $localAdminCredential
@@ -132,7 +132,7 @@ $psSession | Remove-PSSession
 $params = @{
     VMName       = $vmName
     Credential   = $localAdminCredential
-    ArgumentList = ${function:WriteLog}, $vmName, $configParams, $wacPfxFilePathInVM, $adminPassword, $wacInstallerFilePathInVM
+    ArgumentList = ${function:WriteLog}, $vmName, $labConfig, $wacPfxFilePathInVM, $adminPassword, $wacInstallerFilePathInVM
 }
 Invoke-Command @params -ScriptBlock {
     $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
@@ -142,7 +142,7 @@ Invoke-Command @params -ScriptBlock {
 
     $WriteLog = [scriptblock]::Create($args[0])
     $vmName = $args[1]
-    $configParams = $args[2]
+    $labConfig = $args[2]
     $wacPfxFilePathInVM = $args[3]
     $wacPfxPassword = $args[4]
     $wacInstallerFilePath = $args[5]
@@ -164,15 +164,15 @@ Invoke-Command @params -ScriptBlock {
     'Setting the IP configuration on the network adapter...' | &$WriteLog -Context $vmName
     $params = @{
         AddressFamily  = 'IPv4'
-        IPAddress      = $configParams.wac.netAdapter.management.ipAddress
-        PrefixLength   = $configParams.wac.netAdapter.management.prefixLength
-        DefaultGateway = $configParams.wac.netAdapter.management.defaultGateway
+        IPAddress      = $labConfig.wac.netAdapter.management.ipAddress
+        PrefixLength   = $labConfig.wac.netAdapter.management.prefixLength
+        DefaultGateway = $labConfig.wac.netAdapter.management.defaultGateway
     }
-    Get-NetAdapter -Name $configParams.wac.netAdapter.management.name | New-NetIPAddress @params
+    Get-NetAdapter -Name $labConfig.wac.netAdapter.management.name | New-NetIPAddress @params
     
     'Setting the DNS configuration on the network adapter...' | &$WriteLog -Context $vmName
-    Get-NetAdapter -Name $configParams.wac.netAdapter.management.name |
-        Set-DnsClientServerAddress -ServerAddresses $configParams.wac.netAdapter.management.dnsServerAddresses
+    Get-NetAdapter -Name $labConfig.wac.netAdapter.management.name |
+        Set-DnsClientServerAddress -ServerAddresses $labConfig.wac.netAdapter.management.dnsServerAddresses
 
     # Import required to Root and My both stores.
     'Importing Windows Admin Center certificate...' | &$WriteLog -Context $vmName
@@ -228,11 +228,11 @@ Invoke-Command @params -ScriptBlock {
 }
 
 'Joining the VM to the AD domain...' | WriteLog -Context $vmName
-$domainAdminCredential = CreateDomainCredential -DomainFqdn $configParams.addsDomain.fqdn -Password $adminPassword
+$domainAdminCredential = CreateDomainCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $adminPassword
 $params = @{
     VMName                = $vmName
     LocalAdminCredential  = $localAdminCredential
-    DomainFqdn            = $configParams.addsDomain.fqdn
+    DomainFqdn            = $labConfig.addsDomain.fqdn
     DomainAdminCredential = $domainAdminCredential
 }
 JoinVMToADDomain @params
