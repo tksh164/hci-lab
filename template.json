@@ -324,7 +324,7 @@
 
         // Configuration parameters
 
-        "configParameters": {
+        "labConfig": {
             "labHost": {
                 "storage": {
                     "poolName": "hcisandboxpool",
@@ -455,8 +455,8 @@
                     "isHaveEligibleWindowsServerLicense": {
                         "value": "[parameters('isHaveEligibleWindowsServerLicense')]"
                     },
-                    "base64EncodedConfigParameters": {
-                        "value": "[base64(string(variables('configParameters')))]"
+                    "base64EncodedLabConfig": {
+                        "value": "[base64(string(variables('labConfig')))]"
                     },
                     "isAutoshutdownEnabled": {
                         "value": "[parameters('isAutoshutdownEnabled')]"

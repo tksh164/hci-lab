@@ -56,7 +56,7 @@
                 "description": "By specifying True, you confirm you have an eligible Windows Server license with Software Assurance or Windows Server subscription to apply this Azure Hybrid Benefit. You can read more about compliance here: http://go.microsoft.com/fwlink/?LinkId=859786"
             }
         },
-        "base64EncodedConfigParameters": {
+        "base64EncodedLabConfig": {
             "type": "string",
             "metadata": {
                 "description": "THe base64 encode user data for the lab hosting virtual machine."
@@ -258,7 +258,7 @@
                         "enabled": true
                     }
                 },
-                "userData": "[parameters('base64EncodedConfigParameters')]"
+                "userData": "[parameters('base64EncodedLabConfig')]"
             },
             "identity": {
                 "type": "SystemAssigned"
