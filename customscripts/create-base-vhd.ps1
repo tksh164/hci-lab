@@ -8,7 +8,7 @@ $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
 Import-Module -Name '.\shared.psm1' -Force
 
-$labConfig = GetConfigParameters
+$labConfig = GetLabConfig
 Start-ScriptTranscript -OutputDirectory $labConfig.labHost.folderPath.log -ScriptName $MyInvocation.MyCommand.Name
 $labConfig | ConvertTo-Json -Depth 16
 

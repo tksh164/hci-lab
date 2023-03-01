@@ -46,7 +46,7 @@ function WriteLog
     }
 }
 
-function GetConfigParameters
+function GetLabConfig
 {
     [CmdletBinding()]
     param ()
