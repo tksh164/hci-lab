@@ -112,7 +112,7 @@ function DownloadFile
     Get-Item -LiteralPath $destinationFilePath
 }
 
-function BuildIsoFileName
+function GetIsoFileName
 {
     [CmdletBinding()]
     param (

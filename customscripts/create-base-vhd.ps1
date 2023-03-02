@@ -46,10 +46,10 @@ function BuildJobParameters
     $jobParams = @{
         ImportModules = $ImportModules
         SourcePath    = if ($PSBoundParameters.Keys.Contains('IsoFileNameSuffix')) {
-            [IO.Path]::Combine($IsoFolder, (BuildIsoFileName -OperatingSystem $OperatingSystem -Culture $Culture -Suffix $IsoFileNameSuffix))
+            [IO.Path]::Combine($IsoFolder, (GetIsoFileName -OperatingSystem $OperatingSystem -Culture $Culture -Suffix $IsoFileNameSuffix))
         }
         else {
-            [IO.Path]::Combine($IsoFolder, (BuildIsoFileName -OperatingSystem $OperatingSystem -Culture $Culture))
+            [IO.Path]::Combine($IsoFolder, (GetIsoFileName -OperatingSystem $OperatingSystem -Culture $Culture))
         }
         ImageIndex    = $ImageIndex
         VhdPath       = [IO.Path]::Combine($VhdFolder, (BuildBaseVhdFileName -OperatingSystem $OperatingSystem -ImageIndex $ImageIndex -Culture $Culture))
@@ -106,8 +106,8 @@ $convertWimScriptFile
 # multiple VHDs from the same single ISO because the ISO unmount when finish first one.
 'Copying Windows Server 2022 ISO file...' | WriteLog -Context $env:ComputerName
 $tempIsoFileNameSuffix = 'temp'
-$ws2022SourceIsoFilePath = [IO.Path]::Combine($labConfig.labHost.folderPath.temp, (BuildIsoFileName -OperatingSystem 'ws2022' -Culture $labConfig.guestOS.culture))
-$ws2022TempIsoFilePath = [IO.Path]::Combine($labConfig.labHost.folderPath.temp, (BuildIsoFileName -OperatingSystem 'ws2022' -Culture $labConfig.guestOS.culture -Suffix $tempIsoFileNameSuffix))
+$ws2022SourceIsoFilePath = [IO.Path]::Combine($labConfig.labHost.folderPath.temp, (GetIsoFileName -OperatingSystem 'ws2022' -Culture $labConfig.guestOS.culture))
+$ws2022TempIsoFilePath = [IO.Path]::Combine($labConfig.labHost.folderPath.temp, (GetIsoFileName -OperatingSystem 'ws2022' -Culture $labConfig.guestOS.culture -Suffix $tempIsoFileNameSuffix))
 Copy-Item -LiteralPath $ws2022SourceIsoFilePath -Destination $ws2022TempIsoFilePath -Force -PassThru
 
 'Creating the base VHD creation jobs.' | WriteLog -Context $env:ComputerName
