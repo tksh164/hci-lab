@@ -39,7 +39,7 @@ function CalculateHciNodeRamBytes
 
 'Creating the HCI node VMs configuraton...' | WriteLog -Context $env:ComputerName
 
-$parentVhdPath = [IO.Path]::Combine($labConfig.labHost.folderPath.vhd, (BuildBaseVhdFileName -OperatingSystem $labConfig.hciNode.operatingSystem.sku -ImageIndex $labConfig.hciNode.operatingSystem.imageIndex -Culture $labConfig.guestOS.culture))
+$parentVhdPath = [IO.Path]::Combine($labConfig.labHost.folderPath.vhd, (GetBaseVhdFileName -OperatingSystem $labConfig.hciNode.operatingSystem.sku -ImageIndex $labConfig.hciNode.operatingSystem.imageIndex -Culture $labConfig.guestOS.culture))
 $ramBytes = CalculateHciNodeRamBytes -NodeCount $labConfig.hciNode.nodeCount -LabHostReservedRamBytes $labConfig.labHost.reservedRamBytes -AddsDcVMName $labConfig.addsDC.vmName -WacVMName $labConfig.wac.vmName
 $adminPassword = GetSecret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName
 

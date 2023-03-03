@@ -52,7 +52,7 @@ function BuildJobParameters
             [IO.Path]::Combine($IsoFolder, (GetIsoFileName -OperatingSystem $OperatingSystem -Culture $Culture))
         }
         ImageIndex    = $ImageIndex
-        VhdPath       = [IO.Path]::Combine($VhdFolder, (BuildBaseVhdFileName -OperatingSystem $OperatingSystem -ImageIndex $ImageIndex -Culture $Culture))
+        VhdPath       = [IO.Path]::Combine($VhdFolder, (GetBaseVhdFileName -OperatingSystem $OperatingSystem -ImageIndex $ImageIndex -Culture $Culture))
         UpdatePackage = @()
         WorkFolder    = $WorkFolder
     }

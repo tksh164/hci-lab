@@ -134,7 +134,7 @@ function GetIsoFileName
     }
 }
 
-function BuildBaseVhdFileName
+function GetBaseVhdFileName
 {
     [CmdletBinding()]
     param (
