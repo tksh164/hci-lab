@@ -86,13 +86,13 @@ function DownloadUpdates
     $updates = @{
         'as22h2' = @(
             # OS
-            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2023/02/windows10.0-kb5022842-x64_708d02971c761091c9d978a18588a315c3817343.msu',
+            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2023/04/windows10.0-kb5025230-x64_a73c874bf9a0f3a2c4df0b7bdeb29226c34ee9f0.msu',
             # .NET Framework
             'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2022/12/windows10.0-kb5022507-x64-ndp48_c738ff11f6b74c8b1e9db4c66676df651b32d8ef.msu'
         )
         'as21h2' = @(
             # OS
-            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2023/02/windows10.0-kb5022842-x64_708d02971c761091c9d978a18588a315c3817343.msu',
+            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2023/04/windows10.0-kb5025230-x64_a73c874bf9a0f3a2c4df0b7bdeb29226c34ee9f0.msu',
             # .NET Framework
             'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2023/01/windows10.0-kb5022501-x64-ndp481_f609707b45c8dd6d6b97c3cec996200d97e95fac.msu',
             'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2022/12/windows10.0-kb5022507-x64-ndp48_c738ff11f6b74c8b1e9db4c66676df651b32d8ef.msu',
@@ -107,7 +107,7 @@ function DownloadUpdates
         )
         'ws2022' = @(
             # OS
-            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2023/02/windows10.0-kb5022842-x64_708d02971c761091c9d978a18588a315c3817343.msu',
+            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2023/04/windows10.0-kb5025230-x64_a73c874bf9a0f3a2c4df0b7bdeb29226c34ee9f0.msu',
             # .NET Framework
             'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2023/01/windows10.0-kb5022501-x64-ndp481_f609707b45c8dd6d6b97c3cec996200d97e95fac.msu',
             'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2022/12/windows10.0-kb5022507-x64-ndp48_c738ff11f6b74c8b1e9db4c66676df651b32d8ef.msu',
