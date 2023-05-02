@@ -9,7 +9,7 @@ $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 Import-Module -Name '.\shared.psm1' -Force
 
 $labConfig = GetLabConfig
-Start-ScriptTranscript -OutputDirectory $labConfig.labHost.folderPath.log -ScriptName $MyInvocation.MyCommand.Name
+Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log -ScriptName $MyInvocation.MyCommand.Name
 $labConfig | ConvertTo-Json -Depth 16
 
 function WaitingForReadyToDC
@@ -38,13 +38,13 @@ function WaitingForReadyToDC
     }
     while ((Invoke-Command @params) -ne $true) {
         Start-Sleep -Seconds $CheckInternal
-        'Waiting...' | WriteLog -Context $VMName
+        'Waiting...' | Write-ScriptLog -Context $VMName
     }
 }
 
 $vmName = $labConfig.addsDC.vmName
 
-'Creating the OS disk for the VM...' | WriteLog -Context $vmName
+'Creating the OS disk for the VM...' | Write-ScriptLog -Context $vmName
 $imageIndex = 3  # Datacenter (Server Core)
 $params = @{
     Differencing = $true
@@ -53,7 +53,7 @@ $params = @{
 }
 $vmOSDiskVhd = New-VHD  @params
 
-'Creating the VM...' | WriteLog -Context $vmName
+'Creating the VM...' | Write-ScriptLog -Context $vmName
 $params = @{
     Name       = $vmName
     Path       = $labConfig.labHost.folderPath.vm
@@ -62,10 +62,10 @@ $params = @{
 }
 New-VM @params
 
-'Setting the VM''s processor configuration...' | WriteLog -Context $vmName
+'Setting the VM''s processor configuration...' | Write-ScriptLog -Context $vmName
 Set-VMProcessor -VMName $vmName -Count 2
 
-'Setting the VM''s memory configuration...' | WriteLog -Context $vmName
+'Setting the VM''s memory configuration...' | Write-ScriptLog -Context $vmName
 $params = @{
     VMName               = $vmName
     StartupBytes         = 1GB
@@ -75,7 +75,7 @@ $params = @{
 }
 Set-VMMemory @params
 
-'Setting the VM''s network adapter configuration...' | WriteLog -Context $vmName
+'Setting the VM''s network adapter configuration...' | Write-ScriptLog -Context $vmName
 Get-VMNetworkAdapter -VMName $vmName | Remove-VMNetworkAdapter
 $params = @{
     VMName       = $vmName
@@ -85,23 +85,23 @@ $params = @{
 }
 Add-VMNetworkAdapter @params
 
-'Generating the unattend answer XML...' | WriteLog -Context $vmName
+'Generating the unattend answer XML...' | Write-ScriptLog -Context $vmName
 $adminPassword = GetSecret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName
 $unattendAnswerFileContent = GetUnattendAnswerFileContent -ComputerName $vmName -Password $adminPassword -Culture $labConfig.guestOS.culture
 
-'Injecting the unattend answer file to the VM...' | WriteLog -Context $vmName
+'Injecting the unattend answer file to the VM...' | Write-ScriptLog -Context $vmName
 InjectUnattendAnswerFile -VhdPath $vmOSDiskVhd.Path -UnattendAnswerFileContent $unattendAnswerFileContent
 
-'Installing the roles and features to the VHD...' | WriteLog -Context $vmName
+'Installing the roles and features to the VHD...' | Write-ScriptLog -Context $vmName
 $features = @(
     'AD-Domain-Services'
 )
 Install-WindowsFeature -Vhd $vmOSDiskVhd.Path -Name $features -IncludeManagementTools
 
-'Starting the VM...' | WriteLog -Context $vmName
+'Starting the VM...' | Write-ScriptLog -Context $vmName
 WaitingForStartingVM -VMName $vmName
 
-'Waiting for ready to the VM...' | WriteLog -Context $vmName
+'Waiting for ready to the VM...' | Write-ScriptLog -Context $vmName
 $params = @{
     TypeName     = 'System.Management.Automation.PSCredential'
     ArgumentList = 'Administrator', $adminPassword
@@ -109,11 +109,11 @@ $params = @{
 $localAdminCredential = New-Object @params
 WaitingForReadyToVM -VMName $vmName -Credential $localAdminCredential
 
-'Configuring the new VM...' | WriteLog -Context $vmName
+'Configuring the new VM...' | Write-ScriptLog -Context $vmName
 $params = @{
     VMName       = $vmName
     Credential   = $localAdminCredential
-    ArgumentList = ${function:WriteLog}, $vmName, $labConfig, $adminPassword
+    ArgumentList = ${function:Write-ScriptLog}, $vmName, $labConfig, $adminPassword
 }
 Invoke-Command @params -ScriptBlock {
     $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
@@ -164,16 +164,16 @@ Invoke-Command @params -ScriptBlock {
     Install-ADDSForest @params
 }
 
-'Stopping the VM...' | WriteLog -Context $vmName
+'Stopping the VM...' | Write-ScriptLog -Context $vmName
 Stop-VM -Name $vmName
 
-'Starting the VM...' | WriteLog -Context $vmName
+'Starting the VM...' | Write-ScriptLog -Context $vmName
 Start-VM -Name $vmName
 
-'Waiting for ready to the domain controller...' | WriteLog -Context $vmName
+'Waiting for ready to the domain controller...' | Write-ScriptLog -Context $vmName
 $domainAdminCredential = CreateDomainCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $adminPassword
 WaitingForReadyToDC -VMName $vmName -Credential $domainAdminCredential
 
-'The AD DS Domain Controller VM creation has been completed.' | WriteLog -Context $vmName
+'The AD DS Domain Controller VM creation has been completed.' | Write-ScriptLog -Context $vmName
 
-Stop-ScriptTranscript
+Stop-ScriptLogging

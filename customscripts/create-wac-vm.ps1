@@ -9,12 +9,12 @@ $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 Import-Module -Name '.\shared.psm1' -Force
 
 $labConfig = GetLabConfig
-Start-ScriptTranscript -OutputDirectory $labConfig.labHost.folderPath.log -ScriptName $MyInvocation.MyCommand.Name
+Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log -ScriptName $MyInvocation.MyCommand.Name
 $labConfig | ConvertTo-Json -Depth 16
 
 $vmName = $labConfig.wac.vmName
 
-'Creating the OS disk for the VM...' | WriteLog -Context $vmName
+'Creating the OS disk for the VM...' | Write-ScriptLog -Context $vmName
 $imageIndex = 4  # Datacenter with Desktop Experience
 $params = @{
     Differencing = $true
@@ -23,7 +23,7 @@ $params = @{
 }
 $vmOSDiskVhd = New-VHD  @params
 
-'Creating the VM...' | WriteLog -Context $vmName
+'Creating the VM...' | Write-ScriptLog -Context $vmName
 $params = @{
     Name       = $vmName
     Path       = $labConfig.labHost.folderPath.vm
@@ -32,10 +32,10 @@ $params = @{
 }
 New-VM @params
 
-'Setting the VM''s processor configuration...' | WriteLog -Context $vmName
+'Setting the VM''s processor configuration...' | Write-ScriptLog -Context $vmName
 Set-VMProcessor -VMName $vmName -Count 4
 
-'Setting the VM''s memory configuration...' | WriteLog -Context $vmName
+'Setting the VM''s memory configuration...' | Write-ScriptLog -Context $vmName
 $params = @{
     VMName               = $vmName
     StartupBytes         = 1GB
@@ -45,7 +45,7 @@ $params = @{
 }
 Set-VMMemory @params
 
-'Setting the VM''s network adapter configuration...' | WriteLog -Context $vmName
+'Setting the VM''s network adapter configuration...' | Write-ScriptLog -Context $vmName
 Get-VMNetworkAdapter -VMName $vmName | Remove-VMNetworkAdapter
 $params = @{
     VMName       = $vmName
@@ -55,14 +55,14 @@ $params = @{
 }
 Add-VMNetworkAdapter @params
 
-'Generating the unattend answer XML...' | WriteLog -Context $vmName
+'Generating the unattend answer XML...' | Write-ScriptLog -Context $vmName
 $adminPassword = GetSecret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName
 $unattendAnswerFileContent = GetUnattendAnswerFileContent -ComputerName $vmName -Password $adminPassword -Culture $labConfig.guestOS.culture
 
-'Injecting the unattend answer file to the VM...' | WriteLog -Context $vmName
+'Injecting the unattend answer file to the VM...' | Write-ScriptLog -Context $vmName
 InjectUnattendAnswerFile -VhdPath $vmOSDiskVhd.Path -UnattendAnswerFileContent $unattendAnswerFileContent
 
-'Installing the roles and features to the VHD...' | WriteLog -Context $vmName
+'Installing the roles and features to the VHD...' | Write-ScriptLog -Context $vmName
 $features = @(
     'RSAT-ADDS-Tools',
     'RSAT-AD-AdminCenter',
@@ -74,10 +74,10 @@ $features = @(
 )
 Install-WindowsFeature -Vhd $vmOSDiskVhd.Path -Name $features
 
-'Starting the VM...' | WriteLog -Context $vmName
+'Starting the VM...' | Write-ScriptLog -Context $vmName
 WaitingForStartingVM -VMName $vmName
 
-'Waiting for ready to the VM...' | WriteLog -Context $vmName
+'Waiting for ready to the VM...' | Write-ScriptLog -Context $vmName
 $params = @{
     TypeName     = 'System.Management.Automation.PSCredential'
     ArgumentList = 'Administrator', $adminPassword
@@ -85,7 +85,7 @@ $params = @{
 $localAdminCredential = New-Object @params
 WaitingForReadyToVM -VMName $vmName -Credential $localAdminCredential
 
-'Downloading the Windows Admin Center installer...' | WriteLog -Context $vmName
+'Downloading the Windows Admin Center installer...' | Write-ScriptLog -Context $vmName
 $params = @{
     SourceUri      = 'https://aka.ms/WACDownload'
     DownloadFolder = $labConfig.labHost.folderPath.temp
@@ -94,7 +94,7 @@ $params = @{
 $wacInstallerFile = DownloadFile @params
 $wacInstallerFile
 
-'Creating a new SSL server authentication certificate for Windows Admin Center...' | WriteLog -Context $vmName
+'Creating a new SSL server authentication certificate for Windows Admin Center...' | Write-ScriptLog -Context $vmName
 $params = @{
     CertStoreLocation = 'Cert:\LocalMachine\My'
     Subject           = 'CN=Windows Admin Center for HCI lab'
@@ -112,27 +112,27 @@ $params = @{
 }
 $wacCret = New-SelfSignedCertificate @params | Move-Item -Destination 'Cert:\LocalMachine\Root' -PassThru
 
-'Exporting the Windows Admin Center certificate...' | WriteLog -Context $vmName
+'Exporting the Windows Admin Center certificate...' | Write-ScriptLog -Context $vmName
 $wacPfxFilePathOnLabHost = [IO.Path]::Combine($labConfig.labHost.folderPath.temp, 'wac.pfx')
 $wacCret | Export-PfxCertificate -FilePath $wacPfxFilePathOnLabHost -Password $adminPassword
 
 $psSession = New-PSSession -VMName $vmName -Credential $localAdminCredential
 
-'Copying the Windows Admin Center installer into the VM...' | WriteLog -Context $vmName
+'Copying the Windows Admin Center installer into the VM...' | Write-ScriptLog -Context $vmName
 $wacInstallerFilePathInVM = [IO.Path]::Combine('C:\Windows\Temp', [IO.Path]::GetFileName($wacInstallerFile.FullName))
 Copy-Item -ToSession $psSession -Path $wacInstallerFile.FullName -Destination $wacInstallerFilePathInVM
 
-'Copying the Windows Admin Center certificate into the VM...' | WriteLog -Context $vmName
+'Copying the Windows Admin Center certificate into the VM...' | Write-ScriptLog -Context $vmName
 $wacPfxFilePathInVM = [IO.Path]::Combine('C:\Windows\Temp', [IO.Path]::GetFileName($wacPfxFilePathOnLabHost))
 Copy-Item -ToSession $psSession -Path $wacPfxFilePathOnLabHost -Destination $wacPfxFilePathInVM
 
 $psSession | Remove-PSSession
 
-'Configuring the new VM...' | WriteLog -Context $vmName
+'Configuring the new VM...' | Write-ScriptLog -Context $vmName
 $params = @{
     VMName       = $vmName
     Credential   = $localAdminCredential
-    ArgumentList = ${function:WriteLog}, $vmName, $labConfig, $wacPfxFilePathInVM, $adminPassword, $wacInstallerFilePathInVM
+    ArgumentList = ${function:Write-ScriptLog}, $vmName, $labConfig, $wacPfxFilePathInVM, $adminPassword, $wacInstallerFilePathInVM
 }
 Invoke-Command @params -ScriptBlock {
     $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
@@ -227,7 +227,7 @@ Invoke-Command @params -ScriptBlock {
     $shortcut.Save()
 }
 
-'Joining the VM to the AD domain...' | WriteLog -Context $vmName
+'Joining the VM to the AD domain...' | Write-ScriptLog -Context $vmName
 $domainAdminCredential = CreateDomainCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $adminPassword
 $params = @{
     VMName                = $vmName
@@ -237,15 +237,15 @@ $params = @{
 }
 JoinVMToADDomain @params
 
-'Stopping the VM...' | WriteLog -Context $vmName
+'Stopping the VM...' | Write-ScriptLog -Context $vmName
 Stop-VM -Name $vmName
 
-'Starting the VM...' | WriteLog -Context $vmName
+'Starting the VM...' | Write-ScriptLog -Context $vmName
 Start-VM -Name $vmName
 
-'Waiting for ready to the VM...' | WriteLog -Context $vmName
+'Waiting for ready to the VM...' | Write-ScriptLog -Context $vmName
 WaitingForReadyToVM -VMName $vmName -Credential $domainAdminCredential
 
-'The WAC VM creation has been completed.' | WriteLog -Context $vmName
+'The WAC VM creation has been completed.' | Write-ScriptLog -Context $vmName
 
-Stop-ScriptTranscript
+Stop-ScriptLogging

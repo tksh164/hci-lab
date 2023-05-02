@@ -1,4 +1,4 @@
-function Start-ScriptTranscript
+function Start-ScriptLogging
 {
     [CmdletBinding()]
     param (
@@ -13,14 +13,14 @@ function Start-ScriptTranscript
     Start-Transcript -LiteralPath $transcriptFilePath -Append -IncludeInvocationHeader
 }
 
-function Stop-ScriptTranscript
+function Stop-ScriptLogging
 {
     [CmdletBinding()]
     param ()
     Stop-Transcript
 }
 
-function WriteLog
+function Write-ScriptLog
 {
     [CmdletBinding()]
     param (
@@ -226,16 +226,16 @@ function InjectUnattendAnswerFile
 
     $vhdMountPath = 'C:\tempmount'
 
-    'Mouting the VHD...' | WriteLog -Context $VhdPath
+    'Mouting the VHD...' | Write-ScriptLog -Context $VhdPath
     New-Item -ItemType Directory -Path $vhdMountPath -Force
     Mount-WindowsImage -Path $vhdMountPath -Index 1 -ImagePath $VhdPath
 
-    'Create the unattend answer file in the VHD...' | WriteLog -Context $VhdPath
+    'Create the unattend answer file in the VHD...' | Write-ScriptLog -Context $VhdPath
     $pantherPath = [IO.Path]::Combine($vhdMountPath, 'Windows', 'Panther')
     New-Item -ItemType Directory -Path $pantherPath -Force
     Set-Content -Path ([IO.Path]::Combine($pantherPath, 'unattend.xml')) -Value $UnattendAnswerFileContent -Force
 
-    'Dismouting the VHD...' | WriteLog -Context $VhdPath
+    'Dismouting the VHD...' | Write-ScriptLog -Context $VhdPath
     Dismount-WindowsImage -Path $vhdMountPath -Save
     Remove-Item $vhdMountPath
 }
@@ -252,7 +252,7 @@ function WaitingForStartingVM
     )
 
     while ((Start-VM -Name $VMName -Passthru -ErrorAction SilentlyContinue) -eq $null) {
-        'Will retry start the VM. Waiting for unmount the VHD...' | WriteLog -Context $VMName
+        'Will retry start the VM. Waiting for unmount the VHD...' | Write-ScriptLog -Context $VMName
         Start-Sleep -Seconds $CheckInternal
     }
 }
@@ -279,7 +279,7 @@ function WaitingForReadyToVM
     }
     while ((Invoke-Command @params) -ne 'ready') {
         Start-Sleep -Seconds $CheckInternal
-        'Waiting...' | WriteLog -Context $VMName
+        'Waiting...' | Write-ScriptLog -Context $VMName
     }    
 }
 

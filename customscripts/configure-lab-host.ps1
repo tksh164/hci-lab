@@ -9,12 +9,12 @@ $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 Import-Module -Name '.\shared.psm1' -Force
 
 $labConfig = GetLabConfig
-Start-ScriptTranscript -OutputDirectory $labConfig.labHost.folderPath.log -ScriptName $MyInvocation.MyCommand.Name
+Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log -ScriptName $MyInvocation.MyCommand.Name
 $labConfig | ConvertTo-Json -Depth 16
 
 # Volume
 
-'Creating a storage pool...' | WriteLog -Context $env:ComputerName
+'Creating a storage pool...' | Write-ScriptLog -Context $env:ComputerName
 $params = @{
     FriendlyName                 = $labConfig.labHost.storage.poolName
     StorageSubSystemFriendlyName = '*storage*'
@@ -25,7 +25,7 @@ if ((Get-StoragePool -FriendlyName $params.FriendlyName -ErrorAction SilentlyCon
     throw 'Storage pool creation failed.'
 }
 
-'Creating a volume...' | WriteLog -Context $env:ComputerName
+'Creating a volume...' | Write-ScriptLog -Context $env:ComputerName
 $params = @{
     StoragePoolFriendlyName = $labConfig.labHost.storage.poolName
     FileSystem              = 'ReFS'
@@ -40,24 +40,24 @@ if ((Get-Volume -DriveLetter $params.DriveLetter -ErrorAction SilentlyContinue).
     throw 'Volume creation failed.'
 }
 
-'Setting Defender exclusions...' | WriteLog -Context $env:ComputerName
+'Setting Defender exclusions...' | Write-ScriptLog -Context $env:ComputerName
 $exclusionPath = $labConfig.labHost.storage.driveLetter + ':\'
 Add-MpPreference -ExclusionPath $exclusionPath
 if ((Get-MpPreference).ExclusionPath -notcontains $exclusionPath) {
     throw 'Defender exclusion setting failed.'
 }
 
-'Creating the folder structure on the volume...' | WriteLog -Context $env:ComputerName
+'Creating the folder structure on the volume...' | Write-ScriptLog -Context $env:ComputerName
 New-Item -ItemType Directory -Path $labConfig.labHost.folderPath.temp -Force
 New-Item -ItemType Directory -Path $labConfig.labHost.folderPath.updates -Force
 New-Item -ItemType Directory -Path $labConfig.labHost.folderPath.vhd -Force
 New-Item -ItemType Directory -Path $labConfig.labHost.folderPath.vm -Force
 
-'The volume creation has been completed.' | WriteLog -Context $env:ComputerName
+'The volume creation has been completed.' | Write-ScriptLog -Context $env:ComputerName
 
 # Hyper-V
 
-'Configuring Hyper-V host settings...' | WriteLog -Context $env:ComputerName
+'Configuring Hyper-V host settings...' | Write-ScriptLog -Context $env:ComputerName
 $params = @{
     VirtualMachinePath        = $labConfig.labHost.folderPath.vm
     VirtualHardDiskPath       = $labConfig.labHost.folderPath.vhd
@@ -65,21 +65,21 @@ $params = @{
 }
 Set-VMHost @params
 
-'Creating a NAT vSwitch...' | WriteLog -Context $env:ComputerName
+'Creating a NAT vSwitch...' | Write-ScriptLog -Context $env:ComputerName
 $params = @{
     Name        = $labConfig.labHost.vSwitch.nat.name
     SwitchType  = 'Internal'
 }
 New-VMSwitch @params
 
-'Creating a network NAT...' | WriteLog -Context $env:ComputerName
+'Creating a network NAT...' | Write-ScriptLog -Context $env:ComputerName
 $params = @{
     Name                             = $labConfig.labHost.vSwitch.nat.name
     InternalIPInterfaceAddressPrefix = $labConfig.labHost.vSwitch.nat.subnet
 }
 New-NetNat @params
 
-'Assigning an IP address to the NAT vSwitch network interface...' | WriteLog -Context $env:ComputerName
+'Assigning an IP address to the NAT vSwitch network interface...' | Write-ScriptLog -Context $env:ComputerName
 $params= @{
     InterfaceIndex = (Get-NetAdapter | Where-Object { $_.Name -match $labConfig.labHost.vSwitch.nat.name }).ifIndex
     AddressFamily  = 'IPv4'
@@ -88,20 +88,20 @@ $params= @{
 }
 New-NetIPAddress @params
 
-'The Hyper-V configuration has been completed.' | WriteLog -Context $env:ComputerName
+'The Hyper-V configuration has been completed.' | Write-ScriptLog -Context $env:ComputerName
 
 # Tweaks
 
-'Setting to stop Server Manager launch at logon.' | WriteLog -Context $env:ComputerName
+'Setting to stop Server Manager launch at logon.' | Write-ScriptLog -Context $env:ComputerName
 Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotOpenServerManagerAtLogon' -Value 1
 
-'Setting to stop Windows Admin Center popup at Server Manager launch.' | WriteLog -Context $env:ComputerName
+'Setting to stop Windows Admin Center popup at Server Manager launch.' | Write-ScriptLog -Context $env:ComputerName
 Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotPopWACConsoleAtSMLaunch' -Value 1
 
-'Setting to hide the Network Location wizard. All networks will be Public.' | WriteLog -Context $env:ComputerName
+'Setting to hide the Network Location wizard. All networks will be Public.' | Write-ScriptLog -Context $env:ComputerName
 New-Item -ItemType Directory -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -Name 'NewNetworkWindowOff'
 
-'Creating shortcut for Hyper-V Manager on the desktop....' | WriteLog -Context $env:ComputerName
+'Creating shortcut for Hyper-V Manager on the desktop....' | Write-ScriptLog -Context $env:ComputerName
 $wshShell = New-Object -ComObject 'WScript.Shell'
 $shortcut = $wshShell.CreateShortcut('C:\Users\Public\Desktop\Hyper-V Manager.lnk')
 $shortcut.TargetPath = '%windir%\System32\mmc.exe'
@@ -110,7 +110,7 @@ $shortcut.Description = 'Hyper-V Manager provides management access to your virt
 $shortcut.IconLocation = '%ProgramFiles%\Hyper-V\SnapInAbout.dll,0'
 $shortcut.Save()
 
-'Creating shortcut for Windows Admin Center VM on the desktop....' | WriteLog -Context $env:ComputerName
+'Creating shortcut for Windows Admin Center VM on the desktop....' | Write-ScriptLog -Context $env:ComputerName
 $wshShell = New-Object -ComObject 'WScript.Shell'
 $shortcut = $wshShell.CreateShortcut('C:\Users\Public\Desktop\Windows Admin Center VM.lnk')
 $shortcut.TargetPath = '%windir%\System32\mstsc.exe'
@@ -118,7 +118,7 @@ $shortcut.Arguments = '/v:{0}' -f $labConfig.wac.vmName  # The VM name is also t
 $shortcut.Description = 'Windows Admin Center VM provides management access to your lab environment.'
 $shortcut.Save()
 
-'Creating shortcut for Windows Admin Center on the desktop....' | WriteLog -Context $env:ComputerName
+'Creating shortcut for Windows Admin Center on the desktop....' | Write-ScriptLog -Context $env:ComputerName
 $wshShell = New-Object -ComObject 'WScript.Shell'
 $shortcut = $wshShell.CreateShortcut('C:\Users\Public\Desktop\Windows Admin Center.lnk')
 $shortcut.TargetPath = 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
@@ -127,6 +127,6 @@ $shortcut.Description = 'Windows Admin Center for the lab environment.'
 $shortcut.IconLocation = 'imageres.dll,1'
 $shortcut.Save()
 
-'Some tweaks have been completed.' | WriteLog -Context $env:ComputerName
+'Some tweaks have been completed.' | Write-ScriptLog -Context $env:ComputerName
 
-Stop-ScriptTranscript
+Stop-ScriptLogging
