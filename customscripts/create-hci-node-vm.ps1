@@ -9,7 +9,7 @@ $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 Import-Module -Name '.\shared.psm1' -Force
 
 $labConfig = GetLabConfig
-Start-ScriptTranscript -OutputDirectory $labConfig.labHost.folderPath.log -ScriptName $MyInvocation.MyCommand.Name
+Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log -ScriptName $MyInvocation.MyCommand.Name
 $labConfig | ConvertTo-Json -Depth 16
 
 function CalculateHciNodeRamBytes
@@ -37,7 +37,7 @@ function CalculateHciNodeRamBytes
     [Math]::Floor((($totalRamBytes - $LabHostReservedRamBytes - $addsDcVMRamBytes - $wacVMRamBytes) / $NodeCount) / 2MB) * 2MB
 }
 
-'Creating the HCI node VMs configuraton...' | WriteLog -Context $env:ComputerName
+'Creating the HCI node VMs configuraton...' | Write-ScriptLog -Context $env:ComputerName
 
 $parentVhdPath = [IO.Path]::Combine($labConfig.labHost.folderPath.vhd, (GetBaseVhdFileName -OperatingSystem $labConfig.hciNode.operatingSystem.sku -ImageIndex $labConfig.hciNode.operatingSystem.imageIndex -Culture $labConfig.guestOS.culture))
 $ramBytes = CalculateHciNodeRamBytes -NodeCount $labConfig.hciNode.nodeCount -LabHostReservedRamBytes $labConfig.labHost.reservedRamBytes -AddsDcVMName $labConfig.addsDC.vmName -WacVMName $labConfig.wac.vmName
@@ -80,7 +80,7 @@ for ($i = 0; $i -lt $labConfig.hciNode.nodeCount; $i++) {
 $hciNodeConfigs | ConvertTo-Json -Depth 16
 
 foreach ($nodeConfig in $hciNodeConfigs) {
-    'Creating the OS disk...' | WriteLog -Context $nodeConfig.VMName
+    'Creating the OS disk...' | Write-ScriptLog -Context $nodeConfig.VMName
     $params = @{
         Path         = [IO.Path]::Combine($labConfig.labHost.folderPath.vm, $nodeConfig.VMName, 'osdisk.vhdx')
         Differencing = $true
@@ -88,7 +88,7 @@ foreach ($nodeConfig in $hciNodeConfigs) {
     }
     $vmOSDiskVhd = New-VHD  @params
 
-    'Creating the VM...' | WriteLog -Context $nodeConfig.VMName
+    'Creating the VM...' | Write-ScriptLog -Context $nodeConfig.VMName
     $params = @{
         Name       = $nodeConfig.VMName
         Path       = $labConfig.labHost.folderPath.vm
@@ -97,10 +97,10 @@ foreach ($nodeConfig in $hciNodeConfigs) {
     }
     New-VM @params
     
-    'Setting processor configuration...' | WriteLog -Context $nodeConfig.VMName
+    'Setting processor configuration...' | Write-ScriptLog -Context $nodeConfig.VMName
     Set-VMProcessor -VMName $nodeConfig.VMName -Count 8 -ExposeVirtualizationExtensions $true
 
-    'Setting memory configuration...' | WriteLog -Context $nodeConfig.VMName
+    'Setting memory configuration...' | Write-ScriptLog -Context $nodeConfig.VMName
     $params = @{
         VMName               = $nodeConfig.VMName
         StartupBytes         = $nodeConfig.RamBytes
@@ -110,7 +110,7 @@ foreach ($nodeConfig in $hciNodeConfigs) {
     }
     Set-VMMemory @params
     
-    'Setting network adapter configuration...' | WriteLog -Context $nodeConfig.VMName
+    'Setting network adapter configuration...' | Write-ScriptLog -Context $nodeConfig.VMName
     Get-VMNetworkAdapter -VMName $nodeConfig.VMName | Remove-VMNetworkAdapter
 
     # Management
@@ -140,7 +140,7 @@ foreach ($nodeConfig in $hciNodeConfigs) {
     }
     Add-VMNetworkAdapter @params
 
-    'Creating the data disks...' | WriteLog -Context $nodeConfig.VMName
+    'Creating the data disks...' | Write-ScriptLog -Context $nodeConfig.VMName
     for ($diskIndex = 0; $diskIndex -lt 6; $diskIndex++) {
         $params = @{
             Path      = [IO.Path]::Combine($labConfig.labHost.folderPath.vm, $nodeConfig.VMName, ('datadisk{0}.vhdx' -f ($diskIndex + 1)))
@@ -151,13 +151,13 @@ foreach ($nodeConfig in $hciNodeConfigs) {
         Add-VMHardDiskDrive -VMName $nodeConfig.VMName -Path $vmDataDiskVhd.Path -Passthru
     }
 
-    'Generating the unattend answer XML...' | WriteLog -Context $nodeConfig.VMName
+    'Generating the unattend answer XML...' | Write-ScriptLog -Context $nodeConfig.VMName
     $unattendAnswerFileContent = GetUnattendAnswerFileContent -ComputerName $nodeConfig.VMName -Password $nodeConfig.AdminPassword -Culture $labConfig.guestOS.culture
 
-    'Injecting the unattend answer file to the VHD...' | WriteLog -Context $nodeConfig.VMName
+    'Injecting the unattend answer file to the VHD...' | Write-ScriptLog -Context $nodeConfig.VMName
     InjectUnattendAnswerFile -VhdPath $vmOSDiskVhd.Path -UnattendAnswerFileContent $unattendAnswerFileContent
 
-    'Installing the roles and features to the VHD...' | WriteLog -Context $nodeConfig.VMName
+    'Installing the roles and features to the VHD...' | Write-ScriptLog -Context $nodeConfig.VMName
     $features = @(
         'Hyper-V',  # Note: https://twitter.com/pronichkin/status/1294308601276719104
         'Failover-Clustering',
@@ -169,12 +169,12 @@ foreach ($nodeConfig in $hciNodeConfigs) {
     )
     Install-WindowsFeature -Vhd $vmOSDiskVhd.Path -Name $features
 
-    'Starting the VM...' | WriteLog -Context $nodeConfig.VMName
+    'Starting the VM...' | Write-ScriptLog -Context $nodeConfig.VMName
     WaitingForStartingVM -VMName $nodeConfig.VMName
 }
 
 foreach ($nodeConfig in $hciNodeConfigs) {
-    'Waiting for ready to the VM...' | WriteLog -Context $nodeConfig.VMName
+    'Waiting for ready to the VM...' | Write-ScriptLog -Context $nodeConfig.VMName
     $params = @{
         TypeName     = 'System.Management.Automation.PSCredential'
         ArgumentList = 'Administrator', $nodeConfig.AdminPassword
@@ -184,7 +184,7 @@ foreach ($nodeConfig in $hciNodeConfigs) {
 }
 
 foreach ($nodeConfig in $hciNodeConfigs) {
-    'Configuring the VM...' | WriteLog -Context $nodeConfig.VMName
+    'Configuring the VM...' | Write-ScriptLog -Context $nodeConfig.VMName
 
     $params = @{
         TypeName     = 'System.Management.Automation.PSCredential'
@@ -195,7 +195,7 @@ foreach ($nodeConfig in $hciNodeConfigs) {
     $params = @{
         VMName       = $nodeConfig.VMName
         Credential   = $localAdminCredential
-        ArgumentList = ${function:WriteLog}, $nodeConfig
+        ArgumentList = ${function:Write-ScriptLog}, $nodeConfig
     }
     Invoke-Command @params -ScriptBlock {
         $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
@@ -255,7 +255,7 @@ foreach ($nodeConfig in $hciNodeConfigs) {
         Get-NetAdapter -Name $nodeConfig.NetAdapter.Storage2.Name | New-NetIPAddress @params
     }
 
-    'Joining the VM the AD domain...' | WriteLog -Context $nodeConfig.VMName
+    'Joining the VM the AD domain...' | Write-ScriptLog -Context $nodeConfig.VMName
     $domainAdminCredential = CreateDomainCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $nodeConfig.AdminPassword
     $params = @{
         VMName                = $nodeConfig.VMName
@@ -265,19 +265,19 @@ foreach ($nodeConfig in $hciNodeConfigs) {
     }
     JoinVMToADDomain @params
     
-    'Stopping the VM...' | WriteLog -Context $nodeConfig.VMName
+    'Stopping the VM...' | Write-ScriptLog -Context $nodeConfig.VMName
     Stop-VM -Name $nodeConfig.VMName
     
-    'Starting the VM...' | WriteLog -Context $nodeConfig.VMName
+    'Starting the VM...' | Write-ScriptLog -Context $nodeConfig.VMName
     Start-VM -Name $nodeConfig.VMName
 }
 
 foreach ($nodeConfig in $hciNodeConfigs) {
-    'Waiting for ready to the VM...' | WriteLog -Context $nodeConfig.VMName
+    'Waiting for ready to the VM...' | Write-ScriptLog -Context $nodeConfig.VMName
     $domainAdminCredential = CreateDomainCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $nodeConfig.AdminPassword
     WaitingForReadyToVM -VMName $nodeConfig.VMName -Credential $domainAdminCredential
 }
 
-'The HCI node VMs creation has been completed.' | WriteLog -Context $env:ComputerName
+'The HCI node VMs creation has been completed.' | Write-ScriptLog -Context $env:ComputerName
 
-Stop-ScriptTranscript
+Stop-ScriptLogging

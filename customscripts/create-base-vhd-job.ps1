@@ -47,7 +47,7 @@ $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
 Import-Module -Name $PSModuleNameToImport -Force
 
-Start-ScriptTranscript -OutputDirectory $LogFolder -ScriptName $LogFileName
+Start-ScriptLogging -OutputDirectory $LogFolder -ScriptName $LogFileName
 
 $sourcePath = if ($PSBoundParameters.Keys.Contains('IsoFileNameSuffix')) {
     [IO.Path]::Combine($IsoFolder, (GetIsoFileName -OperatingSystem $OperatingSystem -Culture $Culture -Suffix $IsoFileNameSuffix))
@@ -84,4 +84,4 @@ if (-not (Test-Path -PathType Leaf -LiteralPath $vhdPath)) {
     throw ('The created VHD "{0}" does not exist.' -f $vhdPath)
 }
 
-Stop-ScriptTranscript
+Stop-ScriptLogging
