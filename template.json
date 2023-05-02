@@ -186,8 +186,9 @@
             "type": "int",
             "defaultValue": 1,
             "allowedValues": [
-                1,  // For Azure Stack HCI and Windows Server 2022 Server Core
-                4   // For Windows Server 2022 with Desktop Experience
+                1,  // For Azure Stack HCI
+                //3,  // For Windows Server Datacenter Server Core
+                4   // For Windows Server Datacenter with Desktop Experience
             ],
             "metadata": {
                 "description": "The image index of the operating system for the HCI node virtual machines."
@@ -209,6 +210,13 @@
                 "description": "The Active Direcory Domain Services domain FQDN."
             }
         },
+        "repoUriBase": {
+            "type": "string",
+            "defaultValue": "https://raw.githubusercontent.com/tksh164/azure-demo-scripts-templates/master/arm-templates/hci-lab/",
+            "metadata": {
+                "description": "The base URI of template's repository. The value must end with '/'."
+            }
+        },
         "salt": {
             "type": "string",
             "defaultValue": "[utcNow()]",
@@ -222,7 +230,7 @@
 
         "location": "[resourceGroup().location]",
         "uniqueString": "[substring(uniqueString(resourceGroup().id, parameters('salt')), 0, 6)]",
-        "repoUriBase": "https://raw.githubusercontent.com/tksh164/azure-demo-scripts-templates/master/arm-templates/hci-lab/",  // Must end with "/".
+        "repoUriBase": "[if(endsWith(parameters('repoUriBase'), '/'), parameters('repoUriBase'), concat(parameters('repoUriBase'), '/'))]",
 
         // Lab host virtual machine
 
