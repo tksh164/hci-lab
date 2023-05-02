@@ -113,6 +113,7 @@ Copy-Item -LiteralPath $ws2022SourceIsoFilePath -Destination $ws2022TempIsoFileP
 'Creating the base VHD creation jobs.' | WriteLog -Context $env:ComputerName
 $jobs = @()
 
+'Starting the HCI node base VHD creation job.' | WriteLog -Context $env:ComputerName
 $params = @{
     ImportModules   = (Get-Module -Name 'shared').Path, $convertWimScriptFile.FullName
     IsoFolder       = $labConfig.labHost.folderPath.temp
@@ -127,6 +128,7 @@ $jobs += Start-Job -Name 'HCI node' -ScriptBlock ${function:CreateBaseVhdFromIso
 
 if (-not (($labConfig.hciNode.operatingSystem.sku -eq 'ws2022') -and ($labConfig.hciNode.operatingSystem.imageIndex -eq 3))) {
     # Use the Windows Server Server Core VHD for AD DS domain controller always.
+    'Starting the Windows Server Core base VHD creation job.' | WriteLog -Context $env:ComputerName
     $params = @{
         ImportModules   = (Get-Module -Name 'shared').Path, $convertWimScriptFile.FullName
         IsoFolder       = $labConfig.labHost.folderPath.temp
@@ -142,6 +144,7 @@ if (-not (($labConfig.hciNode.operatingSystem.sku -eq 'ws2022') -and ($labConfig
 
 if (-not (($labConfig.hciNode.operatingSystem.sku -eq 'ws2022') -and ($labConfig.hciNode.operatingSystem.imageIndex -eq 4))) {
     # Use the Windows Server with Desktop Experience VHD for Windows Admin Center always.
+    'Starting the Windows Server Desktop Experience base VHD creation job.' | WriteLog -Context $env:ComputerName
     $params = @{
         ImportModules     = (Get-Module -Name 'shared').Path, $convertWimScriptFile.FullName
         IsoFolder         = $labConfig.labHost.folderPath.temp
