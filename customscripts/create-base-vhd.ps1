@@ -12,81 +12,6 @@ $labConfig = GetLabConfig
 Start-ScriptTranscript -OutputDirectory $labConfig.labHost.folderPath.log -ScriptName $MyInvocation.MyCommand.Name
 $labConfig | ConvertTo-Json -Depth 16
 
-function BuildJobParameters
-{
-    param (
-        [Parameter(Mandatory = $true)]
-        [string[]] $ImportModules,
-
-        [Parameter(Mandatory = $true)]
-        [string] $IsoFolder,
-
-        [Parameter(Mandatory = $true)]
-        [string] $VhdFolder,
-
-        [Parameter(Mandatory = $true)]
-        [string] $UpdatesFolder,
-
-        [Parameter(Mandatory = $true)]
-        [string] $OperatingSystem,
-
-        [Parameter(Mandatory = $true)]
-        [int] $ImageIndex,
-
-        [Parameter(Mandatory = $true)]
-        [string] $Culture,
-
-        [Parameter(Mandatory = $true)]
-        [string] $WorkFolder,
-
-        [Parameter(Mandatory = $false)]
-        [string] $IsoFileNameSuffix
-    )
-
-    $jobParams = @{
-        ImportModules = $ImportModules
-        SourcePath    = if ($PSBoundParameters.Keys.Contains('IsoFileNameSuffix')) {
-            [IO.Path]::Combine($IsoFolder, (GetIsoFileName -OperatingSystem $OperatingSystem -Culture $Culture -Suffix $IsoFileNameSuffix))
-        }
-        else {
-            [IO.Path]::Combine($IsoFolder, (GetIsoFileName -OperatingSystem $OperatingSystem -Culture $Culture))
-        }
-        ImageIndex    = $ImageIndex
-        VhdPath       = [IO.Path]::Combine($VhdFolder, (GetBaseVhdFileName -OperatingSystem $OperatingSystem -ImageIndex $ImageIndex -Culture $Culture))
-        UpdatePackage = @()
-        WorkFolder    = $WorkFolder
-    }
-
-    # Add update package paths if the update packages exist.
-    $updatesFolderPath = [IO.Path]::Combine($UpdatesFolder, $OperatingSystem)
-    if (Test-Path -PathType Container -LiteralPath $updatesFolderPath) {
-        $jobParams.UpdatePackage += Get-ChildItem -LiteralPath $updatesFolderPath | Select-Object -ExpandProperty 'FullName' | Sort-Object
-    }
-    
-    $jobParams
-}
-
-function CreateBaseVhdFromIsoAsJob
-{
-    $jobParams = $args[0]
-    Import-Module -Name $jobParams.ImportModules -Force
-
-    $params = @{
-        SourcePath    = $jobParams.SourcePath
-        Edition       = $jobParams.ImageIndex
-        VHDPath       = $jobParams.VhdPath
-        VHDFormat     = 'VHDX'
-        DiskLayout    = 'UEFI'
-        SizeBytes     = 40GB
-        TempDirectory = $jobParams.WorkFolder
-        Verbose       = $true
-    }
-    if ($jobParams.UpdatePackage.Count -ne 0) {
-        $params.Package = $jobParams.UpdatePackage
-    }
-    Convert-WindowsImage @params
-}
-
 'Creating the temp folder if it does not exist...' | WriteLog -Context $env:ComputerName
 New-Item -ItemType Directory -Path $labConfig.labHost.folderPath.temp -Force
 
@@ -111,52 +36,59 @@ $ws2022TempIsoFilePath = [IO.Path]::Combine($labConfig.labHost.folderPath.temp, 
 Copy-Item -LiteralPath $ws2022SourceIsoFilePath -Destination $ws2022TempIsoFilePath -Force -PassThru
 
 'Creating the base VHD creation jobs.' | WriteLog -Context $env:ComputerName
+$jobScriptFilePath = [IO.Path]::Combine($PSScriptRoot, 'create-base-vhd-job.ps1')
 $jobs = @()
 
 'Starting the HCI node base VHD creation job.' | WriteLog -Context $env:ComputerName
-$params = @{
-    ImportModules   = (Get-Module -Name 'shared').Path, $convertWimScriptFile.FullName
-    IsoFolder       = $labConfig.labHost.folderPath.temp
-    VhdFolder       = $labConfig.labHost.folderPath.vhd
-    UpdatesFolder   = $labConfig.labHost.folderPath.updates
-    OperatingSystem = $labConfig.hciNode.operatingSystem.sku
-    ImageIndex      = $labConfig.hciNode.operatingSystem.imageIndex
-    Culture         = $labConfig.guestOS.culture
-    WorkFolder      = $labConfig.labHost.folderPath.temp
+$params = [PSCustomObject] @{
+    PSModuleNameToImport = (Get-Module -Name 'shared').Path, $convertWimScriptFile.FullName
+    IsoFolder            = $labConfig.labHost.folderPath.temp
+    OperatingSystem      = $labConfig.hciNode.operatingSystem.sku
+    ImageIndex           = $labConfig.hciNode.operatingSystem.imageIndex
+    Culture              = $labConfig.guestOS.culture
+    VhdFolder            = $labConfig.labHost.folderPath.vhd
+    UpdatesFolder        = $labConfig.labHost.folderPath.updates
+    WorkFolder           = $labConfig.labHost.folderPath.temp
+    LogFolder            = $labConfig.labHost.folderPath.log
+    LogFileName          = 'create-base-vhd-job-hcinode'
 }
-$jobs += Start-Job -Name 'HCI node' -ScriptBlock ${function:CreateBaseVhdFromIsoAsJob} -ArgumentList (BuildJobParameters @params)
+$jobs += Start-Job -Name 'HCI node' -LiteralPath $jobScriptFilePath -InputObject $params
 
 if (-not (($labConfig.hciNode.operatingSystem.sku -eq 'ws2022') -and ($labConfig.hciNode.operatingSystem.imageIndex -eq 3))) {
     # Use the Windows Server Server Core VHD for AD DS domain controller always.
     'Starting the Windows Server Core base VHD creation job.' | WriteLog -Context $env:ComputerName
-    $params = @{
-        ImportModules   = (Get-Module -Name 'shared').Path, $convertWimScriptFile.FullName
-        IsoFolder       = $labConfig.labHost.folderPath.temp
-        VhdFolder       = $labConfig.labHost.folderPath.vhd
-        UpdatesFolder   = $labConfig.labHost.folderPath.updates
-        OperatingSystem = 'ws2022'
-        ImageIndex      = 3 # Datacenter (Server Core)
-        Culture         = $labConfig.guestOS.culture
-        WorkFolder      = $labConfig.labHost.folderPath.temp
+    $params = [PSCustomObject] @{
+        PSModuleNameToImport = (Get-Module -Name 'shared').Path, $convertWimScriptFile.FullName
+        IsoFolder            = $labConfig.labHost.folderPath.temp
+        OperatingSystem      = 'ws2022'
+        ImageIndex           = 3 # Datacenter (Server Core)
+        IsoFileNameSuffix    = $tempIsoFileNameSuffix
+        Culture              = $labConfig.guestOS.culture
+        VhdFolder            = $labConfig.labHost.folderPath.vhd
+        UpdatesFolder        = $labConfig.labHost.folderPath.updates
+        WorkFolder           = $labConfig.labHost.folderPath.temp
+        LogFolder            = $labConfig.labHost.folderPath.log
+        LogFileName          = 'create-base-vhd-job-wscore'
     }
-    $jobs += Start-Job -Name 'WS Server Core' -ScriptBlock ${function:CreateBaseVhdFromIsoAsJob} -ArgumentList (BuildJobParameters @params)
+    $jobs += Start-Job -Name 'WS Server Core' -LiteralPath $jobScriptFilePath -InputObject $params
 }
 
 if (-not (($labConfig.hciNode.operatingSystem.sku -eq 'ws2022') -and ($labConfig.hciNode.operatingSystem.imageIndex -eq 4))) {
     # Use the Windows Server with Desktop Experience VHD for Windows Admin Center always.
     'Starting the Windows Server Desktop Experience base VHD creation job.' | WriteLog -Context $env:ComputerName
-    $params = @{
-        ImportModules     = (Get-Module -Name 'shared').Path, $convertWimScriptFile.FullName
-        IsoFolder         = $labConfig.labHost.folderPath.temp
-        VhdFolder         = $labConfig.labHost.folderPath.vhd
-        UpdatesFolder     = $labConfig.labHost.folderPath.updates
-        OperatingSystem   = 'ws2022'
-        ImageIndex        = 4  # Datacenter with Desktop Experience
-        Culture           = $labConfig.guestOS.culture
-        WorkFolder        = $labConfig.labHost.folderPath.temp
-        IsoFileNameSuffix = $tempIsoFileNameSuffix
+    $params = [PSCustomObject] @{
+        PSModuleNameToImport = (Get-Module -Name 'shared').Path, $convertWimScriptFile.FullName
+        IsoFolder            = $labConfig.labHost.folderPath.temp
+        OperatingSystem      = 'ws2022'
+        ImageIndex           = 4  # Datacenter with Desktop Experience
+        Culture              = $labConfig.guestOS.culture
+        VhdFolder            = $labConfig.labHost.folderPath.vhd
+        UpdatesFolder        = $labConfig.labHost.folderPath.updates
+        WorkFolder           = $labConfig.labHost.folderPath.temp
+        LogFolder            = $labConfig.labHost.folderPath.log
+        LogFileName          = 'create-base-vhd-job-wsgui'
     }
-    $jobs += Start-Job -Name 'WS Desktop Experience' -ScriptBlock ${function:CreateBaseVhdFromIsoAsJob} -ArgumentList (BuildJobParameters @params)
+    $jobs += Start-Job -Name 'WS Desktop Experience' -LiteralPath $jobScriptFilePath -InputObject $params
 }
 
 $jobs | Format-Table -Property Id, Name, State, HasMoreData, PSBeginTime, PSEndTime
