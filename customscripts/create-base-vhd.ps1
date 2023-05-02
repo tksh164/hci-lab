@@ -104,7 +104,7 @@ $convertWimScriptFile
 
 # NOTE: Only one VHD file can create from the same single ISO file. The second VHD creation will fail if create
 # multiple VHDs from the same single ISO because the ISO unmount when finish first one.
-'Copying Windows Server 2022 ISO file...' | WriteLog -Context $env:ComputerName
+'Copying Windows Server ISO file...' | WriteLog -Context $env:ComputerName
 $tempIsoFileNameSuffix = 'temp'
 $ws2022SourceIsoFilePath = [IO.Path]::Combine($labConfig.labHost.folderPath.temp, (GetIsoFileName -OperatingSystem 'ws2022' -Culture $labConfig.guestOS.culture))
 $ws2022TempIsoFilePath = [IO.Path]::Combine($labConfig.labHost.folderPath.temp, (GetIsoFileName -OperatingSystem 'ws2022' -Culture $labConfig.guestOS.culture -Suffix $tempIsoFileNameSuffix))
