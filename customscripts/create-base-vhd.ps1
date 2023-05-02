@@ -27,20 +27,21 @@ $params = @{
 $convertWimScriptFile = DownloadFile @params
 $convertWimScriptFile
 
-# NOTE: Only one VHD file can create from the same single ISO file. The second VHD creation will fail if create
-# multiple VHDs from the same single ISO because the ISO unmount when finish first one.
-'Copying Windows Server ISO file...' | WriteLog -Context $env:ComputerName
-$tempIsoFileNameSuffix = 'concurrent'
-$ws2022SourceIsoFilePath = [IO.Path]::Combine($labConfig.labHost.folderPath.temp, (GetIsoFileName -OperatingSystem 'ws2022' -Culture $labConfig.guestOS.culture))
-$ws2022TempIsoFilePath = [IO.Path]::Combine($labConfig.labHost.folderPath.temp, (GetIsoFileName -OperatingSystem 'ws2022' -Culture $labConfig.guestOS.culture -Suffix $tempIsoFileNameSuffix))
-Copy-Item -LiteralPath $ws2022SourceIsoFilePath -Destination $ws2022TempIsoFilePath -Force -PassThru
+# NOTE: Only one VHD file can be created from a single ISO file at the same time.
+# The second VHD creation will fail if create multiple VHDs from a single ISO file
+# because the ISO file will unmount when finish first one.
+'Copying Windows Server ISO file for concurrency...' | WriteLog -Context $env:ComputerName
+$isoFileNameSuffix = 'for-concurrent'
+$sourceIsoFilePath = [IO.Path]::Combine($labConfig.labHost.folderPath.temp, (GetIsoFileName -OperatingSystem 'ws2022' -Culture $labConfig.guestOS.culture))
+$isoFilePathForConcurrency = [IO.Path]::Combine($labConfig.labHost.folderPath.temp, (GetIsoFileName -OperatingSystem 'ws2022' -Culture $labConfig.guestOS.culture -Suffix $isoFileNameSuffix))
+Copy-Item -LiteralPath $sourceIsoFilePath -Destination $isoFilePathForConcurrency -Force -PassThru
 
-'Creating the base VHD creation jobs.' | WriteLog -Context $env:ComputerName
+'Creating the base VHD creation jobs...' | WriteLog -Context $env:ComputerName
 $jobScriptFilePath = [IO.Path]::Combine($PSScriptRoot, 'create-base-vhd-job.ps1')
 $jobs = @()
 
-'Starting the HCI node base VHD creation job.' | WriteLog -Context $env:ComputerName
-$params = [PSCustomObject] @{
+'Starting the HCI node base VHD creation job...' | WriteLog -Context $env:ComputerName
+$params = @{
     PSModuleNameToImport = (Get-Module -Name 'shared').Path, $convertWimScriptFile.FullName
     IsoFolder            = $labConfig.labHost.folderPath.temp
     OperatingSystem      = $labConfig.hciNode.operatingSystem.sku
@@ -50,52 +51,59 @@ $params = [PSCustomObject] @{
     UpdatesFolder        = $labConfig.labHost.folderPath.updates
     WorkFolder           = $labConfig.labHost.folderPath.temp
     LogFolder            = $labConfig.labHost.folderPath.log
-    LogFileName          = 'create-base-vhd-job-hcinode'
+    LogFileName          = [IO.Path]::GetFileNameWithoutExtension($jobScriptFilePath) + '-hcinode'
 }
-$jobs += Start-Job -Name 'HCI node' -LiteralPath $jobScriptFilePath -InputObject $params
+$jobs += Start-Job -Name 'hci-node' -LiteralPath $jobScriptFilePath -InputObject ([PSCustomObject] $params)
 
-if (-not (($labConfig.hciNode.operatingSystem.sku -eq 'ws2022') -and ($labConfig.hciNode.operatingSystem.imageIndex -eq 4))) {
-    # Use the Windows Server with Desktop Experience VHD for Windows Admin Center always.
-    'Starting the Windows Server Desktop Experience base VHD creation job.' | WriteLog -Context $env:ComputerName
-    $params = [PSCustomObject] @{
-        PSModuleNameToImport = (Get-Module -Name 'shared').Path, $convertWimScriptFile.FullName
-        IsoFolder            = $labConfig.labHost.folderPath.temp
-        OperatingSystem      = 'ws2022'
-        ImageIndex           = 4  # Datacenter with Desktop Experience
-        Culture              = $labConfig.guestOS.culture
-        VhdFolder            = $labConfig.labHost.folderPath.vhd
-        UpdatesFolder        = $labConfig.labHost.folderPath.updates
-        WorkFolder           = $labConfig.labHost.folderPath.temp
-        LogFolder            = $labConfig.labHost.folderPath.log
-        LogFileName          = 'create-base-vhd-job-wsgui'
-    }
-    $jobs += Start-Job -Name 'WS Desktop Experience' -LiteralPath $jobScriptFilePath -InputObject $params
-}
-
+# Create a Windows Server Server Core (= index 3) VHD for AD DS domain controller VM if HCI node's OS is not Windows Server Server Core.
 if (-not (($labConfig.hciNode.operatingSystem.sku -eq 'ws2022') -and ($labConfig.hciNode.operatingSystem.imageIndex -eq 3))) {
-    # Use the Windows Server Server Core VHD for AD DS domain controller always.
-    'Starting the Windows Server Core base VHD creation job.' | WriteLog -Context $env:ComputerName
-    $params = [PSCustomObject] @{
+    'Starting the Windows Server Core base VHD creation job...' | WriteLog -Context $env:ComputerName
+    $params = @{
         PSModuleNameToImport = (Get-Module -Name 'shared').Path, $convertWimScriptFile.FullName
         IsoFolder            = $labConfig.labHost.folderPath.temp
         OperatingSystem      = 'ws2022'
         ImageIndex           = 3 # Datacenter (Server Core)
-        IsoFileNameSuffix    = $tempIsoFileNameSuffix
         Culture              = $labConfig.guestOS.culture
         VhdFolder            = $labConfig.labHost.folderPath.vhd
         UpdatesFolder        = $labConfig.labHost.folderPath.updates
         WorkFolder           = $labConfig.labHost.folderPath.temp
         LogFolder            = $labConfig.labHost.folderPath.log
-        LogFileName          = 'create-base-vhd-job-wscore'
+        LogFileName          = [IO.Path]::GetFileNameWithoutExtension($jobScriptFilePath) + '-wscore'
     }
-    $jobs += Start-Job -Name 'WS Server Core' -LiteralPath $jobScriptFilePath -InputObject $params
+
+    # Use the for-concurrency ISO file if HCI node's OS is Windows Server with Desktop Experience (= index 4)
+    # because the ISO file without suffix is already used for HCI node's VHD creation.
+    if (($labConfig.hciNode.operatingSystem.sku -eq 'ws2022') -and ($labConfig.hciNode.operatingSystem.imageIndex -eq 4)) {
+        $params.IsoFileNameSuffix = $isoFileNameSuffix
+    }
+
+    $jobs += Start-Job -Name 'ws-server-core' -LiteralPath $jobScriptFilePath -InputObject ([PSCustomObject] $params)
+}
+
+# Create a Windows Server with Desktop Experience (= index 4) VHD for Windows Admin Center VM if HCI node's OS is not Windows Server with Desktop Experience.
+if (-not (($labConfig.hciNode.operatingSystem.sku -eq 'ws2022') -and ($labConfig.hciNode.operatingSystem.imageIndex -eq 4))) {
+    'Starting the Windows Server Desktop Experience base VHD creation job...' | WriteLog -Context $env:ComputerName
+    $params = @{
+        PSModuleNameToImport = (Get-Module -Name 'shared').Path, $convertWimScriptFile.FullName
+        IsoFolder            = $labConfig.labHost.folderPath.temp
+        OperatingSystem      = 'ws2022'
+        ImageIndex           = 4  # Datacenter with Desktop Experience
+        IsoFileNameSuffix    = $isoFileNameSuffix
+        Culture              = $labConfig.guestOS.culture
+        VhdFolder            = $labConfig.labHost.folderPath.vhd
+        UpdatesFolder        = $labConfig.labHost.folderPath.updates
+        WorkFolder           = $labConfig.labHost.folderPath.temp
+        LogFolder            = $labConfig.labHost.folderPath.log
+        LogFileName          = [IO.Path]::GetFileNameWithoutExtension($jobScriptFilePath) + '-wsdexp'
+    }
+    $jobs += Start-Job -Name 'ws-desktop-experience' -LiteralPath $jobScriptFilePath -InputObject ([PSCustomObject] $params)
 }
 
 $jobs | Format-Table -Property Id, Name, State, HasMoreData, PSBeginTime, PSEndTime
 $jobs | Receive-Job -Wait
 $jobs | Format-Table -Property Id, Name, State, HasMoreData, PSBeginTime, PSEndTime
 
-Remove-Item -LiteralPath $ws2022TempIsoFilePath -Force
+Remove-Item -LiteralPath $isoFilePathForConcurrency -Force
 
 'The base VHDs creation has been completed.' | WriteLog -Context $env:ComputerName
 
