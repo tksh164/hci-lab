@@ -292,6 +292,7 @@
                 "deploymentName": "base-vhd-creation",
                 "fileUris": [
                     "[uri(variables('customScriptBaseUri'), 'create-base-vhd.ps1')]",
+                    "[uri(variables('customScriptBaseUri'), 'create-base-vhd-job.ps1')]",
                     "[uri(variables('customScriptBaseUri'), 'shared.psm1')]"
                 ],
                 "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\create-base-vhd.ps1"
