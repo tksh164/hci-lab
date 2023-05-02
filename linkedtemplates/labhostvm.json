@@ -247,7 +247,7 @@
                                 },
                                 "diskSizeGB": "[parameters('dataDiskSize')]",
                                 "createOption": "Empty",
-                                "caching": "ReadOnly",
+                                "caching": "ReadWrite",
                                 "deleteOption": "Delete"
                             }
                         }
