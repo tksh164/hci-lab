@@ -130,60 +130,82 @@ $psSession | Remove-PSSession
 
 'Configuring the new VM...' | Write-ScriptLog -Context $vmName
 $params = @{
-    VMName       = $vmName
-    Credential   = $localAdminCredential
-    ArgumentList = ${function:Write-ScriptLog}, $vmName, $labConfig, $wacPfxFilePathInVM, $adminPassword, $wacInstallerFilePathInVM
+    VMName      = $vmName
+    Credential  = $localAdminCredential
+    InputObject = [PSCustomObject] @{
+        VMName                   = $vmName
+        WacInstallerFilePathInVM = $wacInstallerFilePathInVM
+        WacPfxFilePathInVM       = $wacPfxFilePathInVM
+        WacPfxPassword           = $adminPassword
+        LabConfig                = $labConfig
+        WriteLogImplementation   = (${function:Write-ScriptLog}).ToString()
+    }
 }
 Invoke-Command @params -ScriptBlock {
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [string] $VMName,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [string] $WacInstallerFilePathInVM,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [string] $WacPfxFilePathInVM,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [SecureString] $WacPfxPassword,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [PSCustomObject] $LabConfig,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [string] $WriteLogImplementation
+    )
+
     $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
     $WarningPreference = [Management.Automation.ActionPreference]::Continue
     $VerbosePreference = [Management.Automation.ActionPreference]::Continue
     $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
-    $WriteLog = [scriptblock]::Create($args[0])
-    $vmName = $args[1]
-    $labConfig = $args[2]
-    $wacPfxFilePathInVM = $args[3]
-    $wacPfxPassword = $args[4]
-    $wacInstallerFilePath = $args[5]
+    New-Item -Path 'function:' -Name 'Write-ScriptLog' -Value $WriteLogImplementation -Force | Out-Null
 
-    'Stop Server Manager launch at logon.' | &$WriteLog -Context $vmName
+    'Stop Server Manager launch at logon.' | Write-ScriptLog -Context $VMName
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotOpenServerManagerAtLogon' -Value 1
 
-    'Stop Windows Admin Center popup at Server Manager launch.' | &$WriteLog -Context $vmName
+    'Stop Windows Admin Center popup at Server Manager launch.' | Write-ScriptLog -Context $VMName
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotPopWACConsoleAtSMLaunch' -Value 1
 
-    'Hide the Network Location wizard. All networks will be Public.' | &$WriteLog -Context $vmName
+    'Hide the Network Location wizard. All networks will be Public.' | Write-ScriptLog -Context $VMName
     New-Item -ItemType Directory -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -Name 'NewNetworkWindowOff' -Force
 
-    'Renaming the network adapters...' | &$WriteLog -Context $vmName
+    'Renaming the network adapters...' | Write-ScriptLog -Context $VMName
     Get-NetAdapterAdvancedProperty -RegistryKeyword 'HyperVNetworkAdapterName' | ForEach-Object -Process {
         Rename-NetAdapter -Name $_.Name -NewName $_.DisplayValue
     }
 
-    'Setting the IP configuration on the network adapter...' | &$WriteLog -Context $vmName
+    'Setting the IP configuration on the network adapter...' | Write-ScriptLog -Context $VMName
     $params = @{
         AddressFamily  = 'IPv4'
-        IPAddress      = $labConfig.wac.netAdapter.management.ipAddress
-        PrefixLength   = $labConfig.wac.netAdapter.management.prefixLength
-        DefaultGateway = $labConfig.wac.netAdapter.management.defaultGateway
+        IPAddress      = $LabConfig.wac.netAdapter.management.ipAddress
+        PrefixLength   = $LabConfig.wac.netAdapter.management.prefixLength
+        DefaultGateway = $LabConfig.wac.netAdapter.management.defaultGateway
     }
-    Get-NetAdapter -Name $labConfig.wac.netAdapter.management.name | New-NetIPAddress @params
+    Get-NetAdapter -Name $LabConfig.wac.netAdapter.management.name | New-NetIPAddress @params
     
-    'Setting the DNS configuration on the network adapter...' | &$WriteLog -Context $vmName
-    Get-NetAdapter -Name $labConfig.wac.netAdapter.management.name |
-        Set-DnsClientServerAddress -ServerAddresses $labConfig.wac.netAdapter.management.dnsServerAddresses
+    'Setting the DNS configuration on the network adapter...' | Write-ScriptLog -Context $VMName
+    Get-NetAdapter -Name $LabConfig.wac.netAdapter.management.name |
+        Set-DnsClientServerAddress -ServerAddresses $LabConfig.wac.netAdapter.management.dnsServerAddresses
 
     # Import required to Root and My both stores.
-    'Importing Windows Admin Center certificate...' | &$WriteLog -Context $vmName
-    Import-PfxCertificate -CertStoreLocation 'Cert:\LocalMachine\Root' -FilePath $wacPfxFilePathInVM -Password $wacPfxPassword -Exportable
-    $wacCert = Import-PfxCertificate -CertStoreLocation 'Cert:\LocalMachine\My' -FilePath $wacPfxFilePathInVM -Password $wacPfxPassword -Exportable
-    Remove-Item -LiteralPath $wacPfxFilePathInVM -Force
+    'Importing Windows Admin Center certificate...' | Write-ScriptLog -Context $VMName
+    Import-PfxCertificate -CertStoreLocation 'Cert:\LocalMachine\Root' -FilePath $WacPfxFilePathInVM -Password $WacPfxPassword -Exportable
+    $wacCert = Import-PfxCertificate -CertStoreLocation 'Cert:\LocalMachine\My' -FilePath $WacPfxFilePathInVM -Password $WacPfxPassword -Exportable
+    Remove-Item -LiteralPath $WacPfxFilePathInVM -Force
 
-    'Installing Windows Admin Center...' | &$WriteLog -Context $vmName
+    'Installing Windows Admin Center...' | Write-ScriptLog -Context $VMName
     $msiArgs = @(
         '/i',
-        ('"{0}"' -f $wacInstallerFilePath),
+        ('"{0}"' -f $WacInstallerFilePathInVM),
         '/qn',
         '/L*v',
         '"C:\Windows\Temp\wac-install-log.txt"',
@@ -197,9 +219,9 @@ Invoke-Command @params -ScriptBlock {
     if ($result.ExitCode -ne 0) {
         throw ('Windows Admin Center installation failed with exit code {0}.' -f $result.ExitCode)
     }
-    Remove-Item -LiteralPath $wacInstallerFilePath -Force
+    Remove-Item -LiteralPath $WacInstallerFilePathInVM -Force
 
-    'Updating Windows Admin Center extensions...' | &$WriteLog -Context $vmName
+    'Updating Windows Admin Center extensions...' | Write-ScriptLog -Context $VMName
     $wacPSModulePath = [IO.Path]::Combine($env:ProgramFiles, 'Windows Admin Center\PowerShell\Modules\ExtensionTools\ExtensionTools.psm1')
     Import-Module -Name $wacPSModulePath -Force
     [Uri] $gatewayEndpointUri = 'https://{0}' -f $env:ComputerName
@@ -213,11 +235,11 @@ Invoke-Command @params -ScriptBlock {
         Sort-Object -Property id |
         Format-table -Property id, status, version, isLatestVersion, title
 
-    'Setting Windows Integrated Authentication registry for Windows Admin Center...' | &$WriteLog -Context $vmName
+    'Setting Windows Integrated Authentication registry for Windows Admin Center...' | Write-ScriptLog -Context $VMName
     New-Item -ItemType Directory -Path 'HKLM:\SOFTWARE\Policies\Microsoft' -Name 'Edge' -Force
-    Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Edge' -Name 'AuthServerAllowlist' -Value 'wac'
+    Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Edge' -Name 'AuthServerAllowlist' -Value $VMName
 
-    'Creating shortcut for Windows Admin Center on the desktop...' | &$WriteLog -Context $vmName
+    'Creating shortcut for Windows Admin Center on the desktop...' | Write-ScriptLog -Context $VMName
     $wshShell = New-Object -ComObject 'WScript.Shell'
     $shortcut = $wshShell.CreateShortcut('C:\Users\Public\Desktop\Windows Admin Center.lnk')
     $shortcut.TargetPath = 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'

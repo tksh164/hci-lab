@@ -45,7 +45,7 @@ $adminPassword = GetSecret -KeyVaultName $labConfig.keyVault.name -SecretName $l
 
 $hciNodeConfigs = @()
 for ($i = 0; $i -lt $labConfig.hciNode.nodeCount; $i++) {
-    $hciNodeConfigs += @{
+    $hciNodeConfigs += [PSCustomObject] @{
         VMName            = $labConfig.hciNode.vmName -f ($labConfig.hciNode.vmNameOffset + $i)
         ParentVhdPath     = $parentVhdPath
         RamBytes          = $ramBytes
@@ -193,83 +193,93 @@ foreach ($nodeConfig in $hciNodeConfigs) {
     $localAdminCredential = New-Object @params
 
     $params = @{
-        VMName       = $nodeConfig.VMName
-        Credential   = $localAdminCredential
-        ArgumentList = ${function:Write-ScriptLog}, $nodeConfig
+        VMName      = $nodeConfig.VMName
+        Credential  = $localAdminCredential
+        InputObject = [PSCustomObject] @{
+            NodeConfig             = $nodeConfig
+            WriteLogImplementation = (${function:Write-ScriptLog}).ToString()
+        }
     }
     Invoke-Command @params -ScriptBlock {
+        param (
+            [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+            [PSCustomObject] $NodeConfig,
+    
+            [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+            [string] $WriteLogImplementation
+        )
+
         $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
         $WarningPreference = [Management.Automation.ActionPreference]::Continue
         $VerbosePreference = [Management.Automation.ActionPreference]::Continue
         $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
     
-        $WriteLog = [scriptblock]::Create($args[0])
-        $nodeConfig = $args[1]
+        New-Item -Path 'function:' -Name 'Write-ScriptLog' -Value $WriteLogImplementation -Force | Out-Null
 
         # If the HCI node OS is Windows Server 2022 with Desktop Experience.
-        if (($nodeConfig.OperatingSystem -eq 'ws2022') -and ($nodeConfig.ImageIndex -eq 4)) {
-            'Stop Server Manager launch at logon.' | &$WriteLog -Context $nodeConfig.VMName
+        if (($NodeConfig.OperatingSystem -eq 'ws2022') -and ($NodeConfig.ImageIndex -eq 4)) {
+            'Stop Server Manager launch at logon.' | Write-ScriptLog -Context $NodeConfig.VMName
             Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotOpenServerManagerAtLogon' -Value 1
         
-            'Stop Windows Admin Center popup at Server Manager launch.' | &$WriteLog -Context $nodeConfig.VMName
+            'Stop Windows Admin Center popup at Server Manager launch.' | Write-ScriptLog -Context $NodeConfig.VMName
             Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotPopWACConsoleAtSMLaunch' -Value 1
         
-            'Hide the Network Location wizard. All networks will be Public.' | &$WriteLog -Context $nodeConfig.VMName
+            'Hide the Network Location wizard. All networks will be Public.' | Write-ScriptLog -Context $NodeConfig.VMName
             New-Item -ItemType Directory -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -Name 'NewNetworkWindowOff'
         }
     
-        'Renaming the network adapters...' | &$WriteLog -Context $nodeConfig.VMName
+        'Renaming the network adapters...' | Write-ScriptLog -Context $NodeConfig.VMName
         Get-NetAdapterAdvancedProperty -RegistryKeyword 'HyperVNetworkAdapterName' | ForEach-Object -Process {
             Rename-NetAdapter -Name $_.Name -NewName $_.DisplayValue
         }
     
-        'Setting the IP configuration on the network adapter...' | &$WriteLog -Context $nodeConfig.VMName
+        'Setting the IP configuration on the network adapter...' | Write-ScriptLog -Context $NodeConfig.VMName
 
         # Management
         $params = @{
             AddressFamily  = 'IPv4'
-            IPAddress      = $nodeConfig.NetAdapter.Management.IPAddress
-            PrefixLength   = $nodeConfig.NetAdapter.Management.PrefixLength
-            DefaultGateway = $nodeConfig.NetAdapter.Management.DefaultGateway
+            IPAddress      = $NodeConfig.NetAdapter.Management.IPAddress
+            PrefixLength   = $NodeConfig.NetAdapter.Management.PrefixLength
+            DefaultGateway = $NodeConfig.NetAdapter.Management.DefaultGateway
         }
-        Get-NetAdapter -Name $nodeConfig.NetAdapter.Management.Name | New-NetIPAddress @params
+        Get-NetAdapter -Name $NodeConfig.NetAdapter.Management.Name | New-NetIPAddress @params
 
-        'Setting the DNS configuration on the network adapter...' | &$WriteLog -Context $nodeConfig.VMName
-        Get-NetAdapter -Name $nodeConfig.NetAdapter.Management.Name |
-            Set-DnsClientServerAddress -ServerAddresses $nodeConfig.NetAdapter.Management.DnsServerAddresses
+        'Setting the DNS configuration on the network adapter...' | Write-ScriptLog -Context $NodeConfig.VMName
+        Get-NetAdapter -Name $NodeConfig.NetAdapter.Management.Name |
+            Set-DnsClientServerAddress -ServerAddresses $NodeConfig.NetAdapter.Management.DnsServerAddresses
     
         # Storage 1
         $params = @{
             AddressFamily  = 'IPv4'
-            IPAddress      = $nodeConfig.NetAdapter.Storage1.IPAddress
-            PrefixLength   = $nodeConfig.NetAdapter.Storage1.PrefixLength
+            IPAddress      = $NodeConfig.NetAdapter.Storage1.IPAddress
+            PrefixLength   = $NodeConfig.NetAdapter.Storage1.PrefixLength
         }
-        Get-NetAdapter -Name $nodeConfig.NetAdapter.Storage1.Name | New-NetIPAddress @params
+        Get-NetAdapter -Name $NodeConfig.NetAdapter.Storage1.Name | New-NetIPAddress @params
     
         # Storage 2
         $params = @{
             AddressFamily  = 'IPv4'
-            IPAddress      = $nodeConfig.NetAdapter.Storage2.IPAddress
-            PrefixLength   = $nodeConfig.NetAdapter.Storage2.PrefixLength
+            IPAddress      = $NodeConfig.NetAdapter.Storage2.IPAddress
+            PrefixLength   = $NodeConfig.NetAdapter.Storage2.PrefixLength
         }
-        Get-NetAdapter -Name $nodeConfig.NetAdapter.Storage2.Name | New-NetIPAddress @params
+        Get-NetAdapter -Name $NodeConfig.NetAdapter.Storage2.Name | New-NetIPAddress @params
     }
 
-    'Joining the VM the AD domain...' | Write-ScriptLog -Context $nodeConfig.VMName
-    $domainAdminCredential = CreateDomainCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $nodeConfig.AdminPassword
+    'Joining the VM the AD domain...' | Write-ScriptLog -Context $NodeConfig.VMName
+    $domainAdminCredential = CreateDomainCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $NodeConfig.AdminPassword
     $params = @{
-        VMName                = $nodeConfig.VMName
+        VMName                = $NodeConfig.VMName
         LocalAdminCredential  = $localAdminCredential
         DomainFqdn            = $labConfig.addsDomain.fqdn
         DomainAdminCredential = $domainAdminCredential
     }
     JoinVMToADDomain @params
     
-    'Stopping the VM...' | Write-ScriptLog -Context $nodeConfig.VMName
-    Stop-VM -Name $nodeConfig.VMName
+    'Stopping the VM...' | Write-ScriptLog -Context $NodeConfig.VMName
+    Stop-VM -Name $NodeConfig.VMName
     
-    'Starting the VM...' | Write-ScriptLog -Context $nodeConfig.VMName
-    Start-VM -Name $nodeConfig.VMName
+    'Starting the VM...' | Write-ScriptLog -Context $NodeConfig.VMName
+    Start-VM -Name $NodeConfig.VMName
 }
 
 foreach ($nodeConfig in $hciNodeConfigs) {
