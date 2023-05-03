@@ -8,7 +8,7 @@ $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
 Import-Module -Name ([IO.Path]::Combine($PSScriptRoot, 'shared.psm1')) -Force
 
-$labConfig = GetLabConfig
+$labConfig = Get-LabDeploymentConfig
 Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log -ScriptName $MyInvocation.MyCommand.Name
 $labConfig | ConvertTo-Json -Depth 16
 

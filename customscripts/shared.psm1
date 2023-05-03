@@ -46,7 +46,7 @@ function Write-ScriptLog
     }
 }
 
-function GetLabConfig
+function Get-LabDeploymentConfig
 {
     [CmdletBinding()]
     param ()
