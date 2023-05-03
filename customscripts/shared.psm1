@@ -253,12 +253,12 @@ function WaitingForStartingVM
 
         [Parameter(Mandatory = $false)]
         [ValidateRange(0, 3600)]
-        [int] $CheckInternal = 5
+        [int] $CheckInterval = 5
     )
 
     while ((Start-VM -Name $VMName -Passthru -ErrorAction SilentlyContinue) -eq $null) {
         'Will retry start the VM. Waiting for unmount the VHD...' | Write-ScriptLog -Context $VMName
-        Start-Sleep -Seconds $CheckInternal
+        Start-Sleep -Seconds $CheckInterval
     }
 }
 
@@ -274,7 +274,7 @@ function WaitingForReadyToVM
 
         [Parameter(Mandatory = $false)]
         [ValidateRange(0, 3600)]
-        [int] $CheckInternal = 5
+        [int] $CheckInterval = 5
     )
 
     $params = @{
@@ -284,7 +284,7 @@ function WaitingForReadyToVM
         ErrorAction = [Management.Automation.ActionPreference]::SilentlyContinue
     }
     while ((Invoke-Command @params) -ne 'ready') {
-        Start-Sleep -Seconds $CheckInternal
+        Start-Sleep -Seconds $CheckInterval
         'Waiting...' | Write-ScriptLog -Context $VMName
     }    
 }
