@@ -6,10 +6,10 @@ $WarningPreference = [Management.Automation.ActionPreference]::Continue
 $VerbosePreference = [Management.Automation.ActionPreference]::Continue
 $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
-Import-Module -Name '.\shared.psm1' -Force
+Import-Module -Name ([IO.Path]::Combine($PSScriptRoot, 'shared.psm1')) -Force
 
-$labConfig = GetLabConfig
-Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log -ScriptName $MyInvocation.MyCommand.Name
+$labConfig = Get-LabDeploymentConfig
+Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log
 $labConfig | ConvertTo-Json -Depth 16
 
 function WaitingForReadyToDC
@@ -23,7 +23,7 @@ function WaitingForReadyToDC
         [PSCredential] $Credential,
 
         [Parameter(Mandatory = $false)]
-        [int] $CheckInternal = 5
+        [int] $CheckInterval = 5
     )
 
     $params = @{
@@ -37,7 +37,7 @@ function WaitingForReadyToDC
         ErrorAction  = [Management.Automation.ActionPreference]::SilentlyContinue
     }
     while ((Invoke-Command @params) -ne $true) {
-        Start-Sleep -Seconds $CheckInternal
+        Start-Sleep -Seconds $CheckInterval
         'Waiting...' | Write-ScriptLog -Context $VMName
     }
 }

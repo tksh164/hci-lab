@@ -3,12 +3,15 @@ function Start-ScriptLogging
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
+        [ValidateScript({ Test-Path -PathType Container -LiteralPath $_ })]
         [string] $OutputDirectory,
 
-        [Parameter(Mandatory = $true)]
-        [string] $ScriptName
+        # The log file name suffix. The default value is the file name without extension of the caller script.
+        [Parameter(Mandatory = $false)]
+        [string] $FileName = [IO.Path]::GetFileNameWithoutExtension($MyInvocation.ScriptName)
     )
-    $transcriptFileName = '{0:yyyyMMdd-HHmmss}_{1}_{2}.txt' -f [DateTime]::Now, $env:ComputerName, [IO.Path]::GetFileNameWithoutExtension($ScriptName)
+
+    $transcriptFileName = '{0:yyyyMMdd-HHmmss}_{1}_{2}.txt' -f [DateTime]::Now, $env:ComputerName, $FileName
     $transcriptFilePath = [IO.Path]::Combine($OutputDirectory, $transcriptFileName)
     Start-Transcript -LiteralPath $transcriptFilePath -Append -IncludeInvocationHeader
 }
@@ -27,7 +30,7 @@ function Write-ScriptLog
         [Parameter(Mandatory = $true, Position = 0)]
         [string] $Context,
 
-        [Parameter(Mandatory = $true, Position = 1, ValueFromPipeline)]
+        [Parameter(Mandatory = $true, Position = 1, ValueFromPipeline = $true)]
         [string] $Message,
 
         [Parameter(Mandatory = $false)]
@@ -46,7 +49,7 @@ function Write-ScriptLog
     }
 }
 
-function GetLabConfig
+function Get-LabDeploymentConfig
 {
     [CmdletBinding()]
     param ()
@@ -101,6 +104,7 @@ function DownloadFile
         [string] $SourceUri,
 
         [Parameter(Mandatory = $true)]
+        [ValidateScript({ Test-Path -PathType Container -LiteralPath $_ })]
         [string] $DownloadFolder,
     
         [Parameter(Mandatory = $true)]
@@ -142,6 +146,7 @@ function GetBaseVhdFileName
         [string] $OperatingSystem,
 
         [Parameter(Mandatory = $true)]
+        [ValidateRange(1, 4)]
         [int] $ImageIndex,
 
         [Parameter(Mandatory = $true)]
@@ -218,6 +223,7 @@ function InjectUnattendAnswerFile
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
+        [ValidateScript({ Test-Path -PathType Leaf -LiteralPath $_ })]
         [string] $VhdPath,
 
         [Parameter(Mandatory = $true)]
@@ -248,12 +254,13 @@ function WaitingForStartingVM
         [string] $VMName,
 
         [Parameter(Mandatory = $false)]
-        [int] $CheckInternal = 5
+        [ValidateRange(0, 3600)]
+        [int] $CheckInterval = 5
     )
 
     while ((Start-VM -Name $VMName -Passthru -ErrorAction SilentlyContinue) -eq $null) {
         'Will retry start the VM. Waiting for unmount the VHD...' | Write-ScriptLog -Context $VMName
-        Start-Sleep -Seconds $CheckInternal
+        Start-Sleep -Seconds $CheckInterval
     }
 }
 
@@ -268,7 +275,8 @@ function WaitingForReadyToVM
         [PSCredential] $Credential,
 
         [Parameter(Mandatory = $false)]
-        [int] $CheckInternal = 5
+        [ValidateRange(0, 3600)]
+        [int] $CheckInterval = 5
     )
 
     $params = @{
@@ -278,7 +286,7 @@ function WaitingForReadyToVM
         ErrorAction = [Management.Automation.ActionPreference]::SilentlyContinue
     }
     while ((Invoke-Command @params) -ne 'ready') {
-        Start-Sleep -Seconds $CheckInternal
+        Start-Sleep -Seconds $CheckInterval
         'Waiting...' | Write-ScriptLog -Context $VMName
     }    
 }

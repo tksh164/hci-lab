@@ -6,10 +6,10 @@ $WarningPreference = [Management.Automation.ActionPreference]::Continue
 $VerbosePreference = [Management.Automation.ActionPreference]::Continue
 $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
-Import-Module -Name '.\shared.psm1' -Force
+Import-Module -Name ([IO.Path]::Combine($PSScriptRoot, 'shared.psm1')) -Force
 
-$labConfig = GetLabConfig
-Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log -ScriptName $MyInvocation.MyCommand.Name
+$labConfig = Get-LabDeploymentConfig
+Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log
 $labConfig | ConvertTo-Json -Depth 16
 
 'Creating the temp folder if it does not exist...' | Write-ScriptLog -Context $env:ComputerName
