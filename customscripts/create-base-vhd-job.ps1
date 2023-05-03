@@ -47,7 +47,7 @@ $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
 Import-Module -Name $PSModuleNameToImport -Force
 
-Start-ScriptLogging -OutputDirectory $LogFolder -ScriptName $LogFileName
+Start-ScriptLogging -OutputDirectory $LogFolder -FileName $LogFileName
 
 $sourcePath = if ($PSBoundParameters.Keys.Contains('IsoFileNameSuffix')) {
     [IO.Path]::Combine($IsoFolder, (GetIsoFileName -OperatingSystem $OperatingSystem -Culture $Culture -Suffix $IsoFileNameSuffix))

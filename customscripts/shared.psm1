@@ -6,10 +6,12 @@ function Start-ScriptLogging
         [ValidateScript({ Test-Path -PathType Container -LiteralPath $_ })]
         [string] $OutputDirectory,
 
-        [Parameter(Mandatory = $true)]
-        [string] $ScriptName
+        # The log file name suffix. The default value is the file name without extension of the caller script.
+        [Parameter(Mandatory = $false)]
+        [string] $FileName = [IO.Path]::GetFileNameWithoutExtension($MyInvocation.ScriptName)
     )
-    $transcriptFileName = '{0:yyyyMMdd-HHmmss}_{1}_{2}.txt' -f [DateTime]::Now, $env:ComputerName, [IO.Path]::GetFileNameWithoutExtension($ScriptName)
+
+    $transcriptFileName = '{0:yyyyMMdd-HHmmss}_{1}_{2}.txt' -f [DateTime]::Now, $env:ComputerName, $FileName
     $transcriptFilePath = [IO.Path]::Combine($OutputDirectory, $transcriptFileName)
     Start-Transcript -LiteralPath $transcriptFilePath -Append -IncludeInvocationHeader
 }
