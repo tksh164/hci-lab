@@ -292,6 +292,7 @@
                 "deploymentName": "iso-and-updates-download",
                 "fileUris": [
                     "[uri(variables('customScriptBaseUri'), 'download-iso-updates.ps1')]",
+                    "[uri(variables('customScriptBaseUri'), 'asset-urls.psd1')]",
                     "[uri(variables('customScriptBaseUri'), 'shared.psm1')]"
                 ],
                 "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\download-iso-updates.ps1"
