@@ -30,7 +30,7 @@ function Write-ScriptLog
         [Parameter(Mandatory = $true, Position = 0)]
         [string] $Context,
 
-        [Parameter(Mandatory = $true, Position = 1, ValueFromPipeline)]
+        [Parameter(Mandatory = $true, Position = 1, ValueFromPipeline = $true)]
         [string] $Message,
 
         [Parameter(Mandatory = $false)]
