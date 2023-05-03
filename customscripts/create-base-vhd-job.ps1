@@ -4,7 +4,7 @@ param (
     [string[]] $PSModuleNameToImport,
 
     [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-    [ValidateScript({Test-Path -PathType Container -LiteralPath $_})]
+    [ValidateScript({ Test-Path -PathType Container -LiteralPath $_ })]
     [string] $IsoFolder,
 
     [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
@@ -21,19 +21,19 @@ param (
     [string] $Culture,
 
     [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-    [ValidateScript({Test-Path -PathType Container -LiteralPath $_})]
+    [ValidateScript({ Test-Path -PathType Container -LiteralPath $_ })]
     [string] $VhdFolder,
 
     [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-    [ValidateScript({Test-Path -PathType Container -LiteralPath $_})]
+    [ValidateScript({ Test-Path -PathType Container -LiteralPath $_ })]
     [string] $UpdatesFolder,
 
     [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-    [ValidateScript({Test-Path -PathType Container -LiteralPath $_})]
+    [ValidateScript({ Test-Path -PathType Container -LiteralPath $_ })]
     [string] $WorkFolder,
 
     [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-    [ValidateScript({Test-Path -PathType Container -LiteralPath $_})]
+    [ValidateScript({ Test-Path -PathType Container -LiteralPath $_ })]
     [string] $LogFolder,
 
     [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]

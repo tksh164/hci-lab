@@ -22,7 +22,7 @@ function DownloadIso
         [string] $Culture,
 
         [Parameter(Mandatory = $true)]
-        [ValidateScript({Test-Path -PathType Container -LiteralPath $_})]
+        [ValidateScript({ Test-Path -PathType Container -LiteralPath $_ })]
         [string] $DownloadFolderPath,
 
         [Parameter(Mandatory = $true)]
@@ -44,7 +44,7 @@ function DownloadUpdates
         [string] $OperatingSystem,
 
         [Parameter(Mandatory = $true)]
-        [ValidateScript({Test-Path -PathType Container -LiteralPath $_})]
+        [ValidateScript({ Test-Path -PathType Container -LiteralPath $_ })]
         [string] $DownloadFolderBasePath,
 
         [Parameter(Mandatory = $true)]
