@@ -3,6 +3,7 @@ function Start-ScriptLogging
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
+        [ValidateScript({ Test-Path -PathType Container -LiteralPath $_ })]
         [string] $OutputDirectory,
 
         [Parameter(Mandatory = $true)]
@@ -101,6 +102,7 @@ function DownloadFile
         [string] $SourceUri,
 
         [Parameter(Mandatory = $true)]
+        [ValidateScript({ Test-Path -PathType Container -LiteralPath $_ })]
         [string] $DownloadFolder,
     
         [Parameter(Mandatory = $true)]
@@ -142,6 +144,7 @@ function GetBaseVhdFileName
         [string] $OperatingSystem,
 
         [Parameter(Mandatory = $true)]
+        [ValidateRange(1, 4)]
         [int] $ImageIndex,
 
         [Parameter(Mandatory = $true)]
@@ -218,6 +221,7 @@ function InjectUnattendAnswerFile
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
+        [ValidateScript({ Test-Path -PathType Leaf -LiteralPath $_ })]
         [string] $VhdPath,
 
         [Parameter(Mandatory = $true)]
@@ -248,6 +252,7 @@ function WaitingForStartingVM
         [string] $VMName,
 
         [Parameter(Mandatory = $false)]
+        [ValidateRange(0, 3600)]
         [int] $CheckInternal = 5
     )
 
@@ -268,6 +273,7 @@ function WaitingForReadyToVM
         [PSCredential] $Credential,
 
         [Parameter(Mandatory = $false)]
+        [ValidateRange(0, 3600)]
         [int] $CheckInternal = 5
     )
 
