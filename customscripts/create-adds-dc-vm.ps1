@@ -111,53 +111,69 @@ WaitingForReadyToVM -VMName $vmName -Credential $localAdminCredential
 
 'Configuring the new VM...' | Write-ScriptLog -Context $vmName
 $params = @{
-    VMName       = $vmName
-    Credential   = $localAdminCredential
-    ArgumentList = ${function:Write-ScriptLog}, $vmName, $labConfig, $adminPassword
+    VMName      = $vmName
+    Credential  = $localAdminCredential
+    InputObject = [PSCustomObject] @{
+        VMName                 = $vmName
+        AdminPassword          = $adminPassword
+        LabConfig              = $labConfig
+        WriteLogImplementation = (${function:Write-ScriptLog}).ToString()
+    }
 }
 Invoke-Command @params -ScriptBlock {
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [string] $VMName,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [SecureString] $AdminPassword,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [PSCustomObject] $LabConfig,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [string] $WriteLogImplementation
+    )
+
     $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
     $WarningPreference = [Management.Automation.ActionPreference]::Continue
     $VerbosePreference = [Management.Automation.ActionPreference]::Continue
     $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
-    $WriteLog = [scriptblock]::Create($args[0])
-    $vmName = $args[1]
-    $labConfig = $args[2]
-    $adminPassword = $args[3]
+    New-Item -Path 'function:' -Name 'Write-ScriptLog' -Value $WriteLogImplementation -Force | Out-Null
 
-    'Stop Server Manager launch at logon.' | &$WriteLog -Context $vmName
+    'Stop Server Manager launch at logon.' | Write-ScriptLog -Context $VMName
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotOpenServerManagerAtLogon' -Value 1
 
-    'Stop Windows Admin Center popup at Server Manager launch.' | &$WriteLog -Context $vmName
+    'Stop Windows Admin Center popup at Server Manager launch.' | Write-ScriptLog -Context $VMName
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotPopWACConsoleAtSMLaunch' -Value 1
 
-    'Stop Windows Admin Center popup at Server Manager launch.' | &$WriteLog -Context $vmName
+    'Stop Windows Admin Center popup at Server Manager launch.' | Write-ScriptLog -Context $VMName
     New-Item -ItemType Directory -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -Name 'NewNetworkWindowOff'
 
-    'Renaming the network adapters...' | &$WriteLog -Context $vmName
+    'Renaming the network adapters...' | Write-ScriptLog -Context $VMName
     Get-NetAdapterAdvancedProperty -RegistryKeyword 'HyperVNetworkAdapterName' | ForEach-Object -Process {
         Rename-NetAdapter -Name $_.Name -NewName $_.DisplayValue
     }
 
-    'Setting the IP configuration on the network adapter...' | &$WriteLog -Context $vmName
+    'Setting the IP configuration on the network adapter...' | Write-ScriptLog -Context $VMName
     $params = @{
         AddressFamily  = 'IPv4'
-        IPAddress      = $labConfig.addsDC.netAdapter.management.ipAddress
-        PrefixLength   = $labConfig.addsDC.netAdapter.management.prefixLength
-        DefaultGateway = $labConfig.addsDC.netAdapter.management.defaultGateway
+        IPAddress      = $LabConfig.addsDC.netAdapter.management.ipAddress
+        PrefixLength   = $LabConfig.addsDC.netAdapter.management.prefixLength
+        DefaultGateway = $LabConfig.addsDC.netAdapter.management.defaultGateway
     }
-    Get-NetAdapter -Name $labConfig.addsDC.netAdapter.management.name | New-NetIPAddress @params
+    Get-NetAdapter -Name $LabConfig.addsDC.netAdapter.management.name | New-NetIPAddress @params
     
-    'Setting the DNS configuration on the network adapter...' | &$WriteLog -Context $vmName
-    Get-NetAdapter -Name $labConfig.addsDC.netAdapter.management.name |
-        Set-DnsClientServerAddress -ServerAddresses $labConfig.addsDC.netAdapter.management.dnsServerAddresses
+    'Setting the DNS configuration on the network adapter...' | Write-ScriptLog -Context $VMName
+    Get-NetAdapter -Name $LabConfig.addsDC.netAdapter.management.name |
+        Set-DnsClientServerAddress -ServerAddresses $LabConfig.addsDC.netAdapter.management.dnsServerAddresses
 
-    'Installing AD DS (Creating a new forest)...' | &$WriteLog -Context $vmName
+    'Installing AD DS (Creating a new forest)...' | Write-ScriptLog -Context $VMName
     $params = @{
-        DomainName                    = $labConfig.addsDomain.fqdn
+        DomainName                    = $LabConfig.addsDomain.fqdn
         InstallDns                    = $true
-        SafeModeAdministratorPassword = $adminPassword
+        SafeModeAdministratorPassword = $AdminPassword
         NoRebootOnCompletion          = $true
         Force                         = $true
     }
