@@ -188,7 +188,8 @@
                             }
                         }
                     }
-                ]
+                ],
+                "enableAcceleratedNetworking": true
             }
         },
         {
