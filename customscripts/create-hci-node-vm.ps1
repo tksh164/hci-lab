@@ -20,9 +20,6 @@ function CalculateHciNodeRamBytes
         [int] $NodeCount,
 
         [Parameter(Mandatory = $true)]
-        [long] $LabHostReservedRamBytes,
-
-        [Parameter(Mandatory = $true)]
         [string] $AddsDcVMName,
 
         [Parameter(Mandatory = $true)]
@@ -30,17 +27,23 @@ function CalculateHciNodeRamBytes
     )
 
     $totalRamBytes = (Get-ComputerInfo).OsTotalVisibleMemorySize * 1KB
+    $labHostReservedRamBytes = [Math]::Floor($totalRamBytes * 0.04)  # Reserve a few percent of the total RAM for the lab host.
     $addsDcVMRamBytes = (Get-VM -Name $AddsDcVMName).MemoryMaximum
     $wacVMRamBytes = (Get-VM -Name $WacVMName).MemoryMaximum
 
+    'totalRamBytes: {0}' -f $totalRamBytes | Write-ScriptLog -Context $env:ComputerName
+    'labHostReservedRamBytes: {0}' -f $labHostReservedRamBytes | Write-ScriptLog -Context $env:ComputerName
+    'addsDcVMRamBytes: {0}' -f $addsDcVMRamBytes | Write-ScriptLog -Context $env:ComputerName
+    'wacVMRamBytes: {0}' -f $wacVMRamBytes | Write-ScriptLog -Context $env:ComputerName
+
     # StartupBytes should be a multiple of 2 MB (2 * 1024 * 1024 bytes).
-    [Math]::Floor((($totalRamBytes - $LabHostReservedRamBytes - $addsDcVMRamBytes - $wacVMRamBytes) / $NodeCount) / 2MB) * 2MB
+    [Math]::Floor((($totalRamBytes - $labHostReservedRamBytes - $addsDcVMRamBytes - $wacVMRamBytes) / $NodeCount) / 2MB) * 2MB
 }
 
 'Creating the HCI node VMs configuraton...' | Write-ScriptLog -Context $env:ComputerName
 
 $parentVhdPath = [IO.Path]::Combine($labConfig.labHost.folderPath.vhd, (GetBaseVhdFileName -OperatingSystem $labConfig.hciNode.operatingSystem.sku -ImageIndex $labConfig.hciNode.operatingSystem.imageIndex -Culture $labConfig.guestOS.culture))
-$ramBytes = CalculateHciNodeRamBytes -NodeCount $labConfig.hciNode.nodeCount -LabHostReservedRamBytes $labConfig.labHost.reservedRamBytes -AddsDcVMName $labConfig.addsDC.vmName -WacVMName $labConfig.wac.vmName
+$ramBytes = CalculateHciNodeRamBytes -NodeCount $labConfig.hciNode.nodeCount -AddsDcVMName $labConfig.addsDC.vmName -WacVMName $labConfig.wac.vmName
 $adminPassword = GetSecret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName
 
 $hciNodeConfigs = @()
