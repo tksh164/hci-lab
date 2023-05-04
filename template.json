@@ -30,6 +30,13 @@
             "type": "string",
             "defaultValue": "Standard_E16s_v5",
             "allowedValues": [
+                // Required VM size capabilities:
+                // - Generation 2 VM support
+                // - Premium storage support
+                // - Accelerated networking support
+                // - Nested virtualization support
+                // - Non-AMD processor
+
                 // Dsv5-series
                 "Standard_D32s_v5",
                 "Standard_D48s_v5",
@@ -41,15 +48,15 @@
                 "Standard_D64ds_v5",
                 "Standard_D96ds_v5",
                 // Dasv5-series
-                "Standard_D32as_v5",
-                "Standard_D48as_v5",
-                "Standard_D64as_v5",
-                "Standard_D96as_v5",
+                // "Standard_D32as_v5",
+                // "Standard_D48as_v5",
+                // "Standard_D64as_v5",
+                // "Standard_D96as_v5",
                 // Dadsv5-series
-                "Standard_D32ads_v5",
-                "Standard_D48ads_v5",
-                "Standard_D64ads_v5",
-                "Standard_D96ads_v5",
+                // "Standard_D32ads_v5",
+                // "Standard_D48ads_v5",
+                // "Standard_D64ads_v5",
+                // "Standard_D96ads_v5",
                 // Dlsv5-series
                 "Standard_D64ls_v5",
                 "Standard_D96ls_v5",
@@ -83,19 +90,19 @@
                 "Standard_E64ds_v5",
                 "Standard_E96ds_v5",
                 // Easv5-series
-                "Standard_E16as_v5",
-                "Standard_E20as_v5",
-                "Standard_E32as_v5",
-                "Standard_E48as_v5",
-                "Standard_E64as_v5",
-                "Standard_E96as_v5",
+                // "Standard_E16as_v5",
+                // "Standard_E20as_v5",
+                // "Standard_E32as_v5",
+                // "Standard_E48as_v5",
+                // "Standard_E64as_v5",
+                // "Standard_E96as_v5",
                 // Eadsv5-series
-                "Standard_E16ads_v5",
-                "Standard_E20ads_v5",
-                "Standard_E32ads_v5",
-                "Standard_E48ads_v5",
-                "Standard_E64ads_v5",
-                "Standard_E96ads_v5",
+                // "Standard_E16ads_v5",
+                // "Standard_E20ads_v5",
+                // "Standard_E32ads_v5",
+                // "Standard_E48ads_v5",
+                // "Standard_E64ads_v5",
+                // "Standard_E96ads_v5",
                 // Ebsv5 series
                 "Standard_E16bs_v5",
                 "Standard_E32bs_v5",
