@@ -230,9 +230,9 @@ function InjectUnattendAnswerFile
         [string] $UnattendAnswerFileContent
     )
 
-    $vhdMountPath = 'C:\tempmount'
-
     'Mouting the VHD...' | Write-ScriptLog -Context $VhdPath
+    $vhdMountPath = [IO.Path]::Combine('C:\', [IO.Path]::GetFileNameWithoutExtension([IO.Path]::GetDirectoryName($VhdPath)) + '-' + (New-Guid).Guid.Substring(0, 4))
+    'vhdMountPath: {0}' -f $vhdMountPath | Write-ScriptLog -Context $VhdPath
     New-Item -ItemType Directory -Path $vhdMountPath -Force
     Mount-WindowsImage -Path $vhdMountPath -Index 1 -ImagePath $VhdPath
 
