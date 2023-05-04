@@ -23,6 +23,7 @@ function WaitingForReadyToDC
         [PSCredential] $Credential,
 
         [Parameter(Mandatory = $false)]
+        [ValidateRange(0, 3600)]
         [int] $CheckInterval = 5
     )
 
