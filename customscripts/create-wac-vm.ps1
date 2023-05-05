@@ -231,12 +231,27 @@ Invoke-Command @params -ScriptBlock {
     $wacPSModulePath = [IO.Path]::Combine($env:ProgramFiles, 'Windows Admin Center\PowerShell\Modules\ExtensionTools\ExtensionTools.psm1')
     Import-Module -Name $wacPSModulePath -Force
     [Uri] $gatewayEndpointUri = 'https://{0}' -f $env:ComputerName
-    Get-Extension -GatewayEndpoint $gatewayEndpointUri |
-        Where-Object -Property 'isLatestVersion' -EQ $false |
-        ForEach-Object -Process {
-            $wacExtension = $_
-            Update-Extension -GatewayEndpoint $gatewayEndpointUri -ExtensionId $wacExtension.id -Verbose | Out-Null
+
+    $retryLimit = 10
+    for ($retryCount = 0; $retryCount -lt $retryLimit; $retryCount++) {
+        try {
+            # NOTE: Windows Admin Center extension updating will fail sometimes due to unable to connect remote server.
+            Get-Extension -GatewayEndpoint $gatewayEndpointUri |
+                Where-Object -Property 'isLatestVersion' -EQ $false |
+                ForEach-Object -Process {
+                    $wacExtension = $_
+                    Update-Extension -GatewayEndpoint $gatewayEndpointUri -ExtensionId $wacExtension.id -Verbose | Out-Null
+                }
+            break
         }
+        catch {
+            'Will retry updating Windows Admin Center extensions...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
+        }
+    }
+    if ($retryCount -ge $retryLimit) {
+        'Failed Windows Admin Center extension update. Need manual update later.' | Write-ScriptLog -Context $VMName -UseInScriptBlock
+    }
+
     Get-Extension -GatewayEndpoint $gatewayEndpointUri |
         Sort-Object -Property id |
         Format-table -Property id, status, version, isLatestVersion, title
