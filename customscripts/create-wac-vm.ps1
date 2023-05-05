@@ -15,7 +15,7 @@ $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 Import-Module -Name $PSModuleNameToImport -Force
 
 $labConfig = Get-LabDeploymentConfig
-Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log
+Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log -FileName $LogFileName
 $labConfig | ConvertTo-Json -Depth 16
 
 $vmName = $labConfig.wac.vmName
