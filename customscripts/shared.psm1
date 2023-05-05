@@ -46,7 +46,10 @@ function Write-ScriptLog
 
         [Parameter(Mandatory = $false)]
         [ValidateSet('Verbose', 'Warning', 'Error', 'Debug', 'Otput', 'Host')]
-        [string] $Type = 'Verbose'
+        [string] $Type = 'Verbose',
+
+        [Parameter(Mandatory = $false)]
+        [switch] $UseInScriptBlock
     )
 
     $builtMessage = '[{0:yyyy-MM-dd HH:mm:ss}] [{1}] {2}' -f [DateTime]::Now, $Context, $Message
@@ -56,7 +59,15 @@ function Write-ScriptLog
         'Debug'   { Write-Debug -Message $builtMessage }
         'Otput'   { Write-Output -InputObject $builtMessage }
         'Host'    { Write-Host -Object $builtMessage }
-        default   { Write-Verbose -Message $builtMessage }
+        default   {
+            if ($UseInScriptBlock) {
+                # NOTE: Redirecting a verbose message because verbose messages are not showing it come from script blocks.
+                Write-Verbose -Message ('VERBOSE: ' + $builtMessage) 4>&1
+            }
+            else {
+                Write-Verbose -Message $builtMessage
+            }
+        }
     }
 }
 
