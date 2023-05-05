@@ -118,21 +118,21 @@ Invoke-Command @params -ScriptBlock {
 
     New-Item -Path 'function:' -Name 'Write-ScriptLog' -Value $WriteLogImplementation -Force | Out-Null
 
-    'Stop Server Manager launch at logon.' | Write-ScriptLog -Context $VMName
+    'Stop Server Manager launch at logon.' | Write-ScriptLog -Context $VMName -UseInScriptBlock
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotOpenServerManagerAtLogon' -Value 1
 
-    'Stop Windows Admin Center popup at Server Manager launch.' | Write-ScriptLog -Context $VMName
+    'Stop Windows Admin Center popup at Server Manager launch.' | Write-ScriptLog -Context $VMName -UseInScriptBlock
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotPopWACConsoleAtSMLaunch' -Value 1
 
-    'Stop Windows Admin Center popup at Server Manager launch.' | Write-ScriptLog -Context $VMName
+    'Stop Windows Admin Center popup at Server Manager launch.' | Write-ScriptLog -Context $VMName -UseInScriptBlock
     New-Item -ItemType Directory -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -Name 'NewNetworkWindowOff'
 
-    'Renaming the network adapters...' | Write-ScriptLog -Context $VMName
+    'Renaming the network adapters...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
     Get-NetAdapterAdvancedProperty -RegistryKeyword 'HyperVNetworkAdapterName' | ForEach-Object -Process {
         Rename-NetAdapter -Name $_.Name -NewName $_.DisplayValue
     }
 
-    'Setting the IP configuration on the network adapter...' | Write-ScriptLog -Context $VMName
+    'Setting the IP configuration on the network adapter...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
     $params = @{
         AddressFamily  = 'IPv4'
         IPAddress      = $LabConfig.addsDC.netAdapter.management.ipAddress
@@ -141,11 +141,11 @@ Invoke-Command @params -ScriptBlock {
     }
     Get-NetAdapter -Name $LabConfig.addsDC.netAdapter.management.name | New-NetIPAddress @params
     
-    'Setting the DNS configuration on the network adapter...' | Write-ScriptLog -Context $VMName
+    'Setting the DNS configuration on the network adapter...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
     Get-NetAdapter -Name $LabConfig.addsDC.netAdapter.management.name |
         Set-DnsClientServerAddress -ServerAddresses $LabConfig.addsDC.netAdapter.management.dnsServerAddresses
 
-    'Installing AD DS (Creating a new forest)...' | Write-ScriptLog -Context $VMName
+    'Installing AD DS (Creating a new forest)...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
     $params = @{
         DomainName                    = $LabConfig.addsDomain.fqdn
         InstallDns                    = $true
