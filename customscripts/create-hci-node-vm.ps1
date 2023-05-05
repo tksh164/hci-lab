@@ -158,7 +158,7 @@ foreach ($nodeConfig in $hciNodeConfigs) {
     $unattendAnswerFileContent = GetUnattendAnswerFileContent -ComputerName $nodeConfig.VMName -Password $nodeConfig.AdminPassword -Culture $labConfig.guestOS.culture
 
     'Injecting the unattend answer file to the VHD...' | Write-ScriptLog -Context $nodeConfig.VMName
-    InjectUnattendAnswerFile -VhdPath $vmOSDiskVhd.Path -UnattendAnswerFileContent $unattendAnswerFileContent
+    InjectUnattendAnswerFile -VhdPath $vmOSDiskVhd.Path -UnattendAnswerFileContent $unattendAnswerFileContent -LogFolder $labConfig.labHost.folderPath.log
 
     'Installing the roles and features to the VHD...' | Write-ScriptLog -Context $nodeConfig.VMName
     $features = @(
@@ -170,7 +170,7 @@ foreach ($nodeConfig in $hciNodeConfigs) {
         'RSAT-Clustering',
         'RSAT-AD-PowerShell'  # Needs for WS2022 clsuter by WAC
     )
-    Install-WindowsFeature -Vhd $vmOSDiskVhd.Path -Name $features
+    Install-WindowsFeatureToVhd -VhdPath $vmOSDiskVhd.Path -FeatureName $features -LogFolder $labConfig.labHost.folderPath.log
 
     'Starting the VM...' | Write-ScriptLog -Context $nodeConfig.VMName
     WaitingForStartingVM -VMName $nodeConfig.VMName
@@ -221,22 +221,22 @@ foreach ($nodeConfig in $hciNodeConfigs) {
 
         # If the HCI node OS is Windows Server 2022 with Desktop Experience.
         if (($NodeConfig.OperatingSystem -eq 'ws2022') -and ($NodeConfig.ImageIndex -eq 4)) {
-            'Stop Server Manager launch at logon.' | Write-ScriptLog -Context $NodeConfig.VMName
+            'Stop Server Manager launch at logon.' | Write-ScriptLog -Context $NodeConfig.VMName -UseInScriptBlock
             Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotOpenServerManagerAtLogon' -Value 1
         
-            'Stop Windows Admin Center popup at Server Manager launch.' | Write-ScriptLog -Context $NodeConfig.VMName
+            'Stop Windows Admin Center popup at Server Manager launch.' | Write-ScriptLog -Context $NodeConfig.VMName -UseInScriptBlock
             Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotPopWACConsoleAtSMLaunch' -Value 1
         
-            'Hide the Network Location wizard. All networks will be Public.' | Write-ScriptLog -Context $NodeConfig.VMName
+            'Hide the Network Location wizard. All networks will be Public.' | Write-ScriptLog -Context $NodeConfig.VMName -UseInScriptBlock
             New-Item -ItemType Directory -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -Name 'NewNetworkWindowOff'
         }
     
-        'Renaming the network adapters...' | Write-ScriptLog -Context $NodeConfig.VMName
+        'Renaming the network adapters...' | Write-ScriptLog -Context $NodeConfig.VMName -UseInScriptBlock
         Get-NetAdapterAdvancedProperty -RegistryKeyword 'HyperVNetworkAdapterName' | ForEach-Object -Process {
             Rename-NetAdapter -Name $_.Name -NewName $_.DisplayValue
         }
     
-        'Setting the IP configuration on the network adapter...' | Write-ScriptLog -Context $NodeConfig.VMName
+        'Setting the IP configuration on the network adapter...' | Write-ScriptLog -Context $NodeConfig.VMName -UseInScriptBlock
 
         # Management
         $params = @{
@@ -247,7 +247,7 @@ foreach ($nodeConfig in $hciNodeConfigs) {
         }
         Get-NetAdapter -Name $NodeConfig.NetAdapter.Management.Name | New-NetIPAddress @params
 
-        'Setting the DNS configuration on the network adapter...' | Write-ScriptLog -Context $NodeConfig.VMName
+        'Setting the DNS configuration on the network adapter...' | Write-ScriptLog -Context $NodeConfig.VMName -UseInScriptBlock
         Get-NetAdapter -Name $NodeConfig.NetAdapter.Management.Name |
             Set-DnsClientServerAddress -ServerAddresses $NodeConfig.NetAdapter.Management.DnsServerAddresses
     

@@ -11,7 +11,7 @@ function Start-ScriptLogging
         [string] $FileName = [IO.Path]::GetFileNameWithoutExtension($MyInvocation.ScriptName)
     )
 
-    $transcriptFileName = '{0:yyyyMMdd-HHmmss}_{1}_{2}.txt' -f [DateTime]::Now, $env:ComputerName, $FileName
+    $transcriptFileName = Get-LogFileName -FileName $FileName
     $transcriptFilePath = [IO.Path]::Combine($OutputDirectory, $transcriptFileName)
     Start-Transcript -LiteralPath $transcriptFilePath -Append -IncludeInvocationHeader
 }
@@ -21,6 +21,17 @@ function Stop-ScriptLogging
     [CmdletBinding()]
     param ()
     Stop-Transcript
+}
+
+function Get-LogFileName
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $false)]
+        [string] $FileName
+    )
+
+    '{0:yyyyMMdd-HHmmss}_{1}_{2}.txt' -f [DateTime]::Now, $env:ComputerName, $FileName
 }
 
 function Write-ScriptLog
@@ -35,7 +46,10 @@ function Write-ScriptLog
 
         [Parameter(Mandatory = $false)]
         [ValidateSet('Verbose', 'Warning', 'Error', 'Debug', 'Otput', 'Host')]
-        [string] $Type = 'Verbose'
+        [string] $Type = 'Verbose',
+
+        [Parameter(Mandatory = $false)]
+        [switch] $UseInScriptBlock
     )
 
     $builtMessage = '[{0:yyyy-MM-dd HH:mm:ss}] [{1}] {2}' -f [DateTime]::Now, $Context, $Message
@@ -45,7 +59,15 @@ function Write-ScriptLog
         'Debug'   { Write-Debug -Message $builtMessage }
         'Otput'   { Write-Output -InputObject $builtMessage }
         'Host'    { Write-Host -Object $builtMessage }
-        default   { Write-Verbose -Message $builtMessage }
+        default   {
+            if ($UseInScriptBlock) {
+                # NOTE: Redirecting a verbose message because verbose messages are not showing it come from script blocks.
+                Write-Verbose -Message ('VERBOSE: ' + $builtMessage) 4>&1
+            }
+            else {
+                Write-Verbose -Message $builtMessage
+            }
+        }
     }
 }
 
@@ -227,14 +249,28 @@ function InjectUnattendAnswerFile
         [string] $VhdPath,
 
         [Parameter(Mandatory = $true)]
-        [string] $UnattendAnswerFileContent
+        [string] $UnattendAnswerFileContent,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateScript({ Test-Path -PathType Container -LiteralPath $_ })]
+        [string] $LogFolder
     )
 
+    $baseFolderName = [IO.Path]::GetFileNameWithoutExtension([IO.Path]::GetDirectoryName($VhdPath)) + '-' + (New-Guid).Guid.Substring(0, 4)
+
     'Mouting the VHD...' | Write-ScriptLog -Context $VhdPath
-    $vhdMountPath = [IO.Path]::Combine('C:\', [IO.Path]::GetFileNameWithoutExtension([IO.Path]::GetDirectoryName($VhdPath)) + '-' + (New-Guid).Guid.Substring(0, 4))
+
+    $vhdMountPath = [IO.Path]::Combine('C:\', $baseFolderName + '-mount')
     'vhdMountPath: {0}' -f $vhdMountPath | Write-ScriptLog -Context $VhdPath
     New-Item -ItemType Directory -Path $vhdMountPath -Force
-    Mount-WindowsImage -Path $vhdMountPath -Index 1 -ImagePath $VhdPath
+
+    $scratchDirectory = [IO.Path]::Combine('C:\', $baseFolderName + '-scratch')
+    'scratchDirectory: {0}' -f $scratchDirectory | Write-ScriptLog -Context $VhdPath
+    New-Item -ItemType Directory -Path $scratchDirectory -Force
+
+    $logPath = [IO.Path]::Combine($LogFolder, (Get-LogFileName -FileName ('injectunattend-' + [IO.Path]::GetFileNameWithoutExtension([IO.Path]::GetDirectoryName($VhdPath)))))
+    'logPath: {0}' -f $logPath | Write-ScriptLog -Context $VhdPath
+    Mount-WindowsImage -Path $vhdMountPath -Index 1 -ImagePath $VhdPath -ScratchDirectory $scratchDirectory -LogPath $logPath
 
     'Create the unattend answer file in the VHD...' | Write-ScriptLog -Context $VhdPath
     $pantherPath = [IO.Path]::Combine($vhdMountPath, 'Windows', 'Panther')
@@ -242,8 +278,45 @@ function InjectUnattendAnswerFile
     Set-Content -Path ([IO.Path]::Combine($pantherPath, 'unattend.xml')) -Value $UnattendAnswerFileContent -Force
 
     'Dismouting the VHD...' | Write-ScriptLog -Context $VhdPath
-    Dismount-WindowsImage -Path $vhdMountPath -Save
-    Remove-Item $vhdMountPath
+    Dismount-WindowsImage -Path $vhdMountPath -Save -ScratchDirectory $scratchDirectory -LogPath $logPath
+
+    Remove-Item $vhdMountPath -Force
+    Remove-Item $scratchDirectory -Force
+}
+
+function Install-WindowsFeatureToVhd
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateScript({ Test-Path -PathType Leaf -LiteralPath $_ })]
+        [string] $VhdPath,
+
+        [Parameter(Mandatory = $true)]
+        [string[]] $FeatureName,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateScript({ Test-Path -PathType Container -LiteralPath $_ })]
+        [string] $LogFolder
+    )
+
+    $logPath = [IO.Path]::Combine($LogFolder, (Get-LogFileName -FileName ('installwinfeature-' + [IO.Path]::GetFileNameWithoutExtension([IO.Path]::GetDirectoryName($VhdPath)))))
+    'logPath: {0}' -f $logPath | Write-ScriptLog -Context $VhdPath
+
+    $retryLimit = 10
+    for ($retryCount = 0; $retryCount -lt $retryLimit; $retryCount++) {
+        try {
+            # NOTE: Install-WindowsFeature cmdlet will fail sometimes due to concurrent operations.
+            Install-WindowsFeature -Vhd $VhdPath -Name $FeatureName -IncludeManagementTools -LogPath $logPath
+            break
+        }
+        catch {
+            'Will retry Install-WindowsFeature cmdlet. Wait for the existing DISM operation to complete...' | Write-ScriptLog -Context $VhdPath
+        }
+    }
+    if ($retryCount -ge $retryLimit) {
+        throw 'Failed Install-WindowsFeature cmdlet for "{0}"' -f $VhdPath
+    }
 }
 
 function WaitingForStartingVM
@@ -287,8 +360,42 @@ function WaitingForReadyToVM
     }
     while ((Invoke-Command @params) -ne 'ready') {
         Start-Sleep -Seconds $CheckInterval
-        'Waiting...' | Write-ScriptLog -Context $VMName
+        'Waiting for ready to VM "{0}"...' -f $VMName | Write-ScriptLog -Context $VMName
     }    
+}
+
+function WaitingForReadyToAddsDcVM
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $AddsDcVMName,
+
+        [Parameter(Mandatory = $true)]
+        [string] $AddsDcComputerName,
+
+        [Parameter(Mandatory = $true)]
+        [PSCredential] $Credential,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, 3600)]
+        [int] $CheckInterval = 5
+    )
+
+    $params = @{
+        VMName       = $AddsDcVMName
+        Credential   = $Credential
+        ArgumentList = $AddsDcComputerName
+        ScriptBlock  = {
+            $dcComputerName = $args[0]
+            (Get-ADDomainController -Server $dcComputerName).Enabled
+        }
+        ErrorAction  = [Management.Automation.ActionPreference]::SilentlyContinue
+    }
+    while ((Invoke-Command @params) -ne $true) {
+        Start-Sleep -Seconds $CheckInterval
+        'Waiting for ready to AD DS DC VM "{0}"...' -f $AddsDcVMName | Write-ScriptLog -Context $AddsDcVMName
+    }
 }
 
 function CreateDomainCredential
@@ -332,15 +439,61 @@ function JoinVMToADDomain
         [PSCredential] $DomainAdminCredential
     )
 
-    Invoke-Command -VMName $VMName -Credential $LocalAdminCredential -ArgumentList $DomainFqdn, $DomainAdminCredential -ScriptBlock {
-        $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
-        $WarningPreference = [Management.Automation.ActionPreference]::Continue
-        $VerbosePreference = [Management.Automation.ActionPreference]::Continue
-        $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
-    
-        $domainFqdn = $args[0]
-        $domainAdminCredential = $args[1]
-
-        Add-Computer -DomainName $domainFqdn -Credential $domainAdminCredential
+    $retryLimit = 10
+    for ($retryCount = 0; $retryCount -lt $retryLimit; $retryCount++) {
+        try {
+            # NOTE: Domain joining will fail sometimes.
+            $params = @{
+                VMName      = $VMName
+                Credential  = $LocalAdminCredential
+                InputObject = [PSCustomObject] @{
+                    DomainFqdn            = $DomainFqdn
+                    DomainAdminCredential = $DomainAdminCredential
+                }
+            }
+            Invoke-Command @params -ScriptBlock {
+                param (
+                    [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+                    [string] $DomainFqdn,
+            
+                    [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+                    [PSCredential] $DomainAdminCredential
+                )
+        
+                $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
+                $WarningPreference = [Management.Automation.ActionPreference]::Continue
+                $VerbosePreference = [Management.Automation.ActionPreference]::Continue
+                $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
+            
+                Add-Computer -DomainName $DomainFqdn -Credential $DomainAdminCredential
+            }
+            break
+        }
+        catch {
+            'Will retry join to domain "{0}"...' -f $DomainFqdn | Write-ScriptLog -Context $VMName
+        }
+    }
+    if ($retryCount -ge $retryLimit) {
+        throw 'Failed join to domain "{0}"' -f $DomainFqdn
     }
 }
+
+$exportFunctions = @(
+    'Start-ScriptLogging',
+    'Stop-ScriptLogging',
+    'Write-ScriptLog',
+    'Get-LabDeploymentConfig',
+    'GetSecret',
+    'DownloadFile',
+    'GetIsoFileName',
+    'GetBaseVhdFileName',
+    'GetUnattendAnswerFileContent',
+    'InjectUnattendAnswerFile',
+    'Install-WindowsFeatureToVhd',
+    'WaitingForStartingVM',
+    'WaitingForReadyToVM',
+    'WaitingForReadyToAddsDcVM',
+    'CreateDomainCredential',
+    'JoinVMToADDomain'
+)
+Export-ModuleMember -Function $exportFunctions
