@@ -1,5 +1,11 @@
 [CmdletBinding()]
-param ()
+param (
+    [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+    [string[]] $PSModuleNameToImport,
+
+    [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+    [string] $LogFileName
+)
 
 $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
 $WarningPreference = [Management.Automation.ActionPreference]::Continue
