@@ -11,7 +11,7 @@ function Start-ScriptLogging
         [string] $FileName = [IO.Path]::GetFileNameWithoutExtension($MyInvocation.ScriptName)
     )
 
-    $transcriptFileName = '{0:yyyyMMdd-HHmmss}_{1}_{2}.txt' -f [DateTime]::Now, $env:ComputerName, $FileName
+    $transcriptFileName = Get-LogFileName -FileName $FileName
     $transcriptFilePath = [IO.Path]::Combine($OutputDirectory, $transcriptFileName)
     Start-Transcript -LiteralPath $transcriptFilePath -Append -IncludeInvocationHeader
 }
@@ -21,6 +21,17 @@ function Stop-ScriptLogging
     [CmdletBinding()]
     param ()
     Stop-Transcript
+}
+
+function Get-LogFileName
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $false)]
+        [string] $FileName
+    )
+
+    '{0:yyyyMMdd-HHmmss}_{1}_{2}.txt' -f [DateTime]::Now, $env:ComputerName, $FileName
 }
 
 function Write-ScriptLog
