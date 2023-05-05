@@ -270,8 +270,12 @@ Invoke-Command @params -ScriptBlock {
     $shortcut.Save()
 }
 
-'Joining the VM to the AD domain...' | Write-ScriptLog -Context $vmName
+'Waiting for ready to the domain controller...' | Write-ScriptLog -Context $vmName
 $domainAdminCredential = CreateDomainCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $adminPassword
+# The DC's computer name is the same as the VM name. It's specified in the unattend.xml.
+WaitingForReadyToAddsDcVM -AddsDcVMName $labConfig.addsDC.vmName -AddsDcComputerName $labConfig.addsDC.vmName -Credential $domainAdminCredential
+
+'Joining the VM to the AD domain...' | Write-ScriptLog -Context $vmName
 $params = @{
     VMName                = $vmName
     LocalAdminCredential  = $localAdminCredential
