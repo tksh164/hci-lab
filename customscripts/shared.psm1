@@ -477,3 +477,23 @@ function JoinVMToADDomain
         throw 'Failed join to domain "{0}"' -f $DomainFqdn
     }
 }
+
+$exportFunctions = @(
+    'Start-ScriptLogging',
+    'Stop-ScriptLogging',
+    'Write-ScriptLog',
+    'Get-LabDeploymentConfig',
+    'GetSecret',
+    'DownloadFile',
+    'GetIsoFileName',
+    'GetBaseVhdFileName',
+    'GetUnattendAnswerFileContent',
+    'InjectUnattendAnswerFile',
+    'Install-WindowsFeatureToVhd',
+    'WaitingForStartingVM',
+    'WaitingForReadyToVM',
+    'WaitingForReadyToAddsDcVM',
+    'CreateDomainCredential',
+    'JoinVMToADDomain'
+)
+Export-ModuleMember -Function $exportFunctions
