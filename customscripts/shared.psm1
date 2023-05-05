@@ -283,6 +283,40 @@ function InjectUnattendAnswerFile
     Remove-Item $vhdMountPath -Force
     Remove-Item $scratchDirectory -Force
 }
+
+function Install-WindowsFeatureToVhd
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateScript({ Test-Path -PathType Leaf -LiteralPath $_ })]
+        [string] $VhdPath,
+
+        [Parameter(Mandatory = $true)]
+        [string[]] $FeatureName,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateScript({ Test-Path -PathType Container -LiteralPath $_ })]
+        [string] $LogFolder
+    )
+
+    $logPath = [IO.Path]::Combine($LogFolder, (Get-LogFileName -FileName ('installwinfeature-' + [IO.Path]::GetFileNameWithoutExtension([IO.Path]::GetDirectoryName($VhdPath)))))
+    'logPath: {0}' -f $logPath | Write-ScriptLog -Context $VhdPath
+
+    $retryLimit = 10
+    for ($retryCount = 0; $retryCount -lt $retryLimit; $retryCount++) {
+        try {
+            # NOTE: Install-WindowsFeature cmdlet will fail sometimes due to concurrent operations.
+            Install-WindowsFeature -Vhd $VhdPath -Name $FeatureName -IncludeManagementTools -LogPath $logPath
+            break
+        }
+        catch {
+            'Will retry Install-WindowsFeature cmdlet. Wait for the existing DISM operation to complete...' | Write-ScriptLog -Context $VhdPath
+        }
+    }
+    if ($retryCount -ge $retryLimit) {
+        throw 'Failed Install-WindowsFeature cmdlet for "{0}"' -f $VhdPath
+    }
 }
 
 function WaitingForStartingVM
