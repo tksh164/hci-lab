@@ -249,14 +249,28 @@ function InjectUnattendAnswerFile
         [string] $VhdPath,
 
         [Parameter(Mandatory = $true)]
-        [string] $UnattendAnswerFileContent
+        [string] $UnattendAnswerFileContent,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateScript({ Test-Path -PathType Container -LiteralPath $_ })]
+        [string] $LogFolder
     )
 
+    $baseFolderName = [IO.Path]::GetFileNameWithoutExtension([IO.Path]::GetDirectoryName($VhdPath)) + '-' + (New-Guid).Guid.Substring(0, 4)
+
     'Mouting the VHD...' | Write-ScriptLog -Context $VhdPath
-    $vhdMountPath = [IO.Path]::Combine('C:\', [IO.Path]::GetFileNameWithoutExtension([IO.Path]::GetDirectoryName($VhdPath)) + '-' + (New-Guid).Guid.Substring(0, 4))
+
+    $vhdMountPath = [IO.Path]::Combine('C:\', $baseFolderName + '-mount')
     'vhdMountPath: {0}' -f $vhdMountPath | Write-ScriptLog -Context $VhdPath
     New-Item -ItemType Directory -Path $vhdMountPath -Force
-    Mount-WindowsImage -Path $vhdMountPath -Index 1 -ImagePath $VhdPath
+
+    $scratchDirectory = [IO.Path]::Combine('C:\', $baseFolderName + '-scratch')
+    'scratchDirectory: {0}' -f $scratchDirectory | Write-ScriptLog -Context $VhdPath
+    New-Item -ItemType Directory -Path $scratchDirectory -Force
+
+    $logPath = [IO.Path]::Combine($LogFolder, (Get-LogFileName -FileName ('injectunattend-' + [IO.Path]::GetFileNameWithoutExtension([IO.Path]::GetDirectoryName($VhdPath)))))
+    'logPath: {0}' -f $logPath | Write-ScriptLog -Context $VhdPath
+    Mount-WindowsImage -Path $vhdMountPath -Index 1 -ImagePath $VhdPath -ScratchDirectory $scratchDirectory -LogPath $logPath
 
     'Create the unattend answer file in the VHD...' | Write-ScriptLog -Context $VhdPath
     $pantherPath = [IO.Path]::Combine($vhdMountPath, 'Windows', 'Panther')
@@ -264,8 +278,11 @@ function InjectUnattendAnswerFile
     Set-Content -Path ([IO.Path]::Combine($pantherPath, 'unattend.xml')) -Value $UnattendAnswerFileContent -Force
 
     'Dismouting the VHD...' | Write-ScriptLog -Context $VhdPath
-    Dismount-WindowsImage -Path $vhdMountPath -Save
-    Remove-Item $vhdMountPath
+    Dismount-WindowsImage -Path $vhdMountPath -Save -ScratchDirectory $scratchDirectory -LogPath $logPath
+
+    Remove-Item $vhdMountPath -Force
+    Remove-Item $scratchDirectory -Force
+}
 }
 
 function WaitingForStartingVM
