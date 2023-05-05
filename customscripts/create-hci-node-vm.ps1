@@ -158,7 +158,7 @@ foreach ($nodeConfig in $hciNodeConfigs) {
     $unattendAnswerFileContent = GetUnattendAnswerFileContent -ComputerName $nodeConfig.VMName -Password $nodeConfig.AdminPassword -Culture $labConfig.guestOS.culture
 
     'Injecting the unattend answer file to the VHD...' | Write-ScriptLog -Context $nodeConfig.VMName
-    InjectUnattendAnswerFile -VhdPath $vmOSDiskVhd.Path -UnattendAnswerFileContent $unattendAnswerFileContent
+    InjectUnattendAnswerFile -VhdPath $vmOSDiskVhd.Path -UnattendAnswerFileContent $unattendAnswerFileContent -LogFolder $labConfig.labHost.folderPath.log
 
     'Installing the roles and features to the VHD...' | Write-ScriptLog -Context $nodeConfig.VMName
     $features = @(
