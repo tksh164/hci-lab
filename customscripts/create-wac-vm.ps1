@@ -175,21 +175,21 @@ Invoke-Command @params -ScriptBlock {
 
     New-Item -Path 'function:' -Name 'Write-ScriptLog' -Value $WriteLogImplementation -Force | Out-Null
 
-    'Stop Server Manager launch at logon.' | Write-ScriptLog -Context $VMName
+    'Stop Server Manager launch at logon.' | Write-ScriptLog -Context $VMName -UseInScriptBlock
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotOpenServerManagerAtLogon' -Value 1
 
-    'Stop Windows Admin Center popup at Server Manager launch.' | Write-ScriptLog -Context $VMName
+    'Stop Windows Admin Center popup at Server Manager launch.' | Write-ScriptLog -Context $VMName -UseInScriptBlock
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotPopWACConsoleAtSMLaunch' -Value 1
 
-    'Hide the Network Location wizard. All networks will be Public.' | Write-ScriptLog -Context $VMName
+    'Hide the Network Location wizard. All networks will be Public.' | Write-ScriptLog -Context $VMName -UseInScriptBlock
     New-Item -ItemType Directory -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -Name 'NewNetworkWindowOff' -Force
 
-    'Renaming the network adapters...' | Write-ScriptLog -Context $VMName
+    'Renaming the network adapters...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
     Get-NetAdapterAdvancedProperty -RegistryKeyword 'HyperVNetworkAdapterName' | ForEach-Object -Process {
         Rename-NetAdapter -Name $_.Name -NewName $_.DisplayValue
     }
 
-    'Setting the IP configuration on the network adapter...' | Write-ScriptLog -Context $VMName
+    'Setting the IP configuration on the network adapter...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
     $params = @{
         AddressFamily  = 'IPv4'
         IPAddress      = $LabConfig.wac.netAdapter.management.ipAddress
@@ -198,17 +198,17 @@ Invoke-Command @params -ScriptBlock {
     }
     Get-NetAdapter -Name $LabConfig.wac.netAdapter.management.name | New-NetIPAddress @params
     
-    'Setting the DNS configuration on the network adapter...' | Write-ScriptLog -Context $VMName
+    'Setting the DNS configuration on the network adapter...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
     Get-NetAdapter -Name $LabConfig.wac.netAdapter.management.name |
         Set-DnsClientServerAddress -ServerAddresses $LabConfig.wac.netAdapter.management.dnsServerAddresses
 
     # Import required to Root and My both stores.
-    'Importing Windows Admin Center certificate...' | Write-ScriptLog -Context $VMName
+    'Importing Windows Admin Center certificate...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
     Import-PfxCertificate -CertStoreLocation 'Cert:\LocalMachine\Root' -FilePath $WacPfxFilePathInVM -Password $WacPfxPassword -Exportable
     $wacCert = Import-PfxCertificate -CertStoreLocation 'Cert:\LocalMachine\My' -FilePath $WacPfxFilePathInVM -Password $WacPfxPassword -Exportable
     Remove-Item -LiteralPath $WacPfxFilePathInVM -Force
 
-    'Installing Windows Admin Center...' | Write-ScriptLog -Context $VMName
+    'Installing Windows Admin Center...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
     $msiArgs = @(
         '/i',
         ('"{0}"' -f $WacInstallerFilePathInVM),
@@ -227,7 +227,7 @@ Invoke-Command @params -ScriptBlock {
     }
     Remove-Item -LiteralPath $WacInstallerFilePathInVM -Force
 
-    'Updating Windows Admin Center extensions...' | Write-ScriptLog -Context $VMName
+    'Updating Windows Admin Center extensions...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
     $wacPSModulePath = [IO.Path]::Combine($env:ProgramFiles, 'Windows Admin Center\PowerShell\Modules\ExtensionTools\ExtensionTools.psm1')
     Import-Module -Name $wacPSModulePath -Force
     [Uri] $gatewayEndpointUri = 'https://{0}' -f $env:ComputerName
@@ -241,11 +241,11 @@ Invoke-Command @params -ScriptBlock {
         Sort-Object -Property id |
         Format-table -Property id, status, version, isLatestVersion, title
 
-    'Setting Windows Integrated Authentication registry for Windows Admin Center...' | Write-ScriptLog -Context $VMName
+    'Setting Windows Integrated Authentication registry for Windows Admin Center...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
     New-Item -ItemType Directory -Path 'HKLM:\SOFTWARE\Policies\Microsoft' -Name 'Edge' -Force
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Edge' -Name 'AuthServerAllowlist' -Value $VMName
 
-    'Creating shortcut for Windows Admin Center on the desktop...' | Write-ScriptLog -Context $VMName
+    'Creating shortcut for Windows Admin Center on the desktop...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
     $wshShell = New-Object -ComObject 'WScript.Shell'
     $shortcut = $wshShell.CreateShortcut('C:\Users\Public\Desktop\Windows Admin Center.lnk')
     $shortcut.TargetPath = 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
