@@ -326,7 +326,7 @@ function WaitingForReadyToVM
     }
     while ((Invoke-Command @params) -ne 'ready') {
         Start-Sleep -Seconds $CheckInterval
-        'Waiting...' | Write-ScriptLog -Context $VMName
+        'Waiting for ready to VM "{0}"...' -f $VMName | Write-ScriptLog -Context $VMName
     }    
 }
 
