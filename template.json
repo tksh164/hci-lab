@@ -365,21 +365,15 @@
                 ],
                 "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\create-base-vhd.ps1"
             },
-            "createAddsDcVm": {
-                "deploymentName": "adds-dc-vm-creation",
+            "createEssentialVm": {
+                "deploymentName": "essential-vm-creation",
                 "fileUris": [
+                    "[uri(variables('customScriptBaseUri'), 'create-essential-vm.ps1')]",
                     "[uri(variables('customScriptBaseUri'), 'create-adds-dc-vm.ps1')]",
-                    "[uri(variables('customScriptBaseUri'), 'shared.psm1')]"
-                ],
-                "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\create-adds-dc-vm.ps1"
-            },
-            "createWacVm": {
-                "deploymentName": "wac-vm-creation",
-                "fileUris": [
                     "[uri(variables('customScriptBaseUri'), 'create-wac-vm.ps1')]",
                     "[uri(variables('customScriptBaseUri'), 'shared.psm1')]"
                 ],
-                "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\create-wac-vm.ps1"
+                "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\create-essential-vm.ps1"
             },
             "createHciNodeVm": {
                 "deploymentName": "hci-node-vm-creation",
@@ -800,9 +794,9 @@
             }
         },
 
-        // Create AD DS DC VM.
+        // Create essential VMs.
         {
-            "name": "[variables('customScriptParams').createAddsDcVm.deploymentName]",
+            "name": "[variables('customScriptParams').createEssentialVm.deploymentName]",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2021-04-01",
             "dependsOn": [
@@ -826,45 +820,10 @@
                         "value": "[variables('customScriptExtensionName')]"
                     },
                     "fileUris": {
-                        "value": "[variables('customScriptParams').createAddsDcVm.fileUris]"
+                        "value": "[variables('customScriptParams').createEssentialVm.fileUris]"
                     },
                     "commandToExecute": {
-                        "value": "[variables('customScriptParams').createAddsDcVm.commandToExecute]"
-                    }
-                }
-            }
-        },
-
-        // Create Windows Admin Center VM.
-        {
-            "name": "[variables('customScriptParams').createWacVm.deploymentName]",
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2021-04-01",
-            "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', variables('keyVaultRbacDeploymentName'))]",  // Use secrets by VM's managed identity in the custom script.
-                "[resourceId('Microsoft.Resources/deployments', variables('customScriptParams').createAddsDcVm.deploymentName)]"
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('customScriptLinkedTemplateUri')]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "location": {
-                        "value": "[variables('location')]"
-                    },
-                    "parentVmResourceName": {
-                        "value": "[parameters('labHostVmName')]"
-                    },
-                    "extensionName": {
-                        "value": "[variables('customScriptExtensionName')]"
-                    },
-                    "fileUris": {
-                        "value": "[variables('customScriptParams').createWacVm.fileUris]"
-                    },
-                    "commandToExecute": {
-                        "value": "[variables('customScriptParams').createWacVm.commandToExecute]"
+                        "value": "[variables('customScriptParams').createEssentialVm.commandToExecute]"
                     }
                 }
             }
@@ -877,7 +836,7 @@
             "apiVersion": "2021-04-01",
             "dependsOn": [
                 "[resourceId('Microsoft.Resources/deployments', variables('keyVaultRbacDeploymentName'))]",  // Use secrets by VM's managed identity in the custom script.
-                "[resourceId('Microsoft.Resources/deployments', variables('customScriptParams').createWacVm.deploymentName)]"
+                "[resourceId('Microsoft.Resources/deployments', variables('customScriptParams').createEssentialVm.deploymentName)]"
             ],
             "properties": {
                 "mode": "Incremental",
