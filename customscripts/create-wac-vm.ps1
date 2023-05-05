@@ -66,7 +66,7 @@ $adminPassword = GetSecret -KeyVaultName $labConfig.keyVault.name -SecretName $l
 $unattendAnswerFileContent = GetUnattendAnswerFileContent -ComputerName $vmName -Password $adminPassword -Culture $labConfig.guestOS.culture
 
 'Injecting the unattend answer file to the VM...' | Write-ScriptLog -Context $vmName
-InjectUnattendAnswerFile -VhdPath $vmOSDiskVhd.Path -UnattendAnswerFileContent $unattendAnswerFileContent
+InjectUnattendAnswerFile -VhdPath $vmOSDiskVhd.Path -UnattendAnswerFileContent $unattendAnswerFileContent -LogFolder $labConfig.labHost.folderPath.log
 
 'Installing the roles and features to the VHD...' | Write-ScriptLog -Context $vmName
 $features = @(
