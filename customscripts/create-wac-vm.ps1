@@ -86,7 +86,7 @@ WaitingForStartingVM -VMName $vmName
 'Waiting for ready to the VM...' | Write-ScriptLog -Context $vmName
 $params = @{
     TypeName     = 'System.Management.Automation.PSCredential'
-    ArgumentList = 'Administrator', $adminPassword
+    ArgumentList = '.\Administrator', $adminPassword
 }
 $localAdminCredential = New-Object @params
 WaitingForReadyToVM -VMName $vmName -Credential $localAdminCredential
