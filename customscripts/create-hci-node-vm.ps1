@@ -170,7 +170,7 @@ foreach ($nodeConfig in $hciNodeConfigs) {
         'RSAT-Clustering',
         'RSAT-AD-PowerShell'  # Needs for WS2022 clsuter by WAC
     )
-    Install-WindowsFeature -Vhd $vmOSDiskVhd.Path -Name $features
+    Install-WindowsFeatureToVhd -VhdPath $vmOSDiskVhd.Path -FeatureName $features -LogFolder $labConfig.labHost.folderPath.log
 
     'Starting the VM...' | Write-ScriptLog -Context $nodeConfig.VMName
     WaitingForStartingVM -VMName $nodeConfig.VMName
