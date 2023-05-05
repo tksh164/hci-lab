@@ -405,15 +405,41 @@ function JoinVMToADDomain
         [PSCredential] $DomainAdminCredential
     )
 
-    Invoke-Command -VMName $VMName -Credential $LocalAdminCredential -ArgumentList $DomainFqdn, $DomainAdminCredential -ScriptBlock {
-        $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
-        $WarningPreference = [Management.Automation.ActionPreference]::Continue
-        $VerbosePreference = [Management.Automation.ActionPreference]::Continue
-        $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
-    
-        $domainFqdn = $args[0]
-        $domainAdminCredential = $args[1]
-
-        Add-Computer -DomainName $domainFqdn -Credential $domainAdminCredential
+    $retryLimit = 10
+    for ($retryCount = 0; $retryCount -lt $retryLimit; $retryCount++) {
+        try {
+            # NOTE: Domain joining will fail sometimes.
+            $params = @{
+                VMName      = $VMName
+                Credential  = $LocalAdminCredential
+                InputObject = [PSCustomObject] @{
+                    DomainFqdn            = $DomainFqdn
+                    DomainAdminCredential = $DomainAdminCredential
+                }
+            }
+            Invoke-Command @params -ScriptBlock {
+                param (
+                    [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+                    [string] $DomainFqdn,
+            
+                    [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+                    [PSCredential] $DomainAdminCredential
+                )
+        
+                $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
+                $WarningPreference = [Management.Automation.ActionPreference]::Continue
+                $VerbosePreference = [Management.Automation.ActionPreference]::Continue
+                $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
+            
+                Add-Computer -DomainName $DomainFqdn -Credential $DomainAdminCredential
+            }
+            break
+        }
+        catch {
+            'Will retry join to domain "{0}"...' -f $DomainFqdn | Write-ScriptLog -Context $VMName
+        }
+    }
+    if ($retryCount -ge $retryLimit) {
+        throw 'Failed join to domain "{0}"' -f $DomainFqdn
     }
 }
