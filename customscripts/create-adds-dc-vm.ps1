@@ -72,7 +72,7 @@ InjectUnattendAnswerFile -VhdPath $vmOSDiskVhd.Path -UnattendAnswerFileContent $
 $features = @(
     'AD-Domain-Services'
 )
-Install-WindowsFeature -Vhd $vmOSDiskVhd.Path -Name $features -IncludeManagementTools
+Install-WindowsFeatureToVhd -VhdPath $vmOSDiskVhd.Path -FeatureName $features -LogFolder $labConfig.labHost.folderPath.log
 
 'Starting the VM...' | Write-ScriptLog -Context $vmName
 WaitingForStartingVM -VMName $vmName
