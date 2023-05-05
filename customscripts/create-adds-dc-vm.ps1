@@ -18,37 +18,6 @@ $labConfig = Get-LabDeploymentConfig
 Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log
 $labConfig | ConvertTo-Json -Depth 16
 
-function WaitingForReadyToDC
-{
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory = $true)]
-        [string] $VMName,
-
-        [Parameter(Mandatory = $true)]
-        [PSCredential] $Credential,
-
-        [Parameter(Mandatory = $false)]
-        [ValidateRange(0, 3600)]
-        [int] $CheckInterval = 5
-    )
-
-    $params = @{
-        VMName       = $VMName
-        Credential   = $Credential
-        ArgumentList = $VMName  # The DC's computer name is the same as the VM name. It's specified in the unattend.xml.
-        ScriptBlock  = {
-            $dcComputerName = $args[0]
-            (Get-ADDomainController -Server $dcComputerName).Enabled
-        }
-        ErrorAction  = [Management.Automation.ActionPreference]::SilentlyContinue
-    }
-    while ((Invoke-Command @params) -ne $true) {
-        Start-Sleep -Seconds $CheckInterval
-        'Waiting...' | Write-ScriptLog -Context $VMName
-    }
-}
-
 $vmName = $labConfig.addsDC.vmName
 
 'Creating the OS disk for the VM...' | Write-ScriptLog -Context $vmName
@@ -195,7 +164,8 @@ Start-VM -Name $vmName
 
 'Waiting for ready to the domain controller...' | Write-ScriptLog -Context $vmName
 $domainAdminCredential = CreateDomainCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $adminPassword
-WaitingForReadyToDC -VMName $vmName -Credential $domainAdminCredential
+# The DC's computer name is the same as the VM name. It's specified in the unattend.xml.
+WaitingForReadyToAddsDcVM -AddsDcVMName $vmName -AddsDcComputerName $vmName -Credential $domainAdminCredential
 
 'The AD DS Domain Controller VM creation has been completed.' | Write-ScriptLog -Context $vmName
 
