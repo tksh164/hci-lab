@@ -12,4 +12,4 @@ This template deploys an HCI lab environment with Azure Stack HCI or Windows Ser
 
 ## License
 
-- The custom script `create-base-vhd.ps1` in this template downloads `Convert-WindowsImage.ps1` from [microsoft/MSLab](https://github.com/microsoft/MSLab) and uses it during the deployment. The project is licensed under the [MIT License](https://github.com/microsoft/MSLab/blob/master/License).
+- The custom script `create-base-vhd.ps1` in this template downloads `Convert-WindowsImage.ps1` from [microsoft/MSLab](https://github.com/microsoft/MSLab) and uses it during the deployment.
