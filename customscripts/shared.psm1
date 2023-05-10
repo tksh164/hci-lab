@@ -178,6 +178,23 @@ function GetBaseVhdFileName
     '{0}_{1}_{2}.vhdx' -f $OperatingSystem, $ImageIndex, $Culture
 }
 
+function GetHciNodeVMName
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $Format,
+
+        [Parameter(Mandatory = $true)]
+        [int] $Offset,
+
+        [Parameter(Mandatory = $true)]
+        [uint32] $Index
+    )
+
+    $Format -f ($Offset + $Index)
+}
+
 function GetUnattendAnswerFileContent
 {
     [CmdletBinding()]
@@ -490,6 +507,7 @@ $exportFunctions = @(
     'DownloadFile',
     'GetIsoFileName',
     'GetBaseVhdFileName',
+    'GetHciNodeVMName',
     'GetUnattendAnswerFileContent',
     'InjectUnattendAnswerFile',
     'Install-WindowsFeatureToVhd',
