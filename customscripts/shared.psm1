@@ -332,7 +332,8 @@ function WaitingForStartingVM
     )
 
     while ((Start-VM -Name $VMName -Passthru -ErrorAction SilentlyContinue) -eq $null) {
-        'Will retry start the VM. Waiting for unmount the VHD...' | Write-ScriptLog -Context $VMName
+        # NOTE: In sometimes, we need retry to waiting for unmount the VHD.
+        'Will retry start the VM...' | Write-ScriptLog -Context $VMName
         Start-Sleep -Seconds $CheckInterval
     }
 }
@@ -360,7 +361,7 @@ function WaitingForReadyToVM
     }
     while ((Invoke-Command @params) -ne 'ready') {
         Start-Sleep -Seconds $CheckInterval
-        'Waiting for ready to VM "{0}"...' -f $VMName | Write-ScriptLog -Context $VMName
+        'Waiting for ready to VM...' | Write-ScriptLog -Context $VMName
     }    
 }
 
@@ -439,6 +440,8 @@ function JoinVMToADDomain
         [PSCredential] $DomainAdminCredential
     )
 
+    'Joining the VM "{0}" to the AD domain "{1}"...' -f $VMName, $DomainFqdn | Write-ScriptLog -Context $VMName
+
     $retryLimit = 10
     for ($retryCount = 0; $retryCount -lt $retryLimit; $retryCount++) {
         try {
@@ -470,11 +473,11 @@ function JoinVMToADDomain
             break
         }
         catch {
-            'Will retry join to domain "{0}"...' -f $DomainFqdn | Write-ScriptLog -Context $VMName
+            'Will retry join the VM "{0}" to the AD domain "{1}"...' -f $VMName, $DomainFqdn | Write-ScriptLog -Context $VMName
         }
     }
     if ($retryCount -ge $retryLimit) {
-        throw 'Failed join to domain "{0}"' -f $DomainFqdn
+        throw 'Failed join the VM "{0}" to the AD domain "{1}"' -f $VMName, $DomainFqdn
     }
 }
 
