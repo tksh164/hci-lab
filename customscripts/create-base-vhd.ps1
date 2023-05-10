@@ -10,7 +10,7 @@ Import-Module -Name ([IO.Path]::Combine($PSScriptRoot, 'shared.psm1')) -Force
 
 $labConfig = Get-LabDeploymentConfig
 Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log
-$labConfig | ConvertTo-Json -Depth 16
+$labConfig | ConvertTo-Json -Depth 16 | Write-Host
 
 'Creating the temp folder if it does not exist...' | Write-ScriptLog -Context $env:ComputerName
 New-Item -ItemType Directory -Path $labConfig.labHost.folderPath.temp -Force

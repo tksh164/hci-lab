@@ -16,7 +16,7 @@ Import-Module -Name $PSModuleNameToImport -Force
 
 $labConfig = Get-LabDeploymentConfig
 Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log -FileName $LogFileName
-$labConfig | ConvertTo-Json -Depth 16
+$labConfig | ConvertTo-Json -Depth 16 | Write-Host
 
 $vmName = $labConfig.addsDC.vmName
 
