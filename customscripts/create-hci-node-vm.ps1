@@ -10,7 +10,7 @@ Import-Module -Name ([IO.Path]::Combine($PSScriptRoot, 'shared.psm1')) -Force
 
 $labConfig = Get-LabDeploymentConfig
 Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log
-$labConfig | ConvertTo-Json -Depth 16
+$labConfig | ConvertTo-Json -Depth 16 | Write-Host
 
 function CalculateHciNodeRamBytes
 {
