@@ -169,7 +169,7 @@ function GetBaseVhdFileName
 
         [Parameter(Mandatory = $true)]
         [ValidateRange(1, 4)]
-        [int] $ImageIndex,
+        [uint32] $ImageIndex,
 
         [Parameter(Mandatory = $true)]
         [string] $Culture
