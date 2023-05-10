@@ -379,6 +379,7 @@
                 "deploymentName": "hci-node-vm-creation",
                 "fileUris": [
                     "[uri(variables('customScriptBaseUri'), 'create-hci-node-vm.ps1')]",
+                    "[uri(variables('customScriptBaseUri'), 'create-hci-node-vm-job.ps1')]",
                     "[uri(variables('customScriptBaseUri'), 'shared.psm1')]"
                 ],
                 "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\create-hci-node-vm.ps1"
