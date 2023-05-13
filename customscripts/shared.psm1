@@ -357,15 +357,27 @@ function WaitingForStartingVM
         [string] $VMName,
 
         [Parameter(Mandatory = $false)]
+        [ValidateRange(0, 1000)]
+        [int] $RetryLimit = 50,
+
+        [Parameter(Mandatory = $false)]
         [ValidateRange(0, 3600)]
-        [int] $CheckInterval = 5
+        [int] $RetryInterval = 5
     )
 
-    while ((Start-VM -Name $VMName -Passthru -ErrorAction SilentlyContinue) -eq $null) {
+    for ($retryCount = 0; $retryCount -lt $RetryLimit; $retryCount++) {
         # NOTE: In sometimes, we need retry to waiting for unmount the VHD.
+        $params = @{
+            Name = $VMName
+            Passthru = $true
+            ErrorAction = [Management.Automation.ActionPreference]::SilentlyContinue
+        }
+        if ((Start-VM @params) -ne $null) { return }
+
         'Will retry start the VM...' | Write-ScriptLog -Context $VMName
-        Start-Sleep -Seconds $CheckInterval
+        Start-Sleep -Seconds $RetryInterval
     }
+    throw 'The VM "{0}" was not start in the acceptable time.' -f $VMName
 }
 
 function WaitingForReadyToVM
