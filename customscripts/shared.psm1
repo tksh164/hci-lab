@@ -391,20 +391,27 @@ function WaitingForReadyToVM
         [PSCredential] $Credential,
 
         [Parameter(Mandatory = $false)]
+        [ValidateRange(0, 1000)]
+        [int] $RetryLimit = 50,
+
+        [Parameter(Mandatory = $false)]
         [ValidateRange(0, 3600)]
-        [int] $CheckInterval = 5
+        [int] $RetryInterval = 5
     )
 
-    $params = @{
-        VMName      = $VMName
-        Credential  = $Credential
-        ScriptBlock = { 'ready' }
-        ErrorAction = [Management.Automation.ActionPreference]::SilentlyContinue
-    }
-    while ((Invoke-Command @params) -ne 'ready') {
-        Start-Sleep -Seconds $CheckInterval
+    for ($retryCount = 0; $retryCount -lt $RetryLimit; $retryCount++) {
+        $params = @{
+            VMName      = $VMName
+            Credential  = $Credential
+            ScriptBlock = { 'ready' }
+            ErrorAction = [Management.Automation.ActionPreference]::SilentlyContinue
+        }
+        if ((Invoke-Command @params) -eq 'ready') { return }
+
         'Waiting for ready to VM...' | Write-ScriptLog -Context $VMName
-    }    
+        Start-Sleep -Seconds $RetryInterval
+    }
+    throw 'The VM "{0}" was not ready in the acceptable time.' -f $VMName
 }
 
 function WaitingForReadyToAddsDcVM
