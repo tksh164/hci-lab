@@ -314,26 +314,39 @@ function Install-WindowsFeatureToVhd
 
         [Parameter(Mandatory = $true)]
         [ValidateScript({ Test-Path -PathType Container -LiteralPath $_ })]
-        [string] $LogFolder
+        [string] $LogFolder,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, 1000)]
+        [int] $RetryLimit = 50,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, 3600)]
+        [int] $RetryInterval = 5
     )
 
     $logPath = [IO.Path]::Combine($LogFolder, (Get-LogFileName -FileName ('installwinfeature-' + [IO.Path]::GetFileNameWithoutExtension([IO.Path]::GetDirectoryName($VhdPath)))))
     'logPath: {0}' -f $logPath | Write-ScriptLog -Context $VhdPath
 
-    $retryLimit = 10
-    for ($retryCount = 0; $retryCount -lt $retryLimit; $retryCount++) {
+    for ($retryCount = 0; $retryCount -lt $RetryLimit; $retryCount++) {
         try {
             # NOTE: Install-WindowsFeature cmdlet will fail sometimes due to concurrent operations.
-            Install-WindowsFeature -Vhd $VhdPath -Name $FeatureName -IncludeManagementTools -LogPath $logPath
-            break
+            $params = @{
+                Vhd                    = $VhdPath
+                Name                   = $FeatureName
+                IncludeManagementTools = $true
+                LogPath                = $logPath
+                ErrorAction            = [Management.Automation.ActionPreference]::Stop
+            }
+            Install-WindowsFeature @params
+            return
         }
         catch {
             'Will retry Install-WindowsFeature cmdlet. Wait for the existing DISM operation to complete...' | Write-ScriptLog -Context $VhdPath
+            Start-Sleep -Seconds $RetryInterval
         }
     }
-    if ($retryCount -ge $retryLimit) {
-        throw 'Failed Install-WindowsFeature cmdlet for "{0}"' -f $VhdPath
-    }
+    throw 'Failed Install-WindowsFeature cmdlet for "{0}".' -f $VhdPath
 }
 
 function WaitingForStartingVM
@@ -344,15 +357,27 @@ function WaitingForStartingVM
         [string] $VMName,
 
         [Parameter(Mandatory = $false)]
+        [ValidateRange(0, 1000)]
+        [int] $RetryLimit = 50,
+
+        [Parameter(Mandatory = $false)]
         [ValidateRange(0, 3600)]
-        [int] $CheckInterval = 5
+        [int] $RetryInterval = 5
     )
 
-    while ((Start-VM -Name $VMName -Passthru -ErrorAction SilentlyContinue) -eq $null) {
+    for ($retryCount = 0; $retryCount -lt $RetryLimit; $retryCount++) {
         # NOTE: In sometimes, we need retry to waiting for unmount the VHD.
+        $params = @{
+            Name = $VMName
+            Passthru = $true
+            ErrorAction = [Management.Automation.ActionPreference]::SilentlyContinue
+        }
+        if ((Start-VM @params) -ne $null) { return }
+
         'Will retry start the VM...' | Write-ScriptLog -Context $VMName
-        Start-Sleep -Seconds $CheckInterval
+        Start-Sleep -Seconds $RetryInterval
     }
+    throw 'The VM "{0}" was not start in the acceptable time.' -f $VMName
 }
 
 function WaitingForReadyToVM
@@ -366,20 +391,27 @@ function WaitingForReadyToVM
         [PSCredential] $Credential,
 
         [Parameter(Mandatory = $false)]
+        [ValidateRange(0, 1000)]
+        [int] $RetryLimit = 50,
+
+        [Parameter(Mandatory = $false)]
         [ValidateRange(0, 3600)]
-        [int] $CheckInterval = 5
+        [int] $RetryInterval = 5
     )
 
-    $params = @{
-        VMName      = $VMName
-        Credential  = $Credential
-        ScriptBlock = { 'ready' }
-        ErrorAction = [Management.Automation.ActionPreference]::SilentlyContinue
-    }
-    while ((Invoke-Command @params) -ne 'ready') {
-        Start-Sleep -Seconds $CheckInterval
+    for ($retryCount = 0; $retryCount -lt $RetryLimit; $retryCount++) {
+        $params = @{
+            VMName      = $VMName
+            Credential  = $Credential
+            ScriptBlock = { 'ready' }
+            ErrorAction = [Management.Automation.ActionPreference]::SilentlyContinue
+        }
+        if ((Invoke-Command @params) -eq 'ready') { return }
+
         'Waiting for ready to VM...' | Write-ScriptLog -Context $VMName
-    }    
+        Start-Sleep -Seconds $RetryInterval
+    }
+    throw 'The VM "{0}" was not ready in the acceptable time.' -f $VMName
 }
 
 function WaitingForReadyToAddsDcVM
@@ -396,24 +428,31 @@ function WaitingForReadyToAddsDcVM
         [PSCredential] $Credential,
 
         [Parameter(Mandatory = $false)]
+        [ValidateRange(0, 1000)]
+        [int] $RetryLimit = 50,
+
+        [Parameter(Mandatory = $false)]
         [ValidateRange(0, 3600)]
-        [int] $CheckInterval = 5
+        [int] $RetryInterval = 5
     )
 
-    $params = @{
-        VMName       = $AddsDcVMName
-        Credential   = $Credential
-        ArgumentList = $AddsDcComputerName
-        ScriptBlock  = {
-            $dcComputerName = $args[0]
-            (Get-ADDomainController -Server $dcComputerName).Enabled
+    for ($retryCount = 0; $retryCount -lt $RetryLimit; $retryCount++) {
+        $params = @{
+            VMName       = $AddsDcVMName
+            Credential   = $Credential
+            ArgumentList = $AddsDcComputerName
+            ScriptBlock  = {
+                $dcComputerName = $args[0]
+                (Get-ADDomainController -Server $dcComputerName).Enabled
+            }
+            ErrorAction  = [Management.Automation.ActionPreference]::SilentlyContinue
         }
-        ErrorAction  = [Management.Automation.ActionPreference]::SilentlyContinue
-    }
-    while ((Invoke-Command @params) -ne $true) {
-        Start-Sleep -Seconds $CheckInterval
+        if ((Invoke-Command @params) -eq $true) { return }
+
         'Waiting for ready to AD DS DC VM "{0}"...' -f $AddsDcVMName | Write-ScriptLog -Context $AddsDcVMName
+        Start-Sleep -Seconds $RetryInterval
     }
+    throw 'The AD DS DC VM "{0}" was not ready in the acceptable time.' -f $AddsDcVMName
 }
 
 function CreateDomainCredential
@@ -454,48 +493,42 @@ function JoinVMToADDomain
         [string] $DomainFqdn,
 
         [Parameter(Mandatory = $true)]
-        [PSCredential] $DomainAdminCredential
+        [PSCredential] $DomainAdminCredential,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, 1000)]
+        [int] $RetryLimit = 50,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, 3600)]
+        [int] $RetryInterval = 5
     )
 
     'Joining the VM "{0}" to the AD domain "{1}"...' -f $VMName, $DomainFqdn | Write-ScriptLog -Context $VMName
 
-    $retryLimit = 10
-    for ($retryCount = 0; $retryCount -lt $retryLimit; $retryCount++) {
+    for ($retryCount = 0; $retryCount -lt $RetryLimit; $retryCount++) {
         try {
-            # NOTE: Domain joining will fail sometimes.
             $params = @{
-                VMName      = $VMName
-                Credential  = $LocalAdminCredential
-                InputObject = [PSCustomObject] @{
-                    DomainFqdn            = $DomainFqdn
-                    DomainAdminCredential = $DomainAdminCredential
+                VMName       = $VMName
+                Credential   = $LocalAdminCredential
+                ArgumentList = $DomainFqdn, $DomainAdminCredential
+                ScriptBlock  = {
+                    $domainFqdn = $args[0]
+                    $domainAdminCredential = $args[1]
+                    # NOTE: Domain joining will fail sometimes due to AD DS DC VM state.
+                    Add-Computer -DomainName $domainFqdn -Credential $domainAdminCredential
                 }
+                ErrorAction  = [Management.Automation.ActionPreference]::Stop
             }
-            Invoke-Command @params -ScriptBlock {
-                param (
-                    [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-                    [string] $DomainFqdn,
-            
-                    [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-                    [PSCredential] $DomainAdminCredential
-                )
-        
-                $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
-                $WarningPreference = [Management.Automation.ActionPreference]::Continue
-                $VerbosePreference = [Management.Automation.ActionPreference]::Continue
-                $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
-            
-                Add-Computer -DomainName $DomainFqdn -Credential $DomainAdminCredential
-            }
-            break
+            Invoke-Command @params
+            return
         }
         catch {
             'Will retry join the VM "{0}" to the AD domain "{1}"...' -f $VMName, $DomainFqdn | Write-ScriptLog -Context $VMName
+            Start-Sleep -Seconds $RetryInterval
         }
     }
-    if ($retryCount -ge $retryLimit) {
-        throw 'Failed join the VM "{0}" to the AD domain "{1}"' -f $VMName, $DomainFqdn
-    }
+    throw 'Failed join the VM "{0}" to the AD domain "{1}".' -f $VMName, $DomainFqdn
 }
 
 $exportFunctions = @(
