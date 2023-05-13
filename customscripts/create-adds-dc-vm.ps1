@@ -21,10 +21,15 @@ $labConfig | ConvertTo-Json -Depth 16 | Write-Host
 $vmName = $labConfig.addsDC.vmName
 
 'Creating the OS disk for the VM...' | Write-ScriptLog -Context $vmName
-$imageIndex = 3  # Datacenter (Server Core)
+$params = @{
+    OperatingSystem = 'ws2022'
+    ImageIndex      = 3  # Datacenter (Server Core)
+    Culture         = $labConfig.guestOS.culture
+}
+$parentVhdFileName = GetBaseVhdFileName @params
 $params = @{
     Differencing = $true
-    ParentPath   = [IO.Path]::Combine($labConfig.labHost.folderPath.vhd, (GetBaseVhdFileName -OperatingSystem 'ws2022' -ImageIndex $imageIndex -Culture $labConfig.guestOS.culture))
+    ParentPath   = [IO.Path]::Combine($labConfig.labHost.folderPath.vhd, $parentVhdFileName)
     Path         = [IO.Path]::Combine($labConfig.labHost.folderPath.vm, $vmName, 'osdisk.vhdx')
 }
 $vmOSDiskVhd = New-VHD  @params
@@ -63,16 +68,30 @@ Add-VMNetworkAdapter @params
 
 'Generating the unattend answer XML...' | Write-ScriptLog -Context $vmName
 $adminPassword = GetSecret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName
-$unattendAnswerFileContent = GetUnattendAnswerFileContent -ComputerName $vmName -Password $adminPassword -Culture $labConfig.guestOS.culture
+$params = @{
+    ComputerName = $vmName
+    Password     = $adminPassword
+    Culture      = $labConfig.guestOS.culture
+}
+$unattendAnswerFileContent = GetUnattendAnswerFileContent @params
 
 'Injecting the unattend answer file to the VM...' | Write-ScriptLog -Context $vmName
-InjectUnattendAnswerFile -VhdPath $vmOSDiskVhd.Path -UnattendAnswerFileContent $unattendAnswerFileContent -LogFolder $labConfig.labHost.folderPath.log
+$params = @{
+    VhdPath                   = $vmOSDiskVhd.Path
+    UnattendAnswerFileContent = $unattendAnswerFileContent
+    LogFolder                 = $labConfig.labHost.folderPath.log
+}
+InjectUnattendAnswerFile @params
 
 'Installing the roles and features to the VHD...' | Write-ScriptLog -Context $vmName
-$features = @(
-    'AD-Domain-Services'
-)
-Install-WindowsFeatureToVhd -VhdPath $vmOSDiskVhd.Path -FeatureName $features -LogFolder $labConfig.labHost.folderPath.log
+$params = @{
+    VhdPath     = $vmOSDiskVhd.Path
+    FeatureName = @(
+        'AD-Domain-Services'
+    )
+    LogFolder   = $labConfig.labHost.folderPath.log
+}
+Install-WindowsFeatureToVhd @params
 
 'Starting the VM...' | Write-ScriptLog -Context $vmName
 WaitingForStartingVM -VMName $vmName
