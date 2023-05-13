@@ -232,20 +232,22 @@ Invoke-Command @params -ScriptBlock {
     Import-Module -Name $wacPSModulePath -Force
     [Uri] $gatewayEndpointUri = 'https://{0}' -f $env:ComputerName
 
-    $retryLimit = 10
+    $retryLimit = 50
+    $retryInterval = 5
     for ($retryCount = 0; $retryCount -lt $retryLimit; $retryCount++) {
         try {
             # NOTE: Windows Admin Center extension updating will fail sometimes due to unable to connect remote server.
-            Get-Extension -GatewayEndpoint $gatewayEndpointUri |
+            Get-Extension -GatewayEndpoint $gatewayEndpointUri -ErrorAction Stop |
                 Where-Object -Property 'isLatestVersion' -EQ $false |
                 ForEach-Object -Process {
                     $wacExtension = $_
-                    Update-Extension -GatewayEndpoint $gatewayEndpointUri -ExtensionId $wacExtension.id -Verbose | Out-Null
+                    Update-Extension -GatewayEndpoint $gatewayEndpointUri -ExtensionId $wacExtension.id -Verbose -ErrorAction Stop | Out-Null
                 }
             break
         }
         catch {
             'Will retry updating Windows Admin Center extensions...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
+            Start-Sleep -Seconds $retryInterval
         }
     }
     if ($retryCount -ge $retryLimit) {
