@@ -493,48 +493,42 @@ function JoinVMToADDomain
         [string] $DomainFqdn,
 
         [Parameter(Mandatory = $true)]
-        [PSCredential] $DomainAdminCredential
+        [PSCredential] $DomainAdminCredential,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, 1000)]
+        [int] $RetryLimit = 50,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, 3600)]
+        [int] $RetryInterval = 5
     )
 
     'Joining the VM "{0}" to the AD domain "{1}"...' -f $VMName, $DomainFqdn | Write-ScriptLog -Context $VMName
 
-    $retryLimit = 10
-    for ($retryCount = 0; $retryCount -lt $retryLimit; $retryCount++) {
+    for ($retryCount = 0; $retryCount -lt $RetryLimit; $retryCount++) {
         try {
-            # NOTE: Domain joining will fail sometimes.
             $params = @{
-                VMName      = $VMName
-                Credential  = $LocalAdminCredential
-                InputObject = [PSCustomObject] @{
-                    DomainFqdn            = $DomainFqdn
-                    DomainAdminCredential = $DomainAdminCredential
+                VMName       = $VMName
+                Credential   = $LocalAdminCredential
+                ArgumentList = $DomainFqdn, $DomainAdminCredential
+                ScriptBlock  = {
+                    $domainFqdn = $args[0]
+                    $domainAdminCredential = $args[1]
+                    # NOTE: Domain joining will fail sometimes due to AD DS DC VM state.
+                    Add-Computer -DomainName $domainFqdn -Credential $domainAdminCredential
                 }
+                ErrorAction  = [Management.Automation.ActionPreference]::Stop
             }
-            Invoke-Command @params -ScriptBlock {
-                param (
-                    [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-                    [string] $DomainFqdn,
-            
-                    [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-                    [PSCredential] $DomainAdminCredential
-                )
-        
-                $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
-                $WarningPreference = [Management.Automation.ActionPreference]::Continue
-                $VerbosePreference = [Management.Automation.ActionPreference]::Continue
-                $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
-            
-                Add-Computer -DomainName $DomainFqdn -Credential $DomainAdminCredential
-            }
-            break
+            Invoke-Command @params
+            return
         }
         catch {
             'Will retry join the VM "{0}" to the AD domain "{1}"...' -f $VMName, $DomainFqdn | Write-ScriptLog -Context $VMName
+            Start-Sleep -Seconds $RetryInterval
         }
     }
-    if ($retryCount -ge $retryLimit) {
-        throw 'Failed join the VM "{0}" to the AD domain "{1}"' -f $VMName, $DomainFqdn
-    }
+    throw 'Failed join the VM "{0}" to the AD domain "{1}".' -f $VMName, $DomainFqdn
 }
 
 $exportFunctions = @(
