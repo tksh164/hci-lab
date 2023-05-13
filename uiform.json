@@ -8,7 +8,7 @@
                 {
                     "name": "basics",
                     "label": "Basics",
-                    "description": "This template will deploy a HCI lab environment on a single Azure Virtual machine.",
+                    "description": "This template will deploy a HCI lab environment on a single Azure virtual machine.",
                     "elements": [
                         {
                             "name": "resourceScope",
