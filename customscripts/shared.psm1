@@ -314,26 +314,39 @@ function Install-WindowsFeatureToVhd
 
         [Parameter(Mandatory = $true)]
         [ValidateScript({ Test-Path -PathType Container -LiteralPath $_ })]
-        [string] $LogFolder
+        [string] $LogFolder,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, 1000)]
+        [int] $RetryLimit = 50,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, 3600)]
+        [int] $RetryInterval = 5
     )
 
     $logPath = [IO.Path]::Combine($LogFolder, (Get-LogFileName -FileName ('installwinfeature-' + [IO.Path]::GetFileNameWithoutExtension([IO.Path]::GetDirectoryName($VhdPath)))))
     'logPath: {0}' -f $logPath | Write-ScriptLog -Context $VhdPath
 
-    $retryLimit = 10
-    for ($retryCount = 0; $retryCount -lt $retryLimit; $retryCount++) {
+    for ($retryCount = 0; $retryCount -lt $RetryLimit; $retryCount++) {
         try {
             # NOTE: Install-WindowsFeature cmdlet will fail sometimes due to concurrent operations.
-            Install-WindowsFeature -Vhd $VhdPath -Name $FeatureName -IncludeManagementTools -LogPath $logPath
-            break
+            $params = @{
+                Vhd                    = $VhdPath
+                Name                   = $FeatureName
+                IncludeManagementTools = $true
+                LogPath                = $logPath
+                ErrorAction            = [Management.Automation.ActionPreference]::Stop
+            }
+            Install-WindowsFeature @params
+            return
         }
         catch {
             'Will retry Install-WindowsFeature cmdlet. Wait for the existing DISM operation to complete...' | Write-ScriptLog -Context $VhdPath
+            Start-Sleep -Seconds $RetryInterval
         }
     }
-    if ($retryCount -ge $retryLimit) {
-        throw 'Failed Install-WindowsFeature cmdlet for "{0}"' -f $VhdPath
-    }
+    throw 'Failed Install-WindowsFeature cmdlet for "{0}".' -f $VhdPath
 }
 
 function WaitingForStartingVM
