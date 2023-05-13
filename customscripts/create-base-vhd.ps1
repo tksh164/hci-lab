@@ -43,14 +43,8 @@ $jobs = @()
 'Starting the HCI node base VHD creation job...' | Write-ScriptLog -Context $env:ComputerName
 $params = @{
     PSModuleNameToImport = (Get-Module -Name 'shared').Path, $convertWimScriptFile.FullName
-    IsoFolder            = $labConfig.labHost.folderPath.temp
     OperatingSystem      = $labConfig.hciNode.operatingSystem.sku
     ImageIndex           = $labConfig.hciNode.operatingSystem.imageIndex
-    Culture              = $labConfig.guestOS.culture
-    VhdFolder            = $labConfig.labHost.folderPath.vhd
-    UpdatesFolder        = $labConfig.labHost.folderPath.updates
-    WorkFolder           = $labConfig.labHost.folderPath.temp
-    LogFolder            = $labConfig.labHost.folderPath.log
     LogFileName          = [IO.Path]::GetFileNameWithoutExtension($jobScriptFilePath) + '-hcinode'
 }
 $jobs += Start-Job -Name 'hci-node' -LiteralPath $jobScriptFilePath -InputObject ([PSCustomObject] $params)
@@ -60,14 +54,8 @@ if (-not (($labConfig.hciNode.operatingSystem.sku -eq 'ws2022') -and ($labConfig
     'Starting the Windows Server Core base VHD creation job...' | Write-ScriptLog -Context $env:ComputerName
     $params = @{
         PSModuleNameToImport = (Get-Module -Name 'shared').Path, $convertWimScriptFile.FullName
-        IsoFolder            = $labConfig.labHost.folderPath.temp
         OperatingSystem      = 'ws2022'
         ImageIndex           = 3 # Datacenter (Server Core)
-        Culture              = $labConfig.guestOS.culture
-        VhdFolder            = $labConfig.labHost.folderPath.vhd
-        UpdatesFolder        = $labConfig.labHost.folderPath.updates
-        WorkFolder           = $labConfig.labHost.folderPath.temp
-        LogFolder            = $labConfig.labHost.folderPath.log
         LogFileName          = [IO.Path]::GetFileNameWithoutExtension($jobScriptFilePath) + '-wscore'
     }
 
@@ -85,15 +73,9 @@ if (-not (($labConfig.hciNode.operatingSystem.sku -eq 'ws2022') -and ($labConfig
     'Starting the Windows Server Desktop Experience base VHD creation job...' | Write-ScriptLog -Context $env:ComputerName
     $params = @{
         PSModuleNameToImport = (Get-Module -Name 'shared').Path, $convertWimScriptFile.FullName
-        IsoFolder            = $labConfig.labHost.folderPath.temp
         OperatingSystem      = 'ws2022'
         ImageIndex           = 4  # Datacenter with Desktop Experience
         IsoFileNameSuffix    = $isoFileNameSuffix
-        Culture              = $labConfig.guestOS.culture
-        VhdFolder            = $labConfig.labHost.folderPath.vhd
-        UpdatesFolder        = $labConfig.labHost.folderPath.updates
-        WorkFolder           = $labConfig.labHost.folderPath.temp
-        LogFolder            = $labConfig.labHost.folderPath.log
         LogFileName          = [IO.Path]::GetFileNameWithoutExtension($jobScriptFilePath) + '-wsdexp'
     }
     $jobs += Start-Job -Name 'ws-desktop-experience' -LiteralPath $jobScriptFilePath -InputObject ([PSCustomObject] $params)

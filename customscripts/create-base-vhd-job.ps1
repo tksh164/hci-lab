@@ -4,37 +4,14 @@ param (
     [string[]] $PSModuleNameToImport,
 
     [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-    [ValidateScript({ Test-Path -PathType Container -LiteralPath $_ })]
-    [string] $IsoFolder,
-
-    [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
     [string] $OperatingSystem,
 
     [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
     [ValidateRange(1, 4)]
-    [int] $ImageIndex,
+    [uint32] $ImageIndex,
 
     [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
     [string] $IsoFileNameSuffix,
-
-    [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-    [string] $Culture,
-
-    [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-    [ValidateScript({ Test-Path -PathType Container -LiteralPath $_ })]
-    [string] $VhdFolder,
-
-    [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-    [ValidateScript({ Test-Path -PathType Container -LiteralPath $_ })]
-    [string] $UpdatesFolder,
-
-    [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-    [ValidateScript({ Test-Path -PathType Container -LiteralPath $_ })]
-    [string] $WorkFolder,
-
-    [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-    [ValidateScript({ Test-Path -PathType Container -LiteralPath $_ })]
-    [string] $LogFolder,
 
     [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
     [string] $LogFileName
@@ -47,31 +24,40 @@ $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
 Import-Module -Name $PSModuleNameToImport -Force
 
-Start-ScriptLogging -OutputDirectory $LogFolder -FileName $LogFileName
+$labConfig = Get-LabDeploymentConfig
+Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log -FileName $LogFileName
+$labConfig | ConvertTo-Json -Depth 16 | Write-Host
 
-$sourcePath = if ($PSBoundParameters.Keys.Contains('IsoFileNameSuffix')) {
-    [IO.Path]::Combine($IsoFolder, (GetIsoFileName -OperatingSystem $OperatingSystem -Culture $Culture -Suffix $IsoFileNameSuffix))
+$params = @{
+    OperatingSystem = $OperatingSystem
+    Culture         = $labConfig.guestOS.culture
 }
-else {
-    [IO.Path]::Combine($IsoFolder, (GetIsoFileName -OperatingSystem $OperatingSystem -Culture $Culture))
+if ($PSBoundParameters.Keys.Contains('IsoFileNameSuffix')) {
+    $params.Suffix = $IsoFileNameSuffix
 }
+$isoFilePath = [IO.Path]::Combine($labConfig.labHost.folderPath.temp, (GetIsoFileName @params))
 
-$vhdPath = [IO.Path]::Combine($VhdFolder, (GetBaseVhdFileName -OperatingSystem $OperatingSystem -ImageIndex $ImageIndex -Culture $Culture))
+$params = @{
+    OperatingSystem = $OperatingSystem
+    ImageIndex      = $ImageIndex
+    Culture         = $labConfig.guestOS.culture
+}
+$vhdFilePath = [IO.Path]::Combine($labConfig.labHost.folderPath.vhd, (GetBaseVhdFileName @params))
 
 $updatePackage = @()
-$updatesFolderPath = [IO.Path]::Combine($UpdatesFolder, $OperatingSystem)
+$updatesFolderPath = [IO.Path]::Combine($labConfig.labHost.folderPath.updates, $OperatingSystem)
 if (Test-Path -PathType Container -LiteralPath $updatesFolderPath) {
     $updatePackage += Get-ChildItem -LiteralPath $updatesFolderPath | Select-Object -ExpandProperty 'FullName' | Sort-Object
 }
 
 $params = @{
-    SourcePath    = $sourcePath
+    SourcePath    = $isoFilePath
     Edition       = $ImageIndex
-    VHDPath       = $vhdPath
+    VHDPath       = $vhdFilePath
     VHDFormat     = 'VHDX'
     DiskLayout    = 'UEFI'
     SizeBytes     = 40GB
-    TempDirectory = $WorkFolder
+    TempDirectory = $labConfig.labHost.folderPath.temp
     Verbose       = $true
 }
 # Add update package paths if the update packages exist.
@@ -80,8 +66,8 @@ if ($updatePackage.Count -ne 0) {
 }
 Convert-WindowsImage @params
 
-if (-not (Test-Path -PathType Leaf -LiteralPath $vhdPath)) {
-    throw ('The created VHD "{0}" does not exist.' -f $vhdPath)
+if (-not (Test-Path -PathType Leaf -LiteralPath $vhdFilePath)) {
+    throw 'The created VHD "{0}" does not exist.' -f $vhdFilePath
 }
 
 Stop-ScriptLogging
