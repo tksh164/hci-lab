@@ -3,7 +3,7 @@
     "view": {
         "kind": "Form",
         "properties": {
-            "title": "HCI lab environment on a single Azure Virtual machine",
+            "title": "HCI lab environment on a single Azure virtual machine",
             "steps": [
                 {
                     "name": "basics",
