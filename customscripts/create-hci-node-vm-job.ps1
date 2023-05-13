@@ -141,22 +141,36 @@ for ($diskIndex = 1; $diskIndex -le $diskCount; $diskIndex++) {
 }
 
 'Generating the unattend answer XML...' | Write-ScriptLog -Context $nodeConfig.VMName
-$unattendAnswerFileContent = GetUnattendAnswerFileContent -ComputerName $nodeConfig.VMName -Password $nodeConfig.AdminPassword -Culture $labConfig.guestOS.culture
+$params = @{
+    ComputerName = $nodeConfig.VMName
+    Password     = $nodeConfig.AdminPassword
+    Culture      = $labConfig.guestOS.culture
+}
+$unattendAnswerFileContent = GetUnattendAnswerFileContent @params
 
 'Injecting the unattend answer file to the VHD...' | Write-ScriptLog -Context $nodeConfig.VMName
-InjectUnattendAnswerFile -VhdPath $vmOSDiskVhd.Path -UnattendAnswerFileContent $unattendAnswerFileContent -LogFolder $labConfig.labHost.folderPath.log
+$params = @{
+    VhdPath                   = $vmOSDiskVhd.Path
+    UnattendAnswerFileContent = $unattendAnswerFileContent
+    LogFolder                 = $labConfig.labHost.folderPath.log
+}
+InjectUnattendAnswerFile @params
 
 'Installing the roles and features to the VHD...' | Write-ScriptLog -Context $nodeConfig.VMName
-$features = @(
-    'Hyper-V',  # Note: https://twitter.com/pronichkin/status/1294308601276719104
-    'Failover-Clustering',
-    'FS-FileServer',
-    'Data-Center-Bridging',  # Needs for WS2022 clsuter by WAC
-    'RSAT-Hyper-V-Tools',
-    'RSAT-Clustering',
-    'RSAT-AD-PowerShell'  # Needs for WS2022 clsuter by WAC
-)
-Install-WindowsFeatureToVhd -VhdPath $vmOSDiskVhd.Path -FeatureName $features -LogFolder $labConfig.labHost.folderPath.log
+$params = @{
+    VhdPath     = $vmOSDiskVhd.Path
+    FeatureName = @(
+        'Hyper-V',  # Note: https://twitter.com/pronichkin/status/1294308601276719104
+        'Failover-Clustering',
+        'FS-FileServer',
+        'Data-Center-Bridging',  # Needs for WS2022 clsuter by WAC
+        'RSAT-Hyper-V-Tools',
+        'RSAT-Clustering',
+        'RSAT-AD-PowerShell'  # Needs for WS2022 clsuter by WAC
+    )
+    LogFolder   = $labConfig.labHost.folderPath.log
+}
+Install-WindowsFeatureToVhd @params
 
 'Starting the VM...' | Write-ScriptLog -Context $nodeConfig.VMName
 WaitingForStartingVM -VMName $nodeConfig.VMName
@@ -246,7 +260,12 @@ Invoke-Command @params -ScriptBlock {
 'Waiting for ready to the domain controller...' | Write-ScriptLog -Context $nodeConfig.VMName
 $domainAdminCredential = CreateDomainCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $nodeConfig.AdminPassword
 # The DC's computer name is the same as the VM name. It's specified in the unattend.xml.
-WaitingForReadyToAddsDcVM -AddsDcVMName $labConfig.addsDC.vmName -AddsDcComputerName $labConfig.addsDC.vmName -Credential $domainAdminCredential
+$params = @{
+    AddsDcVMName       = $labConfig.addsDC.vmName
+    AddsDcComputerName = $labConfig.addsDC.vmName
+    Credential         = $domainAdminCredential
+}
+WaitingForReadyToAddsDcVM @params
 
 'Joining the VM to the AD domain...'  | Write-ScriptLog -Context $nodeConfig.VMName
 $params = @{
