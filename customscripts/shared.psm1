@@ -428,24 +428,31 @@ function WaitingForReadyToAddsDcVM
         [PSCredential] $Credential,
 
         [Parameter(Mandatory = $false)]
+        [ValidateRange(0, 1000)]
+        [int] $RetryLimit = 50,
+
+        [Parameter(Mandatory = $false)]
         [ValidateRange(0, 3600)]
-        [int] $CheckInterval = 5
+        [int] $RetryInterval = 5
     )
 
-    $params = @{
-        VMName       = $AddsDcVMName
-        Credential   = $Credential
-        ArgumentList = $AddsDcComputerName
-        ScriptBlock  = {
-            $dcComputerName = $args[0]
-            (Get-ADDomainController -Server $dcComputerName).Enabled
+    for ($retryCount = 0; $retryCount -lt $RetryLimit; $retryCount++) {
+        $params = @{
+            VMName       = $AddsDcVMName
+            Credential   = $Credential
+            ArgumentList = $AddsDcComputerName
+            ScriptBlock  = {
+                $dcComputerName = $args[0]
+                (Get-ADDomainController -Server $dcComputerName).Enabled
+            }
+            ErrorAction  = [Management.Automation.ActionPreference]::SilentlyContinue
         }
-        ErrorAction  = [Management.Automation.ActionPreference]::SilentlyContinue
-    }
-    while ((Invoke-Command @params) -ne $true) {
-        Start-Sleep -Seconds $CheckInterval
+        if ((Invoke-Command @params) -eq $true) { return }
+
         'Waiting for ready to AD DS DC VM "{0}"...' -f $AddsDcVMName | Write-ScriptLog -Context $AddsDcVMName
+        Start-Sleep -Seconds $RetryInterval
     }
+    throw 'The AD DS DC VM "{0}" was not ready in the acceptable time.' -f $AddsDcVMName
 }
 
 function CreateDomainCredential
