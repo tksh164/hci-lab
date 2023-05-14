@@ -420,6 +420,7 @@
             },
             "addsDC": {
                 "vmName": "addsdc",
+                "maximumRamBytes": 2147483648,
                 "netAdapter": {
                     "management": {
                         "name": "Management",
@@ -432,6 +433,7 @@
             },
             "wac": {
                 "vmName": "wac",
+                "maximumRamBytes": 6442450944,
                 "netAdapter": {
                     "management": {
                         "name": "Management",
