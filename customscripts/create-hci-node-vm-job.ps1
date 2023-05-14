@@ -4,22 +4,39 @@ param (
     [uint32] $NodeIndex,
 
     [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-    [ValidateScript({ Test-Path -PathType Leaf -LiteralPath $_ })]
-    [string] $ParentVhdPath,
-
-    [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-    [ValidateRange(0, [long]::MaxValue)]
-    [long] $RamBytes,
-
-    [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-    [securestring] $AdminPassword,
-
-    [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
     [string[]] $PSModuleNameToImport,
 
     [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
     [string] $LogFileName
 )
+
+function CalculateHciNodeRamBytes
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [int] $NodeCount,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateRange(0, [long]::MaxValue)]
+        [long] $AddsDcVMRamBytes,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateRange(0, [long]::MaxValue)]
+        [long] $WacVMRamBytes
+    )
+
+    $totalRamBytes = (Get-ComputerInfo).OsTotalVisibleMemorySize * 1KB
+    $labHostReservedRamBytes = [Math]::Floor($totalRamBytes * 0.04)  # Reserve a few percent of the total RAM for the lab host.
+
+    'TotalRamBytes: {0}' -f $totalRamBytes | Write-ScriptLog -Context $env:ComputerName
+    'LabHostReservedRamBytes: {0}' -f $labHostReservedRamBytes | Write-ScriptLog -Context $env:ComputerName
+    'AddsDcVMRamBytes: {0}' -f $AddsDcVMRamBytes | Write-ScriptLog -Context $env:ComputerName
+    'WacVMRamBytes: {0}' -f $WacVMRamBytes | Write-ScriptLog -Context $env:ComputerName
+
+    # StartupBytes should be a multiple of 2 MB (2 * 1024 * 1024 bytes).
+    [Math]::Floor((($totalRamBytes - $labHostReservedRamBytes - $AddsDcVMRamBytes - $WacVMRamBytes) / $NodeCount) / 2MB) * 2MB
+}
 
 $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
 $WarningPreference = [Management.Automation.ActionPreference]::Continue
@@ -34,14 +51,28 @@ $labConfig | ConvertTo-Json -Depth 16 | Write-Host
 
 $vmName = GetHciNodeVMName -Format $labConfig.hciNode.vmName -Offset $labConfig.hciNode.vmNameOffset -Index $NodeIndex
 
+$params = @{
+    OperatingSystem = $labConfig.hciNode.operatingSystem.sku
+    ImageIndex      = $labConfig.hciNode.operatingSystem.imageIndex
+    Culture         = $labConfig.guestOS.culture
+}
+$parentVhdPath = [IO.Path]::Combine($labConfig.labHost.folderPath.vhd, (GetBaseVhdFileName @params))
+
+$params = @{
+    NodeCount        = $labConfig.hciNode.nodeCount
+    AddsDcVMRamBytes = $labConfig.addsDC.maximumRamBytes
+    WacVMRamBytes    = $labConfig.wac.maximumRamBytes
+}
+$ramBytes = CalculateHciNodeRamBytes @params
+
 'Creating a VM configuraton for the HCI node VM...' -f $vmName | Write-ScriptLog -Context $vmName
 $nodeConfig = [PSCustomObject] @{
     VMName            = $vmName
-    ParentVhdPath     = $ParentVhdPath
-    RamBytes          = $RamBytes
+    ParentVhdPath     = $parentVhdPath
+    RamBytes          = $ramBytes
     OperatingSystem   = $labConfig.hciNode.operatingSystem.sku
     ImageIndex        = $labConfig.hciNode.operatingSystem.imageIndex
-    AdminPassword     = $AdminPassword
+    AdminPassword     = GetSecret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName
     DataDiskSizeBytes = $labConfig.hciNode.dataDiskSizeBytes
     NetAdapter        = [PSCustomObject] @{
         Management = [PSCustomObject] @{
