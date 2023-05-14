@@ -52,7 +52,7 @@ $params = @{
     StartupBytes         = 1GB
     DynamicMemoryEnabled = $true
     MinimumBytes         = 512MB
-    MaximumBytes         = 6GB
+    MaximumBytes         = $labConfig.wac.maximumRamBytes
 }
 Set-VMMemory @params
 
