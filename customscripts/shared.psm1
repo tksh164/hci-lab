@@ -270,7 +270,11 @@ function InjectUnattendAnswerFile
 
         [Parameter(Mandatory = $true)]
         [ValidateScript({ Test-Path -PathType Container -LiteralPath $_ })]
-        [string] $LogFolder
+        [string] $LogFolder,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, 3600)]
+        [int] $SleepSeconds = 5
     )
 
     $baseFolderName = [IO.Path]::GetFileNameWithoutExtension([IO.Path]::GetDirectoryName($VhdPath)) + '-' + (New-Guid).Guid.Substring(0, 4)
@@ -297,6 +301,11 @@ function InjectUnattendAnswerFile
     'Dismouting the VHD...' | Write-ScriptLog -Context $VhdPath
     Dismount-WindowsImage -Path $vhdMountPath -Save -ScratchDirectory $scratchDirectory -LogPath $logPath
 
+    while((Get-WindowsImage -Mounted | Where-Object -Property 'ImagePath' -EQ -Value $VhdPath) -ne $null) {
+        'Waiting for VHD dismount completion (MountPath: "{0}")...' -f $vhdMountPath | Write-ScriptLog -Context $VhdPath
+        Start-Sleep -Seconds $SleepSeconds
+    }
+
     Remove-Item $vhdMountPath -Force
     Remove-Item $scratchDirectory -Force
 }
@@ -322,15 +331,21 @@ function Install-WindowsFeatureToVhd
 
         [Parameter(Mandatory = $false)]
         [ValidateRange(0, 3600)]
-        [int] $RetryInterval = 5
+        [int] $SleepSeconds = 5
     )
 
     $logPath = [IO.Path]::Combine($LogFolder, (Get-LogFileName -FileName ('installwinfeature-' + [IO.Path]::GetFileNameWithoutExtension([IO.Path]::GetDirectoryName($VhdPath)))))
     'logPath: {0}' -f $logPath | Write-ScriptLog -Context $VhdPath
 
     for ($retryCount = 0; $retryCount -lt $RetryLimit; $retryCount++) {
+        # NOTE: Effort to prevent concurrent DISM operations.
+        $mutex = New-Object -TypeName 'System.Threading.Mutex' -ArgumentList $false, 'Local\HciLabMutex'
+        'Requesting the mutex for the Install-WindowsFeature cmdlet''s DISM operation...' | Write-ScriptLog -Context $VhdPath
+        $mutex.WaitOne()
+        'Acquired the mutex for the Install-WindowsFeature cmdlet''s DISM operation' | Write-ScriptLog -Context $VhdPath
+
         try {
-            # NOTE: Install-WindowsFeature cmdlet will fail sometimes due to concurrent operations.
+            # NOTE: Install-WindowsFeature cmdlet will fail sometimes due to concurrent operations, etc.
             $params = @{
                 Vhd                    = $VhdPath
                 Name                   = $FeatureName
@@ -339,11 +354,22 @@ function Install-WindowsFeatureToVhd
                 ErrorAction            = [Management.Automation.ActionPreference]::Stop
             }
             Install-WindowsFeature @params
+
+            # NOTE: The DISM mount point is still remain after the Install-WindowsFeature cmdlet completed.
+            while((Get-WindowsImage -Mounted | Where-Object -Property 'ImagePath' -EQ -Value $VhdPath) -ne $null) {
+                'Waiting for VHD dismount completion by Install-WindowsFeature cmdlet...' | Write-ScriptLog -Context $VhdPath
+                Start-Sleep -Seconds $SleepSeconds
+            }
             return
         }
         catch {
-            'Will retry Install-WindowsFeature cmdlet. Wait for the existing DISM operation to complete...' | Write-ScriptLog -Context $VhdPath
-            Start-Sleep -Seconds $RetryInterval
+            'Thrown a exception by Install-WindowsFeature cmdlet. Will retry Install-WindowsFeature cmdlet...' | Write-ScriptLog -Context $VhdPath
+            Start-Sleep -Seconds $SleepSeconds
+        }
+        finally {
+            'Releasing the mutex for the Install-WindowsFeature cmdlet''s DISM operation...' | Write-ScriptLog -Context $VhdPath
+            $mutex.ReleaseMutex()
+            $mutex.Dispose()
         }
     }
     throw 'Failed Install-WindowsFeature cmdlet for "{0}".' -f $VhdPath
@@ -362,7 +388,7 @@ function WaitingForStartingVM
 
         [Parameter(Mandatory = $false)]
         [ValidateRange(0, 3600)]
-        [int] $RetryInterval = 5
+        [int] $SleepSeconds = 5
     )
 
     for ($retryCount = 0; $retryCount -lt $RetryLimit; $retryCount++) {
@@ -375,7 +401,7 @@ function WaitingForStartingVM
         if ((Start-VM @params) -ne $null) { return }
 
         'Will retry start the VM...' | Write-ScriptLog -Context $VMName
-        Start-Sleep -Seconds $RetryInterval
+        Start-Sleep -Seconds $SleepSeconds
     }
     throw 'The VM "{0}" was not start in the acceptable time.' -f $VMName
 }
@@ -396,7 +422,7 @@ function WaitingForReadyToVM
 
         [Parameter(Mandatory = $false)]
         [ValidateRange(0, 3600)]
-        [int] $RetryInterval = 5
+        [int] $SleepSeconds = 5
     )
 
     for ($retryCount = 0; $retryCount -lt $RetryLimit; $retryCount++) {
@@ -409,7 +435,7 @@ function WaitingForReadyToVM
         if ((Invoke-Command @params) -eq 'ready') { return }
 
         'Waiting for ready to VM...' | Write-ScriptLog -Context $VMName
-        Start-Sleep -Seconds $RetryInterval
+        Start-Sleep -Seconds $SleepSeconds
     }
     throw 'The VM "{0}" was not ready in the acceptable time.' -f $VMName
 }
@@ -433,7 +459,7 @@ function WaitingForReadyToAddsDcVM
 
         [Parameter(Mandatory = $false)]
         [ValidateRange(0, 3600)]
-        [int] $RetryInterval = 5
+        [int] $SleepSeconds = 5
     )
 
     for ($retryCount = 0; $retryCount -lt $RetryLimit; $retryCount++) {
@@ -450,7 +476,7 @@ function WaitingForReadyToAddsDcVM
         if ((Invoke-Command @params) -eq $true) { return }
 
         'Waiting for ready to AD DS DC VM "{0}"...' -f $AddsDcVMName | Write-ScriptLog -Context $AddsDcVMName
-        Start-Sleep -Seconds $RetryInterval
+        Start-Sleep -Seconds $SleepSeconds
     }
     throw 'The AD DS DC VM "{0}" was not ready in the acceptable time.' -f $AddsDcVMName
 }
@@ -501,7 +527,7 @@ function JoinVMToADDomain
 
         [Parameter(Mandatory = $false)]
         [ValidateRange(0, 3600)]
-        [int] $RetryInterval = 5
+        [int] $SleepSeconds = 5
     )
 
     'Joining the VM "{0}" to the AD domain "{1}"...' -f $VMName, $DomainFqdn | Write-ScriptLog -Context $VMName
@@ -525,7 +551,7 @@ function JoinVMToADDomain
         }
         catch {
             'Will retry join the VM "{0}" to the AD domain "{1}"...' -f $VMName, $DomainFqdn | Write-ScriptLog -Context $VMName
-            Start-Sleep -Seconds $RetryInterval
+            Start-Sleep -Seconds $SleepSeconds
         }
     }
     throw 'Failed join the VM "{0}" to the AD domain "{1}".' -f $VMName, $DomainFqdn

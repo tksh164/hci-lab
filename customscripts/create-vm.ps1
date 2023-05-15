@@ -12,9 +12,26 @@ $labConfig = Get-LabDeploymentConfig
 Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log
 $labConfig | ConvertTo-Json -Depth 16 | Write-Host
 
-$jobScriptFilePath = [IO.Path]::Combine($PSScriptRoot, 'create-hci-node-vm-job.ps1')
-
 $jobs = @()
+
+'Creating an AD DS VM...' | Write-ScriptLog -Context $env:ComputerName
+$jobScriptFilePath = [IO.Path]::Combine($PSScriptRoot, 'create-vm-job-addsdc.ps1')
+$params = @{
+    PSModuleNameToImport = (Get-Module -Name 'shared').Path
+    LogFileName          = [IO.Path]::GetFileNameWithoutExtension($jobScriptFilePath)
+}
+$jobs += Start-Job -Name 'addsdc-vm' -LiteralPath $jobScriptFilePath -InputObject ([PSCustomObject] $params)
+
+'Creating a WAC VM...' | Write-ScriptLog -Context $env:ComputerName
+$jobScriptFilePath = [IO.Path]::Combine($PSScriptRoot, 'create-vm-job-wac.ps1')
+$params = @{
+    PSModuleNameToImport = (Get-Module -Name 'shared').Path
+    LogFileName          = [IO.Path]::GetFileNameWithoutExtension($jobScriptFilePath)
+}
+$jobs += Start-Job -Name 'wac-vm' -LiteralPath $jobScriptFilePath -InputObject ([PSCustomObject] $params)
+
+'Creating HCI node VMs...' | Write-ScriptLog -Context $env:ComputerName
+$jobScriptFilePath = [IO.Path]::Combine($PSScriptRoot, 'create-vm-job-hcinode.ps1')
 for ($nodeIndex = 0; $nodeIndex -lt $labConfig.hciNode.nodeCount; $nodeIndex++) {
     $vmName = GetHciNodeVMName -Format $labConfig.hciNode.vmName -Offset $labConfig.hciNode.vmNameOffset -Index $nodeIndex
     'Start creating a HCI node VM...' -f $vmName | Write-ScriptLog -Context $vmName
@@ -30,6 +47,6 @@ $jobs | Format-Table -Property Id, Name, State, HasMoreData, PSBeginTime, PSEndT
 $jobs | Receive-Job -Wait
 $jobs | Format-Table -Property Id, Name, State, HasMoreData, PSBeginTime, PSEndTime
 
-'The HCI node VMs creation has been completed.' | Write-ScriptLog -Context $env:ComputerName
+'The HCI lab VMs creation has been completed.' | Write-ScriptLog -Context $env:ComputerName
 
 Stop-ScriptLogging
