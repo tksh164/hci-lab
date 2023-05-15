@@ -331,15 +331,21 @@ function Install-WindowsFeatureToVhd
 
         [Parameter(Mandatory = $false)]
         [ValidateRange(0, 3600)]
-        [int] $RetryInterval = 5
+        [int] $SleepSeconds = 5
     )
 
     $logPath = [IO.Path]::Combine($LogFolder, (Get-LogFileName -FileName ('installwinfeature-' + [IO.Path]::GetFileNameWithoutExtension([IO.Path]::GetDirectoryName($VhdPath)))))
     'logPath: {0}' -f $logPath | Write-ScriptLog -Context $VhdPath
 
     for ($retryCount = 0; $retryCount -lt $RetryLimit; $retryCount++) {
+        # NOTE: Effort to prevent concurrent DISM operations.
+        $mutex = New-Object -TypeName 'System.Threading.Mutex' -ArgumentList $false, 'Local\HciLabMutex'
+        'Requesting the mutex for the Install-WindowsFeature cmdlet''s DISM operation...' | Write-ScriptLog -Context $VhdPath
+        $mutex.WaitOne()
+        'Acquired the mutex for the Install-WindowsFeature cmdlet''s DISM operation' | Write-ScriptLog -Context $VhdPath
+
         try {
-            # NOTE: Install-WindowsFeature cmdlet will fail sometimes due to concurrent operations.
+            # NOTE: Install-WindowsFeature cmdlet will fail sometimes due to concurrent operations, etc.
             $params = @{
                 Vhd                    = $VhdPath
                 Name                   = $FeatureName
@@ -348,11 +354,22 @@ function Install-WindowsFeatureToVhd
                 ErrorAction            = [Management.Automation.ActionPreference]::Stop
             }
             Install-WindowsFeature @params
+
+            # NOTE: The DISM mount point is still remain after the Install-WindowsFeature cmdlet completed.
+            while((Get-WindowsImage -Mounted | Where-Object -Property 'ImagePath' -EQ -Value $VhdPath) -ne $null) {
+                'Waiting for VHD dismount completion by Install-WindowsFeature cmdlet...' | Write-ScriptLog -Context $VhdPath
+                Start-Sleep -Seconds $SleepSeconds
+            }
             return
         }
         catch {
-            'Will retry Install-WindowsFeature cmdlet. Wait for the existing DISM operation to complete...' | Write-ScriptLog -Context $VhdPath
-            Start-Sleep -Seconds $RetryInterval
+            'Thrown a exception by Install-WindowsFeature cmdlet. Will retry Install-WindowsFeature cmdlet...' | Write-ScriptLog -Context $VhdPath
+            Start-Sleep -Seconds $SleepSeconds
+        }
+        finally {
+            'Releasing the mutex for the Install-WindowsFeature cmdlet''s DISM operation...' | Write-ScriptLog -Context $VhdPath
+            $mutex.ReleaseMutex()
+            $mutex.Dispose()
         }
     }
     throw 'Failed Install-WindowsFeature cmdlet for "{0}".' -f $VhdPath
