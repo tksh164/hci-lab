@@ -369,9 +369,9 @@
                 "deploymentName": "vm-creation",
                 "fileUris": [
                     "[uri(variables('customScriptBaseUri'), 'create-vm.ps1')]",
-                    "[uri(variables('customScriptBaseUri'), 'create-adds-dc-vm.ps1')]",
-                    "[uri(variables('customScriptBaseUri'), 'create-wac-vm.ps1')]",
-                    "[uri(variables('customScriptBaseUri'), 'create-hci-node-vm-job.ps1')]",
+                    "[uri(variables('customScriptBaseUri'), 'create-vm-job-addsdc.ps1')]",
+                    "[uri(variables('customScriptBaseUri'), 'create-vm-job-wac.ps1')]",
+                    "[uri(variables('customScriptBaseUri'), 'create-vm-job-hcinode.ps1')]",
                     "[uri(variables('customScriptBaseUri'), 'shared.psm1')]"
                 ],
                 "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\create-vm.ps1"
