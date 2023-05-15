@@ -365,24 +365,16 @@
                 ],
                 "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\create-base-vhd.ps1"
             },
-            "createEssentialVm": {
-                "deploymentName": "essential-vm-creation",
+            "createVm": {
+                "deploymentName": "vm-creation",
                 "fileUris": [
-                    "[uri(variables('customScriptBaseUri'), 'create-essential-vm.ps1')]",
+                    "[uri(variables('customScriptBaseUri'), 'create-vm.ps1')]",
                     "[uri(variables('customScriptBaseUri'), 'create-adds-dc-vm.ps1')]",
                     "[uri(variables('customScriptBaseUri'), 'create-wac-vm.ps1')]",
-                    "[uri(variables('customScriptBaseUri'), 'shared.psm1')]"
-                ],
-                "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\create-essential-vm.ps1"
-            },
-            "createHciNodeVm": {
-                "deploymentName": "hci-node-vm-creation",
-                "fileUris": [
-                    "[uri(variables('customScriptBaseUri'), 'create-hci-node-vm.ps1')]",
                     "[uri(variables('customScriptBaseUri'), 'create-hci-node-vm-job.ps1')]",
                     "[uri(variables('customScriptBaseUri'), 'shared.psm1')]"
                 ],
-                "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\create-hci-node-vm.ps1"
+                "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\create-vm.ps1"
             }
         },
 
@@ -797,9 +789,9 @@
             }
         },
 
-        // Create essential VMs.
+        // Create VMs.
         {
-            "name": "[variables('customScriptParams').createEssentialVm.deploymentName]",
+            "name": "[variables('customScriptParams').createVm.deploymentName]",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2021-04-01",
             "dependsOn": [
@@ -823,45 +815,10 @@
                         "value": "[variables('customScriptExtensionName')]"
                     },
                     "fileUris": {
-                        "value": "[variables('customScriptParams').createEssentialVm.fileUris]"
+                        "value": "[variables('customScriptParams').createVm.fileUris]"
                     },
                     "commandToExecute": {
-                        "value": "[variables('customScriptParams').createEssentialVm.commandToExecute]"
-                    }
-                }
-            }
-        },
-
-        // Create HCI node VMs.
-        {
-            "name": "[variables('customScriptParams').createHciNodeVm.deploymentName]",
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2021-04-01",
-            "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', variables('keyVaultRbacDeploymentName'))]",  // Use secrets by VM's managed identity in the custom script.
-                "[resourceId('Microsoft.Resources/deployments', variables('customScriptParams').createEssentialVm.deploymentName)]"
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('customScriptLinkedTemplateUri')]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "location": {
-                        "value": "[variables('location')]"
-                    },
-                    "parentVmResourceName": {
-                        "value": "[parameters('labHostVmName')]"
-                    },
-                    "extensionName": {
-                        "value": "[variables('customScriptExtensionName')]"
-                    },
-                    "fileUris": {
-                        "value": "[variables('customScriptParams').createHciNodeVm.fileUris]"
-                    },
-                    "commandToExecute": {
-                        "value": "[variables('customScriptParams').createHciNodeVm.commandToExecute]"
+                        "value": "[variables('customScriptParams').createVm.commandToExecute]"
                     }
                 }
             }
