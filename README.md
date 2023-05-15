@@ -10,6 +10,6 @@ This template deploys an HCI lab environment with Azure Stack HCI or Windows Ser
 
 - The log files of the custom scripts are stored under `C:\Temp` in the lab host Azure VM. Those log files are helpful for troubleshooting when deployment fails.
 
-## License
+## External artifacts
 
 - The custom script `create-base-vhd.ps1` in this template downloads `Convert-WindowsImage.ps1` from [microsoft/MSLab](https://github.com/microsoft/MSLab) and uses it during the deployment.
