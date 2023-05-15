@@ -388,7 +388,7 @@ function WaitingForStartingVM
 
         [Parameter(Mandatory = $false)]
         [ValidateRange(0, 3600)]
-        [int] $RetryInterval = 5
+        [int] $SleepSeconds = 5
     )
 
     for ($retryCount = 0; $retryCount -lt $RetryLimit; $retryCount++) {
@@ -401,7 +401,7 @@ function WaitingForStartingVM
         if ((Start-VM @params) -ne $null) { return }
 
         'Will retry start the VM...' | Write-ScriptLog -Context $VMName
-        Start-Sleep -Seconds $RetryInterval
+        Start-Sleep -Seconds $SleepSeconds
     }
     throw 'The VM "{0}" was not start in the acceptable time.' -f $VMName
 }
@@ -422,7 +422,7 @@ function WaitingForReadyToVM
 
         [Parameter(Mandatory = $false)]
         [ValidateRange(0, 3600)]
-        [int] $RetryInterval = 5
+        [int] $SleepSeconds = 5
     )
 
     for ($retryCount = 0; $retryCount -lt $RetryLimit; $retryCount++) {
@@ -435,7 +435,7 @@ function WaitingForReadyToVM
         if ((Invoke-Command @params) -eq 'ready') { return }
 
         'Waiting for ready to VM...' | Write-ScriptLog -Context $VMName
-        Start-Sleep -Seconds $RetryInterval
+        Start-Sleep -Seconds $SleepSeconds
     }
     throw 'The VM "{0}" was not ready in the acceptable time.' -f $VMName
 }
@@ -459,7 +459,7 @@ function WaitingForReadyToAddsDcVM
 
         [Parameter(Mandatory = $false)]
         [ValidateRange(0, 3600)]
-        [int] $RetryInterval = 5
+        [int] $SleepSeconds = 5
     )
 
     for ($retryCount = 0; $retryCount -lt $RetryLimit; $retryCount++) {
@@ -476,7 +476,7 @@ function WaitingForReadyToAddsDcVM
         if ((Invoke-Command @params) -eq $true) { return }
 
         'Waiting for ready to AD DS DC VM "{0}"...' -f $AddsDcVMName | Write-ScriptLog -Context $AddsDcVMName
-        Start-Sleep -Seconds $RetryInterval
+        Start-Sleep -Seconds $SleepSeconds
     }
     throw 'The AD DS DC VM "{0}" was not ready in the acceptable time.' -f $AddsDcVMName
 }
@@ -527,7 +527,7 @@ function JoinVMToADDomain
 
         [Parameter(Mandatory = $false)]
         [ValidateRange(0, 3600)]
-        [int] $RetryInterval = 5
+        [int] $SleepSeconds = 5
     )
 
     'Joining the VM "{0}" to the AD domain "{1}"...' -f $VMName, $DomainFqdn | Write-ScriptLog -Context $VMName
@@ -551,7 +551,7 @@ function JoinVMToADDomain
         }
         catch {
             'Will retry join the VM "{0}" to the AD domain "{1}"...' -f $VMName, $DomainFqdn | Write-ScriptLog -Context $VMName
-            Start-Sleep -Seconds $RetryInterval
+            Start-Sleep -Seconds $SleepSeconds
         }
     }
     throw 'Failed join the VM "{0}" to the AD domain "{1}".' -f $VMName, $DomainFqdn
