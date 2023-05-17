@@ -463,20 +463,47 @@ function WaitingForReadyToAddsDcVM
     )
 
     for ($retryCount = 0; $retryCount -lt $RetryLimit; $retryCount++) {
-        $params = @{
-            VMName       = $AddsDcVMName
-            Credential   = $Credential
-            ArgumentList = $AddsDcComputerName
-            ScriptBlock  = {
-                $dcComputerName = $args[0]
-                (Get-ADDomainController -Server $dcComputerName).Enabled
+        try {
+            $params = @{
+                VMName       = $AddsDcVMName
+                Credential   = $Credential
+                ArgumentList = $AddsDcComputerName
+                ScriptBlock  = {
+                    $dcComputerName = $args[0]
+                    (Get-ADDomainController -Server $dcComputerName).Enabled
+                }
+                ErrorAction  = [Management.Automation.ActionPreference]::Stop
             }
-            ErrorAction  = [Management.Automation.ActionPreference]::SilentlyContinue
+            if ((Invoke-Command @params) -eq $true) { return }
         }
-        if ((Invoke-Command @params) -eq $true) { return }
+        catch [System.Management.Automation.Remoting.PSRemotingTransportException] {
+            # FullyQualifiedErrorId: 2100,PSSessionStateBroken
+            # The background process reported an error with the following message: "The Hyper-V socket target process has ended.".
+            (
+                'Restart the AD DS DC VM due to PowerShell Remoting transport exception.' + "`n" +
+                'Exception: {0}' + "`n" +
+                'FullyQualifiedErrorId: {1}' + "`n" +
+                'CategoryInfo: {2}' + "`n" +
+                'Message: {3}'
+            ) -f @(
+                $Error[0].Exception.GetType().FullName
+                $Error[0].FullyQualifiedErrorId
+                $Error[0].CategoryInfo.ToString()
+                $Error[0].ErrorDetails.Message
+            ) | Write-ScriptLog -Context $AddsDcVMName
 
-        'Waiting for ready to AD DS DC VM "{0}"...' -f $AddsDcVMName | Write-ScriptLog -Context $AddsDcVMName
-        Start-Sleep -Seconds $SleepSeconds
+            'Stopping the AD DS DC VM...' | Write-ScriptLog -Context $AddsDcVMName
+            Stop-VM -Name $AddsDcVMName
+
+            'Starting the AD DS DC VM...' | Write-ScriptLog -Context $AddsDcVMName
+            Start-VM -Name $AddsDcVMName
+
+            Start-Sleep -Seconds $SleepSeconds
+        }
+        catch {
+            'Waiting for ready to AD DS DC VM "{0}"...' -f $AddsDcVMName | Write-ScriptLog -Context $AddsDcVMName
+            Start-Sleep -Seconds $SleepSeconds
+        }
     }
     throw 'The AD DS DC VM "{0}" was not ready in the acceptable time.' -f $AddsDcVMName
 }
