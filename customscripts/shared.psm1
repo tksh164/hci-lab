@@ -514,15 +514,15 @@ function WaitingForReadyToAddsDcVM
         [PSCredential] $Credential,
 
         [Parameter(Mandatory = $false)]
-        [ValidateRange(0, 1000)]
-        [int] $RetryLimit = 50,
+        [ValidateRange(0, 3600)]
+        [int] $RetryIntervalSeconds = 5,
 
         [Parameter(Mandatory = $false)]
-        [ValidateRange(0, 3600)]
-        [int] $SleepSeconds = 5
+        [TimeSpan] $RetyTimeout = (New-TimeSpan -Minutes 30)
     )
 
-    for ($retryCount = 0; $retryCount -lt $RetryLimit; $retryCount++) {
+    $startTime = Get-Date
+    while ((Get-Date) -lt ($startTime + $RetyTimeout)) {
         try {
             $params = @{
                 VMName       = $AddsDcVMName
@@ -534,38 +534,55 @@ function WaitingForReadyToAddsDcVM
                 }
                 ErrorAction  = [Management.Automation.ActionPreference]::Stop
             }
-            if ((Invoke-Command @params) -eq $true) { return }
+            if ((Invoke-Command @params) -eq $true) {
+                'The AD DS DC is ready.' | Write-ScriptLog -Context $AddsDcVMName
+                return
+            }
         }
         catch [System.Management.Automation.Remoting.PSRemotingTransportException] {
+            # NOTE: When this exception continued to happen, PowerShell Direct capability was never recovered until reboot the AD DS DC VM.
             # FullyQualifiedErrorId: 2100,PSSessionStateBroken
             # The background process reported an error with the following message: "The Hyper-V socket target process has ended.".
-            (
-                'Restart the AD DS DC VM due to PowerShell Remoting transport exception.' + "`n" +
-                'Exception: {0}' + "`n" +
-                'FullyQualifiedErrorId: {1}' + "`n" +
-                'CategoryInfo: {2}' + "`n" +
-                'Message: {3}'
-            ) -f @(
-                $Error[0].Exception.GetType().FullName
-                $Error[0].FullyQualifiedErrorId
-                $Error[0].CategoryInfo.ToString()
-                $Error[0].ErrorDetails.Message
-            ) | Write-ScriptLog -Context $AddsDcVMName
+            'Restart the AD DS DC VM due to PowerShell Remoting transport exception. ' +
+                '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})' -f
+                $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message |
+                Write-ScriptLog -Context $AddsDcVMName
 
-            'Stopping the AD DS DC VM...' | Write-ScriptLog -Context $AddsDcVMName
-            Stop-VM -Name $AddsDcVMName
-
-            'Starting the AD DS DC VM...' | Write-ScriptLog -Context $AddsDcVMName
-            Start-VM -Name $AddsDcVMName
-
-            Start-Sleep -Seconds $SleepSeconds
+            $mutex = New-Object -TypeName 'System.Threading.Mutex' -ArgumentList $false, 'Local\HciLabMutexAddsDcVmReboot'
+            'Requesting the mutex for AD DS DC VM reboot...' | Write-ScriptLog -Context $AddsDcVMName
+            $mutex.WaitOne()
+            'Acquired the mutex for AD DS DC VM reboot.' | Write-ScriptLog -Context $AddsDcVMName
+    
+            try {
+                $uptimeThresholdMinutes = 5
+                $addsDcVM = Get-VM -Name $AddsDcVMName
+                # NOTE: Skip rebooting if the VM is young because it means the VM already rebooted recently by other jobs.
+                if ($addsDcVM.UpTime -gt (New-TimeSpan -Minutes $uptimeThresholdMinutes)) {
+                    'Stopping the AD DS DC VM due to PowerShell Direct exception...' | Write-ScriptLog -Context $AddsDcVMName
+                    Stop-VM -Name $AddsDcVMName -ErrorAction Continue
+        
+                    'Starting the AD DS DC VM due to PowerShell Direct exception...' | Write-ScriptLog -Context $AddsDcVMName
+                    Start-VM -Name $AddsDcVMName -ErrorAction Continue
+                }
+                else {
+                    'Skip the AD DS DC VM rebooting because the VM''s uptime is too short (less than {0} minutes).' -f $uptimeThresholdMinutes | Write-ScriptLog -Context $AddsDcVMName
+                }
+            }
+            finally {
+                'Releasing the mutex for AD DS DC VM reboot...' | Write-ScriptLog -Context $AddsDcVMName
+                $mutex.ReleaseMutex()
+                $mutex.Dispose()
+            }
         }
         catch {
-            'Waiting for ready to AD DS DC VM "{0}"...' -f $AddsDcVMName | Write-ScriptLog -Context $AddsDcVMName
-            Start-Sleep -Seconds $SleepSeconds
+            'Probing AD DS DC ready state... ' +
+                '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})' -f
+                $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message |
+                Write-ScriptLog -Context $AddsDcVMName
         }
+        Start-Sleep -Seconds $RetryIntervalSeconds
     }
-    throw 'The AD DS DC VM "{0}" was not ready in the acceptable time.' -f $AddsDcVMName
+    throw 'The AD DS DC "{0}" was not ready in the acceptable time ({1}).' -f $AddsDcVMName, $RetyTimeout.ToString()
 }
 
 function CreateDomainCredential
