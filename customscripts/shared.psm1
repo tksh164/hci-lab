@@ -425,27 +425,36 @@ function WaitingForStartingVM
         [string] $VMName,
 
         [Parameter(Mandatory = $false)]
-        [ValidateRange(0, 1000)]
-        [int] $RetryLimit = 50,
+        [ValidateRange(0, 3600)]
+        [int] $RetryIntervalSeconds = 5,
 
         [Parameter(Mandatory = $false)]
-        [ValidateRange(0, 3600)]
-        [int] $SleepSeconds = 5
+        [TimeSpan] $RetyTimeout = (New-TimeSpan -Minutes 30)
     )
 
-    for ($retryCount = 0; $retryCount -lt $RetryLimit; $retryCount++) {
-        # NOTE: In sometimes, we need retry to waiting for unmount the VHD.
-        $params = @{
-            Name = $VMName
-            Passthru = $true
-            ErrorAction = [Management.Automation.ActionPreference]::SilentlyContinue
+    $startTime = Get-Date
+    while ((Get-Date) -lt ($startTime + $RetyTimeout)) {
+        try {
+            # NOTE: In sometimes, we need retry to waiting for unmount the VHD.
+            $params = @{
+                Name        = $VMName
+                Passthru    = $true
+                ErrorAction = [Management.Automation.ActionPreference]::Stop
+            }
+            if ((Start-VM @params) -ne $null) {
+                'The VM was started.' | Write-ScriptLog -Context $VMName
+                return
+            }
         }
-        if ((Start-VM @params) -ne $null) { return }
-
-        'Will retry start the VM...' | Write-ScriptLog -Context $VMName
-        Start-Sleep -Seconds $SleepSeconds
+        catch {
+            'Will retry start the VM...' +
+                '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})' -f
+                $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message |
+                Write-ScriptLog -Context $VMName
+        }
+        Start-Sleep -Seconds $RetryIntervalSeconds
     }
-    throw 'The VM "{0}" was not start in the acceptable time.' -f $VMName
+    throw 'The VM "{0}" was not start in the acceptable time ({1}).' -f $VMName, $RetyTimeout.ToString()
 }
 
 function WaitingForReadyToVM
