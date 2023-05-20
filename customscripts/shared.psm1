@@ -365,23 +365,23 @@ function Install-WindowsFeatureToVhd
         [string] $LogFolder,
 
         [Parameter(Mandatory = $false)]
-        [ValidateRange(0, 1000)]
-        [int] $RetryLimit = 50,
+        [ValidateRange(0, 3600)]
+        [int] $RetryIntervalSeconds = 5,
 
         [Parameter(Mandatory = $false)]
-        [ValidateRange(0, 3600)]
-        [int] $SleepSeconds = 5
+        [TimeSpan] $RetyTimeout = (New-TimeSpan -Minutes 30)
     )
 
     $logPath = [IO.Path]::Combine($LogFolder, (Get-LogFileName -FileName ('installwinfeature-' + [IO.Path]::GetFileNameWithoutExtension([IO.Path]::GetDirectoryName($VhdPath)))))
     'logPath: {0}' -f $logPath | Write-ScriptLog -Context $VhdPath
 
-    for ($retryCount = 0; $retryCount -lt $RetryLimit; $retryCount++) {
+    $startTime = Get-Date
+    while ((Get-Date) -lt ($startTime + $RetyTimeout)) {
         # NOTE: Effort to prevent concurrent DISM operations.
-        $mutex = New-Object -TypeName 'System.Threading.Mutex' -ArgumentList $false, 'Local\HciLabMutex'
+        $mutex = New-Object -TypeName 'System.Threading.Mutex' -ArgumentList $false, 'Local\HciLabMutexInstallWindowsFeature'
         'Requesting the mutex for the Install-WindowsFeature cmdlet''s DISM operation...' | Write-ScriptLog -Context $VhdPath
         $mutex.WaitOne()
-        'Acquired the mutex for the Install-WindowsFeature cmdlet''s DISM operation' | Write-ScriptLog -Context $VhdPath
+        'Acquired the mutex for the Install-WindowsFeature cmdlet''s DISM operation.' | Write-ScriptLog -Context $VhdPath
 
         try {
             # NOTE: Install-WindowsFeature cmdlet will fail sometimes due to concurrent operations, etc.
@@ -395,23 +395,26 @@ function Install-WindowsFeatureToVhd
             Install-WindowsFeature @params
 
             # NOTE: The DISM mount point is still remain after the Install-WindowsFeature cmdlet completed.
-            while((Get-WindowsImage -Mounted | Where-Object -Property 'ImagePath' -EQ -Value $VhdPath) -ne $null) {
-                'Waiting for VHD dismount completion by Install-WindowsFeature cmdlet...' | Write-ScriptLog -Context $VhdPath
-                Start-Sleep -Seconds $SleepSeconds
-            }
+            'Waiting for VHD dismount completion by the Install-WindowsFeature cmdlet execution...' | Write-ScriptLog -Context $VhdPath
+            WaitingForVhdDismount -VhdPath $VhdPath
+
+            'Windows features installation to VHD was completed.' | Write-ScriptLog -Context $VhdPath
             return
         }
         catch {
-            'Thrown a exception by Install-WindowsFeature cmdlet. Will retry Install-WindowsFeature cmdlet...' | Write-ScriptLog -Context $VhdPath
-            Start-Sleep -Seconds $SleepSeconds
+            'Thrown a exception by Install-WindowsFeature cmdlet execution. Will retry Install-WindowsFeature cmdlet...' +
+                '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})' -f
+                $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message |
+                Write-ScriptLog -Context $VhdPath
         }
         finally {
             'Releasing the mutex for the Install-WindowsFeature cmdlet''s DISM operation...' | Write-ScriptLog -Context $VhdPath
             $mutex.ReleaseMutex()
             $mutex.Dispose()
         }
+        Start-Sleep -Seconds $RetryIntervalSeconds
     }
-    throw 'Failed Install-WindowsFeature cmdlet for "{0}".' -f $VhdPath
+    throw 'The Install-WindowsFeature cmdlet execution for "{0}" was not succeeded in the acceptable time ({1}).' -f $VhdPath, $RetyTimeout.ToString()
 }
 
 function WaitingForStartingVM
