@@ -282,6 +282,26 @@ function GetUnattendAnswerFileContent
 '@ -f $encodedAdminPassword, $ComputerName, $Culture
 }
 
+function WaitingForVhdDismount
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateScript({ Test-Path -PathType Leaf -LiteralPath $_ })]
+        [string] $VhdPath,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, 3600)]
+        [int] $ProbeIntervalSeconds = 5
+    )
+
+    while((Get-WindowsImage -Mounted | Where-Object -Property 'ImagePath' -EQ -Value $VhdPath) -ne $null) {
+        'Waiting for VHD dismount completion...' | Write-ScriptLog -Context $VhdPath
+        Start-Sleep -Seconds $ProbeIntervalSeconds
+    }
+    'The VHD dismount completed.' | Write-ScriptLog -Context $VhdPath
+}
+
 function InjectUnattendAnswerFile
 {
     [CmdletBinding()]
