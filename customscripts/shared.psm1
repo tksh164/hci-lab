@@ -468,27 +468,36 @@ function WaitingForReadyToVM
         [PSCredential] $Credential,
 
         [Parameter(Mandatory = $false)]
-        [ValidateRange(0, 1000)]
-        [int] $RetryLimit = 50,
+        [ValidateRange(0, 3600)]
+        [int] $RetryIntervalSeconds = 5,
 
         [Parameter(Mandatory = $false)]
-        [ValidateRange(0, 3600)]
-        [int] $SleepSeconds = 5
+        [TimeSpan] $RetyTimeout = (New-TimeSpan -Minutes 30)
     )
 
-    for ($retryCount = 0; $retryCount -lt $RetryLimit; $retryCount++) {
-        $params = @{
-            VMName      = $VMName
-            Credential  = $Credential
-            ScriptBlock = { 'ready' }
-            ErrorAction = [Management.Automation.ActionPreference]::SilentlyContinue
+    $startTime = Get-Date
+    while ((Get-Date) -lt ($startTime + $RetyTimeout)) {
+        try {
+            $params = @{
+                VMName      = $VMName
+                Credential  = $Credential
+                ScriptBlock = { 'ready' }
+                ErrorAction = [Management.Automation.ActionPreference]::Stop
+            }
+            if ((Invoke-Command @params) -eq 'ready') {
+                'The VM is ready.' | Write-ScriptLog -Context $VMName
+                return
+            }
         }
-        if ((Invoke-Command @params) -eq 'ready') { return }
-
-        'Waiting for ready to VM...' | Write-ScriptLog -Context $VMName
-        Start-Sleep -Seconds $SleepSeconds
+        catch {
+            'Probing the VM ready state... ' +
+                '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})' -f
+                $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message |
+                Write-ScriptLog -Context $VMName
+        }
+        Start-Sleep -Seconds $RetryIntervalSeconds
     }
-    throw 'The VM "{0}" was not ready in the acceptable time.' -f $VMName
+    throw 'The VM "{0}" was not ready in the acceptable time ({1}).' -f $VMName, $RetyTimeout.ToString()
 }
 
 function WaitingForReadyToAddsDcVM
