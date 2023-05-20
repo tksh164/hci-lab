@@ -539,46 +539,49 @@ function WaitingForReadyToAddsDcVM
                 return
             }
         }
-        catch [System.Management.Automation.Remoting.PSRemotingTransportException] {
-            # NOTE: When this exception continued to happen, PowerShell Direct capability was never recovered until reboot the AD DS DC VM.
-            # FullyQualifiedErrorId: 2100,PSSessionStateBroken
-            # The background process reported an error with the following message: "The Hyper-V socket target process has ended.".
-            'Restart the AD DS DC VM due to PowerShell Remoting transport exception. ' +
-                '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})' -f
-                $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message |
-                Write-ScriptLog -Context $AddsDcVMName
-
-            $mutex = New-Object -TypeName 'System.Threading.Mutex' -ArgumentList $false, 'Local\HciLabMutexAddsDcVmReboot'
-            'Requesting the mutex for AD DS DC VM reboot...' | Write-ScriptLog -Context $AddsDcVMName
-            $mutex.WaitOne()
-            'Acquired the mutex for AD DS DC VM reboot.' | Write-ScriptLog -Context $AddsDcVMName
-    
-            try {
-                $uptimeThresholdMinutes = 5
-                $addsDcVM = Get-VM -Name $AddsDcVMName
-                # NOTE: Skip rebooting if the VM is young because it means the VM already rebooted recently by other jobs.
-                if ($addsDcVM.UpTime -gt (New-TimeSpan -Minutes $uptimeThresholdMinutes)) {
-                    'Stopping the AD DS DC VM due to PowerShell Direct exception...' | Write-ScriptLog -Context $AddsDcVMName
-                    Stop-VM -Name $AddsDcVMName -ErrorAction Continue
-        
-                    'Starting the AD DS DC VM due to PowerShell Direct exception...' | Write-ScriptLog -Context $AddsDcVMName
-                    Start-VM -Name $AddsDcVMName -ErrorAction Continue
-                }
-                else {
-                    'Skip the AD DS DC VM rebooting because the VM''s uptime is too short (less than {0} minutes).' -f $uptimeThresholdMinutes | Write-ScriptLog -Context $AddsDcVMName
-                }
-            }
-            finally {
-                'Releasing the mutex for AD DS DC VM reboot...' | Write-ScriptLog -Context $AddsDcVMName
-                $mutex.ReleaseMutex()
-                $mutex.Dispose()
-            }
-        }
         catch {
-            'Probing AD DS DC ready state... ' +
-                '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})' -f
-                $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message |
-                Write-ScriptLog -Context $AddsDcVMName
+            if ($_.FullyQualifiedErrorId -eq '2100,PSSessionStateBroken') {
+                # NOTE: When this exception continued to happen, PowerShell Direct capability was never recovered until reboot the AD DS DC VM.
+                # Exception: System.Management.Automation.Remoting.PSRemotingTransportException
+                # FullyQualifiedErrorId: 2100,PSSessionStateBroken
+                # The background process reported an error with the following message: "The Hyper-V socket target process has ended.".
+                'Restart the AD DS DC VM due to PowerShell Remoting transport exception. ' +
+                    '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})' -f
+                    $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message |
+                    Write-ScriptLog -Context $AddsDcVMName
+
+                $mutex = New-Object -TypeName 'System.Threading.Mutex' -ArgumentList $false, 'Local\HciLabMutexAddsDcVmReboot'
+                'Requesting the mutex for AD DS DC VM reboot...' | Write-ScriptLog -Context $AddsDcVMName
+                $mutex.WaitOne()
+                'Acquired the mutex for AD DS DC VM reboot.' | Write-ScriptLog -Context $AddsDcVMName
+    
+                try {
+                    $uptimeThresholdMinutes = 15
+                    $addsDcVM = Get-VM -Name $AddsDcVMName
+                    # NOTE: Skip rebooting if the VM is young because it means the VM already rebooted recently by other jobs.
+                    if ($addsDcVM.UpTime -gt (New-TimeSpan -Minutes $uptimeThresholdMinutes)) {
+                        'Stopping the AD DS DC VM due to PowerShell Direct exception...' | Write-ScriptLog -Context $AddsDcVMName
+                        Stop-VM -Name $AddsDcVMName -ErrorAction Continue
+            
+                        'Starting the AD DS DC VM due to PowerShell Direct exception...' | Write-ScriptLog -Context $AddsDcVMName
+                        Start-VM -Name $AddsDcVMName -ErrorAction Continue
+                    }
+                    else {
+                        'Skip the AD DS DC VM rebooting because the VM''s uptime is too short (less than {0} minutes).' -f $uptimeThresholdMinutes | Write-ScriptLog -Context $AddsDcVMName
+                    }
+                }
+                finally {
+                    'Releasing the mutex for AD DS DC VM reboot...' | Write-ScriptLog -Context $AddsDcVMName
+                    $mutex.ReleaseMutex()
+                    $mutex.Dispose()
+                }
+            }
+            else {
+                'Probing AD DS DC ready state... ' +
+                    '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})' -f
+                    $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message |
+                    Write-ScriptLog -Context $AddsDcVMName
+            }
         }
         Start-Sleep -Seconds $RetryIntervalSeconds
     }
