@@ -130,12 +130,37 @@ function DownloadFile
         [string] $DownloadFolder,
     
         [Parameter(Mandatory = $true)]
-        [string] $FileNameToSave
+        [string] $FileNameToSave,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, 3600)]
+        [int] $RetryIntervalSeconds = 30,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, 1000)]
+        [int] $MaxRetryCount = 10
     )
 
     $destinationFilePath = [IO.Path]::Combine($DownloadFolder, $FileNameToSave)
-    Start-BitsTransfer -Source $SourceUri -Destination $destinationFilePath
-    Get-Item -LiteralPath $destinationFilePath
+
+    for ($retryCount = 0; $retryCount -lt $MaxRetryCount; $retryCount++) {
+        try {
+            'Downloading the file from "{0}" to "{1}".' -f $SourceUri, $destinationFilePath | Write-ScriptLog -Context $env:ComputerName
+            Start-BitsTransfer -Source $SourceUri -Destination $destinationFilePath
+            Get-Item -LiteralPath $destinationFilePath
+            return
+        }
+        catch {
+            'Will retry the download...' +
+                '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})' -f
+                $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message |
+                Write-ScriptLog -Context $env:ComputerName
+
+            Remove-Item -LiteralPath $destinationFilePath -Force -ErrorAction Continue
+        }
+        Start-Sleep -Seconds $RetryIntervalSeconds
+    }
+    throw 'The download from "{0}" did not succeed in the acceptable retry count ({1}).' -f $SourceUri, $MaxRetryCount
 }
 
 function GetIsoFileName
