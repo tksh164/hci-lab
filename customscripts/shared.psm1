@@ -609,18 +609,19 @@ function JoinVMToADDomain
         [PSCredential] $DomainAdminCredential,
 
         [Parameter(Mandatory = $false)]
-        [ValidateRange(0, 1000)]
-        [int] $RetryLimit = 50,
+        [ValidateRange(0, 3600)]
+        [int] $RetryIntervalSeconds = 5,
 
         [Parameter(Mandatory = $false)]
-        [ValidateRange(0, 3600)]
-        [int] $SleepSeconds = 5
+        [TimeSpan] $RetyTimeout = (New-TimeSpan -Minutes 30)
     )
 
     'Joining the VM "{0}" to the AD domain "{1}"...' -f $VMName, $DomainFqdn | Write-ScriptLog -Context $VMName
 
-    for ($retryCount = 0; $retryCount -lt $RetryLimit; $retryCount++) {
+    $startTime = Get-Date
+    while ((Get-Date) -lt ($startTime + $RetyTimeout)) {
         try {
+            # NOTE: Domain joining will fail sometimes due to AD DS DC VM state.
             $params = @{
                 VMName       = $VMName
                 Credential   = $LocalAdminCredential
@@ -628,20 +629,23 @@ function JoinVMToADDomain
                 ScriptBlock  = {
                     $domainFqdn = $args[0]
                     $domainAdminCredential = $args[1]
-                    # NOTE: Domain joining will fail sometimes due to AD DS DC VM state.
                     Add-Computer -DomainName $domainFqdn -Credential $domainAdminCredential
                 }
                 ErrorAction  = [Management.Automation.ActionPreference]::Stop
             }
             Invoke-Command @params
+            'The VM "{0}" was joined to the AD domain "{1}".' -f $VMName, $DomainFqdn | Write-ScriptLog -Context $VMName
             return
         }
         catch {
-            'Will retry join the VM "{0}" to the AD domain "{1}"...' -f $VMName, $DomainFqdn | Write-ScriptLog -Context $VMName
-            Start-Sleep -Seconds $SleepSeconds
+            'Will retry join the VM "{0}" to the AD domain "{1}"... ' +
+            '(ExceptionMessage: {2} | Exception: {3} | FullyQualifiedErrorId: {4} | CategoryInfo: {5} | ErrorDetailsMessage: {6})' -f
+            $VMName, $DomainFqdn, $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message |
+            Write-ScriptLog -Context $VMName
         }
+        Start-Sleep -Seconds $RetryIntervalSeconds
     }
-    throw 'Failed join the VM "{0}" to the AD domain "{1}".' -f $VMName, $DomainFqdn
+    throw 'Domain join the VM "{0}" to the AD domain "{1}" was not complete in the acceptable time ({2}).' -f $VMName, $DomainFqdn, $RetyTimeout.ToString()
 }
 
 $exportFunctions = @(
