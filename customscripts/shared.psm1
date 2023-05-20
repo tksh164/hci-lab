@@ -315,11 +315,7 @@ function InjectUnattendAnswerFile
 
         [Parameter(Mandatory = $true)]
         [ValidateScript({ Test-Path -PathType Container -LiteralPath $_ })]
-        [string] $LogFolder,
-
-        [Parameter(Mandatory = $false)]
-        [ValidateRange(0, 3600)]
-        [int] $SleepSeconds = 5
+        [string] $LogFolder
     )
 
     $baseFolderName = [IO.Path]::GetFileNameWithoutExtension([IO.Path]::GetDirectoryName($VhdPath)) + '-' + (New-Guid).Guid.Substring(0, 4)
@@ -346,10 +342,8 @@ function InjectUnattendAnswerFile
     'Dismouting the VHD...' | Write-ScriptLog -Context $VhdPath
     Dismount-WindowsImage -Path $vhdMountPath -Save -ScratchDirectory $scratchDirectory -LogPath $logPath
 
-    while((Get-WindowsImage -Mounted | Where-Object -Property 'ImagePath' -EQ -Value $VhdPath) -ne $null) {
-        'Waiting for VHD dismount completion (MountPath: "{0}")...' -f $vhdMountPath | Write-ScriptLog -Context $VhdPath
-        Start-Sleep -Seconds $SleepSeconds
-    }
+    'Waiting for VHD dismount completion (MountPath: "{0}")...' -f $vhdMountPath | Write-ScriptLog -Context $VhdPath
+    WaitingForVhdDismount -VhdPath $VhdPath
 
     Remove-Item $vhdMountPath -Force
     Remove-Item $scratchDirectory -Force
