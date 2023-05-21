@@ -288,6 +288,9 @@ Invoke-Command @params -ScriptBlock {
     Get-NetAdapter -Name $NodeConfig.NetAdapter.Storage2.Name | New-NetIPAddress @params
 }
 
+'Waiting for the AD DS DC VM setup completion...' | Write-ScriptLog -Context $vmName
+WaitingForAddsDcVMSetupCompletion
+
 'Waiting for ready to the domain controller...' | Write-ScriptLog -Context $nodeConfig.VMName
 $domainAdminCredential = CreateDomainCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $nodeConfig.AdminPassword
 # The DC's computer name is the same as the VM name. It's specified in the unattend.xml.

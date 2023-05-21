@@ -20,6 +20,9 @@ $labConfig | ConvertTo-Json -Depth 16 | Write-Host
 
 $vmName = $labConfig.addsDC.vmName
 
+'Initializing the AD DS DC VM setup completion notification...' | Write-ScriptLog -Context $vmName
+InitAddsDcVMSetupCompletionNotification
+
 'Creating the OS disk for the VM...' | Write-ScriptLog -Context $vmName
 $params = @{
     OperatingSystem = 'ws2022'
@@ -185,6 +188,9 @@ Start-VM -Name $vmName
 $domainAdminCredential = CreateDomainCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $adminPassword
 # The DC's computer name is the same as the VM name. It's specified in the unattend.xml.
 WaitingForReadyToAddsDcVM -AddsDcVMName $vmName -AddsDcComputerName $vmName -Credential $domainAdminCredential
+
+'Notifying the AD DS DC VM setup completion...' | Write-ScriptLog -Context $vmName
+NotifyAddsDcVMSetupCompletion
 
 'The AD DS Domain Controller VM creation has been completed.' | Write-ScriptLog -Context $vmName
 
