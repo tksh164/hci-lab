@@ -469,7 +469,7 @@ function WaitingForReadyToVM
 
         [Parameter(Mandatory = $false)]
         [ValidateRange(0, 3600)]
-        [int] $RetryIntervalSeconds = 5,
+        [int] $RetryIntervalSeconds = 15,
 
         [Parameter(Mandatory = $false)]
         [TimeSpan] $RetyTimeout = (New-TimeSpan -Minutes 30)
@@ -568,7 +568,7 @@ function WaitingForReadyToAddsDcVM
 
         [Parameter(Mandatory = $false)]
         [ValidateRange(0, 3600)]
-        [int] $RetryIntervalSeconds = 5,
+        [int] $RetryIntervalSeconds = 15,
 
         [Parameter(Mandatory = $false)]
         [TimeSpan] $RetyTimeout = (New-TimeSpan -Minutes 30)
@@ -683,7 +683,7 @@ function JoinVMToADDomain
 
         [Parameter(Mandatory = $false)]
         [ValidateRange(0, 3600)]
-        [int] $RetryIntervalSeconds = 5,
+        [int] $RetryIntervalSeconds = 15,
 
         [Parameter(Mandatory = $false)]
         [TimeSpan] $RetyTimeout = (New-TimeSpan -Minutes 30)
