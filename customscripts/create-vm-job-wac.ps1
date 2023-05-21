@@ -291,6 +291,9 @@ Invoke-Command @params -ScriptBlock {
     $shortcut.Save()
 }
 
+'Waiting for the AD DS DC VM setup completion...' | Write-ScriptLog -Context $vmName
+WaitingForAddsDcVMSetupCompletion
+
 'Waiting for ready to the domain controller...' | Write-ScriptLog -Context $vmName
 $domainAdminCredential = CreateDomainCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $adminPassword
 # The DC's computer name is the same as the VM name. It's specified in the unattend.xml.

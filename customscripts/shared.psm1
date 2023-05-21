@@ -130,12 +130,39 @@ function DownloadFile
         [string] $DownloadFolder,
     
         [Parameter(Mandatory = $true)]
-        [string] $FileNameToSave
+        [string] $FileNameToSave,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, 3600)]
+        [int] $RetryIntervalSeconds = 30,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, 1000)]
+        [int] $MaxRetryCount = 10
     )
 
     $destinationFilePath = [IO.Path]::Combine($DownloadFolder, $FileNameToSave)
-    Start-BitsTransfer -Source $SourceUri -Destination $destinationFilePath
-    Get-Item -LiteralPath $destinationFilePath
+
+    for ($retryCount = 0; $retryCount -lt $MaxRetryCount; $retryCount++) {
+        try {
+            'Downloading the file from "{0}" to "{1}".' -f $SourceUri, $destinationFilePath | Write-ScriptLog -Context $env:ComputerName
+            Start-BitsTransfer -Source $SourceUri -Destination $destinationFilePath
+            Get-Item -LiteralPath $destinationFilePath
+            return
+        }
+        catch {
+            (
+                'Will retry the download...' +
+                '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})'
+            ) -f @(
+                $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message
+            ) | Write-ScriptLog -Context $env:ComputerName
+
+            Remove-Item -LiteralPath $destinationFilePath -Force -ErrorAction Continue
+        }
+        Start-Sleep -Seconds $RetryIntervalSeconds
+    }
+    throw 'The download from "{0}" did not succeed in the acceptable retry count ({1}).' -f $SourceUri, $MaxRetryCount
 }
 
 function GetIsoFileName
@@ -257,6 +284,26 @@ function GetUnattendAnswerFileContent
 '@ -f $encodedAdminPassword, $ComputerName, $Culture
 }
 
+function WaitingForVhdDismount
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateScript({ Test-Path -PathType Leaf -LiteralPath $_ })]
+        [string] $VhdPath,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, 3600)]
+        [int] $ProbeIntervalSeconds = 5
+    )
+
+    while((Get-WindowsImage -Mounted | Where-Object -Property 'ImagePath' -EQ -Value $VhdPath) -ne $null) {
+        'Waiting for VHD dismount completion...' | Write-ScriptLog -Context $VhdPath
+        Start-Sleep -Seconds $ProbeIntervalSeconds
+    }
+    'The VHD dismount completed.' | Write-ScriptLog -Context $VhdPath
+}
+
 function InjectUnattendAnswerFile
 {
     [CmdletBinding()]
@@ -270,11 +317,7 @@ function InjectUnattendAnswerFile
 
         [Parameter(Mandatory = $true)]
         [ValidateScript({ Test-Path -PathType Container -LiteralPath $_ })]
-        [string] $LogFolder,
-
-        [Parameter(Mandatory = $false)]
-        [ValidateRange(0, 3600)]
-        [int] $SleepSeconds = 5
+        [string] $LogFolder
     )
 
     $baseFolderName = [IO.Path]::GetFileNameWithoutExtension([IO.Path]::GetDirectoryName($VhdPath)) + '-' + (New-Guid).Guid.Substring(0, 4)
@@ -301,10 +344,8 @@ function InjectUnattendAnswerFile
     'Dismouting the VHD...' | Write-ScriptLog -Context $VhdPath
     Dismount-WindowsImage -Path $vhdMountPath -Save -ScratchDirectory $scratchDirectory -LogPath $logPath
 
-    while((Get-WindowsImage -Mounted | Where-Object -Property 'ImagePath' -EQ -Value $VhdPath) -ne $null) {
-        'Waiting for VHD dismount completion (MountPath: "{0}")...' -f $vhdMountPath | Write-ScriptLog -Context $VhdPath
-        Start-Sleep -Seconds $SleepSeconds
-    }
+    'Waiting for VHD dismount completion (MountPath: "{0}")...' -f $vhdMountPath | Write-ScriptLog -Context $VhdPath
+    WaitingForVhdDismount -VhdPath $VhdPath
 
     Remove-Item $vhdMountPath -Force
     Remove-Item $scratchDirectory -Force
@@ -326,23 +367,23 @@ function Install-WindowsFeatureToVhd
         [string] $LogFolder,
 
         [Parameter(Mandatory = $false)]
-        [ValidateRange(0, 1000)]
-        [int] $RetryLimit = 50,
+        [ValidateRange(0, 3600)]
+        [int] $RetryIntervalSeconds = 5,
 
         [Parameter(Mandatory = $false)]
-        [ValidateRange(0, 3600)]
-        [int] $SleepSeconds = 5
+        [TimeSpan] $RetyTimeout = (New-TimeSpan -Minutes 30)
     )
 
     $logPath = [IO.Path]::Combine($LogFolder, (Get-LogFileName -FileName ('installwinfeature-' + [IO.Path]::GetFileNameWithoutExtension([IO.Path]::GetDirectoryName($VhdPath)))))
     'logPath: {0}' -f $logPath | Write-ScriptLog -Context $VhdPath
 
-    for ($retryCount = 0; $retryCount -lt $RetryLimit; $retryCount++) {
+    $startTime = Get-Date
+    while ((Get-Date) -lt ($startTime + $RetyTimeout)) {
         # NOTE: Effort to prevent concurrent DISM operations.
-        $mutex = New-Object -TypeName 'System.Threading.Mutex' -ArgumentList $false, 'Local\HciLabMutex'
+        $mutex = New-Object -TypeName 'System.Threading.Mutex' -ArgumentList $false, 'Local\HciLabMutexInstallWindowsFeature'
         'Requesting the mutex for the Install-WindowsFeature cmdlet''s DISM operation...' | Write-ScriptLog -Context $VhdPath
         $mutex.WaitOne()
-        'Acquired the mutex for the Install-WindowsFeature cmdlet''s DISM operation' | Write-ScriptLog -Context $VhdPath
+        'Acquired the mutex for the Install-WindowsFeature cmdlet''s DISM operation.' | Write-ScriptLog -Context $VhdPath
 
         try {
             # NOTE: Install-WindowsFeature cmdlet will fail sometimes due to concurrent operations, etc.
@@ -356,23 +397,28 @@ function Install-WindowsFeatureToVhd
             Install-WindowsFeature @params
 
             # NOTE: The DISM mount point is still remain after the Install-WindowsFeature cmdlet completed.
-            while((Get-WindowsImage -Mounted | Where-Object -Property 'ImagePath' -EQ -Value $VhdPath) -ne $null) {
-                'Waiting for VHD dismount completion by Install-WindowsFeature cmdlet...' | Write-ScriptLog -Context $VhdPath
-                Start-Sleep -Seconds $SleepSeconds
-            }
+            'Waiting for VHD dismount completion by the Install-WindowsFeature cmdlet execution...' | Write-ScriptLog -Context $VhdPath
+            WaitingForVhdDismount -VhdPath $VhdPath
+
+            'Windows features installation to VHD was completed.' | Write-ScriptLog -Context $VhdPath
             return
         }
         catch {
-            'Thrown a exception by Install-WindowsFeature cmdlet. Will retry Install-WindowsFeature cmdlet...' | Write-ScriptLog -Context $VhdPath
-            Start-Sleep -Seconds $SleepSeconds
+            (
+                'Thrown a exception by Install-WindowsFeature cmdlet execution. Will retry Install-WindowsFeature cmdlet...' +
+                '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})'
+            ) -f @(
+                $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message
+            ) | Write-ScriptLog -Context $VhdPath
         }
         finally {
             'Releasing the mutex for the Install-WindowsFeature cmdlet''s DISM operation...' | Write-ScriptLog -Context $VhdPath
             $mutex.ReleaseMutex()
             $mutex.Dispose()
         }
+        Start-Sleep -Seconds $RetryIntervalSeconds
     }
-    throw 'Failed Install-WindowsFeature cmdlet for "{0}".' -f $VhdPath
+    throw 'The Install-WindowsFeature cmdlet execution for "{0}" was not succeeded in the acceptable time ({1}).' -f $VhdPath, $RetyTimeout.ToString()
 }
 
 function WaitingForStartingVM
@@ -383,27 +429,38 @@ function WaitingForStartingVM
         [string] $VMName,
 
         [Parameter(Mandatory = $false)]
-        [ValidateRange(0, 1000)]
-        [int] $RetryLimit = 50,
+        [ValidateRange(0, 3600)]
+        [int] $RetryIntervalSeconds = 5,
 
         [Parameter(Mandatory = $false)]
-        [ValidateRange(0, 3600)]
-        [int] $SleepSeconds = 5
+        [TimeSpan] $RetyTimeout = (New-TimeSpan -Minutes 30)
     )
 
-    for ($retryCount = 0; $retryCount -lt $RetryLimit; $retryCount++) {
-        # NOTE: In sometimes, we need retry to waiting for unmount the VHD.
-        $params = @{
-            Name = $VMName
-            Passthru = $true
-            ErrorAction = [Management.Automation.ActionPreference]::SilentlyContinue
+    $startTime = Get-Date
+    while ((Get-Date) -lt ($startTime + $RetyTimeout)) {
+        try {
+            # NOTE: In sometimes, we need retry to waiting for unmount the VHD.
+            $params = @{
+                Name        = $VMName
+                Passthru    = $true
+                ErrorAction = [Management.Automation.ActionPreference]::Stop
+            }
+            if ((Start-VM @params) -ne $null) {
+                'The VM was started.' | Write-ScriptLog -Context $VMName
+                return
+            }
         }
-        if ((Start-VM @params) -ne $null) { return }
-
-        'Will retry start the VM...' | Write-ScriptLog -Context $VMName
-        Start-Sleep -Seconds $SleepSeconds
+        catch {
+            (
+                'Will retry start the VM...' +
+                '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})'
+            ) -f @(
+                $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message
+            ) | Write-ScriptLog -Context $VMName
+        }
+        Start-Sleep -Seconds $RetryIntervalSeconds
     }
-    throw 'The VM "{0}" was not start in the acceptable time.' -f $VMName
+    throw 'The VM "{0}" was not start in the acceptable time ({1}).' -f $VMName, $RetyTimeout.ToString()
 }
 
 function WaitingForReadyToVM
@@ -417,27 +474,91 @@ function WaitingForReadyToVM
         [PSCredential] $Credential,
 
         [Parameter(Mandatory = $false)]
-        [ValidateRange(0, 1000)]
-        [int] $RetryLimit = 50,
+        [ValidateRange(0, 3600)]
+        [int] $RetryIntervalSeconds = 15,
 
         [Parameter(Mandatory = $false)]
-        [ValidateRange(0, 3600)]
-        [int] $SleepSeconds = 5
+        [TimeSpan] $RetyTimeout = (New-TimeSpan -Minutes 30)
     )
 
-    for ($retryCount = 0; $retryCount -lt $RetryLimit; $retryCount++) {
-        $params = @{
-            VMName      = $VMName
-            Credential  = $Credential
-            ScriptBlock = { 'ready' }
-            ErrorAction = [Management.Automation.ActionPreference]::SilentlyContinue
+    $startTime = Get-Date
+    while ((Get-Date) -lt ($startTime + $RetyTimeout)) {
+        try {
+            $params = @{
+                VMName      = $VMName
+                Credential  = $Credential
+                ScriptBlock = { 'ready' }
+                ErrorAction = [Management.Automation.ActionPreference]::Stop
+            }
+            if ((Invoke-Command @params) -eq 'ready') {
+                'The VM is ready.' | Write-ScriptLog -Context $VMName
+                return
+            }
         }
-        if ((Invoke-Command @params) -eq 'ready') { return }
-
-        'Waiting for ready to VM...' | Write-ScriptLog -Context $VMName
-        Start-Sleep -Seconds $SleepSeconds
+        catch {
+            (
+                'Probing the VM ready state... ' +
+                '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})'
+            ) -f @(
+                $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message
+            ) | Write-ScriptLog -Context $VMName
+        }
+        Start-Sleep -Seconds $RetryIntervalSeconds
     }
-    throw 'The VM "{0}" was not ready in the acceptable time.' -f $VMName
+    throw 'The VM "{0}" was not ready in the acceptable time ({1}).' -f $VMName, $RetyTimeout.ToString()
+}
+
+# A semaphore for blocking the AD DS DC VM setup completion prove.
+$script:addsDcVmSemaphoreName = 'Local\HciLabSemaphoreAddsDcVm'
+$script:addsDcVmSemaphore = $null
+$script:addsDcVmSemaphoreMaxCount = 20  # Need AD DS DC VM + WAC + HCI node counts at least.
+
+function InitAddsDcVMSetupCompletionNotification
+{
+    [CmdletBinding()]
+    param ()
+
+    'Create a semaphore for the waiting AD DS DC VM setup completion.' | Write-ScriptLog -Context $env:ComputerName
+    $script:addsDcVmSemaphore = New-Object -TypeName 'System.Threading.Semaphore' -ArgumentList 0, $script:addsDcVmSemaphoreMaxCount, $script:addsDcVmSemaphoreName
+}
+
+function NotifyAddsDcVMSetupCompletion
+{
+    [CmdletBinding()]
+    param ()
+
+    $script:addsDcVmSemaphore.Release($script:addsDcVmSemaphoreMaxCount)
+    $script:addsDcVmSemaphore.Dispose()
+    'Released the semaphore for the waiting AD DS DC VM setup completion.' | Write-ScriptLog -Context $env:ComputerName
+}
+
+function WaitingForAddsDcVMSetupCompletion
+{
+    [CmdletBinding()]
+    param ()
+
+    try {
+        $semaphore = $null
+        if ([System.Threading.Semaphore]::TryOpenExisting($script:addsDcVmSemaphoreName, [ref] $semaphore)) {
+            try {
+                'Requesting the semaphore for the AD DS DC VM setup completion waiting...' | Write-ScriptLog -Context $env:ComputerName
+                $semaphore.WaitOne()
+                'Acquired the semaphore for the AD DS DC VM setup completion waiting.' | Write-ScriptLog -Context $env:ComputerName
+            }
+            finally {
+                'Releasing the semaphore for the AD DS DC VM setup completion waiting...' | Write-ScriptLog -Context $env:ComputerName
+                $semaphore.Release()
+            }
+        }
+        else {
+            'No need waiting the setup completion because did not exist the semaphore "{0}".' -f $script:addsDcVmSemaphoreName | Write-ScriptLog -Context $env:ComputerName
+        }
+    }
+    finally {
+        if ($semaphore -ne $null) {
+            $semaphore.Dispose()
+        }
+    }
 }
 
 function WaitingForReadyToAddsDcVM
@@ -454,15 +575,15 @@ function WaitingForReadyToAddsDcVM
         [PSCredential] $Credential,
 
         [Parameter(Mandatory = $false)]
-        [ValidateRange(0, 1000)]
-        [int] $RetryLimit = 50,
+        [ValidateRange(0, 3600)]
+        [int] $RetryIntervalSeconds = 15,
 
         [Parameter(Mandatory = $false)]
-        [ValidateRange(0, 3600)]
-        [int] $SleepSeconds = 5
+        [TimeSpan] $RetyTimeout = (New-TimeSpan -Minutes 30)
     )
 
-    for ($retryCount = 0; $retryCount -lt $RetryLimit; $retryCount++) {
+    $startTime = Get-Date
+    while ((Get-Date) -lt ($startTime + $RetyTimeout)) {
         try {
             $params = @{
                 VMName       = $AddsDcVMName
@@ -474,38 +595,62 @@ function WaitingForReadyToAddsDcVM
                 }
                 ErrorAction  = [Management.Automation.ActionPreference]::Stop
             }
-            if ((Invoke-Command @params) -eq $true) { return }
-        }
-        catch [System.Management.Automation.Remoting.PSRemotingTransportException] {
-            # FullyQualifiedErrorId: 2100,PSSessionStateBroken
-            # The background process reported an error with the following message: "The Hyper-V socket target process has ended.".
-            (
-                'Restart the AD DS DC VM due to PowerShell Remoting transport exception.' + "`n" +
-                'Exception: {0}' + "`n" +
-                'FullyQualifiedErrorId: {1}' + "`n" +
-                'CategoryInfo: {2}' + "`n" +
-                'Message: {3}'
-            ) -f @(
-                $Error[0].Exception.GetType().FullName
-                $Error[0].FullyQualifiedErrorId
-                $Error[0].CategoryInfo.ToString()
-                $Error[0].ErrorDetails.Message
-            ) | Write-ScriptLog -Context $AddsDcVMName
-
-            'Stopping the AD DS DC VM...' | Write-ScriptLog -Context $AddsDcVMName
-            Stop-VM -Name $AddsDcVMName
-
-            'Starting the AD DS DC VM...' | Write-ScriptLog -Context $AddsDcVMName
-            Start-VM -Name $AddsDcVMName
-
-            Start-Sleep -Seconds $SleepSeconds
+            if ((Invoke-Command @params) -eq $true) {
+                'The AD DS DC is ready.' | Write-ScriptLog -Context $AddsDcVMName
+                return
+            }
         }
         catch {
-            'Waiting for ready to AD DS DC VM "{0}"...' -f $AddsDcVMName | Write-ScriptLog -Context $AddsDcVMName
-            Start-Sleep -Seconds $SleepSeconds
+            if ($_.FullyQualifiedErrorId -eq '2100,PSSessionStateBroken') {
+                # NOTE: When this exception continued to happen, PowerShell Direct capability was never recovered until reboot the AD DS DC VM.
+                # Exception: System.Management.Automation.Remoting.PSRemotingTransportException
+                # FullyQualifiedErrorId: 2100,PSSessionStateBroken
+                # The background process reported an error with the following message: "The Hyper-V socket target process has ended.".
+                (
+                    'Restart the AD DS DC VM due to PowerShell Remoting transport exception. ' +
+                    '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})'
+                ) -f @(
+                    $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message
+                ) | Write-ScriptLog -Context $AddsDcVMName
+
+                $mutex = New-Object -TypeName 'System.Threading.Mutex' -ArgumentList $false, 'Local\HciLabMutexAddsDcVmReboot'
+                'Requesting the mutex for AD DS DC VM reboot...' | Write-ScriptLog -Context $AddsDcVMName
+                $mutex.WaitOne()
+                'Acquired the mutex for AD DS DC VM reboot.' | Write-ScriptLog -Context $AddsDcVMName
+    
+                try {
+                    $uptimeThresholdMinutes = 15
+                    $addsDcVM = Get-VM -Name $AddsDcVMName
+                    # NOTE: Skip rebooting if the VM is young because it means the VM already rebooted recently by other jobs.
+                    if ($addsDcVM.UpTime -gt (New-TimeSpan -Minutes $uptimeThresholdMinutes)) {
+                        'Stopping the AD DS DC VM due to PowerShell Direct exception...' | Write-ScriptLog -Context $AddsDcVMName
+                        Stop-VM -Name $AddsDcVMName -ErrorAction Continue
+            
+                        'Starting the AD DS DC VM due to PowerShell Direct exception...' | Write-ScriptLog -Context $AddsDcVMName
+                        Start-VM -Name $AddsDcVMName -ErrorAction Continue
+                    }
+                    else {
+                        'Skip the AD DS DC VM rebooting because the VM''s uptime is too short (less than {0} minutes).' -f $uptimeThresholdMinutes | Write-ScriptLog -Context $AddsDcVMName
+                    }
+                }
+                finally {
+                    'Releasing the mutex for AD DS DC VM reboot...' | Write-ScriptLog -Context $AddsDcVMName
+                    $mutex.ReleaseMutex()
+                    $mutex.Dispose()
+                }
+            }
+            else {
+                (
+                    'Probing AD DS DC ready state... ' +
+                    '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})'
+                ) -f @(
+                    $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message
+                ) | Write-ScriptLog -Context $AddsDcVMName
+            }
         }
+        Start-Sleep -Seconds $RetryIntervalSeconds
     }
-    throw 'The AD DS DC VM "{0}" was not ready in the acceptable time.' -f $AddsDcVMName
+    throw 'The AD DS DC "{0}" was not ready in the acceptable time ({1}).' -f $AddsDcVMName, $RetyTimeout.ToString()
 }
 
 function CreateDomainCredential
@@ -549,18 +694,19 @@ function JoinVMToADDomain
         [PSCredential] $DomainAdminCredential,
 
         [Parameter(Mandatory = $false)]
-        [ValidateRange(0, 1000)]
-        [int] $RetryLimit = 50,
+        [ValidateRange(0, 3600)]
+        [int] $RetryIntervalSeconds = 15,
 
         [Parameter(Mandatory = $false)]
-        [ValidateRange(0, 3600)]
-        [int] $SleepSeconds = 5
+        [TimeSpan] $RetyTimeout = (New-TimeSpan -Minutes 30)
     )
 
     'Joining the VM "{0}" to the AD domain "{1}"...' -f $VMName, $DomainFqdn | Write-ScriptLog -Context $VMName
 
-    for ($retryCount = 0; $retryCount -lt $RetryLimit; $retryCount++) {
+    $startTime = Get-Date
+    while ((Get-Date) -lt ($startTime + $RetyTimeout)) {
         try {
+            # NOTE: Domain joining will fail sometimes due to AD DS DC VM state.
             $params = @{
                 VMName       = $VMName
                 Credential   = $LocalAdminCredential
@@ -568,20 +714,25 @@ function JoinVMToADDomain
                 ScriptBlock  = {
                     $domainFqdn = $args[0]
                     $domainAdminCredential = $args[1]
-                    # NOTE: Domain joining will fail sometimes due to AD DS DC VM state.
                     Add-Computer -DomainName $domainFqdn -Credential $domainAdminCredential
                 }
                 ErrorAction  = [Management.Automation.ActionPreference]::Stop
             }
             Invoke-Command @params
+            'The VM "{0}" was joined to the AD domain "{1}".' -f $VMName, $DomainFqdn | Write-ScriptLog -Context $VMName
             return
         }
         catch {
-            'Will retry join the VM "{0}" to the AD domain "{1}"...' -f $VMName, $DomainFqdn | Write-ScriptLog -Context $VMName
-            Start-Sleep -Seconds $SleepSeconds
+            (
+                'Will retry join the VM "{0}" to the AD domain "{1}"... ' +
+                '(ExceptionMessage: {2} | Exception: {3} | FullyQualifiedErrorId: {4} | CategoryInfo: {5} | ErrorDetailsMessage: {6})'
+            ) -f @(
+                $VMName, $DomainFqdn, $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message
+            ) | Write-ScriptLog -Context $VMName
         }
+        Start-Sleep -Seconds $RetryIntervalSeconds
     }
-    throw 'Failed join the VM "{0}" to the AD domain "{1}".' -f $VMName, $DomainFqdn
+    throw 'Domain join the VM "{0}" to the AD domain "{1}" was not complete in the acceptable time ({2}).' -f $VMName, $DomainFqdn, $RetyTimeout.ToString()
 }
 
 $exportFunctions = @(
@@ -599,6 +750,9 @@ $exportFunctions = @(
     'Install-WindowsFeatureToVhd',
     'WaitingForStartingVM',
     'WaitingForReadyToVM',
+    'InitAddsDcVMSetupCompletionNotification',
+    'NotifyAddsDcVMSetupCompletion',
+    'WaitingForAddsDcVMSetupCompletion',
     'WaitingForReadyToAddsDcVM',
     'CreateDomainCredential',
     'JoinVMToADDomain'
