@@ -151,10 +151,12 @@ function DownloadFile
             return
         }
         catch {
-            'Will retry the download...' +
-                '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})' -f
-                $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message |
-                Write-ScriptLog -Context $env:ComputerName
+            (
+                'Will retry the download...' +
+                '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})'
+            ) -f @(
+                $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message
+            ) | Write-ScriptLog -Context $env:ComputerName
 
             Remove-Item -LiteralPath $destinationFilePath -Force -ErrorAction Continue
         }
@@ -402,10 +404,12 @@ function Install-WindowsFeatureToVhd
             return
         }
         catch {
-            'Thrown a exception by Install-WindowsFeature cmdlet execution. Will retry Install-WindowsFeature cmdlet...' +
-                '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})' -f
-                $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message |
-                Write-ScriptLog -Context $VhdPath
+            (
+                'Thrown a exception by Install-WindowsFeature cmdlet execution. Will retry Install-WindowsFeature cmdlet...' +
+                '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})'
+            ) -f @(
+                $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message
+            ) | Write-ScriptLog -Context $VhdPath
         }
         finally {
             'Releasing the mutex for the Install-WindowsFeature cmdlet''s DISM operation...' | Write-ScriptLog -Context $VhdPath
@@ -447,10 +451,12 @@ function WaitingForStartingVM
             }
         }
         catch {
-            'Will retry start the VM...' +
-                '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})' -f
-                $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message |
-                Write-ScriptLog -Context $VMName
+            (
+                'Will retry start the VM...' +
+                '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})'
+            ) -f @(
+                $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message
+            ) | Write-ScriptLog -Context $VMName
         }
         Start-Sleep -Seconds $RetryIntervalSeconds
     }
@@ -490,10 +496,12 @@ function WaitingForReadyToVM
             }
         }
         catch {
-            'Probing the VM ready state... ' +
-                '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})' -f
-                $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message |
-                Write-ScriptLog -Context $VMName
+            (
+                'Probing the VM ready state... ' +
+                '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})'
+            ) -f @(
+                $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message
+            ) | Write-ScriptLog -Context $VMName
         }
         Start-Sleep -Seconds $RetryIntervalSeconds
     }
@@ -598,10 +606,12 @@ function WaitingForReadyToAddsDcVM
                 # Exception: System.Management.Automation.Remoting.PSRemotingTransportException
                 # FullyQualifiedErrorId: 2100,PSSessionStateBroken
                 # The background process reported an error with the following message: "The Hyper-V socket target process has ended.".
-                'Restart the AD DS DC VM due to PowerShell Remoting transport exception. ' +
-                    '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})' -f
-                    $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message |
-                    Write-ScriptLog -Context $AddsDcVMName
+                (
+                    'Restart the AD DS DC VM due to PowerShell Remoting transport exception. ' +
+                    '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})'
+                ) -f @(
+                    $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message
+                ) | Write-ScriptLog -Context $AddsDcVMName
 
                 $mutex = New-Object -TypeName 'System.Threading.Mutex' -ArgumentList $false, 'Local\HciLabMutexAddsDcVmReboot'
                 'Requesting the mutex for AD DS DC VM reboot...' | Write-ScriptLog -Context $AddsDcVMName
@@ -630,10 +640,12 @@ function WaitingForReadyToAddsDcVM
                 }
             }
             else {
-                'Probing AD DS DC ready state... ' +
-                    '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})' -f
-                    $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message |
-                    Write-ScriptLog -Context $AddsDcVMName
+                (
+                    'Probing AD DS DC ready state... ' +
+                    '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})'
+                ) -f @(
+                    $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message
+                ) | Write-ScriptLog -Context $AddsDcVMName
             }
         }
         Start-Sleep -Seconds $RetryIntervalSeconds
@@ -711,10 +723,12 @@ function JoinVMToADDomain
             return
         }
         catch {
-            'Will retry join the VM "{0}" to the AD domain "{1}"... ' +
-            '(ExceptionMessage: {2} | Exception: {3} | FullyQualifiedErrorId: {4} | CategoryInfo: {5} | ErrorDetailsMessage: {6})' -f
-            $VMName, $DomainFqdn, $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message |
-            Write-ScriptLog -Context $VMName
+            (
+                'Will retry join the VM "{0}" to the AD domain "{1}"... ' +
+                '(ExceptionMessage: {2} | Exception: {3} | FullyQualifiedErrorId: {4} | CategoryInfo: {5} | ErrorDetailsMessage: {6})'
+            ) -f @(
+                $VMName, $DomainFqdn, $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message
+            ) | Write-ScriptLog -Context $VMName
         }
         Start-Sleep -Seconds $RetryIntervalSeconds
     }
