@@ -502,7 +502,7 @@
         {
             "name": "[variables('labHostVmDeploymentName')]",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2021-04-01",
+            "apiVersion": "2022-09-01",
             "dependsOn": [
                 "[resourceId('Microsoft.Resources/deployments', variables('keyVaultDeploymentName'))]"
             ],
@@ -569,7 +569,7 @@
         {
             "name": "[variables('cloudWitnessStorageAccountDeploymentName')]",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2021-04-01",
+            "apiVersion": "2022-09-01",
             "dependsOn": [
                 "[resourceId('Microsoft.Resources/deployments', variables('keyVaultDeploymentName'))]"
             ],
@@ -606,7 +606,7 @@
         {
             "name": "[variables('keyVaultRbacDeploymentName')]",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2021-04-01",
+            "apiVersion": "2022-09-01",
             "dependsOn": [
                 "[resourceId('Microsoft.Resources/deployments', variables('keyVaultDeploymentName'))]",
                 "[resourceId('Microsoft.Resources/deployments', variables('labHostVmDeploymentName'))]"
@@ -635,7 +635,7 @@
         {
             "name": "[variables('dscParams').installRolesFeatures.deploymentName]",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2021-04-01",
+            "apiVersion": "2022-09-01",
             "dependsOn": [
                 "[resourceId('Microsoft.Resources/deployments', variables('keyVaultRbacDeploymentName'))]",
                 "[resourceId('Microsoft.Resources/deployments', variables('labHostVmDeploymentName'))]",
@@ -674,7 +674,7 @@
         {
             "name": "[variables('customScriptParams').configureLabHost.deploymentName]",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2021-04-01",
+            "apiVersion": "2022-09-01",
             "dependsOn": [
                 "[resourceId('Microsoft.Resources/deployments', variables('dscParams').installRolesFeatures.deploymentName)]"
             ],
@@ -708,7 +708,7 @@
         {
             "name": "[variables('customScriptParams').downloadIsoUpdates.deploymentName]",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2021-04-01",
+            "apiVersion": "2022-09-01",
             "dependsOn": [
                 "[resourceId('Microsoft.Resources/deployments', variables('customScriptParams').configureLabHost.deploymentName)]"
             ],
@@ -742,7 +742,7 @@
         {
             "name": "[variables('customScriptParams').createBaseVhd.deploymentName]",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2021-04-01",
+            "apiVersion": "2022-09-01",
             "dependsOn": [
                 "[resourceId('Microsoft.Resources/deployments', variables('customScriptParams').downloadIsoUpdates.deploymentName)]"
             ],
@@ -776,7 +776,7 @@
         {
             "name": "[variables('dscParams').rebootLabHost.deploymentName]",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2021-04-01",
+            "apiVersion": "2022-09-01",
             "dependsOn": [
                 "[resourceId('Microsoft.Resources/deployments', variables('customScriptParams').createBaseVhd.deploymentName)]"
             ],
@@ -813,7 +813,7 @@
         {
             "name": "[variables('customScriptParams').createVm.deploymentName]",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2021-04-01",
+            "apiVersion": "2022-09-01",
             "dependsOn": [
                 "[resourceId('Microsoft.Resources/deployments', variables('keyVaultRbacDeploymentName'))]",  // Use secrets by VM's managed identity in the custom script.
                 "[resourceId('Microsoft.Resources/deployments', variables('dscParams').rebootLabHost.deploymentName)]"

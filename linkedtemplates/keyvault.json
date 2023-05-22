@@ -20,7 +20,7 @@
         {
             "name": "[parameters('keyVaultName')]",
             "type": "Microsoft.KeyVault/vaults",
-            "apiVersion": "2022-07-01",
+            "apiVersion": "2022-11-01",
             "location": "[parameters('location')]",
             "properties": {
                 "sku": {

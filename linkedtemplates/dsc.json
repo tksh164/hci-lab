@@ -44,7 +44,7 @@
         {
             "name": "[format('{0}/{1}', parameters('parentVmResourceName'), parameters('extensionName'))]",
             "type": "Microsoft.Compute/virtualMachines/extensions",
-            "apiVersion": "2022-03-01",
+            "apiVersion": "2022-11-01",
             "location": "[parameters('location')]",
             "properties": {
                 "publisher": "Microsoft.Powershell",
