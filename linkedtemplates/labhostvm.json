@@ -83,7 +83,19 @@
         "uniqueString": {
             "type": "string",
             "metadata": {
-                "description": "The string for uniqueness."
+                "description": "The string for uniqueness of resource names."
+            }
+        },
+        "keyVaultName": {
+            "type": "string",
+            "metadata": {
+                "description": "The Key Vault name to store the admin password."
+            }
+        },
+        "secretNameForAdminPassword": {
+            "type": "string",
+            "metadata": {
+                "description": "The secret's name of the admin password in the Key Vault."
             }
         }
     },
@@ -110,7 +122,7 @@
         {
             "name": "[variables('subnetNetworkSecurityGroupName')]",
             "type": "Microsoft.Network/networkSecurityGroups",
-            "apiVersion": "2020-11-01",
+            "apiVersion": "2022-09-01",
             "location": "[parameters('location')]",
             "properties": {
                 "securityRules": []
@@ -122,7 +134,7 @@
         {
             "name": "[variables('virtualNetworkName')]",
             "type": "Microsoft.Network/virtualNetworks",
-            "apiVersion": "2020-11-01",
+            "apiVersion": "2022-09-01",
             "location": "[parameters('location')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/networkSecurityGroups', variables('subnetNetworkSecurityGroupName'))]"
@@ -152,7 +164,7 @@
         {
             "name": "[variables('publicIpAddressName')]",
             "type": "Microsoft.Network/publicIpAddresses",
-            "apiVersion": "2020-11-01",
+            "apiVersion": "2022-09-01",
             "location": "[parameters('location')]",
             "sku": {
                 "name": "Standard"
@@ -167,7 +179,7 @@
         {
             "name": "[variables('networkInterfaceName')]",
             "type": "Microsoft.Network/networkInterfaces",
-            "apiVersion": "2020-11-01",
+            "apiVersion": "2022-09-01",
             "location": "[parameters('location')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
@@ -195,7 +207,7 @@
         {
             "name": "[parameters('vmName')]",
             "type": "Microsoft.Compute/virtualMachines",
-            "apiVersion": "2022-08-01",
+            "apiVersion": "2022-11-01",
             "location": "[parameters('location')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfaceName'))]"
@@ -282,6 +294,17 @@
                 },
                 "timeZoneId": "[parameters('autoshutdownTimeZone')]",
                 "targetResourceId": "[resourceId('Microsoft.Compute/virtualMachines', parameters('vmName'))]"
+            }
+        },
+
+        // Store the admin password to the Key Vault.
+
+        {
+            "name": "[format('{0}/{1}', parameters('keyVaultName'), parameters('secretNameForAdminPassword'))]",
+            "type": "Microsoft.KeyVault/vaults/secrets",
+            "apiVersion": "2022-11-01",
+            "properties": {
+                "value": "[parameters('adminPassword')]"
             }
         }
     ],

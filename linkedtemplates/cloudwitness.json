@@ -11,13 +11,31 @@
         "storageAccountNamePrefix": {
             "type": "string",
             "metadata": {
-                "description": "The storage account name prefix for Cloud Witness."
+                "description": "The prefix of the storage account name for Cloud Witness."
             }
         },
         "uniqueString": {
             "type": "string",
             "metadata": {
-                "description": "The string for uniqueness."
+                "description": "The string for uniqueness of the storage account name."
+            }
+        },
+        "keyVaultName": {
+            "type": "string",
+            "metadata": {
+                "description": "The Key Vault name to store the storage account key."
+            }
+        },
+        "secretNameForStorageAccountName": {
+            "type": "string",
+            "metadata": {
+                "description": "The secret's name of the storage account name in the Key Vault."
+            }
+        },
+        "secretNameForStorageAccountKey": {
+            "type": "string",
+            "metadata": {
+                "description": "The secret's name of the storage account key in the Key Vault."
             }
         }
     },
@@ -25,10 +43,11 @@
         "storageAccountName": "[format('{0}{1}', toLower(parameters('storageAccountNamePrefix')), toLower(parameters('uniqueString')))]"
     },
     "resources": [
+        // Storage account for Cloud Witness.
         {
             "name": "[variables('storageAccountName')]",
             "type": "Microsoft.Storage/storageAccounts",
-            "apiVersion": "2022-05-01",
+            "apiVersion": "2022-09-01",
             "location": "[parameters('location')]",
             "kind": "StorageV2",
             "sku": {
@@ -72,7 +91,7 @@
         {
             "name": "[format('{0}/default', variables('storageAccountName'))]",
             "type": "Microsoft.Storage/storageAccounts/blobServices",
-            "apiVersion": "2022-05-01",
+            "apiVersion": "2022-09-01",
             "dependsOn": [
                 "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
             ],
@@ -95,7 +114,7 @@
         {
             "name": "[format('{0}/default', variables('storageAccountName'))]",
             "type": "Microsoft.Storage/storageAccounts/fileservices",
-            "apiVersion": "2022-05-01",
+            "apiVersion": "2022-09-01",
             "dependsOn": [
                 "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
             ],
@@ -103,6 +122,30 @@
                 "shareDeleteRetentionPolicy": {
                     "enabled": false
                 }
+            }
+        },
+
+        // Store the storage account name and key to the Key Vault.
+        {
+            "name": "[format('{0}/{1}', parameters('keyVaultName'), parameters('secretNameForStorageAccountName'))]",
+            "type": "Microsoft.KeyVault/vaults/secrets",
+            "apiVersion": "2022-11-01",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+            ],
+            "properties": {
+                "value": "[variables('storageAccountName')]"
+            }
+        },
+        {
+            "name": "[format('{0}/{1}', parameters('keyVaultName'), parameters('secretNameForStorageAccountKey'))]",
+            "type": "Microsoft.KeyVault/vaults/secrets",
+            "apiVersion": "2022-11-01",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+            ],
+            "properties": {
+                "value": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2022-09-01').keys[0].value]"
             }
         }
     ],

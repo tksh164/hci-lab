@@ -13,18 +13,6 @@
             "metadata": {
                 "description": "The Key Vault name."
             }
-        },
-        "secretName": {
-            "type": "string",
-            "metadata": {
-                "description": "The name of the secret."
-            }
-        },
-        "secretContent": {
-            "type": "securestring",
-            "metadata": {
-                "description": "The content of the secret."
-            }
         }
     },
     "variables": {},
@@ -32,7 +20,7 @@
         {
             "name": "[parameters('keyVaultName')]",
             "type": "Microsoft.KeyVault/vaults",
-            "apiVersion": "2022-07-01",
+            "apiVersion": "2022-11-01",
             "location": "[parameters('location')]",
             "properties": {
                 "sku": {
@@ -51,17 +39,6 @@
                     "defaultAction": "allow",
                     "bypass": "AzureServices"
                 }
-            }
-        },
-        {
-            "name": "[format('{0}/{1}', parameters('keyVaultName'), parameters('secretName'))]",
-            "type": "Microsoft.KeyVault/vaults/secrets",
-            "apiVersion": "2022-07-01",
-            "dependsOn": [
-                "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]"
-            ],
-            "properties": {
-                "value": "[parameters('secretContent')]"
             }
         }
     ],
