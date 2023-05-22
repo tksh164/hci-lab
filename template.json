@@ -301,17 +301,16 @@
         "keyVaultDeploymentName": "key-vault",
         "keyVaultLinkedTemplateUri": "[uri(variables('repoUriBase'), 'linkedtemplates/keyvault.json')]",
         "keyVaultName": "[format('hcilab{0}-kv', toLower(variables('uniqueString')))]",
-        "secretName": "AdminPassword",
-
-        // Key Vault RBAC
-
-        "keyVaultRbacDeploymentName": "key-vault-rbac",
-        "keyVaultRbacLinkedTemplateUri": "[uri(variables('repoUriBase'), 'linkedtemplates/keyvault-rbac.json')]",
 
         // Storage account for Cloud Witness
 
         "cloudWitnessStorageAccountDeploymentName": "cloud-witness-storage-account",
         "cloudWitnessStorageAccountLinkedTemplateUri": "[uri(variables('repoUriBase'), 'linkedtemplates/cloudwitness.json')]",
+
+        // Key Vault RBAC
+
+        "keyVaultRbacDeploymentName": "key-vault-rbac",
+        "keyVaultRbacLinkedTemplateUri": "[uri(variables('repoUriBase'), 'linkedtemplates/keyvault-rbac.json')]",
 
         // DSC extension
 
@@ -468,16 +467,45 @@
             },
             "keyVault": {
                 "name": "[variables('keyVaultName')]",
-                "secretName": "[variables('secretName')]"
+                "secretName": {
+                    "adminPassword": "AdminPassword",
+                    "cloudWitnessStorageAccountName": "CloudWitnessStorageAccountName",
+                    "cloudWitnessStorageAccountKey": "CloudWitnessStorageAccountKey"
+                }
             }
         }
     },
     "resources": [
+        // Key Vault
+        {
+            "name": "[variables('keyVaultDeploymentName')]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2021-04-01",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('keyVaultLinkedTemplateUri')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
+                    "keyVaultName": {
+                        "value": "[variables('keyVaultName')]"
+                    }
+                }
+            }
+        },
+
         // Lab host virtual machine and virtual network.
         {
             "name": "[variables('labHostVmDeploymentName')]",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2021-04-01",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', variables('keyVaultDeploymentName'))]"
+            ],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
@@ -526,34 +554,49 @@
                     },
                     "uniqueString": {
                         "value": "[variables('uniqueString')]"
+                    },
+                    "keyVaultName": {
+                        "value": "[variables('keyVaultName')]"
+                    },
+                    "secretNameForAdminPassword": {
+                        "value": "[variables('labConfig').keyVault.secretName.adminPassword]"
                     }
                 }
             }
         },
 
-        // Key Vault
+        // Storage account for the HCI cluster witness.
         {
-            "name": "[variables('keyVaultDeploymentName')]",
+            "name": "[variables('cloudWitnessStorageAccountDeploymentName')]",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2021-04-01",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', variables('keyVaultDeploymentName'))]"
+            ],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[variables('keyVaultLinkedTemplateUri')]",
+                    "uri": "[variables('cloudWitnessStorageAccountLinkedTemplateUri')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
                     "location": {
                         "value": "[variables('location')]"
                     },
+                    "storageAccountNamePrefix": {
+                        "value": "hciclusterwitness"
+                    },
+                    "uniqueString": {
+                        "value": "[variables('uniqueString')]"
+                    },
                     "keyVaultName": {
                         "value": "[variables('keyVaultName')]"
                     },
-                    "secretName": {
-                        "value": "[variables('secretName')]"
+                    "secretNameForStorageAccountName": {
+                        "value": "[variables('labConfig').keyVault.secretName.cloudWitnessStorageAccountName]"
                     },
-                    "secretContent": {
-                        "value": "[parameters('adminPassword')]"
+                    "secretNameForStorageAccountKey": {
+                        "value": "[variables('labConfig').keyVault.secretName.cloudWitnessStorageAccountKey]"
                     }
                 }
             }
@@ -565,8 +608,8 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2021-04-01",
             "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', variables('labHostVmDeploymentName'))]",
-                "[resourceId('Microsoft.Resources/deployments', variables('keyVaultDeploymentName'))]"
+                "[resourceId('Microsoft.Resources/deployments', variables('keyVaultDeploymentName'))]",
+                "[resourceId('Microsoft.Resources/deployments', variables('labHostVmDeploymentName'))]"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -588,38 +631,15 @@
             }
         },
 
-        // Storage account for the HCI cluster witness.
-        {
-            "name": "[variables('cloudWitnessStorageAccountDeploymentName')]",
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2021-04-01",
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('cloudWitnessStorageAccountLinkedTemplateUri')]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "location": {
-                        "value": "[variables('location')]"
-                    },
-                    "storageAccountNamePrefix": {
-                        "value": "hciclusterwitness"
-                    },
-                    "uniqueString": {
-                        "value": "[variables('uniqueString')]"
-                    }
-                }
-            }
-        },
-
         // Install roles and features.
         {
             "name": "[variables('dscParams').installRolesFeatures.deploymentName]",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2021-04-01",
             "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', variables('labHostVmDeploymentName'))]"
+                "[resourceId('Microsoft.Resources/deployments', variables('keyVaultRbacDeploymentName'))]",
+                "[resourceId('Microsoft.Resources/deployments', variables('labHostVmDeploymentName'))]",
+                "[resourceId('Microsoft.Resources/deployments', variables('cloudWitnessStorageAccountDeploymentName'))]"
             ],
             "properties": {
                 "mode": "Incremental",
