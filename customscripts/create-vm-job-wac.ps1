@@ -90,6 +90,7 @@ $params = @{
         'RSAT-ADDS-Tools',
         'RSAT-AD-AdminCenter',
         'RSAT-AD-PowerShell',
+        'RSAT-DNS-Server',
         'RSAT-Clustering-Mgmt',
         'RSAT-Clustering-PowerShell',
         'Hyper-V-Tools',
