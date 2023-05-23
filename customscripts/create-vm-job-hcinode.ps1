@@ -26,7 +26,7 @@ function CalculateHciNodeRamBytes
         [long] $WacVMRamBytes
     )
 
-    $totalRamBytes = (Get-ComputerInfo).OsTotalVisibleMemorySize * 1KB
+    $totalRamBytes = (Get-VMHost).MemoryCapacity
     $labHostReservedRamBytes = [Math]::Floor($totalRamBytes * 0.04)  # Reserve a few percent of the total RAM for the lab host.
 
     'TotalRamBytes: {0}' -f $totalRamBytes | Write-ScriptLog -Context $env:ComputerName
