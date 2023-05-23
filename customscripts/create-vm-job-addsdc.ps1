@@ -115,7 +115,16 @@ $params = @{
         VMName                 = $vmName
         AdminPassword          = $adminPassword
         LabConfig              = $labConfig
-        WriteLogImplementation = (${function:Write-ScriptLog}).ToString()
+        FunctionsToInject      = @(
+            [PSCustomObject] @{
+                Name           = 'Write-ScriptLog'
+                Implementation = (${function:Write-ScriptLog}).ToString()
+            },
+            [PSCustomObject] @{
+                Name           = 'CreateRegistryKeyIfNotExists'
+                Implementation = (${function:CreateRegistryKeyIfNotExists}).ToString()
+            }
+        )
     }
 }
 Invoke-Command @params -ScriptBlock {
@@ -130,7 +139,7 @@ Invoke-Command @params -ScriptBlock {
         [PSCustomObject] $LabConfig,
 
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-        [string] $WriteLogImplementation
+        [PSCustomObject[]] $FunctionsToInject
     )
 
     $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
@@ -138,7 +147,10 @@ Invoke-Command @params -ScriptBlock {
     $VerbosePreference = [Management.Automation.ActionPreference]::Continue
     $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
-    New-Item -Path 'function:' -Name 'Write-ScriptLog' -Value $WriteLogImplementation -Force | Out-Null
+    # Create injected functions.
+    foreach ($func in $FunctionsToInject) {
+        New-Item -Path 'function:' -Name $func.Name -Value $func.Implementation -Force | Out-Null
+    }
 
     'Stop Server Manager launch at logon.' | Write-ScriptLog -Context $VMName -UseInScriptBlock
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotOpenServerManagerAtLogon' -Value 1
@@ -147,7 +159,7 @@ Invoke-Command @params -ScriptBlock {
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotPopWACConsoleAtSMLaunch' -Value 1
 
     'Hide the Network Location wizard. All networks will be Public.' | Write-ScriptLog -Context $VMName -UseInScriptBlock
-    New-Item -ItemType Directory -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -Name 'NewNetworkWindowOff' -Force
+    CreateRegistryKeyIfNotExists -ParentPath 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -KeyName 'NewNetworkWindowOff'
 
     'Renaming the network adapters...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
     Get-NetAdapterAdvancedProperty -RegistryKeyword 'HyperVNetworkAdapterName' | ForEach-Object -Process {

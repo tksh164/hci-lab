@@ -163,7 +163,16 @@ $params = @{
         WacPfxFilePathInVM       = $wacPfxFilePathInVM
         WacPfxPassword           = $adminPassword
         LabConfig                = $labConfig
-        WriteLogImplementation   = (${function:Write-ScriptLog}).ToString()
+        FunctionsToInject        = @(
+            [PSCustomObject] @{
+                Name           = 'Write-ScriptLog'
+                Implementation = (${function:Write-ScriptLog}).ToString()
+            },
+            [PSCustomObject] @{
+                Name           = 'CreateRegistryKeyIfNotExists'
+                Implementation = (${function:CreateRegistryKeyIfNotExists}).ToString()
+            }
+        )
     }
 }
 Invoke-Command @params -ScriptBlock {
@@ -184,7 +193,7 @@ Invoke-Command @params -ScriptBlock {
         [PSCustomObject] $LabConfig,
 
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-        [string] $WriteLogImplementation
+        [PSCustomObject[]] $FunctionsToInject
     )
 
     $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
@@ -192,7 +201,10 @@ Invoke-Command @params -ScriptBlock {
     $VerbosePreference = [Management.Automation.ActionPreference]::Continue
     $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
-    New-Item -Path 'function:' -Name 'Write-ScriptLog' -Value $WriteLogImplementation -Force | Out-Null
+    # Create injected functions.
+    foreach ($func in $FunctionsToInject) {
+        New-Item -Path 'function:' -Name $func.Name -Value $func.Implementation -Force | Out-Null
+    }
 
     'Stop Server Manager launch at logon.' | Write-ScriptLog -Context $VMName -UseInScriptBlock
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotOpenServerManagerAtLogon' -Value 1
@@ -201,10 +213,10 @@ Invoke-Command @params -ScriptBlock {
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotPopWACConsoleAtSMLaunch' -Value 1
 
     'Hide the Network Location wizard. All networks will be Public.' | Write-ScriptLog -Context $VMName -UseInScriptBlock
-    New-Item -ItemType Directory -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -Name 'NewNetworkWindowOff' -Force
+    CreateRegistryKeyIfNotExists -ParentPath 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -KeyName 'NewNetworkWindowOff'
 
     'Setting to hide the first run experience of Microsoft Edge.' | Write-ScriptLog -Context $VMName -UseInScriptBlock
-    New-Item -ItemType Directory -Path 'HKLM:\SOFTWARE\Policies\Microsoft' -Name 'Edge' -Force
+    CreateRegistryKeyIfNotExists -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft' -KeyName 'Edge'
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Edge' -Name 'HideFirstRunExperience' -Value 1
 
     'Renaming the network adapters...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
@@ -282,7 +294,7 @@ Invoke-Command @params -ScriptBlock {
         Format-table -Property id, status, version, isLatestVersion, title
 
     'Setting Windows Integrated Authentication registry for Windows Admin Center...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
-    New-Item -ItemType Directory -Path 'HKLM:\SOFTWARE\Policies\Microsoft' -Name 'Edge' -Force
+    CreateRegistryKeyIfNotExists -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft' -KeyName 'Edge'
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Edge' -Name 'AuthServerAllowlist' -Value $VMName
 
     'Creating shortcut for Windows Admin Center on the desktop...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
