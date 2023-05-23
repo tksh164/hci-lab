@@ -260,7 +260,7 @@
                 {
                     "name": "labHostVmDetails",
                     "label": "Lab host VM details",
-                    "description": "Configure details for your lab host VM.",
+                    "description": "Configure details for your lab host virtual machine. The lab host virtual machine is an Azure virtual machine.",
                     "elements": [
                         {
                             "name": "diskSection",
@@ -1081,7 +1081,7 @@
                 {
                     "name": "labConfiguration",
                     "label": "Lab configuration",
-                    "description": "Configure your lab environment details.",
+                    "description": "Configure your lab environment details. The lab environment is built as a set of Hyper-V virtual machines within an Azure virtual machine using nested virtualization technology.",
                     "elements": [
                         {
                             "name": "generalSection",
@@ -1140,10 +1140,37 @@
                             ]
                         },
                         {
+                            "name": "addsSection",
+                            "type": "Microsoft.Common.Section",
+                            "visible": true,
+                            "label": "Active Directory Domain Services (AD DS)",
+                            "elements": [
+                                {
+                                    "name": "domainName",
+                                    "type": "Microsoft.Common.TextBox",
+                                    "visible": true,
+                                    "multiLine": false,
+                                    "label": "AD DS domain FQDN",
+                                    "toolTip": "Specify the AD DS domain FQDN for the lab environment.",
+                                    "placeholder": "e.g. hci.local",
+                                    "defaultValue": "hci.local",
+                                    "constraints": {
+                                        "required": true,
+                                        "validations": [
+                                            {
+                                                "regex": "^(?!-)[A-Za-z0-9-]+([\\-\\.]{1}[a-z0-9]+)*\\.[A-Za-z]{2,6}$",
+                                                "message": "Invalid domain name."
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        },
+                        {
                             "name": "hciNodeSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
-                            "label": "HCI node",
+                            "label": "HCI cluster",
                             "elements": [
                                 {
                                     "name": "hciNodeOperatingSystem",
@@ -1153,7 +1180,7 @@
                                     "selectAll": false,
                                     "filter": true,
                                     "multiLine": true,
-                                    "label": "Operating system",
+                                    "label": "Node's operating system",
                                     "toolTip": "The operating system for the HCI nodes.",
                                     "placeholder": "Select the HCI node's operating system...",
                                     "defaultDescription": "---",
@@ -1211,32 +1238,16 @@
                                     "min": 2,
                                     "max": 8,
                                     "defaultValue": 2
-                                }
-                            ]
-                        },
-                        {
-                            "name": "addsSection",
-                            "type": "Microsoft.Common.Section",
-                            "visible": true,
-                            "label": "Active Directory Domain Services (AD DS)",
-                            "elements": [
+                                },
                                 {
-                                    "name": "domainName",
-                                    "type": "Microsoft.Common.TextBox",
+                                    "name": "isCreateHciCluster",
+                                    "type": "Microsoft.Common.CheckBox",
+                                    "label": "HCI cluster creation",
                                     "visible": true,
-                                    "multiLine": false,
-                                    "label": "AD DS domain FQDN",
-                                    "toolTip": "Specify the AD DS domain FQDN for the lab environment.",
-                                    "placeholder": "e.g. hci.local",
-                                    "defaultValue": "hci.local",
+                                    "toolTip": "By checked, will create an HCI cluster during the deployment. If not checked, just deploy HCI cluster nodes.",
+                                    "defaultValue": true,
                                     "constraints": {
-                                        "required": true,
-                                        "validations": [
-                                            {
-                                                "regex": "^(?!-)[A-Za-z0-9-]+([\\-\\.]{1}[a-z0-9]+)*\\.[A-Za-z]{2,6}$",
-                                                "message": "Invalid domain name."
-                                            }
-                                        ]
+                                        "required": false
                                     }
                                 }
                             ]
@@ -1266,7 +1277,8 @@
                 "hciNodeOsSku": "[steps('labConfiguration').hciNodeSection.hciNodeOperatingSystem.sku]",
                 "hciNodeOsImageIndex": "[steps('labConfiguration').hciNodeSection.hciNodeOperatingSystem.imageIndex]",
                 "hciNodeCount": "[steps('labConfiguration').hciNodeSection.hciNodeCount]",
-                "addsDomainFqdn": "[steps('labConfiguration').addsSection.domainName]"
+                "addsDomainFqdn": "[steps('labConfiguration').addsSection.domainName]",
+                "isCreateHciCluster": "[steps('labConfiguration').hciNodeSection.isCreateHciCluster]"
             }
         }
     }
