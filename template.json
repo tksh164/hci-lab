@@ -269,6 +269,13 @@
                 "description": "The Active Direcory Domain Services domain FQDN."
             }
         },
+        "isCreateHciCluster": {
+            "type": "bool",
+            "defaultValue": false,
+            "metadata": {
+                "description": "By specifying True, automatically create an HCI cluster during the deployment."
+            }
+        },
         "repoUriBase": {
             "type": "string",
             "defaultValue": "https://raw.githubusercontent.com/tksh164/azure-demo-scripts-templates/master/arm-templates/hci-lab/",
@@ -374,6 +381,16 @@
                     "[uri(variables('customScriptBaseUri'), 'shared.psm1')]"
                 ],
                 "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\create-vm.ps1"
+            },
+            "createHciCluster": {
+                "deploymentName": "hci-cluster-creation",
+                "fileUris": [
+                    "[uri(variables('customScriptBaseUri'), 'create-hci-cluster.ps1')]",
+                    "[uri(variables('customScriptBaseUri'), 'cluster-test-categories-en-us.psd1')]",
+                    "[uri(variables('customScriptBaseUri'), 'cluster-test-categories-ja-jp.psd1')]",
+                    "[uri(variables('customScriptBaseUri'), 'shared.psm1')]"
+                ],
+                "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\create-hci-cluster.ps1"
             }
         },
 
@@ -843,6 +860,41 @@
                     },
                     "commandToExecute": {
                         "value": "[variables('customScriptParams').createVm.commandToExecute]"
+                    }
+                }
+            }
+        },
+
+        // Create an HCI cluster.
+        {
+            "condition": "[parameters('isCreateHciCluster')]",
+            "name": "[variables('customScriptParams').createHciCluster.deploymentName]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2022-09-01",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', variables('customScriptParams').createVm.deploymentName)]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('customScriptLinkedTemplateUri')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
+                    "parentVmResourceName": {
+                        "value": "[parameters('labHostVmName')]"
+                    },
+                    "extensionName": {
+                        "value": "[variables('customScriptExtensionName')]"
+                    },
+                    "fileUris": {
+                        "value": "[variables('customScriptParams').createHciCluster.fileUris]"
+                    },
+                    "commandToExecute": {
+                        "value": "[variables('customScriptParams').createHciCluster.commandToExecute]"
                     }
                 }
             }
