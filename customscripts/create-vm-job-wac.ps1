@@ -173,11 +173,7 @@ $params = @{
             [PSCustomObject] @{
                 Name           = 'CreateRegistryKeyIfNotExists'
                 Implementation = (${function:CreateRegistryKeyIfNotExists}).ToString()
-            }#,
-            #[PSCustomObject] @{
-            #    Name           = 'GetHciNodeVMName'
-            #    Implementation = (${function:GetHciNodeVMName}).ToString()
-            #}
+            }
         )
     }
 }
@@ -298,35 +294,6 @@ Invoke-Command @params -ScriptBlock {
     Get-Extension -GatewayEndpoint $gatewayEndpointUri |
         Sort-Object -Property id |
         Format-table -Property id, status, version, isLatestVersion, title
-
-    <#
-    'Importing server connections to Windows Admin Center for the local Administrator...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
-    $wacConnectionToolsPSModulePath = [IO.Path]::Combine($env:ProgramFiles, 'Windows Admin Center\PowerShell\Modules\ConnectionTools\ConnectionTools.psm1')
-    Import-Module -Name $wacConnectionToolsPSModulePath -Force
-
-    # Create a connection list file to import to Windows Admin Center.
-    $formatValues = @()
-    $formatValues += $LabConfig.addsDomain.fqdn
-    $formatValues += $LabConfig.addsDC.vmName
-    $formatValues += $LabConfig.wac.vmName
-    for ($nodeIndex = 0; $nodeIndex -lt $LabConfig.hciNode.nodeCount; $nodeIndex++) {
-        $formatValues += GetHciNodeVMName -Format $LabConfig.hciNode.vmName -Offset $LabConfig.hciNode.vmNameOffset -Index $nodeIndex
-    }
-    $formatValues += $LabConfig.hciCluster.name
-    $wacConnectionFilePathInVM = [IO.Path]::Combine('C:\Windows\Temp', 'wac-connections.txt')
-    @'
-"name","type","tags","groupId"
-"{1}.{0}","msft.sme.connection-type.server","",
-"{2}.{0}","msft.sme.connection-type.server","",
-"{3}.{0}","msft.sme.connection-type.server","{5}.{0}",
-"{4}.{0}","msft.sme.connection-type.server","{5}.{0}",
-"{5}.{0}","msft.sme.connection-type.cluster","{5}.{0}",
-'@ -f $formatValues | Set-Content -LiteralPath $wacConnectionFilePathInVM -Force
-
-    # Import connections to Windows Admin Center.
-    Import-Connection -GatewayEndpoint $gatewayEndpointUri -FileName $wacConnectionFilePathInVM
-    Remove-Item -LiteralPath $wacConnectionFilePathInVM -Force
-    #>
 
     'Setting Windows Integrated Authentication registry for Windows Admin Center...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
     CreateRegistryKeyIfNotExists -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft' -KeyName 'Edge'
