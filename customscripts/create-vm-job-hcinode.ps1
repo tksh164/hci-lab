@@ -249,6 +249,10 @@ Invoke-Command @params -ScriptBlock {
     
         'Hide the Network Location wizard. All networks will be Public.' | Write-ScriptLog -Context $NodeConfig.VMName -UseInScriptBlock
         New-Item -ItemType Directory -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -Name 'NewNetworkWindowOff' -Force
+
+        'Setting to hide the first run experience of Microsoft Edge.' | Write-ScriptLog -Context $NodeConfig.VMName -UseInScriptBlock
+        New-Item -ItemType Directory -Path 'HKLM:\SOFTWARE\Policies\Microsoft' -Name 'Edge' -Force
+        Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Edge' -Name 'HideFirstRunExperience' -Value 1
     }
 
     'Renaming the network adapters...' | Write-ScriptLog -Context $NodeConfig.VMName -UseInScriptBlock
