@@ -1167,7 +1167,7 @@
                             ]
                         },
                         {
-                            "name": "hciNodeSection",
+                            "name": "hciClusterSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
                             "label": "HCI cluster",
@@ -1274,11 +1274,11 @@
                 "autoshutdownTimeZone": "[steps('labHostVmDetails').autoshutdownSection.shutdownTimeZone]",
                 "labVmOsCulture": "[steps('labConfiguration').generalSection.culture]",
                 "isInstallUpdatesToLabVm": "[steps('labConfiguration').generalSection.isInstallUpdatesToLabVm]",
-                "hciNodeOsSku": "[steps('labConfiguration').hciNodeSection.hciNodeOperatingSystem.sku]",
-                "hciNodeOsImageIndex": "[steps('labConfiguration').hciNodeSection.hciNodeOperatingSystem.imageIndex]",
-                "hciNodeCount": "[steps('labConfiguration').hciNodeSection.hciNodeCount]",
+                "hciNodeOsSku": "[steps('labConfiguration').hciClusterSection.hciNodeOperatingSystem.sku]",
+                "hciNodeOsImageIndex": "[steps('labConfiguration').hciClusterSection.hciNodeOperatingSystem.imageIndex]",
+                "hciNodeCount": "[steps('labConfiguration').hciClusterSection.hciNodeCount]",
                 "addsDomainFqdn": "[steps('labConfiguration').addsSection.domainName]",
-                "isCreateHciCluster": "[steps('labConfiguration').hciNodeSection.isCreateHciCluster]"
+                "isCreateHciCluster": "[steps('labConfiguration').hciClusterSection.isCreateHciCluster]"
             }
         }
     }
