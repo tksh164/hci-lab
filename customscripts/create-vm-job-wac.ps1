@@ -142,6 +142,7 @@ $wacCret = New-SelfSignedCertificate @params | Move-Item -Destination 'Cert:\Loc
 $wacPfxFilePathOnLabHost = [IO.Path]::Combine($labConfig.labHost.folderPath.temp, 'wac.pfx')
 $wacCret | Export-PfxCertificate -FilePath $wacPfxFilePathOnLabHost -Password $adminPassword
 
+# Copy the Windows Admin Center related files into the VM.
 $psSession = New-PSSession -VMName $vmName -Credential $localAdminCredential
 
 'Copying the Windows Admin Center installer into the VM...' | Write-ScriptLog -Context $vmName
@@ -172,7 +173,11 @@ $params = @{
             [PSCustomObject] @{
                 Name           = 'CreateRegistryKeyIfNotExists'
                 Implementation = (${function:CreateRegistryKeyIfNotExists}).ToString()
-            }
+            }#,
+            #[PSCustomObject] @{
+            #    Name           = 'GetHciNodeVMName'
+            #    Implementation = (${function:GetHciNodeVMName}).ToString()
+            #}
         )
     }
 }
@@ -264,8 +269,8 @@ Invoke-Command @params -ScriptBlock {
     Remove-Item -LiteralPath $WacInstallerFilePathInVM -Force
 
     'Updating Windows Admin Center extensions...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
-    $wacPSModulePath = [IO.Path]::Combine($env:ProgramFiles, 'Windows Admin Center\PowerShell\Modules\ExtensionTools\ExtensionTools.psm1')
-    Import-Module -Name $wacPSModulePath -Force
+    $wacExtensionToolsPSModulePath = [IO.Path]::Combine($env:ProgramFiles, 'Windows Admin Center\PowerShell\Modules\ExtensionTools\ExtensionTools.psm1')
+    Import-Module -Name $wacExtensionToolsPSModulePath -Force
     [Uri] $gatewayEndpointUri = 'https://{0}' -f $env:ComputerName
 
     $retryLimit = 50
@@ -293,6 +298,35 @@ Invoke-Command @params -ScriptBlock {
     Get-Extension -GatewayEndpoint $gatewayEndpointUri |
         Sort-Object -Property id |
         Format-table -Property id, status, version, isLatestVersion, title
+
+    <#
+    'Importing server connections to Windows Admin Center for the local Administrator...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
+    $wacConnectionToolsPSModulePath = [IO.Path]::Combine($env:ProgramFiles, 'Windows Admin Center\PowerShell\Modules\ConnectionTools\ConnectionTools.psm1')
+    Import-Module -Name $wacConnectionToolsPSModulePath -Force
+
+    # Create a connection list file to import to Windows Admin Center.
+    $formatValues = @()
+    $formatValues += $LabConfig.addsDomain.fqdn
+    $formatValues += $LabConfig.addsDC.vmName
+    $formatValues += $LabConfig.wac.vmName
+    for ($nodeIndex = 0; $nodeIndex -lt $LabConfig.hciNode.nodeCount; $nodeIndex++) {
+        $formatValues += GetHciNodeVMName -Format $LabConfig.hciNode.vmName -Offset $LabConfig.hciNode.vmNameOffset -Index $nodeIndex
+    }
+    $formatValues += $LabConfig.hciCluster.name
+    $wacConnectionFilePathInVM = [IO.Path]::Combine('C:\Windows\Temp', 'wac-connections.txt')
+    @'
+"name","type","tags","groupId"
+"{1}.{0}","msft.sme.connection-type.server","",
+"{2}.{0}","msft.sme.connection-type.server","",
+"{3}.{0}","msft.sme.connection-type.server","{5}.{0}",
+"{4}.{0}","msft.sme.connection-type.server","{5}.{0}",
+"{5}.{0}","msft.sme.connection-type.cluster","{5}.{0}",
+'@ -f $formatValues | Set-Content -LiteralPath $wacConnectionFilePathInVM -Force
+
+    # Import connections to Windows Admin Center.
+    Import-Connection -GatewayEndpoint $gatewayEndpointUri -FileName $wacConnectionFilePathInVM
+    Remove-Item -LiteralPath $wacConnectionFilePathInVM -Force
+    #>
 
     'Setting Windows Integrated Authentication registry for Windows Admin Center...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
     CreateRegistryKeyIfNotExists -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft' -KeyName 'Edge'
@@ -333,6 +367,78 @@ Start-VM -Name $vmName
 
 'Waiting for ready to the VM...' | Write-ScriptLog -Context $vmName
 WaitingForReadyToVM -VMName $vmName -Credential $domainAdminCredential
+
+# NOTE: To preset WAC connections for the domain Administrator, the preset operation is required by
+# the domain Administrator because WAC connections are managed based on each user.
+'Configuring Windows Admin Center for the domain Administrator...' | Write-ScriptLog -Context $vmName
+$params = @{
+    VMName      = $vmName
+    Credential  = $domainAdminCredential
+    InputObject = [PSCustomObject] @{
+        VMName            = $vmName
+        LabConfig         = $labConfig
+        FunctionsToInject = @(
+            [PSCustomObject] @{
+                Name           = 'Write-ScriptLog'
+                Implementation = (${function:Write-ScriptLog}).ToString()
+            },
+            [PSCustomObject] @{
+                Name           = 'GetHciNodeVMName'
+                Implementation = (${function:GetHciNodeVMName}).ToString()
+            }
+        )
+    }
+}
+Invoke-Command @params -ScriptBlock {
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [string] $VMName,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [PSCustomObject] $LabConfig,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [PSCustomObject[]] $FunctionsToInject
+    )
+
+    $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
+    $WarningPreference = [Management.Automation.ActionPreference]::Continue
+    $VerbosePreference = [Management.Automation.ActionPreference]::Continue
+    $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
+
+    # Create injected functions.
+    foreach ($func in $FunctionsToInject) {
+        New-Item -Path 'function:' -Name $func.Name -Value $func.Implementation -Force | Out-Null
+    }
+
+    'Importing server connections to Windows Admin Center for the domain Administrator...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
+    $wacConnectionToolsPSModulePath = [IO.Path]::Combine($env:ProgramFiles, 'Windows Admin Center\PowerShell\Modules\ConnectionTools\ConnectionTools.psm1')
+    Import-Module -Name $wacConnectionToolsPSModulePath -Force
+
+    # Create a connection list file to import to Windows Admin Center.
+    $formatValues = @()
+    $formatValues += $LabConfig.addsDomain.fqdn
+    $formatValues += $LabConfig.addsDC.vmName
+    $formatValues += $LabConfig.wac.vmName
+    for ($nodeIndex = 0; $nodeIndex -lt $LabConfig.hciNode.nodeCount; $nodeIndex++) {
+        $formatValues += GetHciNodeVMName -Format $LabConfig.hciNode.vmName -Offset $LabConfig.hciNode.vmNameOffset -Index $nodeIndex
+    }
+    $formatValues += $LabConfig.hciCluster.name
+    $wacConnectionFilePathInVM = [IO.Path]::Combine('C:\Windows\Temp', 'wac-connections.txt')
+    @'
+"name","type","tags","groupId"
+"{1}.{0}","msft.sme.connection-type.server","",
+"{2}.{0}","msft.sme.connection-type.server","",
+"{3}.{0}","msft.sme.connection-type.server","{5}.{0}",
+"{4}.{0}","msft.sme.connection-type.server","{5}.{0}",
+"{5}.{0}","msft.sme.connection-type.cluster","{5}.{0}",
+'@ -f $formatValues | Set-Content -LiteralPath $wacConnectionFilePathInVM -Force
+
+    # Import connections to Windows Admin Center.
+    [Uri] $gatewayEndpointUri = 'https://{0}' -f $env:ComputerName
+    Import-Connection -GatewayEndpoint $gatewayEndpointUri -FileName $wacConnectionFilePathInVM
+    Remove-Item -LiteralPath $wacConnectionFilePathInVM -Force
+}
 
 'The WAC VM creation has been completed.' | Write-ScriptLog -Context $vmName
 
