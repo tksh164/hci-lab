@@ -96,7 +96,10 @@ function GetSecret
         [string] $KeyVaultName,
 
         [Parameter(Mandatory = $true)]
-        [string] $SecretName
+        [string] $SecretName,
+
+        [Parameter(Mandatory = $false)]
+        [switch] $AsPlainText
     )
 
     $params = @{
@@ -115,7 +118,13 @@ function GetSecret
             Authorization = ('Bearer {0}' -f $accessToken)
         }
     }
-    ConvertTo-SecureString -String (Invoke-RestMethod @params).value -AsPlainText -Force
+    $secretValue = (Invoke-RestMethod @params).value
+    if ($AsPlainText) {
+        $secretValue
+    }
+    else {
+        ConvertTo-SecureString -String $secretValue -AsPlainText -Force
+    }
 }
 
 function DownloadFile
@@ -152,7 +161,7 @@ function DownloadFile
         }
         catch {
             (
-                'Will retry the download...' +
+                'Will retry the download... ' +
                 '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})'
             ) -f @(
                 $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message
@@ -405,7 +414,7 @@ function Install-WindowsFeatureToVhd
         }
         catch {
             (
-                'Thrown a exception by Install-WindowsFeature cmdlet execution. Will retry Install-WindowsFeature cmdlet...' +
+                'Thrown a exception by Install-WindowsFeature cmdlet execution. Will retry Install-WindowsFeature cmdlet... ' +
                 '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})'
             ) -f @(
                 $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message
@@ -452,7 +461,7 @@ function WaitingForStartingVM
         }
         catch {
             (
-                'Will retry start the VM...' +
+                'Will retry start the VM... ' +
                 '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})'
             ) -f @(
                 $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message
