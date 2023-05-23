@@ -220,7 +220,16 @@ $params = @{
     Credential  = $localAdminCredential
     InputObject = [PSCustomObject] @{
         NodeConfig             = $nodeConfig
-        WriteLogImplementation = (${function:Write-ScriptLog}).ToString()
+        FunctionsToInject      = @(
+            [PSCustomObject] @{
+                Name           = 'Write-ScriptLog'
+                Implementation = (${function:Write-ScriptLog}).ToString()
+            },
+            [PSCustomObject] @{
+                Name           = 'CreateRegistryKeyIfNotExists'
+                Implementation = (${function:CreateRegistryKeyIfNotExists}).ToString()
+            }
+        )
     }
 }
 Invoke-Command @params -ScriptBlock {
@@ -229,7 +238,7 @@ Invoke-Command @params -ScriptBlock {
         [PSCustomObject] $NodeConfig,
 
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-        [string] $WriteLogImplementation
+        [PSCustomObject[]] $FunctionsToInject
     )
 
     $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
@@ -237,7 +246,10 @@ Invoke-Command @params -ScriptBlock {
     $VerbosePreference = [Management.Automation.ActionPreference]::Continue
     $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
-    New-Item -Path 'function:' -Name 'Write-ScriptLog' -Value $WriteLogImplementation -Force | Out-Null
+    # Create injected functions.
+    foreach ($func in $FunctionsToInject) {
+        New-Item -Path 'function:' -Name $func.Name -Value $func.Implementation -Force | Out-Null
+    }
 
     # If the HCI node OS is Windows Server 2022 with Desktop Experience.
     if (($NodeConfig.OperatingSystem -eq 'ws2022') -and ($NodeConfig.ImageIndex -eq 4)) {
@@ -248,7 +260,11 @@ Invoke-Command @params -ScriptBlock {
         Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotPopWACConsoleAtSMLaunch' -Value 1
     
         'Hide the Network Location wizard. All networks will be Public.' | Write-ScriptLog -Context $NodeConfig.VMName -UseInScriptBlock
-        New-Item -ItemType Directory -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -Name 'NewNetworkWindowOff' -Force
+        CreateRegistryKeyIfNotExists -ParentPath 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -KeyName 'NewNetworkWindowOff'
+
+        'Setting to hide the first run experience of Microsoft Edge.' | Write-ScriptLog -Context $NodeConfig.VMName -UseInScriptBlock
+        CreateRegistryKeyIfNotExists -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft' -KeyName 'Edge'
+        Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Edge' -Name 'HideFirstRunExperience' -Value 1
     }
 
     'Renaming the network adapters...' | Write-ScriptLog -Context $NodeConfig.VMName -UseInScriptBlock

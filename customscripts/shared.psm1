@@ -174,6 +174,23 @@ function DownloadFile
     throw 'The download from "{0}" did not succeed in the acceptable retry count ({1}).' -f $SourceUri, $MaxRetryCount
 }
 
+function CreateRegistryKeyIfNotExists
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $ParentPath,
+
+        [Parameter(Mandatory = $true)]
+        [string] $KeyName
+    )
+
+    $path = [IO.Path]::Combine($ParentPath, $KeyName)
+    if ((Get-Item -LiteralPath $path -ErrorAction SilentlyContinue) -eq $null) {
+        New-Item -ItemType Directory -Path $ParentPath -Name $KeyName
+    }
+}
+
 function GetIsoFileName
 {
     [CmdletBinding()]
@@ -751,6 +768,7 @@ $exportFunctions = @(
     'Get-LabDeploymentConfig',
     'GetSecret',
     'DownloadFile',
+    'CreateRegistryKeyIfNotExists',
     'GetIsoFileName',
     'GetBaseVhdFileName',
     'GetHciNodeVMName',
