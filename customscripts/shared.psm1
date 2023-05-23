@@ -96,7 +96,10 @@ function GetSecret
         [string] $KeyVaultName,
 
         [Parameter(Mandatory = $true)]
-        [string] $SecretName
+        [string] $SecretName,
+
+        [Parameter(Mandatory = $false)]
+        [switch] $AsPlainText
     )
 
     $params = @{
@@ -115,7 +118,13 @@ function GetSecret
             Authorization = ('Bearer {0}' -f $accessToken)
         }
     }
-    ConvertTo-SecureString -String (Invoke-RestMethod @params).value -AsPlainText -Force
+    $secretValue = (Invoke-RestMethod @params).value
+    if ($AsPlainText) {
+        $secretValue
+    }
+    else {
+        ConvertTo-SecureString -String $secretValue -AsPlainText -Force
+    }
 }
 
 function DownloadFile
