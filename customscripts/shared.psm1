@@ -161,7 +161,7 @@ function DownloadFile
         }
         catch {
             (
-                'Will retry the download...' +
+                'Will retry the download... ' +
                 '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})'
             ) -f @(
                 $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message
@@ -414,7 +414,7 @@ function Install-WindowsFeatureToVhd
         }
         catch {
             (
-                'Thrown a exception by Install-WindowsFeature cmdlet execution. Will retry Install-WindowsFeature cmdlet...' +
+                'Thrown a exception by Install-WindowsFeature cmdlet execution. Will retry Install-WindowsFeature cmdlet... ' +
                 '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})'
             ) -f @(
                 $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message
@@ -461,7 +461,7 @@ function WaitingForStartingVM
         }
         catch {
             (
-                'Will retry start the VM...' +
+                'Will retry start the VM... ' +
                 '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})'
             ) -f @(
                 $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message
