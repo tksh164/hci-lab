@@ -92,12 +92,14 @@ $nodeConfig = [PSCustomObject] @{
             VSwitchName  = $labConfig.labHost.vSwitch.nat.name
             IPAddress    = $labConfig.hciNode.netAdapter.storage1.ipAddress -f ($labConfig.hciNode.netAdapter.ipAddressOffset + $NodeIndex)
             PrefixLength = $labConfig.hciNode.netAdapter.storage1.prefixLength
+            VlanId       = $labConfig.hciNode.netAdapter.storage1.vlanId
         }
         Storage2 = [PSCustomObject] @{
             Name         = $labConfig.hciNode.netAdapter.storage2.name
             VSwitchName  = $labConfig.labHost.vSwitch.nat.name
             IPAddress    = $labConfig.hciNode.netAdapter.storage2.ipAddress -f ($labConfig.hciNode.netAdapter.ipAddressOffset + $NodeIndex)
             PrefixLength = $labConfig.hciNode.netAdapter.storage2.prefixLength
+            VlanId       = $labConfig.hciNode.netAdapter.storage2.vlanId
         }
     }
 }
@@ -162,6 +164,13 @@ $params = @{
     DeviceNaming = 'On'
 }
 Add-VMNetworkAdapter @params
+$params = @{
+    VMName               = $nodeConfig.VMName
+    VMNetworkAdapterName = $nodeConfig.NetAdapter.Storage1.Name
+    Access               = $true
+    VlanId               = $nodeConfig.NetAdapter.Storage1.VlanId
+}
+Set-VMNetworkAdapterVlan @params
 
 # Storage 2
 $params = @{
@@ -171,6 +180,13 @@ $params = @{
     DeviceNaming = 'On'
 }
 Add-VMNetworkAdapter @params
+$params = @{
+    VMName               = $nodeConfig.VMName
+    VMNetworkAdapterName = $nodeConfig.NetAdapter.Storage2.Name
+    Access               = $true
+    VlanId               = $nodeConfig.NetAdapter.Storage2.VlanId
+}
+Set-VMNetworkAdapterVlan @params
 
 'Creating the data disks...' | Write-ScriptLog -Context $nodeConfig.VMName
 $diskCount = 6
