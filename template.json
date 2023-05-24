@@ -491,7 +491,7 @@
             },
             "hciCluster": {
                 "name": "hciclus",
-                "ipAddress": "192.168.0.200"
+                "ipAddress": "172.16.0.200"
             },
             "keyVault": {
                 "name": "[variables('keyVaultName')]",
