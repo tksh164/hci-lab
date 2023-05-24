@@ -83,6 +83,10 @@ $nodeConfig = [PSCustomObject] @{
             DefaultGateway     = $labConfig.hciNode.netAdapter.management.defaultGateway
             DnsServerAddresses = $labConfig.hciNode.netAdapter.management.dnsServerAddresses
         }
+        Compute = [PSCustomObject] @{
+            Name        = $labConfig.hciNode.netAdapter.compute.name
+            VSwitchName = $labConfig.labHost.vSwitch.nat.name
+        }
         Storage1 = [PSCustomObject] @{
             Name         = $labConfig.hciNode.netAdapter.storage1.name
             VSwitchName  = $labConfig.labHost.vSwitch.nat.name
@@ -137,6 +141,15 @@ $params = @{
     VMName       = $nodeConfig.VMName
     Name         = $nodeConfig.NetAdapter.Management.Name
     SwitchName   = $nodeConfig.NetAdapter.Management.VSwitchName
+    DeviceNaming = 'On'
+}
+Add-VMNetworkAdapter @params
+
+# Compute
+$params = @{
+    VMName       = $nodeConfig.VMName
+    Name         = $nodeConfig.NetAdapter.Compute.Name
+    SwitchName   = $nodeConfig.NetAdapter.Compute.VSwitchName
     DeviceNaming = 'On'
 }
 Add-VMNetworkAdapter @params
