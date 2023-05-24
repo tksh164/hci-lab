@@ -413,8 +413,8 @@
                 "vSwitch": {
                     "nat": {
                         "name": "LabHostNAT",
-                        "subnet": "192.168.0.0/24",
-                        "hostIPAddress": "192.168.0.1",
+                        "subnet": "172.16.0.0/24",
+                        "hostIPAddress": "172.16.0.1",
                         "hostPrefixLength": 24
                     }
                 }
@@ -432,9 +432,9 @@
                 "netAdapter": {
                     "management": {
                         "name": "Management",
-                        "ipAddress": "192.168.0.4",
+                        "ipAddress": "172.16.0.2",
                         "prefixLength": 24,
-                        "defaultGateway": "192.168.0.1",
+                        "defaultGateway": "172.16.0.1",
                         "dnsServerAddresses": [ "168.63.129.16" ]
                     }
                 }
@@ -445,10 +445,10 @@
                 "netAdapter": {
                     "management": {
                         "name": "Management",
-                        "ipAddress": "192.168.0.8",
+                        "ipAddress": "172.16.0.3",
                         "prefixLength": 24,
-                        "defaultGateway": "192.168.0.1",
-                        "dnsServerAddresses": [ "192.168.0.4" ]
+                        "defaultGateway": "172.16.0.1",
+                        "dnsServerAddresses": [ "172.16.0.2" ]
                     }
                 }
             },
@@ -465,19 +465,24 @@
                     "ipAddressOffset": 11,
                     "management": {
                         "name": "Management",
-                        "ipAddress": "192.168.0.{0}",  // ipAddressOffset + ZeroBasedNodeIndex
+                        "ipAddress": "172.16.0.{0}",  // ipAddressOffset + ZeroBasedNodeIndex
                         "prefixLength": 24,
-                        "defaultGateway": "192.168.0.1",
-                        "dnsServerAddresses": [ "192.168.0.4" ]
+                        "defaultGateway": "172.16.0.1",
+                        "dnsServerAddresses": [ "172.16.0.2" ]
+                    },
+                    "compute": {
+                        "name": "Compute"
                     },
                     "storage1": {
                         "name": "Storage1",
-                        "ipAddress": "172.16.1.{0}",  // ipAddressOffset + ZeroBasedNodeIndex
+                        "vlanId": 4001,
+                        "ipAddress": "172.20.1.{0}",  // ipAddressOffset + ZeroBasedNodeIndex
                         "prefixLength": 24
                     },
                     "storage2": {
                         "name": "Storage2",
-                        "ipAddress": "172.16.2.{0}",  // ipAddressOffset + ZeroBasedNodeIndex
+                        "vlanId": 4002,
+                        "ipAddress": "172.20.2.{0}",  // ipAddressOffset + ZeroBasedNodeIndex
                         "prefixLength": 24
                     }
                 }
