@@ -84,8 +84,10 @@ $nodeConfig = [PSCustomObject] @{
             DnsServerAddresses = $labConfig.hciNode.netAdapter.management.dnsServerAddresses
         }
         Compute = [PSCustomObject] @{
-            Name        = $labConfig.hciNode.netAdapter.compute.name
-            VSwitchName = $labConfig.labHost.vSwitch.nat.name
+            Name         = $labConfig.hciNode.netAdapter.compute.name
+            VSwitchName  = $labConfig.labHost.vSwitch.nat.name
+            IPAddress    = $labConfig.hciNode.netAdapter.compute.ipAddress -f ($labConfig.hciNode.netAdapter.ipAddressOffset + $NodeIndex)
+            PrefixLength = $labConfig.hciNode.netAdapter.compute.prefixLength
         }
         Storage1 = [PSCustomObject] @{
             Name         = $labConfig.hciNode.netAdapter.storage1.name
@@ -316,19 +318,27 @@ Invoke-Command @params -ScriptBlock {
     Get-NetAdapter -Name $NodeConfig.NetAdapter.Management.Name |
         Set-DnsClientServerAddress -ServerAddresses $NodeConfig.NetAdapter.Management.DnsServerAddresses
 
-    # Storage 1
+    # Compute
     $params = @{
         AddressFamily  = 'IPv4'
-        IPAddress      = $NodeConfig.NetAdapter.Storage1.IPAddress
-        PrefixLength   = $NodeConfig.NetAdapter.Storage1.PrefixLength
+        IPAddress      = $NodeConfig.NetAdapter.Compute.IPAddress
+        PrefixLength   = $NodeConfig.NetAdapter.Compute.PrefixLength
+    }
+    Get-NetAdapter -Name $NodeConfig.NetAdapter.Compute.Name | New-NetIPAddress @params
+
+    # Storage 1
+    $params = @{
+        AddressFamily = 'IPv4'
+        IPAddress     = $NodeConfig.NetAdapter.Storage1.IPAddress
+        PrefixLength  = $NodeConfig.NetAdapter.Storage1.PrefixLength
     }
     Get-NetAdapter -Name $NodeConfig.NetAdapter.Storage1.Name | New-NetIPAddress @params
 
     # Storage 2
     $params = @{
-        AddressFamily  = 'IPv4'
-        IPAddress      = $NodeConfig.NetAdapter.Storage2.IPAddress
-        PrefixLength   = $NodeConfig.NetAdapter.Storage2.PrefixLength
+        AddressFamily = 'IPv4'
+        IPAddress     = $NodeConfig.NetAdapter.Storage2.IPAddress
+        PrefixLength  = $NodeConfig.NetAdapter.Storage2.PrefixLength
     }
     Get-NetAdapter -Name $NodeConfig.NetAdapter.Storage2.Name | New-NetIPAddress @params
 }
