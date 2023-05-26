@@ -61,13 +61,21 @@ Set-VMMemory @params
 
 'Setting the VM''s network adapter configuration...' | Write-ScriptLog -Context $vmName
 Get-VMNetworkAdapter -VMName $vmName | Remove-VMNetworkAdapter
-$params = @{
+
+# Management
+$paramsForAdd = @{
     VMName       = $vmName
     Name         = $labConfig.addsDC.netAdapter.management.name
     SwitchName   = $labConfig.labHost.vSwitch.nat.name
-    DeviceNaming = 'On'
+    DeviceNaming = [Microsoft.HyperV.PowerShell.OnOffState]::On
+    Passthru     = $true
 }
-Add-VMNetworkAdapter @params
+$paramsForSet = @{
+    MacAddressSpoofing = [Microsoft.HyperV.PowerShell.OnOffState]::On
+    AllowTeaming       = [Microsoft.HyperV.PowerShell.OnOffState]::On
+}
+Add-VMNetworkAdapter @paramsForAdd |
+Set-VMNetworkAdapter @paramsForSet
 
 'Generating the unattend answer XML...' | Write-ScriptLog -Context $vmName
 $adminPassword = GetSecret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName.adminPassword

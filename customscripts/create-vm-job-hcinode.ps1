@@ -141,54 +141,74 @@ Set-VMMemory @params
 Get-VMNetworkAdapter -VMName $nodeConfig.VMName | Remove-VMNetworkAdapter
 
 # Management
-$params = @{
+$paramsForAdd = @{
     VMName       = $nodeConfig.VMName
     Name         = $nodeConfig.NetAdapter.Management.Name
     SwitchName   = $nodeConfig.NetAdapter.Management.VSwitchName
-    DeviceNaming = 'On'
+    DeviceNaming = [Microsoft.HyperV.PowerShell.OnOffState]::On
+    Passthru     = $true
 }
-Add-VMNetworkAdapter @params
+$paramsForSet = @{
+    MacAddressSpoofing = [Microsoft.HyperV.PowerShell.OnOffState]::On
+    AllowTeaming       = [Microsoft.HyperV.PowerShell.OnOffState]::On
+}
+Add-VMNetworkAdapter @paramsForAdd |
+Set-VMNetworkAdapter @paramsForSet
 
 # Compute
-$params = @{
+$paramsForAdd = @{
     VMName       = $nodeConfig.VMName
     Name         = $nodeConfig.NetAdapter.Compute.Name
     SwitchName   = $nodeConfig.NetAdapter.Compute.VSwitchName
-    DeviceNaming = 'On'
+    DeviceNaming = [Microsoft.HyperV.PowerShell.OnOffState]::On
+    Passthru     = $true
 }
-Add-VMNetworkAdapter @params
+$paramsForSet = @{
+    MacAddressSpoofing = [Microsoft.HyperV.PowerShell.OnOffState]::On
+    AllowTeaming       = [Microsoft.HyperV.PowerShell.OnOffState]::On
+}
+Add-VMNetworkAdapter @paramsForAdd |
+Set-VMNetworkAdapter @paramsForSet
 
 # Storage 1
-$params = @{
+$paramsForAdd = @{
     VMName       = $nodeConfig.VMName
     Name         = $nodeConfig.NetAdapter.Storage1.Name
     SwitchName   = $nodeConfig.NetAdapter.Storage1.VSwitchName
-    DeviceNaming = 'On'
+    DeviceNaming = [Microsoft.HyperV.PowerShell.OnOffState]::On
+    Passthru     = $true
 }
-Add-VMNetworkAdapter @params
-$params = @{
-    VMName               = $nodeConfig.VMName
-    VMNetworkAdapterName = $nodeConfig.NetAdapter.Storage1.Name
-    Access               = $true
-    VlanId               = $nodeConfig.NetAdapter.Storage1.VlanId
+$paramsForSet = @{
+    AllowTeaming = [Microsoft.HyperV.PowerShell.OnOffState]::On
+    Passthru     = $true
 }
-Set-VMNetworkAdapterVlan @params
+$paramsForVlan = @{
+    Access = $true
+    VlanId = $nodeConfig.NetAdapter.Storage1.VlanId
+}
+Add-VMNetworkAdapter @paramsForAdd |
+Set-VMNetworkAdapter @paramsForSet |
+Set-VMNetworkAdapterVlan @paramsForVlan
 
 # Storage 2
-$params = @{
+$paramsForAdd = @{
     VMName       = $nodeConfig.VMName
     Name         = $nodeConfig.NetAdapter.Storage2.Name
     SwitchName   = $nodeConfig.NetAdapter.Storage2.VSwitchName
-    DeviceNaming = 'On'
+    DeviceNaming = [Microsoft.HyperV.PowerShell.OnOffState]::On
+    Passthru     = $true
 }
-Add-VMNetworkAdapter @params
-$params = @{
-    VMName               = $nodeConfig.VMName
-    VMNetworkAdapterName = $nodeConfig.NetAdapter.Storage2.Name
-    Access               = $true
-    VlanId               = $nodeConfig.NetAdapter.Storage2.VlanId
+$paramsForSet = @{
+    AllowTeaming = [Microsoft.HyperV.PowerShell.OnOffState]::On
+    Passthru     = $true
 }
-Set-VMNetworkAdapterVlan @params
+$paramsForVlan = @{
+    Access = $true
+    VlanId = $nodeConfig.NetAdapter.Storage2.VlanId
+}
+Add-VMNetworkAdapter @paramsForAdd |
+Set-VMNetworkAdapter @paramsForSet |
+Set-VMNetworkAdapterVlan @paramsForVlan
 
 'Creating the data disks...' | Write-ScriptLog -Context $nodeConfig.VMName
 $diskCount = 6
