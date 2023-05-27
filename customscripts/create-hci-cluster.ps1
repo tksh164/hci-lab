@@ -112,8 +112,9 @@ Invoke-Command @params -ScriptBlock {
         Where-Object -Property 'PartitionStyle' -EQ 'RAW' |
         Group-Object -NoElement -Property 'FriendlyName' |
         Sort-Object -Property 'PSComputerName'
-} | Select-Object -Property 'PSComputerName', 'Count', 'Name' |
+} |
     Sort-Object -Property 'PSComputerName' |
+    Format-Table -Property 'PSComputerName', 'Count', 'Name' |
     Out-String |
     Write-ScriptLog -Context $env:ComputerName
 
