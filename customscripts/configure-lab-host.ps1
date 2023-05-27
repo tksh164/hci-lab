@@ -72,21 +72,23 @@ $params = @{
 }
 New-VMSwitch @params
 
-'Creating a network NAT...' | Write-ScriptLog -Context $env:ComputerName
-$params = @{
-    Name                             = $labConfig.labHost.vSwitch.nat.name
-    InternalIPInterfaceAddressPrefix = $labConfig.labHost.vSwitch.nat.subnet
-}
-New-NetNat @params
+foreach ($netNat in $labConfig.labHost.netNat) {
+    'Creating a network NAT "{0}"...' -f $netNat.name | Write-ScriptLog -Context $env:ComputerName
+    $params = @{
+        Name                             = $netNat.name
+        InternalIPInterfaceAddressPrefix = $netNat.InternalAddressPrefix
+    }
+    New-NetNat @params
 
-'Assigning an IP address to the NAT vSwitch network interface...' | Write-ScriptLog -Context $env:ComputerName
-$params= @{
-    InterfaceIndex = (Get-NetAdapter | Where-Object { $_.Name -match $labConfig.labHost.vSwitch.nat.name }).ifIndex
-    AddressFamily  = 'IPv4'
-    IPAddress      = $labConfig.labHost.vSwitch.nat.hostIPAddress
-    PrefixLength   = $labConfig.labHost.vSwitch.nat.hostPrefixLength
+    'Assigning an internal IP configuration to the host''s NAT network interface...' | Write-ScriptLog -Context $env:ComputerName
+    $params= @{
+        InterfaceIndex = (Get-NetAdapter -Name ('*{0}*' -f $labConfig.labHost.vSwitch.nat.name)).ifIndex
+        AddressFamily  = 'IPv4'
+        IPAddress      = $netNat.hostInternalIPAddress
+        PrefixLength   = $netNat.hostInternalPrefixLength
+    }
+    New-NetIPAddress @params
 }
-New-NetIPAddress @params
 
 'The Hyper-V configuration has been completed.' | Write-ScriptLog -Context $env:ComputerName
 

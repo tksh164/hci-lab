@@ -412,12 +412,23 @@
                 },
                 "vSwitch": {
                     "nat": {
-                        "name": "LabHostNAT",
-                        "subnet": "172.16.0.0/24",
-                        "hostIPAddress": "172.16.0.1",
-                        "hostPrefixLength": 24
+                        "name": "NATSwitch"
                     }
-                }
+                },
+                "netNat": [
+                    {
+                        "name": "ManagementNAT",
+                        "InternalAddressPrefix": "172.16.0.0/24",
+                        "hostInternalIPAddress": "172.16.0.1",
+                        "hostInternalPrefixLength": 24
+                    },
+                    {
+                        "name": "ComputeNAT",
+                        "InternalAddressPrefix": "10.0.0.0/16",
+                        "hostInternalIPAddress": "10.0.0.1",
+                        "hostInternalPrefixLength": 16
+                    }
+                ]
             },
             "guestOS": {
                 "culture": "[parameters('labVmOsCulture')]",
