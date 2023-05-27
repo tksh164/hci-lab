@@ -103,16 +103,16 @@
         // Virtual network
 
         "virtualNetworkName": "hcilab-vnet",
-        "virtualNetworkNameAddressPrefix": "10.0.0.0/16",
+        "virtualNetworkNameAddressPrefix": "192.168.0.0/16",
         "subnetName": "default",
-        "subnetAddressPrefix": "10.0.0.0/24",
+        "subnetAddressPrefix": "192.168.0.0/24",
         "subnetNetworkSecurityGroupName": "[format('{0}-{1}-nsg', variables('virtualNetworkName'), variables('subnetName'))]",
 
         // Virtual machine
 
         "dataDisksCount": 8,
         "networkInterfaceName": "[format('{0}-nic1', parameters('vmName'))]",
-        "privateIPAddress": "10.0.0.4",
+        "privateIPAddress": "192.168.0.4",
         "publicIpAddressName": "[format('{0}-ip1', parameters('vmName'))]",
         "dnsNameForPublicIP": "[toLower(format('{0}-{1}-{2}', resourceGroup().name, parameters('vmName'), toLower(parameters('uniqueString'))))]"
     },

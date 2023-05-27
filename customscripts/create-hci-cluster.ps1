@@ -20,6 +20,51 @@ $nodes += for ($nodeIndex = 0; $nodeIndex -lt $labConfig.hciNode.nodeCount; $nod
 $adminPassword = GetSecret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName.adminPassword
 $domainCredential = CreateDomainCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $adminPassword
 
+'Creating virtual switches within each HCI node...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+$params = @{
+    VMName      = $nodes
+    Credential  = $domainCredential
+    InputObject = [PSCustomObject] @{
+        NetAdapterName = [PSCustomObject] @{
+            Management = $labConfig.hciNode.netAdapter.management.name
+            Compute    = $labConfig.hciNode.netAdapter.compute.name
+        }
+    }
+}
+Invoke-Command @params -ScriptBlock {
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [PSCustomObject] $NetAdapterName
+    )
+
+    $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
+    $WarningPreference = [Management.Automation.ActionPreference]::Continue
+    $VerbosePreference = [Management.Automation.ActionPreference]::Continue
+    $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
+
+    # External vSwitch for the management network.
+    $params = @{
+        Name                  = '{0}Switch' -f $NetAdapterName.Management
+        NetAdapterName        = $NetAdapterName.Management
+        AllowManagementOS     = $true
+        EnableEmbeddedTeaming = $true
+    }
+    New-VMSwitch @params
+
+    # External vSwitch for the compute network.
+    $params = @{
+        Name                  = '{0}Switch' -f $NetAdapterName.Compute
+        NetAdapterName        = $NetAdapterName.Compute
+        AllowManagementOS     = $false
+        EnableEmbeddedTeaming = $true
+    }
+    New-VMSwitch @params
+} |
+    Sort-Object -Property 'PSComputerName' |
+    Format-Table -Property 'PSComputerName', 'Name', 'SwitchType', 'AllowManagementOS', 'EmbeddedTeamingEnabled' |
+    Out-String |
+    Write-ScriptLog -Context $env:ComputerName
+
 'Preparing HCI node drives...' | Write-ScriptLog -Context $env:ComputerName
 $params = @{
     VMName     = $nodes
@@ -67,8 +112,9 @@ Invoke-Command @params -ScriptBlock {
         Where-Object -Property 'PartitionStyle' -EQ 'RAW' |
         Group-Object -NoElement -Property 'FriendlyName' |
         Sort-Object -Property 'PSComputerName'
-} | Select-Object -Property 'PSComputerName', 'Count', 'Name' |
+} |
     Sort-Object -Property 'PSComputerName' |
+    Format-Table -Property 'PSComputerName', 'Count', 'Name' |
     Out-String |
     Write-ScriptLog -Context $env:ComputerName
 

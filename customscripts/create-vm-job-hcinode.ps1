@@ -83,17 +83,25 @@ $nodeConfig = [PSCustomObject] @{
             DefaultGateway     = $labConfig.hciNode.netAdapter.management.defaultGateway
             DnsServerAddresses = $labConfig.hciNode.netAdapter.management.dnsServerAddresses
         }
+        Compute = [PSCustomObject] @{
+            Name         = $labConfig.hciNode.netAdapter.compute.name
+            VSwitchName  = $labConfig.labHost.vSwitch.nat.name
+            IPAddress    = $labConfig.hciNode.netAdapter.compute.ipAddress -f ($labConfig.hciNode.netAdapter.ipAddressOffset + $NodeIndex)
+            PrefixLength = $labConfig.hciNode.netAdapter.compute.prefixLength
+        }
         Storage1 = [PSCustomObject] @{
             Name         = $labConfig.hciNode.netAdapter.storage1.name
             VSwitchName  = $labConfig.labHost.vSwitch.nat.name
             IPAddress    = $labConfig.hciNode.netAdapter.storage1.ipAddress -f ($labConfig.hciNode.netAdapter.ipAddressOffset + $NodeIndex)
             PrefixLength = $labConfig.hciNode.netAdapter.storage1.prefixLength
+            VlanId       = $labConfig.hciNode.netAdapter.storage1.vlanId
         }
         Storage2 = [PSCustomObject] @{
             Name         = $labConfig.hciNode.netAdapter.storage2.name
             VSwitchName  = $labConfig.labHost.vSwitch.nat.name
             IPAddress    = $labConfig.hciNode.netAdapter.storage2.ipAddress -f ($labConfig.hciNode.netAdapter.ipAddressOffset + $NodeIndex)
             PrefixLength = $labConfig.hciNode.netAdapter.storage2.prefixLength
+            VlanId       = $labConfig.hciNode.netAdapter.storage2.vlanId
         }
     }
 }
@@ -133,31 +141,74 @@ Set-VMMemory @params
 Get-VMNetworkAdapter -VMName $nodeConfig.VMName | Remove-VMNetworkAdapter
 
 # Management
-$params = @{
+$paramsForAdd = @{
     VMName       = $nodeConfig.VMName
     Name         = $nodeConfig.NetAdapter.Management.Name
     SwitchName   = $nodeConfig.NetAdapter.Management.VSwitchName
-    DeviceNaming = 'On'
+    DeviceNaming = [Microsoft.HyperV.PowerShell.OnOffState]::On
+    Passthru     = $true
 }
-Add-VMNetworkAdapter @params
+$paramsForSet = @{
+    MacAddressSpoofing = [Microsoft.HyperV.PowerShell.OnOffState]::On
+    AllowTeaming       = [Microsoft.HyperV.PowerShell.OnOffState]::On
+}
+Add-VMNetworkAdapter @paramsForAdd |
+Set-VMNetworkAdapter @paramsForSet
+
+# Compute
+$paramsForAdd = @{
+    VMName       = $nodeConfig.VMName
+    Name         = $nodeConfig.NetAdapter.Compute.Name
+    SwitchName   = $nodeConfig.NetAdapter.Compute.VSwitchName
+    DeviceNaming = [Microsoft.HyperV.PowerShell.OnOffState]::On
+    Passthru     = $true
+}
+$paramsForSet = @{
+    MacAddressSpoofing = [Microsoft.HyperV.PowerShell.OnOffState]::On
+    AllowTeaming       = [Microsoft.HyperV.PowerShell.OnOffState]::On
+}
+Add-VMNetworkAdapter @paramsForAdd |
+Set-VMNetworkAdapter @paramsForSet
 
 # Storage 1
-$params = @{
+$paramsForAdd = @{
     VMName       = $nodeConfig.VMName
     Name         = $nodeConfig.NetAdapter.Storage1.Name
     SwitchName   = $nodeConfig.NetAdapter.Storage1.VSwitchName
-    DeviceNaming = 'On'
+    DeviceNaming = [Microsoft.HyperV.PowerShell.OnOffState]::On
+    Passthru     = $true
 }
-Add-VMNetworkAdapter @params
+$paramsForSet = @{
+    AllowTeaming = [Microsoft.HyperV.PowerShell.OnOffState]::On
+    Passthru     = $true
+}
+$paramsForVlan = @{
+    Access = $true
+    VlanId = $nodeConfig.NetAdapter.Storage1.VlanId
+}
+Add-VMNetworkAdapter @paramsForAdd |
+Set-VMNetworkAdapter @paramsForSet |
+Set-VMNetworkAdapterVlan @paramsForVlan
 
 # Storage 2
-$params = @{
+$paramsForAdd = @{
     VMName       = $nodeConfig.VMName
     Name         = $nodeConfig.NetAdapter.Storage2.Name
     SwitchName   = $nodeConfig.NetAdapter.Storage2.VSwitchName
-    DeviceNaming = 'On'
+    DeviceNaming = [Microsoft.HyperV.PowerShell.OnOffState]::On
+    Passthru     = $true
 }
-Add-VMNetworkAdapter @params
+$paramsForSet = @{
+    AllowTeaming = [Microsoft.HyperV.PowerShell.OnOffState]::On
+    Passthru     = $true
+}
+$paramsForVlan = @{
+    Access = $true
+    VlanId = $nodeConfig.NetAdapter.Storage2.VlanId
+}
+Add-VMNetworkAdapter @paramsForAdd |
+Set-VMNetworkAdapter @paramsForSet |
+Set-VMNetworkAdapterVlan @paramsForVlan
 
 'Creating the data disks...' | Write-ScriptLog -Context $nodeConfig.VMName
 $diskCount = 6
@@ -287,19 +338,27 @@ Invoke-Command @params -ScriptBlock {
     Get-NetAdapter -Name $NodeConfig.NetAdapter.Management.Name |
         Set-DnsClientServerAddress -ServerAddresses $NodeConfig.NetAdapter.Management.DnsServerAddresses
 
-    # Storage 1
+    # Compute
     $params = @{
         AddressFamily  = 'IPv4'
-        IPAddress      = $NodeConfig.NetAdapter.Storage1.IPAddress
-        PrefixLength   = $NodeConfig.NetAdapter.Storage1.PrefixLength
+        IPAddress      = $NodeConfig.NetAdapter.Compute.IPAddress
+        PrefixLength   = $NodeConfig.NetAdapter.Compute.PrefixLength
+    }
+    Get-NetAdapter -Name $NodeConfig.NetAdapter.Compute.Name | New-NetIPAddress @params
+
+    # Storage 1
+    $params = @{
+        AddressFamily = 'IPv4'
+        IPAddress     = $NodeConfig.NetAdapter.Storage1.IPAddress
+        PrefixLength  = $NodeConfig.NetAdapter.Storage1.PrefixLength
     }
     Get-NetAdapter -Name $NodeConfig.NetAdapter.Storage1.Name | New-NetIPAddress @params
 
     # Storage 2
     $params = @{
-        AddressFamily  = 'IPv4'
-        IPAddress      = $NodeConfig.NetAdapter.Storage2.IPAddress
-        PrefixLength   = $NodeConfig.NetAdapter.Storage2.PrefixLength
+        AddressFamily = 'IPv4'
+        IPAddress     = $NodeConfig.NetAdapter.Storage2.IPAddress
+        PrefixLength  = $NodeConfig.NetAdapter.Storage2.PrefixLength
     }
     Get-NetAdapter -Name $NodeConfig.NetAdapter.Storage2.Name | New-NetIPAddress @params
 }
