@@ -265,7 +265,7 @@ $params = @{
 $localAdminCredential = New-Object @params
 WaitingForReadyToVM -VMName $nodeConfig.VMName -Credential $localAdminCredential
 
-'Configuring the guest OS...' | Write-ScriptLog -Context $nodeConfig.VMName
+'Configuring the inside of the VM...' | Write-ScriptLog -Context $nodeConfig.VMName
 $params = @{
     VMName      = $nodeConfig.VMName
     Credential  = $localAdminCredential
@@ -323,7 +323,7 @@ Invoke-Command @params -ScriptBlock {
         Rename-NetAdapter -Name $_.Name -NewName $_.DisplayValue
     }
 
-    'Setting the IP configuration on the network adapter...' | Write-ScriptLog -Context $NodeConfig.VMName -UseInScriptBlock
+    'Setting the IP configuration on the network adapters...' | Write-ScriptLog -Context $NodeConfig.VMName -UseInScriptBlock
 
     # Management
     $params = @{
@@ -334,7 +334,7 @@ Invoke-Command @params -ScriptBlock {
     }
     Get-NetAdapter -Name $NodeConfig.NetAdapter.Management.Name | New-NetIPAddress @params
 
-    'Setting the DNS configuration on the network adapter...' | Write-ScriptLog -Context $NodeConfig.VMName -UseInScriptBlock
+    'Setting the DNS configuration on the {0} network adapter...' -f $NodeConfig.NetAdapter.Management.Name | Write-ScriptLog -Context $NodeConfig.VMName -UseInScriptBlock
     Get-NetAdapter -Name $NodeConfig.NetAdapter.Management.Name |
         Set-DnsClientServerAddress -ServerAddresses $NodeConfig.NetAdapter.Management.DnsServerAddresses
 

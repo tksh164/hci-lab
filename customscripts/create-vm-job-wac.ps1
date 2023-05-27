@@ -163,7 +163,7 @@ Copy-Item -ToSession $psSession -Path $wacPfxFilePathOnLabHost -Destination $wac
 
 $psSession | Remove-PSSession
 
-'Configuring the new VM...' | Write-ScriptLog -Context $vmName
+'Configuring the inside of the VM...' | Write-ScriptLog -Context $vmName
 $params = @{
     VMName      = $vmName
     Credential  = $localAdminCredential

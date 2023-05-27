@@ -115,7 +115,7 @@ $params = @{
 $localAdminCredential = New-Object @params
 WaitingForReadyToVM -VMName $vmName -Credential $localAdminCredential
 
-'Configuring the new VM...' | Write-ScriptLog -Context $vmName
+'Configuring the inside of the VM...' | Write-ScriptLog -Context $vmName
 $params = @{
     VMName      = $vmName
     Credential  = $localAdminCredential
