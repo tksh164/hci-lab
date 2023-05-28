@@ -68,7 +68,7 @@ function DownloadUpdates
 }
 
 'Reading the asset URL data file...' | Write-ScriptLog -Context $env:ComputerName
-$assetUrls = Import-PowerShellDataFile -LiteralPath ([IO.Path]::Combine($PSScriptRoot, 'asset-urls.psd1'))
+$assetUrls = Import-PowerShellDataFile -LiteralPath ([IO.Path]::Combine($PSScriptRoot, 'download-iso-updates-asset-urls.psd1'))
 
 # ISO
 
