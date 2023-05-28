@@ -128,7 +128,7 @@ $langTag = Invoke-Command @params -ScriptBlock {
 }
 'The node''s UI culture is "{0}".' -f $langTag | Write-ScriptLog -Context $env:ComputerName
 
-$localizedDataFileName = ('cluster-test-categories-{0}.psd1' -f $langTag).ToLower()
+$localizedDataFileName = ('create-hci-cluster-test-cat-{0}.psd1' -f $langTag).ToLower()
 'Localized data file name: {0}' -f $localizedDataFileName | Write-ScriptLog -Context $env:ComputerName
 Import-LocalizedData -FileName $localizedDataFileName -BindingVariable 'clusterTestCategories'
 

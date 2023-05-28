@@ -357,7 +357,7 @@
                 "deploymentName": "iso-and-updates-download",
                 "fileUris": [
                     "[uri(variables('customScriptBaseUri'), 'download-iso-updates.ps1')]",
-                    "[uri(variables('customScriptBaseUri'), 'asset-urls.psd1')]",
+                    "[uri(variables('customScriptBaseUri'), 'download-iso-updates-asset-urls.psd1')]",
                     "[uri(variables('customScriptBaseUri'), 'shared.psm1')]"
                 ],
                 "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\download-iso-updates.ps1"
@@ -386,8 +386,8 @@
                 "deploymentName": "hci-cluster-creation",
                 "fileUris": [
                     "[uri(variables('customScriptBaseUri'), 'create-hci-cluster.ps1')]",
-                    "[uri(variables('customScriptBaseUri'), 'cluster-test-categories-en-us.psd1')]",
-                    "[uri(variables('customScriptBaseUri'), 'cluster-test-categories-ja-jp.psd1')]",
+                    "[uri(variables('customScriptBaseUri'), 'create-hci-cluster-test-cat-en-us.psd1')]",
+                    "[uri(variables('customScriptBaseUri'), 'create-hci-cluster-test-cat-ja-jp.psd1')]",
                     "[uri(variables('customScriptBaseUri'), 'shared.psm1')]"
                 ],
                 "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\create-hci-cluster.ps1"
