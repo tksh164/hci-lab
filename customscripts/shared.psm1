@@ -405,11 +405,12 @@ function Install-WindowsFeatureToVhd
 
     $startTime = Get-Date
     while ((Get-Date) -lt ($startTime + $RetyTimeout)) {
-        # NOTE: Effort to prevent concurrent DISM operations.
-        $mutex = New-Object -TypeName 'System.Threading.Mutex' -ArgumentList $false, 'Local\HciLabMutexInstallWindowsFeature'
-        'Requesting the mutex for the Install-WindowsFeature cmdlet''s DISM operation...' | Write-ScriptLog -Context $VhdPath
-        $mutex.WaitOne()
-        'Acquired the mutex for the Install-WindowsFeature cmdlet''s DISM operation.' | Write-ScriptLog -Context $VhdPath
+        # NOTE: Effort to prevent collision of concurrent DISM operations.
+        $syncEventName = 'Local\hcilab-install-windows-feature-to-vhd'
+        $eventWaitHandle = New-Object -TypeName 'System.Threading.EventWaitHandle' -ArgumentList $true, ([System.Threading.EventResetMode]::AutoReset), $syncEventName
+        'Waiting the turn to doing the Install-WindowsFeature cmdlet''s DISM operations...' | Write-ScriptLog -Context $VhdPath
+        $eventWaitHandle.WaitOne()
+        'Acquired the turn to doing the Install-WindowsFeature cmdlet''s DISM operation.' | Write-ScriptLog -Context $VhdPath
 
         try {
             # NOTE: Install-WindowsFeature cmdlet will fail sometimes due to concurrent operations, etc.
@@ -438,9 +439,9 @@ function Install-WindowsFeatureToVhd
             ) | Write-ScriptLog -Context $VhdPath
         }
         finally {
-            'Releasing the mutex for the Install-WindowsFeature cmdlet''s DISM operation...' | Write-ScriptLog -Context $VhdPath
-            $mutex.ReleaseMutex()
-            $mutex.Dispose()
+            'Releasing the turn to doing the Install-WindowsFeature cmdlet''s DISM operation...' | Write-ScriptLog -Context $VhdPath
+            $eventWaitHandle.Set()
+            $eventWaitHandle.Dispose()
         }
         Start-Sleep -Seconds $RetryIntervalSeconds
     }
