@@ -650,10 +650,10 @@ function WaitingForReadyToAddsDcVM
                     $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message
                 ) | Write-ScriptLog -Context $AddsDcVMName
 
-                $mutex = New-Object -TypeName 'System.Threading.Mutex' -ArgumentList $false, 'Local\HciLabMutexAddsDcVmReboot'
-                'Requesting the mutex for AD DS DC VM reboot...' | Write-ScriptLog -Context $AddsDcVMName
-                $mutex.WaitOne()
-                'Acquired the mutex for AD DS DC VM reboot.' | Write-ScriptLog -Context $AddsDcVMName
+                $waitHandle = CreateWaitHandleForSerialization -SyncEventName 'Local\hcilab-adds-dc-vm-reboot'
+                'Waiting the turn to doing the AD DS DC VM reboot...' | Write-ScriptLog -Context $VhdPath
+                $waitHandle.WaitOne()
+                'Acquired the turn to doing the AD DS DC VM reboot.' | Write-ScriptLog -Context $VhdPath
     
                 try {
                     $uptimeThresholdMinutes = 15
@@ -671,9 +671,9 @@ function WaitingForReadyToAddsDcVM
                     }
                 }
                 finally {
-                    'Releasing the mutex for AD DS DC VM reboot...' | Write-ScriptLog -Context $AddsDcVMName
-                    $mutex.ReleaseMutex()
-                    $mutex.Dispose()
+                    'Releasing the turn to doing the AD DS DC VM reboot...' | Write-ScriptLog -Context $VhdPath
+                    $waitHandle.Set()
+                    $waitHandle.Dispose()
                 }
             }
             else {
