@@ -377,6 +377,17 @@ function InjectUnattendAnswerFile
     Remove-Item $scratchDirectory -Force
 }
 
+function CreateWaitHandleForSerialization
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $SyncEventName
+    )
+
+    New-Object -TypeName 'System.Threading.EventWaitHandle' -ArgumentList $true, ([System.Threading.EventResetMode]::AutoReset), $SyncEventName
+}
+
 function Install-WindowsFeatureToVhd
 {
     [CmdletBinding()]
@@ -405,11 +416,11 @@ function Install-WindowsFeatureToVhd
 
     $startTime = Get-Date
     while ((Get-Date) -lt ($startTime + $RetyTimeout)) {
-        # NOTE: Effort to prevent concurrent DISM operations.
-        $mutex = New-Object -TypeName 'System.Threading.Mutex' -ArgumentList $false, 'Local\HciLabMutexInstallWindowsFeature'
-        'Requesting the mutex for the Install-WindowsFeature cmdlet''s DISM operation...' | Write-ScriptLog -Context $VhdPath
-        $mutex.WaitOne()
-        'Acquired the mutex for the Install-WindowsFeature cmdlet''s DISM operation.' | Write-ScriptLog -Context $VhdPath
+        # NOTE: Effort to prevent collision of concurrent DISM operations.
+        $waitHandle = CreateWaitHandleForSerialization -SyncEventName 'Local\hcilab-install-windows-feature-to-vhd'
+        'Waiting the turn to doing the Install-WindowsFeature cmdlet''s DISM operations...' | Write-ScriptLog -Context $VhdPath
+        $waitHandle.WaitOne()
+        'Acquired the turn to doing the Install-WindowsFeature cmdlet''s DISM operation.' | Write-ScriptLog -Context $VhdPath
 
         try {
             # NOTE: Install-WindowsFeature cmdlet will fail sometimes due to concurrent operations, etc.
@@ -438,9 +449,9 @@ function Install-WindowsFeatureToVhd
             ) | Write-ScriptLog -Context $VhdPath
         }
         finally {
-            'Releasing the mutex for the Install-WindowsFeature cmdlet''s DISM operation...' | Write-ScriptLog -Context $VhdPath
-            $mutex.ReleaseMutex()
-            $mutex.Dispose()
+            'Releasing the turn to doing the Install-WindowsFeature cmdlet''s DISM operation...' | Write-ScriptLog -Context $VhdPath
+            $waitHandle.Set()
+            $waitHandle.Dispose()
         }
         Start-Sleep -Seconds $RetryIntervalSeconds
     }
@@ -639,10 +650,10 @@ function WaitingForReadyToAddsDcVM
                     $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message
                 ) | Write-ScriptLog -Context $AddsDcVMName
 
-                $mutex = New-Object -TypeName 'System.Threading.Mutex' -ArgumentList $false, 'Local\HciLabMutexAddsDcVmReboot'
-                'Requesting the mutex for AD DS DC VM reboot...' | Write-ScriptLog -Context $AddsDcVMName
-                $mutex.WaitOne()
-                'Acquired the mutex for AD DS DC VM reboot.' | Write-ScriptLog -Context $AddsDcVMName
+                $waitHandle = CreateWaitHandleForSerialization -SyncEventName 'Local\hcilab-adds-dc-vm-reboot'
+                'Waiting the turn to doing the AD DS DC VM reboot...' | Write-ScriptLog -Context $VhdPath
+                $waitHandle.WaitOne()
+                'Acquired the turn to doing the AD DS DC VM reboot.' | Write-ScriptLog -Context $VhdPath
     
                 try {
                     $uptimeThresholdMinutes = 15
@@ -660,9 +671,9 @@ function WaitingForReadyToAddsDcVM
                     }
                 }
                 finally {
-                    'Releasing the mutex for AD DS DC VM reboot...' | Write-ScriptLog -Context $AddsDcVMName
-                    $mutex.ReleaseMutex()
-                    $mutex.Dispose()
+                    'Releasing the turn to doing the AD DS DC VM reboot...' | Write-ScriptLog -Context $VhdPath
+                    $waitHandle.Set()
+                    $waitHandle.Dispose()
                 }
             }
             else {
