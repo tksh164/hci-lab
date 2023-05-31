@@ -363,10 +363,10 @@ Invoke-Command @params -ScriptBlock {
     Get-NetAdapter -Name $NodeConfig.NetAdapter.Storage2.Name | New-NetIPAddress @params
 
     'Installing the latest NuGet...' | Write-ScriptLog -Context $NodeConfig.VMName -UseInScriptBlock
-    Install-PackageProvider -Name 'NuGet' -Force -Verbose
+    Install-PackageProvider -Name 'NuGet' -Scope AllUsers -Force -Verbose
 
     'Installing the latest PowershellGet...' | Write-ScriptLog -Context $NodeConfig.VMName -UseInScriptBlock
-    Install-Module -Name 'PowershellGet' -Force -Verbose
+    Install-Module -Name 'PowershellGet' -Scope AllUsers -Force -Verbose
 }
 
 'Waiting for the AD DS DC VM setup completion...' | Write-ScriptLog -Context $vmName

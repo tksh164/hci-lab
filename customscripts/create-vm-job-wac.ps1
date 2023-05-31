@@ -248,10 +248,10 @@ Invoke-Command @params -ScriptBlock {
         Set-DnsClientServerAddress -ServerAddresses $LabConfig.wac.netAdapter.management.dnsServerAddresses
 
     'Installing the latest NuGet...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
-    Install-PackageProvider -Name 'NuGet' -Force -Verbose
+    Install-PackageProvider -Name 'NuGet' -Scope AllUsers -Force -Verbose
 
     'Installing the latest PowershellGet...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
-    Install-Module -Name 'PowershellGet' -Force -Verbose
+    Install-Module -Name 'PowershellGet' -Scope AllUsers -Force -Verbose
 
     # Import required to Root and My both stores.
     'Importing Windows Admin Center certificate...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
