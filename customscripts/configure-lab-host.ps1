@@ -72,6 +72,15 @@ $params = @{
 }
 New-VMSwitch @params
 
+'Enabling forwarding on the host''s NAT network interfaces...' | Write-ScriptLog -Context $env:ComputerName
+$paramsForGet = @{
+    InterfaceAlias = '*{0}*' -f $labConfig.labHost.vSwitch.nat.name
+}
+$paramsForSet = @{
+    Forwarding = 'Enabled'
+}
+Get-NetIPInterface @paramsForGet | Set-NetIPInterface @paramsForSet
+
 foreach ($netNat in $labConfig.labHost.netNat) {
     'Creating a network NAT "{0}"...' -f $netNat.name | Write-ScriptLog -Context $env:ComputerName
     $params = @{
