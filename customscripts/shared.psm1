@@ -377,6 +377,17 @@ function InjectUnattendAnswerFile
     Remove-Item $scratchDirectory -Force
 }
 
+function CreateWaitHandleForSerialization
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $SyncEventName
+    )
+
+    New-Object -TypeName 'System.Threading.EventWaitHandle' -ArgumentList $true, ([System.Threading.EventResetMode]::AutoReset), $SyncEventName
+}
+
 function Install-WindowsFeatureToVhd
 {
     [CmdletBinding()]
