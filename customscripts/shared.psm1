@@ -651,9 +651,9 @@ function WaitingForReadyToAddsDcVM
                 ) | Write-ScriptLog -Context $AddsDcVMName
 
                 $waitHandle = CreateWaitHandleForSerialization -SyncEventName 'Local\hcilab-adds-dc-vm-reboot'
-                'Waiting the turn to doing the AD DS DC VM reboot...' | Write-ScriptLog -Context $VhdPath
+                'Waiting the turn to doing the AD DS DC VM reboot...' | Write-ScriptLog -Context $AddsDcVMName
                 $waitHandle.WaitOne()
-                'Acquired the turn to doing the AD DS DC VM reboot.' | Write-ScriptLog -Context $VhdPath
+                'Acquired the turn to doing the AD DS DC VM reboot.' | Write-ScriptLog -Context $AddsDcVMName
     
                 try {
                     $uptimeThresholdMinutes = 15
@@ -671,7 +671,7 @@ function WaitingForReadyToAddsDcVM
                     }
                 }
                 finally {
-                    'Releasing the turn to doing the AD DS DC VM reboot...' | Write-ScriptLog -Context $VhdPath
+                    'Releasing the turn to doing the AD DS DC VM reboot...' | Write-ScriptLog -Context $AddsDcVMName
                     $waitHandle.Set()
                     $waitHandle.Dispose()
                 }
