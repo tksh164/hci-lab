@@ -509,7 +509,7 @@ function Start-VMWithRetry
     throw 'The VM "{0}" was not start in the acceptable time ({1}).' -f $VMName, $RetyTimeout.ToString()
 }
 
-function Wait-PowerShellDirectOnVMToReady
+function Wait-PowerShellDirectReady
 {
     [CmdletBinding()]
     param (
@@ -802,7 +802,7 @@ $exportFunctions = @(
     'Set-UnattendAnswerFileToVhd',
     'Install-WindowsFeatureToVhd',
     'Start-VMWithRetry',
-    'Wait-PowerShellDirectOnVMToReady',
+    'Wait-PowerShellDirectReady',
     'Block-AddsDomainOperation',
     'Unblock-AddsDomainOperation',
     'Wait-AddsDcDeploymentCompletion',

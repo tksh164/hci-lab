@@ -117,7 +117,7 @@ $params = @{
     ArgumentList = '.\Administrator', $adminPassword
 }
 $localAdminCredential = New-Object @params
-Wait-PowerShellDirectOnVMToReady -VMName $vmName -Credential $localAdminCredential
+Wait-PowerShellDirectReady -VMName $vmName -Credential $localAdminCredential
 
 'Downloading the Windows Admin Center installer...' | Write-ScriptLog -Context $vmName
 $params = @{
@@ -340,7 +340,7 @@ Stop-VM -Name $vmName
 Start-VM -Name $vmName
 
 'Waiting for ready to the VM...' | Write-ScriptLog -Context $vmName
-Wait-PowerShellDirectOnVMToReady -VMName $vmName -Credential $domainAdminCredential
+Wait-PowerShellDirectReady -VMName $vmName -Credential $domainAdminCredential
 
 # NOTE: To preset WAC connections for the domain Administrator, the preset operation is required by
 # the domain Administrator because WAC connections are managed based on each user.
