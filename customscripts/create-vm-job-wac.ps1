@@ -75,7 +75,7 @@ Add-VMNetworkAdapter @paramsForAdd |
 Set-VMNetworkAdapter @paramsForSet
 
 'Generating the unattend answer XML...' | Write-ScriptLog -Context $vmName
-$adminPassword = GetSecret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName.adminPassword
+$adminPassword = Get-Secret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName.adminPassword
 $params = @{
     ComputerName = $vmName
     Password     = $adminPassword

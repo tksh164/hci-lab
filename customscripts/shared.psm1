@@ -89,7 +89,7 @@ function Get-LabDeploymentConfig
     return [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($encodedUserData)) | ConvertFrom-Json
 }
 
-function GetSecret
+function Get-Secret
 {
     [CmdletBinding()]
     param (
@@ -792,7 +792,7 @@ $exportFunctions = @(
     'Stop-ScriptLogging',
     'Write-ScriptLog',
     'Get-LabDeploymentConfig',
-    'GetSecret',
+    'Get-Secret',
     'DownloadFile',
     'CreateRegistryKeyIfNotExists',
     'GetIsoFileName',
