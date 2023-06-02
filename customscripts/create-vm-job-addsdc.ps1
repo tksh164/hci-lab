@@ -16,7 +16,7 @@ Import-Module -Name $PSModuleNameToImport -Force
 
 $labConfig = Get-LabDeploymentConfig
 Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log -FileName $LogFileName
-$labConfig | ConvertTo-Json -Depth 16 | Write-Host
+$labConfig | ConvertTo-Json -Depth 16 | Out-String | Write-ScriptLog -Context $env:ComputerName
 
 $vmName = $labConfig.addsDC.vmName
 
@@ -44,7 +44,7 @@ $params = @{
     VHDPath    = $vmOSDiskVhd.Path
     Generation = 2
 }
-New-VM @params
+New-VM @params | Out-String | Write-ScriptLog -Context $vmName
 
 'Setting the VM''s processor configuration...' | Write-ScriptLog -Context $vmName
 Set-VMProcessor -VMName $vmName -Count 2
@@ -196,7 +196,7 @@ Invoke-Command @params -ScriptBlock {
         Force                         = $true
     }
     Install-ADDSForest @params
-}
+} | Out-String | Write-ScriptLog -Context $vmName
 
 'Stopping the VM...' | Write-ScriptLog -Context $vmName
 Stop-VM -Name $vmName

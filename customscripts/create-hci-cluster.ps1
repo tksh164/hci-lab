@@ -162,7 +162,7 @@ Invoke-Command @params -ScriptBlock {
         ErrorAction = [Management.Automation.ActionPreference]::Stop
     }
     Test-Cluster @params
-}
+} | Out-String | Write-ScriptLog -Context $env:ComputerName
 
 'Creating an HCI cluster...' | Write-ScriptLog -Context $env:ComputerName
 $params = @{
@@ -200,7 +200,7 @@ Invoke-Command @params -ScriptBlock {
         ErrorAction   = [Management.Automation.ActionPreference]::Stop
     }
     New-Cluster @params
-}
+} | Out-String | Write-ScriptLog -Context $env:ComputerName
 
 'Waiting for the cluster to be ready...' | Write-ScriptLog -Context $env:ComputerName
 $params = @{
@@ -245,7 +245,7 @@ Invoke-Command @params -ScriptBlock {
         Start-Sleep -Seconds $RetryIntervalSeconds
     }
     throw 'The cluster was not ready in the acceptable time ({0}).' -f $RetyTimeout.ToString()
-}
+} | Out-String | Write-ScriptLog -Context $env:ComputerName
 
 'Configuring the cluster quorum...' | Write-ScriptLog -Context $env:ComputerName
 $params = @{
@@ -283,7 +283,7 @@ Invoke-Command @params -ScriptBlock {
         ErrorAction  = [Management.Automation.ActionPreference]::Stop
     }
     Set-ClusterQuorum @params
-}
+} | Out-String | Write-ScriptLog -Context $env:ComputerName
 
 'Enabling Storage Space Direct (S2D)...' | Write-ScriptLog -Context $env:ComputerName
 $params = @{
@@ -311,7 +311,7 @@ Invoke-Command @params -ScriptBlock {
         ErrorAction      = [Management.Automation.ActionPreference]::Stop
     }
     Enable-ClusterStorageSpacesDirect @params
-}
+} | Out-String | Write-ScriptLog -Context $env:ComputerName
 
 'Creating a volume on S2D...' | Write-ScriptLog -Context $env:ComputerName
 $params = @{
@@ -347,7 +347,7 @@ Invoke-Command @params -ScriptBlock {
         ErrorAction             = [Management.Automation.ActionPreference]::Stop
     }
     New-Volume @params
-}
+} | Out-String | Write-ScriptLog -Context $env:ComputerName
 
 'The HCI cluster creation has been completed.' | Write-ScriptLog -Context $env:ComputerName
 

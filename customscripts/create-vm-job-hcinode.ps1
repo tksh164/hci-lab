@@ -47,7 +47,7 @@ Import-Module -Name $PSModuleNameToImport -Force
 
 $labConfig = Get-LabDeploymentConfig
 Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log -FileName $LogFileName
-$labConfig | ConvertTo-Json -Depth 16 | Write-Host
+$labConfig | ConvertTo-Json -Depth 16 | Out-String | Write-ScriptLog -Context $env:ComputerName
 
 $vmName = GetHciNodeVMName -Format $labConfig.hciNode.vmName -Offset $labConfig.hciNode.vmNameOffset -Index $NodeIndex
 
@@ -105,7 +105,7 @@ $nodeConfig = [PSCustomObject] @{
         }
     }
 }
-$nodeConfig | ConvertTo-Json -Depth 16 | Write-Host
+$nodeConfig | ConvertTo-Json -Depth 16 | Out-String | Write-ScriptLog -Context $vmName
 
 'Creating the OS disk...' | Write-ScriptLog -Context $nodeConfig.VMName
 $params = @{
@@ -122,7 +122,7 @@ $params = @{
     VHDPath    = $vmOSDiskVhd.Path
     Generation = 2
 }
-New-VM @params
+New-VM @params | Out-String | Write-ScriptLog -Context $vmName
 
 'Setting processor configuration...' | Write-ScriptLog -Context $nodeConfig.VMName
 Set-VMProcessor -VMName $nodeConfig.VMName -Count 8 -ExposeVirtualizationExtensions $true
@@ -219,7 +219,7 @@ for ($diskIndex = 1; $diskIndex -le $diskCount; $diskIndex++) {
         SizeBytes = $nodeConfig.DataDiskSizeBytes
     }
     $vmDataDiskVhd = New-VHD @params
-    Add-VMHardDiskDrive -VMName $nodeConfig.VMName -Path $vmDataDiskVhd.Path -Passthru
+    Add-VMHardDiskDrive -VMName $nodeConfig.VMName -Path $vmDataDiskVhd.Path -Passthru | Out-String | Write-ScriptLog -Context $vmName
 }
 
 'Generating the unattend answer XML...' | Write-ScriptLog -Context $nodeConfig.VMName
@@ -361,7 +361,7 @@ Invoke-Command @params -ScriptBlock {
         PrefixLength  = $NodeConfig.NetAdapter.Storage2.PrefixLength
     }
     Get-NetAdapter -Name $NodeConfig.NetAdapter.Storage2.Name | New-NetIPAddress @params
-}
+} | Out-String | Write-ScriptLog -Context $vmName
 
 'Waiting for the AD DS DC VM setup completion...' | Write-ScriptLog -Context $vmName
 WaitingForAddsDcVMSetupCompletion
