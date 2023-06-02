@@ -33,7 +33,7 @@ function DownloadIso
     $params = @{
         SourceUri      = $AssetUrls[$OperatingSystem]['iso'][$Culture]
         DownloadFolder = $DownloadFolderPath
-        FileNameToSave = (New-IsoFileName -OperatingSystem $OperatingSystem -Culture $Culture)
+        FileNameToSave = (Format-IsoFileName -OperatingSystem $OperatingSystem -Culture $Culture)
     }
     Invoke-FileDownload @params
 }

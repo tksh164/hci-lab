@@ -33,8 +33,8 @@ try {
     # because the ISO file will unmount when finish first one.
     'Copying Windows Server ISO file for concurrency...' | Write-ScriptLog -Context $env:ComputerName
     $isoFileNameSuffix = 'for-concurrent'
-    $sourceIsoFilePath = [IO.Path]::Combine($labConfig.labHost.folderPath.temp, (New-IsoFileName -OperatingSystem 'ws2022' -Culture $labConfig.guestOS.culture))
-    $isoFilePathForConcurrency = [IO.Path]::Combine($labConfig.labHost.folderPath.temp, (New-IsoFileName -OperatingSystem 'ws2022' -Culture $labConfig.guestOS.culture -Suffix $isoFileNameSuffix))
+    $sourceIsoFilePath = [IO.Path]::Combine($labConfig.labHost.folderPath.temp, (Format-IsoFileName -OperatingSystem 'ws2022' -Culture $labConfig.guestOS.culture))
+    $isoFilePathForConcurrency = [IO.Path]::Combine($labConfig.labHost.folderPath.temp, (Format-IsoFileName -OperatingSystem 'ws2022' -Culture $labConfig.guestOS.culture -Suffix $isoFileNameSuffix))
     Copy-Item -LiteralPath $sourceIsoFilePath -Destination $isoFilePathForConcurrency -Force -PassThru
 
     'Creating the base VHD creation jobs...' | Write-ScriptLog -Context $env:ComputerName
