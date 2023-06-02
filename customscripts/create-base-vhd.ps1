@@ -25,7 +25,7 @@ try {
         DownloadFolder = $labConfig.labHost.folderPath.temp
         FileNameToSave = 'Convert-WindowsImage.ps1'
     }
-    $convertWimScriptFile = DownloadFile @params
+    $convertWimScriptFile = Invoke-FileDownload @params
     $convertWimScriptFile
 
     # NOTE: Only one VHD file can be created from a single ISO file at the same time.

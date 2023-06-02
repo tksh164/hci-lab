@@ -125,7 +125,7 @@ $params = @{
     DownloadFolder = $labConfig.labHost.folderPath.temp
     FileNameToSave = 'WindowsAdminCenter.msi'
 }
-$wacInstallerFile = DownloadFile @params
+$wacInstallerFile = Invoke-FileDownload @params
 $wacInstallerFile | Out-String | Write-ScriptLog -Context $vmName
 
 'Creating a new SSL server authentication certificate for Windows Admin Center...' | Write-ScriptLog -Context $vmName

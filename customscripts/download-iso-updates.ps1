@@ -35,7 +35,7 @@ function DownloadIso
         DownloadFolder = $DownloadFolderPath
         FileNameToSave = (GetIsoFileName -OperatingSystem $OperatingSystem -Culture $Culture)
     }
-    DownloadFile @params
+    Invoke-FileDownload @params
 }
 
 function DownloadUpdates
@@ -65,7 +65,7 @@ function DownloadUpdates
             DownloadFolder = $downloadFolderPath
             FileNameToSave = $fileNameToSave
         }
-        DownloadFile @params
+        Invoke-FileDownload @params
     }
 }
 

@@ -129,7 +129,7 @@ function Get-Secret
     return ConvertTo-SecureString -String $secretValue -AsPlainText -Force
 }
 
-function DownloadFile
+function Invoke-FileDownload
 {
     [CmdletBinding()]
     param (
@@ -793,7 +793,7 @@ $exportFunctions = @(
     'Write-ScriptLog',
     'Get-LabDeploymentConfig',
     'Get-Secret',
-    'DownloadFile',
+    'Invoke-FileDownload',
     'CreateRegistryKeyIfNotExists',
     'GetIsoFileName',
     'GetBaseVhdFileName',
