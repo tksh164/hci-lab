@@ -26,7 +26,7 @@ $params = @{
     ImageIndex      = 4  # Datacenter with Desktop Experience
     Culture         = $labConfig.guestOS.culture
 }
-$parentVhdFileName = New-BaseVhdFileName @params
+$parentVhdFileName = Format-BaseVhdFileName @params
 $params = @{
     Differencing = $true
     ParentPath   = [IO.Path]::Combine($labConfig.labHost.folderPath.vhd, $parentVhdFileName)
