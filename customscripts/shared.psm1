@@ -20,6 +20,7 @@ function Stop-ScriptLogging
 {
     [CmdletBinding()]
     param ()
+
     Stop-Transcript
 }
 
@@ -31,7 +32,7 @@ function Get-LogFileName
         [string] $FileName
     )
 
-    '{0:yyyyMMdd-HHmmss}_{1}_{2}.txt' -f [DateTime]::Now, $env:ComputerName, $FileName
+    return '{0:yyyyMMdd-HHmmss}_{1}_{2}.txt' -f [DateTime]::Now, $env:ComputerName, $FileName
 }
 
 function Write-ScriptLog
@@ -85,7 +86,7 @@ function Get-LabDeploymentConfig
         UseBasicParsing = $true
     }
     $encodedUserData = Invoke-RestMethod @params
-    [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($encodedUserData)) | ConvertFrom-Json
+    return [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($encodedUserData)) | ConvertFrom-Json
 }
 
 function GetSecret
@@ -102,6 +103,7 @@ function GetSecret
         [switch] $AsPlainText
     )
 
+    # Get a token for Key Vault using VM's managed identity via Azure Instance Metadata Service.
     $params = @{
         Method  = 'Get'
         Uri     = 'http://169.254.169.254/metadata/identity/oauth2/token?api-version=2021-12-13&resource=https%3A%2F%2Fvault.azure.net'
@@ -111,6 +113,7 @@ function GetSecret
     }
     $accessToken = (Invoke-RestMethod @params).access_token
 
+    # Get a secret value from the Key Vault resource.
     $params = @{
         Method  = 'Get'
         Uri     = ('https://{0}.vault.azure.net/secrets/{1}?api-version=7.3' -f $KeyVaultName, $SecretName)
@@ -119,12 +122,11 @@ function GetSecret
         }
     }
     $secretValue = (Invoke-RestMethod @params).value
+
     if ($AsPlainText) {
-        $secretValue
+        return $secretValue
     }
-    else {
-        ConvertTo-SecureString -String $secretValue -AsPlainText -Force
-    }
+    return ConvertTo-SecureString -String $secretValue -AsPlainText -Force
 }
 
 function DownloadFile
@@ -206,11 +208,9 @@ function GetIsoFileName
     )
 
     if ($PSBoundParameters.Keys.Contains('Suffix')) {
-        '{0}_{1}_{2}.iso' -f $OperatingSystem, $Culture, $Suffix
+        return '{0}_{1}_{2}.iso' -f $OperatingSystem, $Culture, $Suffix
     }
-    else {
-        '{0}_{1}.iso' -f $OperatingSystem, $Culture
-    }
+    return '{0}_{1}.iso' -f $OperatingSystem, $Culture
 }
 
 function GetBaseVhdFileName
@@ -228,7 +228,7 @@ function GetBaseVhdFileName
         [string] $Culture
     )
 
-    '{0}_{1}_{2}.vhdx' -f $OperatingSystem, $ImageIndex, $Culture
+    return '{0}_{1}_{2}.vhdx' -f $OperatingSystem, $ImageIndex, $Culture
 }
 
 function GetHciNodeVMName
@@ -245,7 +245,7 @@ function GetHciNodeVMName
         [uint32] $Index
     )
 
-    $Format -f ($Offset + $Index)
+    return $Format -f ($Offset + $Index)
 }
 
 function GetUnattendAnswerFileContent
@@ -262,6 +262,7 @@ function GetUnattendAnswerFileContent
         [string] $Culture
     )
 
+    # Convert an admin password to the unattend file format.
     $encodedAdminPassword = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes(([Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($Password))) + 'AdministratorPassword'))
 
     return @'
@@ -385,7 +386,15 @@ function CreateWaitHandleForSerialization
         [string] $SyncEventName
     )
 
-    New-Object -TypeName 'System.Threading.EventWaitHandle' -ArgumentList $true, ([System.Threading.EventResetMode]::AutoReset), $SyncEventName
+    $params = @{
+        TypeName     = 'System.Threading.EventWaitHandle'
+        ArgumentList = @(
+            $true,
+            [System.Threading.EventResetMode]::AutoReset,
+            $SyncEventName
+        )
+    }
+    return New-Object @params
 }
 
 function Install-WindowsFeatureToVhd
@@ -717,7 +726,7 @@ function CreateDomainCredential
             $Password
         )
     }
-    New-Object @params
+    return New-Object @params
 }
 
 function JoinVMToADDomain
