@@ -112,11 +112,7 @@ Install-WindowsFeatureToVhd @params
 Start-VMWithRetry -VMName $vmName
 
 'Waiting for ready to the VM...' | Write-ScriptLog -Context $vmName
-$params = @{
-    TypeName     = 'System.Management.Automation.PSCredential'
-    ArgumentList = '.\Administrator', $adminPassword
-}
-$localAdminCredential = New-Object @params
+$localAdminCredential = New-LogonCredential -DomainFqdn '.' -Password $adminPassword
 Wait-PowerShellDirectReady -VMName $vmName -Credential $localAdminCredential
 
 'Downloading the Windows Admin Center installer...' | Write-ScriptLog -Context $vmName
