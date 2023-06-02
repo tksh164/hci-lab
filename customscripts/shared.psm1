@@ -213,7 +213,7 @@ function New-IsoFileName
     return '{0}_{1}.iso' -f $OperatingSystem, $Culture
 }
 
-function GetBaseVhdFileName
+function New-BaseVhdFileName
 {
     [CmdletBinding()]
     param (
@@ -796,7 +796,7 @@ $exportFunctions = @(
     'Invoke-FileDownload',
     'New-RegistryKey',
     'New-IsoFileName',
-    'GetBaseVhdFileName',
+    'New-BaseVhdFileName',
     'GetHciNodeVMName',
     'GetUnattendAnswerFileContent',
     'InjectUnattendAnswerFile',

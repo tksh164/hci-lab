@@ -42,7 +42,7 @@ $params = @{
     ImageIndex      = $ImageIndex
     Culture         = $labConfig.guestOS.culture
 }
-$vhdFilePath = [IO.Path]::Combine($labConfig.labHost.folderPath.vhd, (GetBaseVhdFileName @params))
+$vhdFilePath = [IO.Path]::Combine($labConfig.labHost.folderPath.vhd, (New-BaseVhdFileName @params))
 
 $updatePackage = @()
 $updatesFolderPath = [IO.Path]::Combine($labConfig.labHost.folderPath.updates, $OperatingSystem)

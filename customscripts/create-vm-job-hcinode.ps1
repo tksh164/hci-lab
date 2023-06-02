@@ -56,7 +56,7 @@ $params = @{
     ImageIndex      = $labConfig.hciNode.operatingSystem.imageIndex
     Culture         = $labConfig.guestOS.culture
 }
-$parentVhdPath = [IO.Path]::Combine($labConfig.labHost.folderPath.vhd, (GetBaseVhdFileName @params))
+$parentVhdPath = [IO.Path]::Combine($labConfig.labHost.folderPath.vhd, (New-BaseVhdFileName @params))
 
 $params = @{
     NodeCount        = $labConfig.hciNode.nodeCount
