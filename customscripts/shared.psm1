@@ -729,7 +729,7 @@ function New-LogonCredential
     return New-Object @params
 }
 
-function JoinVMToADDomain
+function Add-VMToADDomain
 {
     [CmdletBinding()]
     param (
@@ -808,6 +808,6 @@ $exportFunctions = @(
     'Wait-AddsDcDeploymentCompletion',
     'Wait-DomainControllerServiceReady',
     'New-LogonCredential',
-    'JoinVMToADDomain'
+    'Add-VMToADDomain'
 )
 Export-ModuleMember -Function $exportFunctions

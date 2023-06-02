@@ -331,7 +331,7 @@ $params = @{
     DomainFqdn            = $labConfig.addsDomain.fqdn
     DomainAdminCredential = $domainAdminCredential
 }
-JoinVMToADDomain @params
+Add-VMToADDomain @params
 
 'Stopping the VM...' | Write-ScriptLog -Context $vmName
 Stop-VM -Name $vmName
