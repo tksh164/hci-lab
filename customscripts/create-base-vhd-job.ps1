@@ -35,7 +35,7 @@ $params = @{
 if ($PSBoundParameters.Keys.Contains('IsoFileNameSuffix')) {
     $params.Suffix = $IsoFileNameSuffix
 }
-$isoFilePath = [IO.Path]::Combine($labConfig.labHost.folderPath.temp, (GetIsoFileName @params))
+$isoFilePath = [IO.Path]::Combine($labConfig.labHost.folderPath.temp, (New-IsoFileName @params))
 
 $params = @{
     OperatingSystem = $OperatingSystem

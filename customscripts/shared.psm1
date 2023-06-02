@@ -193,7 +193,7 @@ function New-RegistryKey
     }
 }
 
-function GetIsoFileName
+function New-IsoFileName
 {
     [CmdletBinding()]
     param (
@@ -795,7 +795,7 @@ $exportFunctions = @(
     'Get-Secret',
     'Invoke-FileDownload',
     'New-RegistryKey',
-    'GetIsoFileName',
+    'New-IsoFileName',
     'GetBaseVhdFileName',
     'GetHciNodeVMName',
     'GetUnattendAnswerFileContent',
