@@ -38,7 +38,7 @@ function Invoke-IsoFileDownload
     Invoke-FileDownload @params
 }
 
-function DownloadUpdates
+function Invoke-UpdateFileDonwload
 {
     [CmdletBinding()]
     param (
@@ -113,7 +113,7 @@ if ($labConfig.guestOS.applyUpdates) {
         DownloadFolderBasePath = $labConfig.labHost.folderPath.updates
         AssetUrls              = $assetUrls
     }
-    DownloadUpdates @params
+    Invoke-UpdateFileDonwload @params
     
     if ($labConfig.hciNode.operatingSystem.sku -ne 'ws2022') {
         'Downloading the Windows Server updates...' | Write-ScriptLog -Context $env:ComputerName
@@ -122,7 +122,7 @@ if ($labConfig.guestOS.applyUpdates) {
             DownloadFolderBasePath = $labConfig.labHost.folderPath.updates
             AssetUrls              = $assetUrls
         }
-        DownloadUpdates @params
+        Invoke-UpdateFileDonwload @params
     }
 
     'The update files download has been completed.' | Write-ScriptLog -Context $env:ComputerName
