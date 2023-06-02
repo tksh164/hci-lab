@@ -108,11 +108,7 @@ Install-WindowsFeatureToVhd @params
 Start-VMWithRetry -VMName $vmName
 
 'Waiting for ready to the VM...' | Write-ScriptLog -Context $vmName
-$params = @{
-    TypeName     = 'System.Management.Automation.PSCredential'
-    ArgumentList = 'Administrator', $adminPassword
-}
-$localAdminCredential = New-Object @params
+$localAdminCredential = New-LogonCredential -DomainFqdn '.' -Password $adminPassword
 Wait-PowerShellDirectReady -VMName $vmName -Credential $localAdminCredential
 
 'Configuring the inside of the VM...' | Write-ScriptLog -Context $vmName
