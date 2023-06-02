@@ -89,7 +89,7 @@ $params = @{
     UnattendAnswerFileContent = $unattendAnswerFileContent
     LogFolder                 = $labConfig.labHost.folderPath.log
 }
-Set-UnattendAnswerFileInVhd @params
+Set-UnattendAnswerFileToVhd @params
 
 'Installing the roles and features to the VHD...' | Write-ScriptLog -Context $vmName
 $params = @{

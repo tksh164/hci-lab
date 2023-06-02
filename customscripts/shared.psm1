@@ -331,7 +331,7 @@ function WaitingForVhdDismount
     'The VHD dismount completed.' | Write-ScriptLog -Context $VhdPath
 }
 
-function Set-UnattendAnswerFileInVhd
+function Set-UnattendAnswerFileToVhd
 {
     [CmdletBinding()]
     param (
@@ -799,7 +799,7 @@ $exportFunctions = @(
     'Format-BaseVhdFileName',
     'Format-HciNodeName',
     'New-UnattendAnswerFileContent',
-    'Set-UnattendAnswerFileInVhd',
+    'Set-UnattendAnswerFileToVhd',
     'Install-WindowsFeatureToVhd',
     'WaitingForStartingVM',
     'WaitingForReadyToVM',
