@@ -10,7 +10,7 @@ param (
     [string] $LogFileName
 )
 
-function CalculateHciNodeRamBytes
+function Invoke-HciNodeRamSizeCalculation
 {
     [CmdletBinding()]
     param (
@@ -63,7 +63,7 @@ $params = @{
     AddsDcVMRamBytes = $labConfig.addsDC.maximumRamBytes
     WacVMRamBytes    = $labConfig.wac.maximumRamBytes
 }
-$ramBytes = CalculateHciNodeRamBytes @params
+$ramBytes = Invoke-HciNodeRamSizeCalculation @params
 
 'Creating a VM configuraton for the HCI node VM...' -f $vmName | Write-ScriptLog -Context $vmName
 $nodeConfig = [PSCustomObject] @{
