@@ -14,6 +14,7 @@ $labConfig | ConvertTo-Json -Depth 16 | Write-Host
 
 function DownloadIso
 {
+    [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
         [string] $OperatingSystem,
@@ -39,6 +40,7 @@ function DownloadIso
 
 function DownloadUpdates
 {
+    [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
         [string] $OperatingSystem,
