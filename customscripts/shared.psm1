@@ -11,7 +11,7 @@ function Start-ScriptLogging
         [string] $FileName = [IO.Path]::GetFileNameWithoutExtension($MyInvocation.ScriptName)
     )
 
-    $transcriptFileName = Get-LogFileName -FileName $FileName
+    $transcriptFileName = New-LogFileName -FileName $FileName
     $transcriptFilePath = [IO.Path]::Combine($OutputDirectory, $transcriptFileName)
     Start-Transcript -LiteralPath $transcriptFilePath -Append -IncludeInvocationHeader
 }
@@ -24,7 +24,7 @@ function Stop-ScriptLogging
     Stop-Transcript
 }
 
-function Get-LogFileName
+function New-LogFileName
 {
     [CmdletBinding()]
     param (
@@ -359,7 +359,7 @@ function InjectUnattendAnswerFile
     'scratchDirectory: {0}' -f $scratchDirectory | Write-ScriptLog -Context $VhdPath
     New-Item -ItemType Directory -Path $scratchDirectory -Force | Out-String | Write-ScriptLog -Context $VhdPath
 
-    $logPath = [IO.Path]::Combine($LogFolder, (Get-LogFileName -FileName ('injectunattend-' + [IO.Path]::GetFileNameWithoutExtension([IO.Path]::GetDirectoryName($VhdPath)))))
+    $logPath = [IO.Path]::Combine($LogFolder, (New-LogFileName -FileName ('injectunattend-' + [IO.Path]::GetFileNameWithoutExtension([IO.Path]::GetDirectoryName($VhdPath)))))
     'logPath: {0}' -f $logPath | Write-ScriptLog -Context $VhdPath
     Mount-WindowsImage -Path $vhdMountPath -Index 1 -ImagePath $VhdPath -ScratchDirectory $scratchDirectory -LogPath $logPath | Out-String | Write-ScriptLog -Context $VhdPath
 
@@ -420,7 +420,7 @@ function Install-WindowsFeatureToVhd
         [TimeSpan] $RetyTimeout = (New-TimeSpan -Minutes 30)
     )
 
-    $logPath = [IO.Path]::Combine($LogFolder, (Get-LogFileName -FileName ('installwinfeature-' + [IO.Path]::GetFileNameWithoutExtension([IO.Path]::GetDirectoryName($VhdPath)))))
+    $logPath = [IO.Path]::Combine($LogFolder, (New-LogFileName -FileName ('installwinfeature-' + [IO.Path]::GetFileNameWithoutExtension([IO.Path]::GetDirectoryName($VhdPath)))))
     'logPath: {0}' -f $logPath | Write-ScriptLog -Context $VhdPath
 
     $startTime = Get-Date
