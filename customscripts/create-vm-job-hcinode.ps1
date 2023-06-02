@@ -263,7 +263,7 @@ $params = @{
     ArgumentList = '.\Administrator', $nodeConfig.AdminPassword
 }
 $localAdminCredential = New-Object @params
-WaitingForReadyToVM -VMName $nodeConfig.VMName -Credential $localAdminCredential
+Wait-PowerShellDirectOnVMToReady -VMName $nodeConfig.VMName -Credential $localAdminCredential
 
 'Configuring the inside of the VM...' | Write-ScriptLog -Context $nodeConfig.VMName
 $params = @{
@@ -392,7 +392,7 @@ Start-VM -Name $nodeConfig.VMName
 
 'Waiting for ready to the VM...' | Write-ScriptLog -Context $nodeConfig.VMName
 $domainAdminCredential = CreateDomainCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $nodeConfig.AdminPassword
-WaitingForReadyToVM -VMName $nodeConfig.VMName -Credential $domainAdminCredential
+Wait-PowerShellDirectOnVMToReady -VMName $nodeConfig.VMName -Credential $domainAdminCredential
 
 'The HCI node VM creation has been completed.' | Write-ScriptLog -Context $nodeConfig.VMName
 

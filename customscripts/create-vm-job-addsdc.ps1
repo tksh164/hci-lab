@@ -113,7 +113,7 @@ $params = @{
     ArgumentList = 'Administrator', $adminPassword
 }
 $localAdminCredential = New-Object @params
-WaitingForReadyToVM -VMName $vmName -Credential $localAdminCredential
+Wait-PowerShellDirectOnVMToReady -VMName $vmName -Credential $localAdminCredential
 
 'Configuring the inside of the VM...' | Write-ScriptLog -Context $vmName
 $params = @{
