@@ -205,7 +205,7 @@ Stop-VM -Name $vmName
 Start-VM -Name $vmName
 
 'Waiting for ready to the domain controller...' | Write-ScriptLog -Context $vmName
-$domainAdminCredential = CreateDomainCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $adminPassword
+$domainAdminCredential = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $adminPassword
 # The DC's computer name is the same as the VM name. It's specified in the unattend.xml.
 Wait-DomainControllerServiceReady -AddsDcVMName $vmName -AddsDcComputerName $vmName -Credential $domainAdminCredential
 

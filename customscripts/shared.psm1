@@ -705,7 +705,7 @@ function Wait-DomainControllerServiceReady
     throw 'The AD DS DC "{0}" was not ready in the acceptable time ({1}).' -f $AddsDcVMName, $RetyTimeout.ToString()
 }
 
-function CreateDomainCredential
+function New-LogonCredential
 {
     [CmdletBinding()]
     param (
@@ -807,7 +807,7 @@ $exportFunctions = @(
     'Unblock-AddsDomainOperation',
     'Wait-AddsDcDeploymentCompletion',
     'Wait-DomainControllerServiceReady',
-    'CreateDomainCredential',
+    'New-LogonCredential',
     'JoinVMToADDomain'
 )
 Export-ModuleMember -Function $exportFunctions

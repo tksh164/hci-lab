@@ -366,7 +366,7 @@ Invoke-Command @params -ScriptBlock {
 Wait-AddsDcDeploymentCompletion
 
 'Waiting for ready to the domain controller...' | Write-ScriptLog -Context $nodeConfig.VMName
-$domainAdminCredential = CreateDomainCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $nodeConfig.AdminPassword
+$domainAdminCredential = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $nodeConfig.AdminPassword
 # The DC's computer name is the same as the VM name. It's specified in the unattend.xml.
 $params = @{
     AddsDcVMName       = $labConfig.addsDC.vmName
@@ -391,7 +391,7 @@ Stop-VM -Name $nodeConfig.VMName
 Start-VM -Name $nodeConfig.VMName
 
 'Waiting for ready to the VM...' | Write-ScriptLog -Context $nodeConfig.VMName
-$domainAdminCredential = CreateDomainCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $nodeConfig.AdminPassword
+$domainAdminCredential = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $nodeConfig.AdminPassword
 Wait-PowerShellDirectReady -VMName $nodeConfig.VMName -Credential $domainAdminCredential
 
 'The HCI node VM creation has been completed.' | Write-ScriptLog -Context $nodeConfig.VMName
