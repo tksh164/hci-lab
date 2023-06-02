@@ -12,7 +12,7 @@ $labConfig = Get-LabDeploymentConfig
 Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log
 $labConfig | ConvertTo-Json -Depth 16 | Write-Host
 
-function DownloadIso
+function Invoke-IsoFileDownload
 {
     [CmdletBinding()]
     param (
@@ -84,7 +84,7 @@ $params = @{
     DownloadFolderPath = $labConfig.labHost.folderPath.temp
     AssetUrls          = $assetUrls
 }
-DownloadIso @params
+Invoke-IsoFileDownload @params
 
 # The Windows Server 2022 ISO is always needed for the domain controller VM.
 if ($labConfig.hciNode.operatingSystem.sku -ne 'ws2022') {
@@ -95,7 +95,7 @@ if ($labConfig.hciNode.operatingSystem.sku -ne 'ws2022') {
         DownloadFolderPath = $labConfig.labHost.folderPath.temp
         AssetUrls          = $assetUrls
     }
-    DownloadIso @params
+    Invoke-IsoFileDownload @params
 }
 
 'The ISO files download has been completed.' | Write-ScriptLog -Context $env:ComputerName
