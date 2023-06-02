@@ -35,7 +35,7 @@ function CalculateHciNodeRamBytes
     'WacVMRamBytes: {0}' -f $WacVMRamBytes | Write-ScriptLog -Context $env:ComputerName
 
     # StartupBytes should be a multiple of 2 MB (2 * 1024 * 1024 bytes).
-    [Math]::Floor((($totalRamBytes - $labHostReservedRamBytes - $AddsDcVMRamBytes - $WacVMRamBytes) / $NodeCount) / 2MB) * 2MB
+    return [Math]::Floor((($totalRamBytes - $labHostReservedRamBytes - $AddsDcVMRamBytes - $WacVMRamBytes) / $NodeCount) / 2MB) * 2MB
 }
 
 $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
