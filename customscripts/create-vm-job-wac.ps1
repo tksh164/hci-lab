@@ -317,8 +317,7 @@ Invoke-Command @params -ScriptBlock {
     $shortcut.Save()
 } | Out-String | Write-ScriptLog -Context $vmName
 
-'Waiting for the AD DS DC VM setup completion...' | Write-ScriptLog -Context $vmName
-WaitingForAddsDcVMSetupCompletion
+Wait-AddsDcDeploymentCompletion
 
 'Waiting for ready to the domain controller...' | Write-ScriptLog -Context $vmName
 $domainAdminCredential = CreateDomainCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $adminPassword

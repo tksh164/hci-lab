@@ -363,8 +363,7 @@ Invoke-Command @params -ScriptBlock {
     Get-NetAdapter -Name $NodeConfig.NetAdapter.Storage2.Name | New-NetIPAddress @params
 } | Out-String | Write-ScriptLog -Context $vmName
 
-'Waiting for the AD DS DC VM setup completion...' | Write-ScriptLog -Context $vmName
-WaitingForAddsDcVMSetupCompletion
+Wait-AddsDcDeploymentCompletion
 
 'Waiting for ready to the domain controller...' | Write-ScriptLog -Context $nodeConfig.VMName
 $domainAdminCredential = CreateDomainCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $nodeConfig.AdminPassword

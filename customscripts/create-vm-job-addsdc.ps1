@@ -20,8 +20,8 @@ $labConfig | ConvertTo-Json -Depth 16 | Out-String | Write-ScriptLog -Context $e
 
 $vmName = $labConfig.addsDC.vmName
 
-'Initializing the AD DS DC VM setup completion notification...' | Write-ScriptLog -Context $vmName
-InitAddsDcVMSetupCompletionNotification
+'Block the AD DS domain operations on other VMs.' | Write-ScriptLog -Context $vmName
+Block-AddsDomainOperation
 
 'Creating the OS disk for the VM...' | Write-ScriptLog -Context $vmName
 $params = @{
@@ -209,8 +209,8 @@ $domainAdminCredential = CreateDomainCredential -DomainFqdn $labConfig.addsDomai
 # The DC's computer name is the same as the VM name. It's specified in the unattend.xml.
 WaitingForReadyToAddsDcVM -AddsDcVMName $vmName -AddsDcComputerName $vmName -Credential $domainAdminCredential
 
-'Notifying the AD DS DC VM setup completion...' | Write-ScriptLog -Context $vmName
-NotifyAddsDcVMSetupCompletion
+'Allow the AD DS domain operations on other VMs.' | Write-ScriptLog -Context $vmName
+Unblock-AddsDomainOperation
 
 'The AD DS Domain Controller VM creation has been completed.' | Write-ScriptLog -Context $vmName
 
