@@ -255,7 +255,7 @@ $params = @{
 Install-WindowsFeatureToVhd @params
 
 'Starting the VM...' | Write-ScriptLog -Context $nodeConfig.VMName
-WaitingForStartingVM -VMName $nodeConfig.VMName
+Start-VMWithRetry -VMName $nodeConfig.VMName
 
 'Waiting for ready to the VM...' | Write-ScriptLog -Context $nodeConfig.VMName
 $params = @{

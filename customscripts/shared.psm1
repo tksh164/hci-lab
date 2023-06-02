@@ -467,7 +467,7 @@ function Install-WindowsFeatureToVhd
     throw 'The Install-WindowsFeature cmdlet execution for "{0}" was not succeeded in the acceptable time ({1}).' -f $VhdPath, $RetyTimeout.ToString()
 }
 
-function WaitingForStartingVM
+function Start-VMWithRetry
 {
     [CmdletBinding()]
     param (
@@ -801,7 +801,7 @@ $exportFunctions = @(
     'New-UnattendAnswerFileContent',
     'Set-UnattendAnswerFileToVhd',
     'Install-WindowsFeatureToVhd',
-    'WaitingForStartingVM',
+    'Start-VMWithRetry',
     'WaitingForReadyToVM',
     'Block-AddsDomainOperation',
     'Unblock-AddsDomainOperation',
