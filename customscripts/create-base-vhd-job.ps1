@@ -35,14 +35,14 @@ $params = @{
 if ($PSBoundParameters.Keys.Contains('IsoFileNameSuffix')) {
     $params.Suffix = $IsoFileNameSuffix
 }
-$isoFilePath = [IO.Path]::Combine($labConfig.labHost.folderPath.temp, (GetIsoFileName @params))
+$isoFilePath = [IO.Path]::Combine($labConfig.labHost.folderPath.temp, (Format-IsoFileName @params))
 
 $params = @{
     OperatingSystem = $OperatingSystem
     ImageIndex      = $ImageIndex
     Culture         = $labConfig.guestOS.culture
 }
-$vhdFilePath = [IO.Path]::Combine($labConfig.labHost.folderPath.vhd, (GetBaseVhdFileName @params))
+$vhdFilePath = [IO.Path]::Combine($labConfig.labHost.folderPath.vhd, (Format-BaseVhdFileName @params))
 
 $updatePackage = @()
 $updatesFolderPath = [IO.Path]::Combine($labConfig.labHost.folderPath.updates, $OperatingSystem)

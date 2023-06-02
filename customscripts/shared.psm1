@@ -11,7 +11,7 @@ function Start-ScriptLogging
         [string] $FileName = [IO.Path]::GetFileNameWithoutExtension($MyInvocation.ScriptName)
     )
 
-    $transcriptFileName = Get-LogFileName -FileName $FileName
+    $transcriptFileName = New-LogFileName -FileName $FileName
     $transcriptFilePath = [IO.Path]::Combine($OutputDirectory, $transcriptFileName)
     Start-Transcript -LiteralPath $transcriptFilePath -Append -IncludeInvocationHeader
 }
@@ -20,10 +20,11 @@ function Stop-ScriptLogging
 {
     [CmdletBinding()]
     param ()
+
     Stop-Transcript
 }
 
-function Get-LogFileName
+function New-LogFileName
 {
     [CmdletBinding()]
     param (
@@ -31,7 +32,7 @@ function Get-LogFileName
         [string] $FileName
     )
 
-    '{0:yyyyMMdd-HHmmss}_{1}_{2}.txt' -f [DateTime]::Now, $env:ComputerName, $FileName
+    return '{0:yyyyMMdd-HHmmss}_{1}_{2}.txt' -f [DateTime]::Now, $env:ComputerName, $FileName
 }
 
 function Write-ScriptLog
@@ -85,10 +86,10 @@ function Get-LabDeploymentConfig
         UseBasicParsing = $true
     }
     $encodedUserData = Invoke-RestMethod @params
-    [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($encodedUserData)) | ConvertFrom-Json
+    return [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($encodedUserData)) | ConvertFrom-Json
 }
 
-function GetSecret
+function Get-Secret
 {
     [CmdletBinding()]
     param (
@@ -102,6 +103,7 @@ function GetSecret
         [switch] $AsPlainText
     )
 
+    # Get a token for Key Vault using VM's managed identity via Azure Instance Metadata Service.
     $params = @{
         Method  = 'Get'
         Uri     = 'http://169.254.169.254/metadata/identity/oauth2/token?api-version=2021-12-13&resource=https%3A%2F%2Fvault.azure.net'
@@ -111,6 +113,7 @@ function GetSecret
     }
     $accessToken = (Invoke-RestMethod @params).access_token
 
+    # Get a secret value from the Key Vault resource.
     $params = @{
         Method  = 'Get'
         Uri     = ('https://{0}.vault.azure.net/secrets/{1}?api-version=7.3' -f $KeyVaultName, $SecretName)
@@ -119,15 +122,14 @@ function GetSecret
         }
     }
     $secretValue = (Invoke-RestMethod @params).value
+
     if ($AsPlainText) {
-        $secretValue
+        return $secretValue
     }
-    else {
-        ConvertTo-SecureString -String $secretValue -AsPlainText -Force
-    }
+    return ConvertTo-SecureString -String $secretValue -AsPlainText -Force
 }
 
-function DownloadFile
+function Invoke-FileDownload
 {
     [CmdletBinding()]
     param (
@@ -174,7 +176,7 @@ function DownloadFile
     throw 'The download from "{0}" did not succeed in the acceptable retry count ({1}).' -f $SourceUri, $MaxRetryCount
 }
 
-function CreateRegistryKeyIfNotExists
+function New-RegistryKey
 {
     [CmdletBinding()]
     param (
@@ -191,7 +193,7 @@ function CreateRegistryKeyIfNotExists
     }
 }
 
-function GetIsoFileName
+function Format-IsoFileName
 {
     [CmdletBinding()]
     param (
@@ -206,14 +208,12 @@ function GetIsoFileName
     )
 
     if ($PSBoundParameters.Keys.Contains('Suffix')) {
-        '{0}_{1}_{2}.iso' -f $OperatingSystem, $Culture, $Suffix
+        return '{0}_{1}_{2}.iso' -f $OperatingSystem, $Culture, $Suffix
     }
-    else {
-        '{0}_{1}.iso' -f $OperatingSystem, $Culture
-    }
+    return '{0}_{1}.iso' -f $OperatingSystem, $Culture
 }
 
-function GetBaseVhdFileName
+function Format-BaseVhdFileName
 {
     [CmdletBinding()]
     param (
@@ -228,10 +228,10 @@ function GetBaseVhdFileName
         [string] $Culture
     )
 
-    '{0}_{1}_{2}.vhdx' -f $OperatingSystem, $ImageIndex, $Culture
+    return '{0}_{1}_{2}.vhdx' -f $OperatingSystem, $ImageIndex, $Culture
 }
 
-function GetHciNodeVMName
+function Format-HciNodeName
 {
     [CmdletBinding()]
     param (
@@ -245,10 +245,10 @@ function GetHciNodeVMName
         [uint32] $Index
     )
 
-    $Format -f ($Offset + $Index)
+    return $Format -f ($Offset + $Index)
 }
 
-function GetUnattendAnswerFileContent
+function New-UnattendAnswerFileContent
 {
     [CmdletBinding()]
     param (
@@ -262,6 +262,7 @@ function GetUnattendAnswerFileContent
         [string] $Culture
     )
 
+    # Convert an admin password to the unattend file format.
     $encodedAdminPassword = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes(([Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($Password))) + 'AdministratorPassword'))
 
     return @'
@@ -330,7 +331,7 @@ function WaitingForVhdDismount
     'The VHD dismount completed.' | Write-ScriptLog -Context $VhdPath
 }
 
-function InjectUnattendAnswerFile
+function Set-UnattendAnswerFileToVhd
 {
     [CmdletBinding()]
     param (
@@ -358,7 +359,7 @@ function InjectUnattendAnswerFile
     'scratchDirectory: {0}' -f $scratchDirectory | Write-ScriptLog -Context $VhdPath
     New-Item -ItemType Directory -Path $scratchDirectory -Force | Out-String | Write-ScriptLog -Context $VhdPath
 
-    $logPath = [IO.Path]::Combine($LogFolder, (Get-LogFileName -FileName ('injectunattend-' + [IO.Path]::GetFileNameWithoutExtension([IO.Path]::GetDirectoryName($VhdPath)))))
+    $logPath = [IO.Path]::Combine($LogFolder, (New-LogFileName -FileName ('injectunattend-' + [IO.Path]::GetFileNameWithoutExtension([IO.Path]::GetDirectoryName($VhdPath)))))
     'logPath: {0}' -f $logPath | Write-ScriptLog -Context $VhdPath
     Mount-WindowsImage -Path $vhdMountPath -Index 1 -ImagePath $VhdPath -ScratchDirectory $scratchDirectory -LogPath $logPath | Out-String | Write-ScriptLog -Context $VhdPath
 
@@ -385,7 +386,15 @@ function CreateWaitHandleForSerialization
         [string] $SyncEventName
     )
 
-    New-Object -TypeName 'System.Threading.EventWaitHandle' -ArgumentList $true, ([System.Threading.EventResetMode]::AutoReset), $SyncEventName
+    $params = @{
+        TypeName     = 'System.Threading.EventWaitHandle'
+        ArgumentList = @(
+            $true,
+            [System.Threading.EventResetMode]::AutoReset,
+            $SyncEventName
+        )
+    }
+    return New-Object @params
 }
 
 function Install-WindowsFeatureToVhd
@@ -411,7 +420,7 @@ function Install-WindowsFeatureToVhd
         [TimeSpan] $RetyTimeout = (New-TimeSpan -Minutes 30)
     )
 
-    $logPath = [IO.Path]::Combine($LogFolder, (Get-LogFileName -FileName ('installwinfeature-' + [IO.Path]::GetFileNameWithoutExtension([IO.Path]::GetDirectoryName($VhdPath)))))
+    $logPath = [IO.Path]::Combine($LogFolder, (New-LogFileName -FileName ('installwinfeature-' + [IO.Path]::GetFileNameWithoutExtension([IO.Path]::GetDirectoryName($VhdPath)))))
     'logPath: {0}' -f $logPath | Write-ScriptLog -Context $VhdPath
 
     $startTime = Get-Date
@@ -458,7 +467,7 @@ function Install-WindowsFeatureToVhd
     throw 'The Install-WindowsFeature cmdlet execution for "{0}" was not succeeded in the acceptable time ({1}).' -f $VhdPath, $RetyTimeout.ToString()
 }
 
-function WaitingForStartingVM
+function Start-VMWithRetry
 {
     [CmdletBinding()]
     param (
@@ -500,7 +509,7 @@ function WaitingForStartingVM
     throw 'The VM "{0}" was not start in the acceptable time ({1}).' -f $VMName, $RetyTimeout.ToString()
 }
 
-function WaitingForReadyToVM
+function Wait-PowerShellDirectReady
 {
     [CmdletBinding()]
     param (
@@ -604,7 +613,7 @@ function Wait-AddsDcDeploymentCompletion
     }
 }
 
-function WaitingForReadyToAddsDcVM
+function Wait-DomainControllerServiceReady
 {
     [CmdletBinding()]
     param (
@@ -696,7 +705,7 @@ function WaitingForReadyToAddsDcVM
     throw 'The AD DS DC "{0}" was not ready in the acceptable time ({1}).' -f $AddsDcVMName, $RetyTimeout.ToString()
 }
 
-function CreateDomainCredential
+function New-LogonCredential
 {
     [CmdletBinding()]
     param (
@@ -717,10 +726,10 @@ function CreateDomainCredential
             $Password
         )
     }
-    New-Object @params
+    return New-Object @params
 }
 
-function JoinVMToADDomain
+function Add-VMToADDomain
 {
     [CmdletBinding()]
     param (
@@ -783,22 +792,22 @@ $exportFunctions = @(
     'Stop-ScriptLogging',
     'Write-ScriptLog',
     'Get-LabDeploymentConfig',
-    'GetSecret',
-    'DownloadFile',
-    'CreateRegistryKeyIfNotExists',
-    'GetIsoFileName',
-    'GetBaseVhdFileName',
-    'GetHciNodeVMName',
-    'GetUnattendAnswerFileContent',
-    'InjectUnattendAnswerFile',
+    'Get-Secret',
+    'Invoke-FileDownload',
+    'New-RegistryKey',
+    'Format-IsoFileName',
+    'Format-BaseVhdFileName',
+    'Format-HciNodeName',
+    'New-UnattendAnswerFileContent',
+    'Set-UnattendAnswerFileToVhd',
     'Install-WindowsFeatureToVhd',
-    'WaitingForStartingVM',
-    'WaitingForReadyToVM',
+    'Start-VMWithRetry',
+    'Wait-PowerShellDirectReady',
     'Block-AddsDomainOperation',
     'Unblock-AddsDomainOperation',
     'Wait-AddsDcDeploymentCompletion',
-    'WaitingForReadyToAddsDcVM',
-    'CreateDomainCredential',
-    'JoinVMToADDomain'
+    'Wait-DomainControllerServiceReady',
+    'New-LogonCredential',
+    'Add-VMToADDomain'
 )
 Export-ModuleMember -Function $exportFunctions

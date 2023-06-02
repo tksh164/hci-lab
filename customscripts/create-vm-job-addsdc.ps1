@@ -29,7 +29,7 @@ $params = @{
     ImageIndex      = 3  # Datacenter (Server Core)
     Culture         = $labConfig.guestOS.culture
 }
-$parentVhdFileName = GetBaseVhdFileName @params
+$parentVhdFileName = Format-BaseVhdFileName @params
 $params = @{
     Differencing = $true
     ParentPath   = [IO.Path]::Combine($labConfig.labHost.folderPath.vhd, $parentVhdFileName)
@@ -78,13 +78,13 @@ Add-VMNetworkAdapter @paramsForAdd |
 Set-VMNetworkAdapter @paramsForSet
 
 'Generating the unattend answer XML...' | Write-ScriptLog -Context $vmName
-$adminPassword = GetSecret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName.adminPassword
+$adminPassword = Get-Secret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName.adminPassword
 $params = @{
     ComputerName = $vmName
     Password     = $adminPassword
     Culture      = $labConfig.guestOS.culture
 }
-$unattendAnswerFileContent = GetUnattendAnswerFileContent @params
+$unattendAnswerFileContent = New-UnattendAnswerFileContent @params
 
 'Injecting the unattend answer file to the VM...' | Write-ScriptLog -Context $vmName
 $params = @{
@@ -92,7 +92,7 @@ $params = @{
     UnattendAnswerFileContent = $unattendAnswerFileContent
     LogFolder                 = $labConfig.labHost.folderPath.log
 }
-InjectUnattendAnswerFile @params
+Set-UnattendAnswerFileToVhd @params
 
 'Installing the roles and features to the VHD...' | Write-ScriptLog -Context $vmName
 $params = @{
@@ -105,7 +105,7 @@ $params = @{
 Install-WindowsFeatureToVhd @params
 
 'Starting the VM...' | Write-ScriptLog -Context $vmName
-WaitingForStartingVM -VMName $vmName
+Start-VMWithRetry -VMName $vmName
 
 'Waiting for ready to the VM...' | Write-ScriptLog -Context $vmName
 $params = @{
@@ -113,7 +113,7 @@ $params = @{
     ArgumentList = 'Administrator', $adminPassword
 }
 $localAdminCredential = New-Object @params
-WaitingForReadyToVM -VMName $vmName -Credential $localAdminCredential
+Wait-PowerShellDirectReady -VMName $vmName -Credential $localAdminCredential
 
 'Configuring the inside of the VM...' | Write-ScriptLog -Context $vmName
 $params = @{
@@ -129,8 +129,8 @@ $params = @{
                 Implementation = (${function:Write-ScriptLog}).ToString()
             },
             [PSCustomObject] @{
-                Name           = 'CreateRegistryKeyIfNotExists'
-                Implementation = (${function:CreateRegistryKeyIfNotExists}).ToString()
+                Name           = 'New-RegistryKey'
+                Implementation = (${function:New-RegistryKey}).ToString()
             }
         )
     }
@@ -167,7 +167,7 @@ Invoke-Command @params -ScriptBlock {
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotPopWACConsoleAtSMLaunch' -Value 1
 
     'Hide the Network Location wizard. All networks will be Public.' | Write-ScriptLog -Context $VMName -UseInScriptBlock
-    CreateRegistryKeyIfNotExists -ParentPath 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -KeyName 'NewNetworkWindowOff'
+    New-RegistryKey -ParentPath 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -KeyName 'NewNetworkWindowOff'
 
     'Renaming the network adapters...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
     Get-NetAdapterAdvancedProperty -RegistryKeyword 'HyperVNetworkAdapterName' | ForEach-Object -Process {
@@ -205,9 +205,9 @@ Stop-VM -Name $vmName
 Start-VM -Name $vmName
 
 'Waiting for ready to the domain controller...' | Write-ScriptLog -Context $vmName
-$domainAdminCredential = CreateDomainCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $adminPassword
+$domainAdminCredential = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $adminPassword
 # The DC's computer name is the same as the VM name. It's specified in the unattend.xml.
-WaitingForReadyToAddsDcVM -AddsDcVMName $vmName -AddsDcComputerName $vmName -Credential $domainAdminCredential
+Wait-DomainControllerServiceReady -AddsDcVMName $vmName -AddsDcComputerName $vmName -Credential $domainAdminCredential
 
 'Allow the AD DS domain operations on other VMs.' | Write-ScriptLog -Context $vmName
 Unblock-AddsDomainOperation

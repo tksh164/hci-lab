@@ -10,7 +10,7 @@ param (
     [string] $LogFileName
 )
 
-function CalculateHciNodeRamBytes
+function Invoke-HciNodeRamSizeCalculation
 {
     [CmdletBinding()]
     param (
@@ -35,7 +35,7 @@ function CalculateHciNodeRamBytes
     'WacVMRamBytes: {0}' -f $WacVMRamBytes | Write-ScriptLog -Context $env:ComputerName
 
     # StartupBytes should be a multiple of 2 MB (2 * 1024 * 1024 bytes).
-    [Math]::Floor((($totalRamBytes - $labHostReservedRamBytes - $AddsDcVMRamBytes - $WacVMRamBytes) / $NodeCount) / 2MB) * 2MB
+    return [Math]::Floor((($totalRamBytes - $labHostReservedRamBytes - $AddsDcVMRamBytes - $WacVMRamBytes) / $NodeCount) / 2MB) * 2MB
 }
 
 $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
@@ -49,21 +49,21 @@ $labConfig = Get-LabDeploymentConfig
 Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log -FileName $LogFileName
 $labConfig | ConvertTo-Json -Depth 16 | Out-String | Write-ScriptLog -Context $env:ComputerName
 
-$vmName = GetHciNodeVMName -Format $labConfig.hciNode.vmName -Offset $labConfig.hciNode.vmNameOffset -Index $NodeIndex
+$vmName = Format-HciNodeName -Format $labConfig.hciNode.vmName -Offset $labConfig.hciNode.vmNameOffset -Index $NodeIndex
 
 $params = @{
     OperatingSystem = $labConfig.hciNode.operatingSystem.sku
     ImageIndex      = $labConfig.hciNode.operatingSystem.imageIndex
     Culture         = $labConfig.guestOS.culture
 }
-$parentVhdPath = [IO.Path]::Combine($labConfig.labHost.folderPath.vhd, (GetBaseVhdFileName @params))
+$parentVhdPath = [IO.Path]::Combine($labConfig.labHost.folderPath.vhd, (Format-BaseVhdFileName @params))
 
 $params = @{
     NodeCount        = $labConfig.hciNode.nodeCount
     AddsDcVMRamBytes = $labConfig.addsDC.maximumRamBytes
     WacVMRamBytes    = $labConfig.wac.maximumRamBytes
 }
-$ramBytes = CalculateHciNodeRamBytes @params
+$ramBytes = Invoke-HciNodeRamSizeCalculation @params
 
 'Creating a VM configuraton for the HCI node VM...' -f $vmName | Write-ScriptLog -Context $vmName
 $nodeConfig = [PSCustomObject] @{
@@ -72,7 +72,7 @@ $nodeConfig = [PSCustomObject] @{
     RamBytes          = $ramBytes
     OperatingSystem   = $labConfig.hciNode.operatingSystem.sku
     ImageIndex        = $labConfig.hciNode.operatingSystem.imageIndex
-    AdminPassword     = GetSecret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName.adminPassword
+    AdminPassword     = Get-Secret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName.adminPassword
     DataDiskSizeBytes = $labConfig.hciNode.dataDiskSizeBytes
     NetAdapter        = [PSCustomObject] @{
         Management = [PSCustomObject] @{
@@ -228,7 +228,7 @@ $params = @{
     Password     = $nodeConfig.AdminPassword
     Culture      = $labConfig.guestOS.culture
 }
-$unattendAnswerFileContent = GetUnattendAnswerFileContent @params
+$unattendAnswerFileContent = New-UnattendAnswerFileContent @params
 
 'Injecting the unattend answer file to the VHD...' | Write-ScriptLog -Context $nodeConfig.VMName
 $params = @{
@@ -236,7 +236,7 @@ $params = @{
     UnattendAnswerFileContent = $unattendAnswerFileContent
     LogFolder                 = $labConfig.labHost.folderPath.log
 }
-InjectUnattendAnswerFile @params
+Set-UnattendAnswerFileToVhd @params
 
 'Installing the roles and features to the VHD...' | Write-ScriptLog -Context $nodeConfig.VMName
 $params = @{
@@ -255,7 +255,7 @@ $params = @{
 Install-WindowsFeatureToVhd @params
 
 'Starting the VM...' | Write-ScriptLog -Context $nodeConfig.VMName
-WaitingForStartingVM -VMName $nodeConfig.VMName
+Start-VMWithRetry -VMName $nodeConfig.VMName
 
 'Waiting for ready to the VM...' | Write-ScriptLog -Context $nodeConfig.VMName
 $params = @{
@@ -263,7 +263,7 @@ $params = @{
     ArgumentList = '.\Administrator', $nodeConfig.AdminPassword
 }
 $localAdminCredential = New-Object @params
-WaitingForReadyToVM -VMName $nodeConfig.VMName -Credential $localAdminCredential
+Wait-PowerShellDirectReady -VMName $nodeConfig.VMName -Credential $localAdminCredential
 
 'Configuring the inside of the VM...' | Write-ScriptLog -Context $nodeConfig.VMName
 $params = @{
@@ -277,8 +277,8 @@ $params = @{
                 Implementation = (${function:Write-ScriptLog}).ToString()
             },
             [PSCustomObject] @{
-                Name           = 'CreateRegistryKeyIfNotExists'
-                Implementation = (${function:CreateRegistryKeyIfNotExists}).ToString()
+                Name           = 'New-RegistryKey'
+                Implementation = (${function:New-RegistryKey}).ToString()
             }
         )
     }
@@ -311,10 +311,10 @@ Invoke-Command @params -ScriptBlock {
         Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotPopWACConsoleAtSMLaunch' -Value 1
     
         'Hide the Network Location wizard. All networks will be Public.' | Write-ScriptLog -Context $NodeConfig.VMName -UseInScriptBlock
-        CreateRegistryKeyIfNotExists -ParentPath 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -KeyName 'NewNetworkWindowOff'
+        New-RegistryKey -ParentPath 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -KeyName 'NewNetworkWindowOff'
 
         'Setting to hide the first run experience of Microsoft Edge.' | Write-ScriptLog -Context $NodeConfig.VMName -UseInScriptBlock
-        CreateRegistryKeyIfNotExists -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft' -KeyName 'Edge'
+        New-RegistryKey -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft' -KeyName 'Edge'
         Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Edge' -Name 'HideFirstRunExperience' -Value 1
     }
 
@@ -366,14 +366,14 @@ Invoke-Command @params -ScriptBlock {
 Wait-AddsDcDeploymentCompletion
 
 'Waiting for ready to the domain controller...' | Write-ScriptLog -Context $nodeConfig.VMName
-$domainAdminCredential = CreateDomainCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $nodeConfig.AdminPassword
+$domainAdminCredential = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $nodeConfig.AdminPassword
 # The DC's computer name is the same as the VM name. It's specified in the unattend.xml.
 $params = @{
     AddsDcVMName       = $labConfig.addsDC.vmName
     AddsDcComputerName = $labConfig.addsDC.vmName
     Credential         = $domainAdminCredential
 }
-WaitingForReadyToAddsDcVM @params
+Wait-DomainControllerServiceReady @params
 
 'Joining the VM to the AD domain...'  | Write-ScriptLog -Context $nodeConfig.VMName
 $params = @{
@@ -382,7 +382,7 @@ $params = @{
     DomainFqdn            = $labConfig.addsDomain.fqdn
     DomainAdminCredential = $domainAdminCredential
 }
-JoinVMToADDomain @params
+Add-VMToADDomain @params
 
 'Stopping the VM...' | Write-ScriptLog -Context $nodeConfig.VMName
 Stop-VM -Name $nodeConfig.VMName
@@ -391,8 +391,8 @@ Stop-VM -Name $nodeConfig.VMName
 Start-VM -Name $nodeConfig.VMName
 
 'Waiting for ready to the VM...' | Write-ScriptLog -Context $nodeConfig.VMName
-$domainAdminCredential = CreateDomainCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $nodeConfig.AdminPassword
-WaitingForReadyToVM -VMName $nodeConfig.VMName -Credential $domainAdminCredential
+$domainAdminCredential = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $nodeConfig.AdminPassword
+Wait-PowerShellDirectReady -VMName $nodeConfig.VMName -Credential $domainAdminCredential
 
 'The HCI node VM creation has been completed.' | Write-ScriptLog -Context $nodeConfig.VMName
 

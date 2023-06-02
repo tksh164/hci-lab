@@ -26,7 +26,7 @@ $params = @{
     ImageIndex      = 4  # Datacenter with Desktop Experience
     Culture         = $labConfig.guestOS.culture
 }
-$parentVhdFileName = GetBaseVhdFileName @params
+$parentVhdFileName = Format-BaseVhdFileName @params
 $params = @{
     Differencing = $true
     ParentPath   = [IO.Path]::Combine($labConfig.labHost.folderPath.vhd, $parentVhdFileName)
@@ -75,13 +75,13 @@ Add-VMNetworkAdapter @paramsForAdd |
 Set-VMNetworkAdapter @paramsForSet
 
 'Generating the unattend answer XML...' | Write-ScriptLog -Context $vmName
-$adminPassword = GetSecret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName.adminPassword
+$adminPassword = Get-Secret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName.adminPassword
 $params = @{
     ComputerName = $vmName
     Password     = $adminPassword
     Culture      = $labConfig.guestOS.culture
 }
-$unattendAnswerFileContent = GetUnattendAnswerFileContent @params
+$unattendAnswerFileContent = New-UnattendAnswerFileContent @params
 
 'Injecting the unattend answer file to the VM...' | Write-ScriptLog -Context $vmName
 $params = @{
@@ -89,7 +89,7 @@ $params = @{
     UnattendAnswerFileContent = $unattendAnswerFileContent
     LogFolder                 = $labConfig.labHost.folderPath.log
 }
-InjectUnattendAnswerFile @params
+Set-UnattendAnswerFileToVhd @params
 
 'Installing the roles and features to the VHD...' | Write-ScriptLog -Context $vmName
 $params = @{
@@ -109,7 +109,7 @@ $params = @{
 Install-WindowsFeatureToVhd @params
 
 'Starting the VM...' | Write-ScriptLog -Context $vmName
-WaitingForStartingVM -VMName $vmName
+Start-VMWithRetry -VMName $vmName
 
 'Waiting for ready to the VM...' | Write-ScriptLog -Context $vmName
 $params = @{
@@ -117,7 +117,7 @@ $params = @{
     ArgumentList = '.\Administrator', $adminPassword
 }
 $localAdminCredential = New-Object @params
-WaitingForReadyToVM -VMName $vmName -Credential $localAdminCredential
+Wait-PowerShellDirectReady -VMName $vmName -Credential $localAdminCredential
 
 'Downloading the Windows Admin Center installer...' | Write-ScriptLog -Context $vmName
 $params = @{
@@ -125,7 +125,7 @@ $params = @{
     DownloadFolder = $labConfig.labHost.folderPath.temp
     FileNameToSave = 'WindowsAdminCenter.msi'
 }
-$wacInstallerFile = DownloadFile @params
+$wacInstallerFile = Invoke-FileDownload @params
 $wacInstallerFile | Out-String | Write-ScriptLog -Context $vmName
 
 'Creating a new SSL server authentication certificate for Windows Admin Center...' | Write-ScriptLog -Context $vmName
@@ -179,8 +179,8 @@ $params = @{
                 Implementation = (${function:Write-ScriptLog}).ToString()
             },
             [PSCustomObject] @{
-                Name           = 'CreateRegistryKeyIfNotExists'
-                Implementation = (${function:CreateRegistryKeyIfNotExists}).ToString()
+                Name           = 'New-RegistryKey'
+                Implementation = (${function:New-RegistryKey}).ToString()
             }
         )
     }
@@ -223,10 +223,10 @@ Invoke-Command @params -ScriptBlock {
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotPopWACConsoleAtSMLaunch' -Value 1
 
     'Hide the Network Location wizard. All networks will be Public.' | Write-ScriptLog -Context $VMName -UseInScriptBlock
-    CreateRegistryKeyIfNotExists -ParentPath 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -KeyName 'NewNetworkWindowOff'
+    New-RegistryKey -ParentPath 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -KeyName 'NewNetworkWindowOff'
 
     'Setting to hide the first run experience of Microsoft Edge.' | Write-ScriptLog -Context $VMName -UseInScriptBlock
-    CreateRegistryKeyIfNotExists -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft' -KeyName 'Edge'
+    New-RegistryKey -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft' -KeyName 'Edge'
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Edge' -Name 'HideFirstRunExperience' -Value 1
 
     'Renaming the network adapters...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
@@ -304,7 +304,7 @@ Invoke-Command @params -ScriptBlock {
         Format-table -Property id, status, version, isLatestVersion, title
 
     'Setting Windows Integrated Authentication registry for Windows Admin Center...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
-    CreateRegistryKeyIfNotExists -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft' -KeyName 'Edge'
+    New-RegistryKey -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft' -KeyName 'Edge'
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Edge' -Name 'AuthServerAllowlist' -Value $VMName
 
     'Creating shortcut for Windows Admin Center on the desktop...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
@@ -320,9 +320,9 @@ Invoke-Command @params -ScriptBlock {
 Wait-AddsDcDeploymentCompletion
 
 'Waiting for ready to the domain controller...' | Write-ScriptLog -Context $vmName
-$domainAdminCredential = CreateDomainCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $adminPassword
+$domainAdminCredential = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $adminPassword
 # The DC's computer name is the same as the VM name. It's specified in the unattend.xml.
-WaitingForReadyToAddsDcVM -AddsDcVMName $labConfig.addsDC.vmName -AddsDcComputerName $labConfig.addsDC.vmName -Credential $domainAdminCredential
+Wait-DomainControllerServiceReady -AddsDcVMName $labConfig.addsDC.vmName -AddsDcComputerName $labConfig.addsDC.vmName -Credential $domainAdminCredential
 
 'Joining the VM to the AD domain...' | Write-ScriptLog -Context $vmName
 $params = @{
@@ -331,7 +331,7 @@ $params = @{
     DomainFqdn            = $labConfig.addsDomain.fqdn
     DomainAdminCredential = $domainAdminCredential
 }
-JoinVMToADDomain @params
+Add-VMToADDomain @params
 
 'Stopping the VM...' | Write-ScriptLog -Context $vmName
 Stop-VM -Name $vmName
@@ -340,7 +340,7 @@ Stop-VM -Name $vmName
 Start-VM -Name $vmName
 
 'Waiting for ready to the VM...' | Write-ScriptLog -Context $vmName
-WaitingForReadyToVM -VMName $vmName -Credential $domainAdminCredential
+Wait-PowerShellDirectReady -VMName $vmName -Credential $domainAdminCredential
 
 # NOTE: To preset WAC connections for the domain Administrator, the preset operation is required by
 # the domain Administrator because WAC connections are managed based on each user.
@@ -357,8 +357,8 @@ $params = @{
                 Implementation = (${function:Write-ScriptLog}).ToString()
             },
             [PSCustomObject] @{
-                Name           = 'GetHciNodeVMName'
-                Implementation = (${function:GetHciNodeVMName}).ToString()
+                Name           = 'Format-HciNodeName'
+                Implementation = (${function:Format-HciNodeName}).ToString()
             }
         )
     }
@@ -395,7 +395,7 @@ Invoke-Command @params -ScriptBlock {
     $formatValues += $LabConfig.addsDC.vmName
     $formatValues += $LabConfig.wac.vmName
     for ($nodeIndex = 0; $nodeIndex -lt $LabConfig.hciNode.nodeCount; $nodeIndex++) {
-        $formatValues += GetHciNodeVMName -Format $LabConfig.hciNode.vmName -Offset $LabConfig.hciNode.vmNameOffset -Index $nodeIndex
+        $formatValues += Format-HciNodeName -Format $LabConfig.hciNode.vmName -Offset $LabConfig.hciNode.vmNameOffset -Index $nodeIndex
     }
     $formatValues += $LabConfig.hciCluster.name
     $wacConnectionFilePathInVM = [IO.Path]::Combine('C:\Windows\Temp', 'wac-connections.txt')

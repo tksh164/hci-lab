@@ -12,8 +12,9 @@ $labConfig = Get-LabDeploymentConfig
 Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log
 $labConfig | ConvertTo-Json -Depth 16 | Write-Host
 
-function DownloadIso
+function Invoke-IsoFileDownload
 {
+    [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
         [string] $OperatingSystem,
@@ -32,13 +33,14 @@ function DownloadIso
     $params = @{
         SourceUri      = $AssetUrls[$OperatingSystem]['iso'][$Culture]
         DownloadFolder = $DownloadFolderPath
-        FileNameToSave = (GetIsoFileName -OperatingSystem $OperatingSystem -Culture $Culture)
+        FileNameToSave = (Format-IsoFileName -OperatingSystem $OperatingSystem -Culture $Culture)
     }
-    DownloadFile @params
+    Invoke-FileDownload @params
 }
 
-function DownloadUpdates
+function Invoke-UpdateFileDonwload
 {
+    [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
         [string] $OperatingSystem,
@@ -63,7 +65,7 @@ function DownloadUpdates
             DownloadFolder = $downloadFolderPath
             FileNameToSave = $fileNameToSave
         }
-        DownloadFile @params
+        Invoke-FileDownload @params
     }
 }
 
@@ -82,7 +84,7 @@ $params = @{
     DownloadFolderPath = $labConfig.labHost.folderPath.temp
     AssetUrls          = $assetUrls
 }
-DownloadIso @params
+Invoke-IsoFileDownload @params
 
 # The Windows Server 2022 ISO is always needed for the domain controller VM.
 if ($labConfig.hciNode.operatingSystem.sku -ne 'ws2022') {
@@ -93,7 +95,7 @@ if ($labConfig.hciNode.operatingSystem.sku -ne 'ws2022') {
         DownloadFolderPath = $labConfig.labHost.folderPath.temp
         AssetUrls          = $assetUrls
     }
-    DownloadIso @params
+    Invoke-IsoFileDownload @params
 }
 
 'The ISO files download has been completed.' | Write-ScriptLog -Context $env:ComputerName
@@ -111,7 +113,7 @@ if ($labConfig.guestOS.applyUpdates) {
         DownloadFolderBasePath = $labConfig.labHost.folderPath.updates
         AssetUrls              = $assetUrls
     }
-    DownloadUpdates @params
+    Invoke-UpdateFileDonwload @params
     
     if ($labConfig.hciNode.operatingSystem.sku -ne 'ws2022') {
         'Downloading the Windows Server updates...' | Write-ScriptLog -Context $env:ComputerName
@@ -120,7 +122,7 @@ if ($labConfig.guestOS.applyUpdates) {
             DownloadFolderBasePath = $labConfig.labHost.folderPath.updates
             AssetUrls              = $assetUrls
         }
-        DownloadUpdates @params
+        Invoke-UpdateFileDonwload @params
     }
 
     'The update files download has been completed.' | Write-ScriptLog -Context $env:ComputerName
