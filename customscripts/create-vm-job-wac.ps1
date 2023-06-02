@@ -16,7 +16,7 @@ Import-Module -Name $PSModuleNameToImport -Force
 
 $labConfig = Get-LabDeploymentConfig
 Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log -FileName $LogFileName
-$labConfig | ConvertTo-Json -Depth 16 | Write-Host
+$labConfig | ConvertTo-Json -Depth 16 | Out-String | Write-ScriptLog -Context $env:ComputerName
 
 $vmName = $labConfig.wac.vmName
 
@@ -41,7 +41,7 @@ $params = @{
     VHDPath    = $vmOSDiskVhd.Path
     Generation = 2
 }
-New-VM @params
+New-VM @params | Out-String | Write-ScriptLog -Context $vmName
 
 'Setting the VM''s processor configuration...' | Write-ScriptLog -Context $vmName
 Set-VMProcessor -VMName $vmName -Count 4
@@ -126,7 +126,7 @@ $params = @{
     FileNameToSave = 'WindowsAdminCenter.msi'
 }
 $wacInstallerFile = DownloadFile @params
-$wacInstallerFile
+$wacInstallerFile | Out-String | Write-ScriptLog -Context $vmName
 
 'Creating a new SSL server authentication certificate for Windows Admin Center...' | Write-ScriptLog -Context $vmName
 $params = @{
@@ -148,7 +148,7 @@ $wacCret = New-SelfSignedCertificate @params | Move-Item -Destination 'Cert:\Loc
 
 'Exporting the Windows Admin Center certificate...' | Write-ScriptLog -Context $vmName
 $wacPfxFilePathOnLabHost = [IO.Path]::Combine($labConfig.labHost.folderPath.temp, 'wac.pfx')
-$wacCret | Export-PfxCertificate -FilePath $wacPfxFilePathOnLabHost -Password $adminPassword
+$wacCret | Export-PfxCertificate -FilePath $wacPfxFilePathOnLabHost -Password $adminPassword | Out-String | Write-ScriptLog -Context $vmName
 
 # Copy the Windows Admin Center related files into the VM.
 $psSession = New-PSSession -VMName $vmName -Credential $localAdminCredential
@@ -315,7 +315,7 @@ Invoke-Command @params -ScriptBlock {
     $shortcut.Description = 'Windows Admin Center for the lab environment.'
     $shortcut.IconLocation = 'imageres.dll,1'
     $shortcut.Save()
-}
+} | Out-String | Write-ScriptLog -Context $vmName
 
 'Waiting for the AD DS DC VM setup completion...' | Write-ScriptLog -Context $vmName
 WaitingForAddsDcVMSetupCompletion
@@ -413,7 +413,7 @@ Invoke-Command @params -ScriptBlock {
     [Uri] $gatewayEndpointUri = 'https://{0}' -f $env:ComputerName
     Import-Connection -GatewayEndpoint $gatewayEndpointUri -FileName $wacConnectionFilePathInVM
     Remove-Item -LiteralPath $wacConnectionFilePathInVM -Force
-}
+} | Out-String | Write-ScriptLog -Context $vmName
 
 'The WAC VM creation has been completed.' | Write-ScriptLog -Context $vmName
 
