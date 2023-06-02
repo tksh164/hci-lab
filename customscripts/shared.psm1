@@ -248,7 +248,7 @@ function Format-HciNodeName
     return $Format -f ($Offset + $Index)
 }
 
-function GetUnattendAnswerFileContent
+function New-UnattendAnswerFileContent
 {
     [CmdletBinding()]
     param (
@@ -798,7 +798,7 @@ $exportFunctions = @(
     'Format-IsoFileName',
     'Format-BaseVhdFileName',
     'Format-HciNodeName',
-    'GetUnattendAnswerFileContent',
+    'New-UnattendAnswerFileContent',
     'InjectUnattendAnswerFile',
     'Install-WindowsFeatureToVhd',
     'WaitingForStartingVM',

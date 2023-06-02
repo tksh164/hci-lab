@@ -228,7 +228,7 @@ $params = @{
     Password     = $nodeConfig.AdminPassword
     Culture      = $labConfig.guestOS.culture
 }
-$unattendAnswerFileContent = GetUnattendAnswerFileContent @params
+$unattendAnswerFileContent = New-UnattendAnswerFileContent @params
 
 'Injecting the unattend answer file to the VHD...' | Write-ScriptLog -Context $nodeConfig.VMName
 $params = @{

@@ -84,7 +84,7 @@ $params = @{
     Password     = $adminPassword
     Culture      = $labConfig.guestOS.culture
 }
-$unattendAnswerFileContent = GetUnattendAnswerFileContent @params
+$unattendAnswerFileContent = New-UnattendAnswerFileContent @params
 
 'Injecting the unattend answer file to the VM...' | Write-ScriptLog -Context $vmName
 $params = @{
