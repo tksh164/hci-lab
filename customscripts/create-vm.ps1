@@ -34,7 +34,7 @@ try {
     'Creating HCI node VMs...' | Write-ScriptLog -Context $env:ComputerName
     $jobScriptFilePath = [IO.Path]::Combine($PSScriptRoot, 'create-vm-job-hcinode.ps1')
     for ($nodeIndex = 0; $nodeIndex -lt $labConfig.hciNode.nodeCount; $nodeIndex++) {
-        $vmName = GetHciNodeVMName -Format $labConfig.hciNode.vmName -Offset $labConfig.hciNode.vmNameOffset -Index $nodeIndex
+        $vmName = Format-HciNodeName -Format $labConfig.hciNode.vmName -Offset $labConfig.hciNode.vmNameOffset -Index $nodeIndex
         'Start creating a HCI node VM...' -f $vmName | Write-ScriptLog -Context $vmName
         $params = @{
             NodeIndex            = $nodeIndex

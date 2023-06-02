@@ -231,7 +231,7 @@ function New-BaseVhdFileName
     return '{0}_{1}_{2}.vhdx' -f $OperatingSystem, $ImageIndex, $Culture
 }
 
-function GetHciNodeVMName
+function Format-HciNodeName
 {
     [CmdletBinding()]
     param (
@@ -797,7 +797,7 @@ $exportFunctions = @(
     'New-RegistryKey',
     'New-IsoFileName',
     'New-BaseVhdFileName',
-    'GetHciNodeVMName',
+    'Format-HciNodeName',
     'GetUnattendAnswerFileContent',
     'InjectUnattendAnswerFile',
     'Install-WindowsFeatureToVhd',

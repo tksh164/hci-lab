@@ -357,8 +357,8 @@ $params = @{
                 Implementation = (${function:Write-ScriptLog}).ToString()
             },
             [PSCustomObject] @{
-                Name           = 'GetHciNodeVMName'
-                Implementation = (${function:GetHciNodeVMName}).ToString()
+                Name           = 'Format-HciNodeName'
+                Implementation = (${function:Format-HciNodeName}).ToString()
             }
         )
     }
@@ -395,7 +395,7 @@ Invoke-Command @params -ScriptBlock {
     $formatValues += $LabConfig.addsDC.vmName
     $formatValues += $LabConfig.wac.vmName
     for ($nodeIndex = 0; $nodeIndex -lt $LabConfig.hciNode.nodeCount; $nodeIndex++) {
-        $formatValues += GetHciNodeVMName -Format $LabConfig.hciNode.vmName -Offset $LabConfig.hciNode.vmNameOffset -Index $nodeIndex
+        $formatValues += Format-HciNodeName -Format $LabConfig.hciNode.vmName -Offset $LabConfig.hciNode.vmNameOffset -Index $nodeIndex
     }
     $formatValues += $LabConfig.hciCluster.name
     $wacConnectionFilePathInVM = [IO.Path]::Combine('C:\Windows\Temp', 'wac-connections.txt')
