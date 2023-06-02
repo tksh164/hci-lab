@@ -277,8 +277,8 @@ $params = @{
                 Implementation = (${function:Write-ScriptLog}).ToString()
             },
             [PSCustomObject] @{
-                Name           = 'CreateRegistryKeyIfNotExists'
-                Implementation = (${function:CreateRegistryKeyIfNotExists}).ToString()
+                Name           = 'New-RegistryKey'
+                Implementation = (${function:New-RegistryKey}).ToString()
             }
         )
     }
@@ -311,10 +311,10 @@ Invoke-Command @params -ScriptBlock {
         Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotPopWACConsoleAtSMLaunch' -Value 1
     
         'Hide the Network Location wizard. All networks will be Public.' | Write-ScriptLog -Context $NodeConfig.VMName -UseInScriptBlock
-        CreateRegistryKeyIfNotExists -ParentPath 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -KeyName 'NewNetworkWindowOff'
+        New-RegistryKey -ParentPath 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -KeyName 'NewNetworkWindowOff'
 
         'Setting to hide the first run experience of Microsoft Edge.' | Write-ScriptLog -Context $NodeConfig.VMName -UseInScriptBlock
-        CreateRegistryKeyIfNotExists -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft' -KeyName 'Edge'
+        New-RegistryKey -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft' -KeyName 'Edge'
         Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Edge' -Name 'HideFirstRunExperience' -Value 1
     }
 

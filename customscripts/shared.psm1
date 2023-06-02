@@ -176,7 +176,7 @@ function Invoke-FileDownload
     throw 'The download from "{0}" did not succeed in the acceptable retry count ({1}).' -f $SourceUri, $MaxRetryCount
 }
 
-function CreateRegistryKeyIfNotExists
+function New-RegistryKey
 {
     [CmdletBinding()]
     param (
@@ -794,7 +794,7 @@ $exportFunctions = @(
     'Get-LabDeploymentConfig',
     'Get-Secret',
     'Invoke-FileDownload',
-    'CreateRegistryKeyIfNotExists',
+    'New-RegistryKey',
     'GetIsoFileName',
     'GetBaseVhdFileName',
     'GetHciNodeVMName',

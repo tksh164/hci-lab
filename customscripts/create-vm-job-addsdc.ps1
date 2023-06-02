@@ -129,8 +129,8 @@ $params = @{
                 Implementation = (${function:Write-ScriptLog}).ToString()
             },
             [PSCustomObject] @{
-                Name           = 'CreateRegistryKeyIfNotExists'
-                Implementation = (${function:CreateRegistryKeyIfNotExists}).ToString()
+                Name           = 'New-RegistryKey'
+                Implementation = (${function:New-RegistryKey}).ToString()
             }
         )
     }
@@ -167,7 +167,7 @@ Invoke-Command @params -ScriptBlock {
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotPopWACConsoleAtSMLaunch' -Value 1
 
     'Hide the Network Location wizard. All networks will be Public.' | Write-ScriptLog -Context $VMName -UseInScriptBlock
-    CreateRegistryKeyIfNotExists -ParentPath 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -KeyName 'NewNetworkWindowOff'
+    New-RegistryKey -ParentPath 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -KeyName 'NewNetworkWindowOff'
 
     'Renaming the network adapters...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
     Get-NetAdapterAdvancedProperty -RegistryKeyword 'HyperVNetworkAdapterName' | ForEach-Object -Process {
