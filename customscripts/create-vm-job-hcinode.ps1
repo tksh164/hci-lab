@@ -373,7 +373,7 @@ $params = @{
     AddsDcComputerName = $labConfig.addsDC.vmName
     Credential         = $domainAdminCredential
 }
-WaitingForReadyToAddsDcVM @params
+Wait-DomainControllerServiceToReady @params
 
 'Joining the VM to the AD domain...'  | Write-ScriptLog -Context $nodeConfig.VMName
 $params = @{
