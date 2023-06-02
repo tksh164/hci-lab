@@ -613,7 +613,7 @@ function Wait-AddsDcDeploymentCompletion
     }
 }
 
-function Wait-DomainControllerServiceToReady
+function Wait-DomainControllerServiceReady
 {
     [CmdletBinding()]
     param (
@@ -806,7 +806,7 @@ $exportFunctions = @(
     'Block-AddsDomainOperation',
     'Unblock-AddsDomainOperation',
     'Wait-AddsDcDeploymentCompletion',
-    'Wait-DomainControllerServiceToReady',
+    'Wait-DomainControllerServiceReady',
     'CreateDomainCredential',
     'JoinVMToADDomain'
 )
