@@ -545,56 +545,62 @@ function WaitingForReadyToVM
     throw 'The VM "{0}" was not ready in the acceptable time ({1}).' -f $VMName, $RetyTimeout.ToString()
 }
 
-# A semaphore for blocking the AD DS DC VM setup completion prove.
-$script:addsDcVmSemaphoreName = 'Local\HciLabSemaphoreAddsDcVm'
-$script:addsDcVmSemaphore = $null
-$script:addsDcVmSemaphoreMaxCount = 20  # Need AD DS DC VM + WAC + HCI node counts at least.
+# A sync event name for blocking the AD DS operations.
+$script:addsDcDeploymentCompletionSyncEventName = 'Local\hcilab-adds-dc-deployment-completion'
+$script:addsDcDeploymentCompletionWaitHandle = $null
 
-function InitAddsDcVMSetupCompletionNotification
+function Block-AddsDomainOperation
 {
     [CmdletBinding()]
     param ()
 
-    'Create a semaphore for the waiting AD DS DC VM setup completion.' | Write-ScriptLog -Context $env:ComputerName
-    $script:addsDcVmSemaphore = New-Object -TypeName 'System.Threading.Semaphore' -ArgumentList 0, $script:addsDcVmSemaphoreMaxCount, $script:addsDcVmSemaphoreName
+    'Block the AD DS domain operations until the AD DS DC VM deployment is completed...' | Write-ScriptLog -Context $env:ComputerName
+    $params = @{
+        TypeName     = 'System.Threading.EventWaitHandle'
+        ArgumentList = @(
+            $false,
+            [System.Threading.EventResetMode]::ManualReset,
+            $script:addsDcDeploymentCompletionSyncEventName
+        )
+    }
+    $script:addsDcDeploymentCompletionWaitHandle = New-Object @params
 }
 
-function NotifyAddsDcVMSetupCompletion
-{
-    [CmdletBinding()]
-    param ()
-
-    $script:addsDcVmSemaphore.Release($script:addsDcVmSemaphoreMaxCount)
-    $script:addsDcVmSemaphore.Dispose()
-    'Released the semaphore for the waiting AD DS DC VM setup completion.' | Write-ScriptLog -Context $env:ComputerName
-}
-
-function WaitingForAddsDcVMSetupCompletion
+function Unblock-AddsDomainOperation
 {
     [CmdletBinding()]
     param ()
 
     try {
-        $semaphore = $null
-        if ([System.Threading.Semaphore]::TryOpenExisting($script:addsDcVmSemaphoreName, [ref] $semaphore)) {
-            try {
-                'Requesting the semaphore for the AD DS DC VM setup completion waiting...' | Write-ScriptLog -Context $env:ComputerName
-                $semaphore.WaitOne()
-                'Acquired the semaphore for the AD DS DC VM setup completion waiting.' | Write-ScriptLog -Context $env:ComputerName
-            }
-            finally {
-                'Releasing the semaphore for the AD DS DC VM setup completion waiting...' | Write-ScriptLog -Context $env:ComputerName
-                $semaphore.Release()
-            }
+        if ($script:addsDcDeploymentCompletionWaitHandle -eq $null) {
+            throw 'The wait event handle for AD DS VM ready is not initialized.'
         }
-        else {
-            'No need waiting the setup completion because did not exist the semaphore "{0}".' -f $script:addsDcVmSemaphoreName | Write-ScriptLog -Context $env:ComputerName
-        }
+        $script:addsDcDeploymentCompletionWaitHandle.Set()
+        'Unblocked the AD DS domain operations. The AD DS DC VM has been deployed.' | Write-ScriptLog -Context $env:ComputerName
     }
     finally {
-        if ($semaphore -ne $null) {
-            $semaphore.Dispose()
+        $script:addsDcDeploymentCompletionWaitHandle.Dispose()
+    }
+}
+
+function Wait-AddsDcDeploymentCompletion
+{
+    [CmdletBinding()]
+    param ()
+
+    $waitHandle = $null
+    if ([System.Threading.EventWaitHandle]::TryOpenExisting($script:addsDcDeploymentCompletionSyncEventName, [ref] $waitHandle)) {
+        try {
+            'Waiting for the AD DS DC deployment completion...' | Write-ScriptLog -Context $env:ComputerName
+            $waitHandle.WaitOne()
+            'The AD DS DC has been deployed.' | Write-ScriptLog -Context $env:ComputerName
         }
+        finally {
+            $waitHandle.Dispose()
+        }
+    }
+    else {
+        'The AD DS DC is already deployed. (The wait handle did not exist)' | Write-ScriptLog -Context $env:ComputerName
     }
 }
 
@@ -788,9 +794,9 @@ $exportFunctions = @(
     'Install-WindowsFeatureToVhd',
     'WaitingForStartingVM',
     'WaitingForReadyToVM',
-    'InitAddsDcVMSetupCompletionNotification',
-    'NotifyAddsDcVMSetupCompletion',
-    'WaitingForAddsDcVMSetupCompletion',
+    'Block-AddsDomainOperation',
+    'Unblock-AddsDomainOperation',
+    'Wait-AddsDcDeploymentCompletion',
     'WaitingForReadyToAddsDcVM',
     'CreateDomainCredential',
     'JoinVMToADDomain'
