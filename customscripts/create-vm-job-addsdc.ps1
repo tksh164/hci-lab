@@ -111,81 +111,94 @@ Start-VMWithRetry -VMName $vmName
 $localAdminCredential = New-LogonCredential -DomainFqdn '.' -Password $adminPassword
 Wait-PowerShellDirectReady -VMName $vmName -Credential $localAdminCredential
 
-'Configuring the inside of the VM...' | Write-ScriptLog -Context $vmName
+'Create a PowerShell Direct session...' | Write-ScriptLog -Context $vmName
+$localAdminCredPSSession = New-PSSession -VMName $vmName -Credential $localAdminCredential
+
+'Copying the shared module file into the VM...' | Write-ScriptLog -Context $vmName
+$sharedModuleFilePath = (Get-Module -Name 'shared').Path
+$sharedModuleFilePathInVM = [IO.Path]::Combine('C:\Windows\Temp', [IO.Path]::GetFileName($sharedModuleFilePath))
+Copy-Item -ToSession $localAdminCredPSSession -Path $sharedModuleFilePath -Destination $sharedModuleFilePathInVM
+
+'Setup the PowerShell Direct session...' | Write-ScriptLog -Context $vmName
 $params = @{
-    VMName      = $vmName
-    Credential  = $localAdminCredential
     InputObject = [PSCustomObject] @{
-        VMName                 = $vmName
-        AdminPassword          = $adminPassword
-        LabConfig              = $labConfig
-        FunctionsToInject      = @(
-            [PSCustomObject] @{
-                Name           = 'Write-ScriptLog'
-                Implementation = (${function:Write-ScriptLog}).ToString()
-            },
-            [PSCustomObject] @{
-                Name           = 'New-RegistryKey'
-                Implementation = (${function:New-RegistryKey}).ToString()
-            }
-        )
+        SharedModuleFilePath = $sharedModuleFilePathInVM
     }
 }
-Invoke-Command @params -ScriptBlock {
+Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
     param (
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-        [string] $VMName,
-
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-        [SecureString] $AdminPassword,
-
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-        [PSCustomObject] $LabConfig,
-
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-        [PSCustomObject[]] $FunctionsToInject
+        [string] $SharedModuleFilePath
     )
 
     $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
     $WarningPreference = [Management.Automation.ActionPreference]::Continue
     $VerbosePreference = [Management.Automation.ActionPreference]::Continue
     $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
+    Import-Module -Name $SharedModuleFilePath -Force
+} #| Out-String | Write-ScriptLog -Context $vmName
 
-    # Create injected functions.
-    foreach ($func in $FunctionsToInject) {
-        New-Item -Path 'function:' -Name $func.Name -Value $func.Implementation -Force | Out-Null
-    }
-
-    'Stop Server Manager launch at logon.' | Write-ScriptLog -Context $VMName -UseInScriptBlock
+'Configuring registry values within the VM...' | Write-ScriptLog -Context $vmName
+Invoke-Command -Session $localAdminCredPSSession -ScriptBlock {
+    'Stop Server Manager launch at logon.' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotOpenServerManagerAtLogon' -Value 1
 
-    'Stop Windows Admin Center popup at Server Manager launch.' | Write-ScriptLog -Context $VMName -UseInScriptBlock
+    'Stop Windows Admin Center popup at Server Manager launch.' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotPopWACConsoleAtSMLaunch' -Value 1
 
-    'Hide the Network Location wizard. All networks will be Public.' | Write-ScriptLog -Context $VMName -UseInScriptBlock
+    'Hide the Network Location wizard. All networks will be Public.' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
     New-RegistryKey -ParentPath 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -KeyName 'NewNetworkWindowOff'
+} | Out-String | Write-ScriptLog -Context $vmName
 
-    'Renaming the network adapters...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
+'Configuring network settings within the VM...' | Write-ScriptLog -Context $vmName
+$params = @{
+    InputObject = [PSCustomObject] @{
+        VMConfig = $LabConfig.addsDC
+    }
+}
+Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [PSCustomObject] $VMConfig
+    )
+
+    'Renaming the network adapters...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
     Get-NetAdapterAdvancedProperty -RegistryKeyword 'HyperVNetworkAdapterName' | ForEach-Object -Process {
         Rename-NetAdapter -Name $_.Name -NewName $_.DisplayValue
     }
 
-    'Setting the IP configuration on the network adapter...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
+    'Setting the IP configuration on the network adapter...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
     $params = @{
         AddressFamily  = 'IPv4'
-        IPAddress      = $LabConfig.addsDC.netAdapter.management.ipAddress
-        PrefixLength   = $LabConfig.addsDC.netAdapter.management.prefixLength
-        DefaultGateway = $LabConfig.addsDC.netAdapter.management.defaultGateway
+        IPAddress      = $VMConfig.netAdapter.management.ipAddress
+        PrefixLength   = $VMConfig.netAdapter.management.prefixLength
+        DefaultGateway = $VMConfig.netAdapter.management.defaultGateway
     }
-    Get-NetAdapter -Name $LabConfig.addsDC.netAdapter.management.name | New-NetIPAddress @params
+    Get-NetAdapter -Name $VMConfig.netAdapter.management.name | New-NetIPAddress @params
     
-    'Setting the DNS configuration on the network adapter...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
-    Get-NetAdapter -Name $LabConfig.addsDC.netAdapter.management.name |
-        Set-DnsClientServerAddress -ServerAddresses $LabConfig.addsDC.netAdapter.management.dnsServerAddresses
+    'Setting the DNS configuration on the network adapter...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    Get-NetAdapter -Name $VMConfig.netAdapter.management.name |
+        Set-DnsClientServerAddress -ServerAddresses $VMConfig.netAdapter.management.dnsServerAddresses
+} | Out-String | Write-ScriptLog -Context $vmName
 
-    'Installing AD DS (Creating a new forest)...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
+'Installing AD DS (Creating a new forest) within the VM...' | Write-ScriptLog -Context $vmName
+$params = @{
+    InputObject = [PSCustomObject] @{
+        DomainName    = $labConfig.addsDomain.fqdn
+        AdminPassword = $adminPassword
+    }
+}
+Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [string] $DomainName,
+
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [SecureString] $AdminPassword
+    )
+
     $params = @{
-        DomainName                    = $LabConfig.addsDomain.fqdn
+        DomainName                    = $DomainName
         InstallDns                    = $true
         SafeModeAdministratorPassword = $AdminPassword
         NoRebootOnCompletion          = $true
@@ -193,6 +206,24 @@ Invoke-Command @params -ScriptBlock {
     }
     Install-ADDSForest @params
 } | Out-String | Write-ScriptLog -Context $vmName
+
+'Cleaning up the PowerShell Direct session...' | Write-ScriptLog -Context $vmName
+$params = @{
+    InputObject = [PSCustomObject] @{
+        SharedModuleFilePath = $sharedModuleFilePathInVM
+    }
+}
+Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [string] $SharedModuleFilePath
+    )
+
+    'Deleting the shared module file "{0}" within the VM...' -f $SharedModuleFilePath | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    Remove-Item -LiteralPath $SharedModuleFilePath -Force
+} | Out-String | Write-ScriptLog -Context $vmName
+
+$localAdminCredPSSession | Remove-PSSession
 
 'Stopping the VM...' | Write-ScriptLog -Context $vmName
 Stop-VM -Name $vmName
