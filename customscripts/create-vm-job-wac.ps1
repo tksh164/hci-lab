@@ -18,6 +18,51 @@ $labConfig = Get-LabDeploymentConfig
 Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log -FileName $LogFileName
 $labConfig | ConvertTo-Json -Depth 16 | Out-String | Write-ScriptLog -Context $env:ComputerName
 
+function Invoke-WindowsAdminCenterInstallerDownload
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateScript({ Test-Path -PathType Container -LiteralPath $_ })]
+        [string] $DownloadFolderPath
+    )
+
+    $params = @{
+        SourceUri      = 'https://aka.ms/WACDownload'
+        DownloadFolder = $DownloadFolderPath
+        FileNameToSave = 'WindowsAdminCenter.msi'
+    }
+    $wacInstallerFile = Invoke-FileDownload @params
+    return $wacInstallerFile
+}
+
+function New-CertificateForWindowsAdminCenter
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $VMName
+    )
+
+    $params = @{
+        CertStoreLocation = 'Cert:\LocalMachine\My'
+        Subject           = 'CN=Windows Admin Center for HCI lab'
+        FriendlyName      = 'Windows Admin Center for HCI lab'
+        Type              = 'SSLServerAuthentication'
+        HashAlgorithm     = 'sha512'
+        KeyExportPolicy   = 'ExportableEncrypted'
+        NotBefore         = (Get-Date)::Now
+        NotAfter          = (Get-Date).AddDays(180)  # The same days with Windows Server evaluation period.
+        KeyUsage          = 'DigitalSignature', 'KeyEncipherment', 'DataEncipherment'
+        TextExtension     = @(
+            '2.5.29.37={text}1.3.6.1.5.5.7.3.1',  # Server Authentication
+            ('2.5.29.17={{text}}DNS={0}' -f $VMName)
+        )
+    }
+    $wacCret = New-SelfSignedCertificate @params | Move-Item -Destination 'Cert:\LocalMachine\Root' -PassThru
+    return $wacCret
+}
+
 $vmName = $labConfig.wac.vmName
 
 'Creating the OS disk for the VM...' | Write-ScriptLog -Context $vmName
@@ -115,32 +160,17 @@ Start-VMWithRetry -VMName $vmName
 $localAdminCredential = New-LogonCredential -DomainFqdn '.' -Password $adminPassword
 Wait-PowerShellDirectReady -VMName $vmName -Credential $localAdminCredential
 
-'Downloading the Windows Admin Center installer...' | Write-ScriptLog -Context $vmName
 $params = @{
-    SourceUri      = 'https://aka.ms/WACDownload'
-    DownloadFolder = $labConfig.labHost.folderPath.temp
-    FileNameToSave = 'WindowsAdminCenter.msi'
 }
-$wacInstallerFile = Invoke-FileDownload @params
+
+$params = @{
+}
+'Downloading the Windows Admin Center installer...' | Write-ScriptLog -Context $vmName
+$wacInstallerFile = Invoke-WindowsAdminCenterInstallerDownload -DownloadFolderPath $labConfig.labHost.folderPath.temp
 $wacInstallerFile | Out-String | Write-ScriptLog -Context $vmName
 
 'Creating a new SSL server authentication certificate for Windows Admin Center...' | Write-ScriptLog -Context $vmName
-$params = @{
-    CertStoreLocation = 'Cert:\LocalMachine\My'
-    Subject           = 'CN=Windows Admin Center for HCI lab'
-    FriendlyName      = 'Windows Admin Center for HCI lab'
-    Type              = 'SSLServerAuthentication'
-    HashAlgorithm     = 'sha512'
-    KeyExportPolicy   = 'ExportableEncrypted'
-    NotBefore         = (Get-Date)::Now
-    NotAfter          = (Get-Date).AddDays(180)  # The same days with Windows Server evaluation period.
-    KeyUsage          = 'DigitalSignature', 'KeyEncipherment', 'DataEncipherment'
-    TextExtension     = @(
-        '2.5.29.37={text}1.3.6.1.5.5.7.3.1',  # Server Authentication
-        ('2.5.29.17={{text}}DNS={0}' -f $vmName)
-    )
-}
-$wacCret = New-SelfSignedCertificate @params | Move-Item -Destination 'Cert:\LocalMachine\Root' -PassThru
+$wacCret = New-CertificateForWindowsAdminCenter -VMName $vmName
 
 'Exporting the Windows Admin Center certificate...' | Write-ScriptLog -Context $vmName
 $wacPfxFilePathOnLabHost = [IO.Path]::Combine($labConfig.labHost.folderPath.temp, 'wac.pfx')
