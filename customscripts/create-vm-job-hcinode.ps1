@@ -261,103 +261,126 @@ Start-VMWithRetry -VMName $nodeConfig.VMName
 $localAdminCredential = New-LogonCredential -DomainFqdn '.' -Password $nodeConfig.AdminPassword
 Wait-PowerShellDirectReady -VMName $nodeConfig.VMName -Credential $localAdminCredential
 
-'Configuring the inside of the VM...' | Write-ScriptLog -Context $nodeConfig.VMName
+'Create a PowerShell Direct session...' | Write-ScriptLog -Context $nodeConfig.VMName
+$localAdminCredPSSession = New-PSSession -VMName $nodeConfig.VMName -Credential $localAdminCredential
+
+'Copying the shared module file into the VM...' | Write-ScriptLog -Context $nodeConfig.VMName
+$sharedModuleFilePath = (Get-Module -Name 'shared').Path
+$sharedModuleFilePathInVM = [IO.Path]::Combine('C:\Windows\Temp', [IO.Path]::GetFileName($sharedModuleFilePath))
+Copy-Item -ToSession $localAdminCredPSSession -Path $sharedModuleFilePath -Destination $sharedModuleFilePathInVM
+
+'Setup the PowerShell Direct session...' | Write-ScriptLog -Context $nodeConfig.VMName
 $params = @{
-    VMName      = $nodeConfig.VMName
-    Credential  = $localAdminCredential
     InputObject = [PSCustomObject] @{
-        NodeConfig             = $nodeConfig
-        FunctionsToInject      = @(
-            [PSCustomObject] @{
-                Name           = 'Write-ScriptLog'
-                Implementation = (${function:Write-ScriptLog}).ToString()
-            },
-            [PSCustomObject] @{
-                Name           = 'New-RegistryKey'
-                Implementation = (${function:New-RegistryKey}).ToString()
-            }
-        )
+        SharedModuleFilePath = $sharedModuleFilePathInVM
     }
 }
-Invoke-Command @params -ScriptBlock {
+Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
     param (
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-        [PSCustomObject] $NodeConfig,
-
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-        [PSCustomObject[]] $FunctionsToInject
+        [string] $SharedModuleFilePath
     )
 
     $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
     $WarningPreference = [Management.Automation.ActionPreference]::Continue
     $VerbosePreference = [Management.Automation.ActionPreference]::Continue
     $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
+    Import-Module -Name $SharedModuleFilePath -Force
+} #| Out-String | Write-ScriptLog -Context $nodeConfig.VMName
 
-    # Create injected functions.
-    foreach ($func in $FunctionsToInject) {
-        New-Item -Path 'function:' -Name $func.Name -Value $func.Implementation -Force | Out-Null
-    }
-
-    # If the HCI node OS is Windows Server 2022 with Desktop Experience.
-    if (($NodeConfig.OperatingSystem -eq 'ws2022') -and ($NodeConfig.ImageIndex -eq 4)) {
-        'Stop Server Manager launch at logon.' | Write-ScriptLog -Context $NodeConfig.VMName -UseInScriptBlock
+# If the HCI node OS is Windows Server 2022 with Desktop Experience.
+if (($NodeConfig.OperatingSystem -eq 'ws2022') -and ($NodeConfig.ImageIndex -eq 4)) {
+    'Configuring registry values within the VM...' | Write-ScriptLog -Context $nodeConfig.VMName
+    Invoke-Command -Session $localAdminCredPSSession -ScriptBlock {
+        'Stop Server Manager launch at logon.' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
         Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotOpenServerManagerAtLogon' -Value 1
     
-        'Stop Windows Admin Center popup at Server Manager launch.' | Write-ScriptLog -Context $NodeConfig.VMName -UseInScriptBlock
+        'Stop Windows Admin Center popup at Server Manager launch.' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
         Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotPopWACConsoleAtSMLaunch' -Value 1
     
-        'Hide the Network Location wizard. All networks will be Public.' | Write-ScriptLog -Context $NodeConfig.VMName -UseInScriptBlock
+        'Hide the Network Location wizard. All networks will be Public.' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
         New-RegistryKey -ParentPath 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -KeyName 'NewNetworkWindowOff'
 
-        'Setting to hide the first run experience of Microsoft Edge.' | Write-ScriptLog -Context $NodeConfig.VMName -UseInScriptBlock
+        'Setting to hide the first run experience of Microsoft Edge.' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
         New-RegistryKey -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft' -KeyName 'Edge'
         Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Edge' -Name 'HideFirstRunExperience' -Value 1
-    }
+    } | Out-String | Write-ScriptLog -Context $nodeConfig.VMName
+}
 
-    'Renaming the network adapters...' | Write-ScriptLog -Context $NodeConfig.VMName -UseInScriptBlock
+'Configuring network settings within the VM...' | Write-ScriptLog -Context $nodeConfig.VMName
+$params = @{
+    InputObject = [PSCustomObject] @{
+        VMConfig = $NodeConfig
+    }
+}
+Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [PSCustomObject] $VMConfig
+    )
+
+    'Renaming the network adapters...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
     Get-NetAdapterAdvancedProperty -RegistryKeyword 'HyperVNetworkAdapterName' | ForEach-Object -Process {
         Rename-NetAdapter -Name $_.Name -NewName $_.DisplayValue
     }
 
-    'Setting the IP configuration on the network adapters...' | Write-ScriptLog -Context $NodeConfig.VMName -UseInScriptBlock
+    'Setting the IP configuration on the network adapters...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
 
     # Management
     $params = @{
         AddressFamily  = 'IPv4'
-        IPAddress      = $NodeConfig.NetAdapter.Management.IPAddress
-        PrefixLength   = $NodeConfig.NetAdapter.Management.PrefixLength
-        DefaultGateway = $NodeConfig.NetAdapter.Management.DefaultGateway
+        IPAddress      = $VMConfig.NetAdapter.Management.IPAddress
+        PrefixLength   = $VMConfig.NetAdapter.Management.PrefixLength
+        DefaultGateway = $VMConfig.NetAdapter.Management.DefaultGateway
     }
-    Get-NetAdapter -Name $NodeConfig.NetAdapter.Management.Name | New-NetIPAddress @params
+    Get-NetAdapter -Name $VMConfig.NetAdapter.Management.Name | New-NetIPAddress @params
 
-    'Setting the DNS configuration on the {0} network adapter...' -f $NodeConfig.NetAdapter.Management.Name | Write-ScriptLog -Context $NodeConfig.VMName -UseInScriptBlock
-    Get-NetAdapter -Name $NodeConfig.NetAdapter.Management.Name |
-        Set-DnsClientServerAddress -ServerAddresses $NodeConfig.NetAdapter.Management.DnsServerAddresses
+    'Setting the DNS configuration on the {0} network adapter...' -f $VMConfig.NetAdapter.Management.Name | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    Get-NetAdapter -Name $VMConfig.NetAdapter.Management.Name |
+        Set-DnsClientServerAddress -ServerAddresses $VMConfig.NetAdapter.Management.DnsServerAddresses
 
     # Compute
     $params = @{
         AddressFamily  = 'IPv4'
-        IPAddress      = $NodeConfig.NetAdapter.Compute.IPAddress
-        PrefixLength   = $NodeConfig.NetAdapter.Compute.PrefixLength
+        IPAddress      = $VMConfig.NetAdapter.Compute.IPAddress
+        PrefixLength   = $VMConfig.NetAdapter.Compute.PrefixLength
     }
-    Get-NetAdapter -Name $NodeConfig.NetAdapter.Compute.Name | New-NetIPAddress @params
+    Get-NetAdapter -Name $VMConfig.NetAdapter.Compute.Name | New-NetIPAddress @params
 
     # Storage 1
     $params = @{
         AddressFamily = 'IPv4'
-        IPAddress     = $NodeConfig.NetAdapter.Storage1.IPAddress
-        PrefixLength  = $NodeConfig.NetAdapter.Storage1.PrefixLength
+        IPAddress     = $VMConfig.NetAdapter.Storage1.IPAddress
+        PrefixLength  = $VMConfig.NetAdapter.Storage1.PrefixLength
     }
-    Get-NetAdapter -Name $NodeConfig.NetAdapter.Storage1.Name | New-NetIPAddress @params
+    Get-NetAdapter -Name $VMConfig.NetAdapter.Storage1.Name | New-NetIPAddress @params
 
     # Storage 2
     $params = @{
         AddressFamily = 'IPv4'
-        IPAddress     = $NodeConfig.NetAdapter.Storage2.IPAddress
-        PrefixLength  = $NodeConfig.NetAdapter.Storage2.PrefixLength
+        IPAddress     = $VMConfig.NetAdapter.Storage2.IPAddress
+        PrefixLength  = $VMConfig.NetAdapter.Storage2.PrefixLength
     }
-    Get-NetAdapter -Name $NodeConfig.NetAdapter.Storage2.Name | New-NetIPAddress @params
-} | Out-String | Write-ScriptLog -Context $vmName
+    Get-NetAdapter -Name $VMConfig.NetAdapter.Storage2.Name | New-NetIPAddress @params
+} | Out-String | Write-ScriptLog -Context $nodeConfig.VMName
+
+'Cleaning up the PowerShell Direct session...' | Write-ScriptLog -Context $nodeConfig.VMName
+$params = @{
+    InputObject = [PSCustomObject] @{
+        SharedModuleFilePath = $sharedModuleFilePathInVM
+    }
+}
+Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [string] $SharedModuleFilePath
+    )
+
+    'Deleting the shared module file "{0}" within the VM...' -f $SharedModuleFilePath | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    Remove-Item -LiteralPath $SharedModuleFilePath -Force
+} | Out-String | Write-ScriptLog -Context $nodeConfig.VMName
+
+$localAdminCredPSSession | Remove-PSSession
 
 Wait-AddsDcDeploymentCompletion
 
