@@ -160,11 +160,80 @@ Start-VMWithRetry -VMName $vmName
 $localAdminCredential = New-LogonCredential -DomainFqdn '.' -Password $adminPassword
 Wait-PowerShellDirectReady -VMName $vmName -Credential $localAdminCredential
 
-$params = @{
-}
+'Create a PowerShell Direct session...' | Write-ScriptLog -Context $vmName
+$localAdminCredPSSession = New-PSSession -VMName $vmName -Credential $localAdminCredential
 
+'Copying the shared module file into the VM...' | Write-ScriptLog -Context $vmName
+$sharedModuleFilePath = (Get-Module -Name 'shared').Path
+$sharedModuleFilePathInVM = [IO.Path]::Combine('C:\Windows\Temp', [IO.Path]::GetFileName($sharedModuleFilePath))
+Copy-Item -ToSession $localAdminCredPSSession -Path $sharedModuleFilePath -Destination $sharedModuleFilePathInVM
+
+'Setup the PowerShell Direct session...' | Write-ScriptLog -Context $vmName
 $params = @{
+    InputObject = [PSCustomObject] @{
+        SharedModuleFilePath = $sharedModuleFilePathInVM
+    }
 }
+Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [string] $SharedModuleFilePath
+    )
+
+    $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
+    $WarningPreference = [Management.Automation.ActionPreference]::Continue
+    $VerbosePreference = [Management.Automation.ActionPreference]::Continue
+    $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
+    Import-Module -Name $SharedModuleFilePath -Force
+} #| Out-String | Write-ScriptLog -Context $vmName
+
+'Configuring registry values within the VM...' | Write-ScriptLog -Context $vmName
+Invoke-Command -Session $localAdminCredPSSession -ScriptBlock {
+    'Stop Server Manager launch at logon.' | Write-ScriptLog -Context $env:ComputerName-UseInScriptBlock
+    Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotOpenServerManagerAtLogon' -Value 1
+
+    'Stop Windows Admin Center popup at Server Manager launch.' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotPopWACConsoleAtSMLaunch' -Value 1
+
+    'Hide the Network Location wizard. All networks will be Public.' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    New-RegistryKey -ParentPath 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -KeyName 'NewNetworkWindowOff'
+
+    'Setting to hide the first run experience of Microsoft Edge.' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    New-RegistryKey -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft' -KeyName 'Edge'
+    Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Edge' -Name 'HideFirstRunExperience' -Value 1
+} | Out-String | Write-ScriptLog -Context $vmName
+
+'Configuring network settings within the VM...' | Write-ScriptLog -Context $vmName
+$params = @{
+    InputObject = [PSCustomObject] @{
+        VMConfig = $LabConfig.wac
+    }
+}
+Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [PSCustomObject] $VMConfig
+    )
+
+    'Renaming the network adapters...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    Get-NetAdapterAdvancedProperty -RegistryKeyword 'HyperVNetworkAdapterName' | ForEach-Object -Process {
+        Rename-NetAdapter -Name $_.Name -NewName $_.DisplayValue
+    }
+
+    'Setting the IP configuration on the network adapter...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    $params = @{
+        AddressFamily  = 'IPv4'
+        IPAddress      = $VMConfig.netAdapter.management.ipAddress
+        PrefixLength   = $VMConfig.netAdapter.management.prefixLength
+        DefaultGateway = $VMConfig.netAdapter.management.defaultGateway
+    }
+    Get-NetAdapter -Name $VMConfig.netAdapter.management.name | New-NetIPAddress @params
+    
+    'Setting the DNS configuration on the network adapter...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    Get-NetAdapter -Name $VMConfig.netAdapter.management.name |
+        Set-DnsClientServerAddress -ServerAddresses $VMConfig.netAdapter.management.dnsServerAddresses
+} | Out-String | Write-ScriptLog -Context $vmName
+
 'Downloading the Windows Admin Center installer...' | Write-ScriptLog -Context $vmName
 $wacInstallerFile = Invoke-WindowsAdminCenterInstallerDownload -DownloadFolderPath $labConfig.labHost.folderPath.temp
 $wacInstallerFile | Out-String | Write-ScriptLog -Context $vmName
@@ -177,45 +246,24 @@ $wacPfxFilePathOnLabHost = [IO.Path]::Combine($labConfig.labHost.folderPath.temp
 $wacCret | Export-PfxCertificate -FilePath $wacPfxFilePathOnLabHost -Password $adminPassword | Out-String | Write-ScriptLog -Context $vmName
 
 # Copy the Windows Admin Center related files into the VM.
-$psSession = New-PSSession -VMName $vmName -Credential $localAdminCredential
-
 'Copying the Windows Admin Center installer into the VM...' | Write-ScriptLog -Context $vmName
 $wacInstallerFilePathInVM = [IO.Path]::Combine('C:\Windows\Temp', [IO.Path]::GetFileName($wacInstallerFile.FullName))
-Copy-Item -ToSession $psSession -Path $wacInstallerFile.FullName -Destination $wacInstallerFilePathInVM
+Copy-Item -ToSession $localAdminCredPSSession -Path $wacInstallerFile.FullName -Destination $wacInstallerFilePathInVM
 
 'Copying the Windows Admin Center certificate into the VM...' | Write-ScriptLog -Context $vmName
 $wacPfxFilePathInVM = [IO.Path]::Combine('C:\Windows\Temp', [IO.Path]::GetFileName($wacPfxFilePathOnLabHost))
-Copy-Item -ToSession $psSession -Path $wacPfxFilePathOnLabHost -Destination $wacPfxFilePathInVM
+Copy-Item -ToSession $localAdminCredPSSession -Path $wacPfxFilePathOnLabHost -Destination $wacPfxFilePathInVM
 
-$psSession | Remove-PSSession
-
-'Configuring the inside of the VM...' | Write-ScriptLog -Context $vmName
+'Installing Windows Admin Center within the VM...' | Write-ScriptLog -Context $vmName
 $params = @{
-    VMName      = $vmName
-    Credential  = $localAdminCredential
     InputObject = [PSCustomObject] @{
-        VMName                   = $vmName
         WacInstallerFilePathInVM = $wacInstallerFilePathInVM
         WacPfxFilePathInVM       = $wacPfxFilePathInVM
         WacPfxPassword           = $adminPassword
-        LabConfig                = $labConfig
-        FunctionsToInject        = @(
-            [PSCustomObject] @{
-                Name           = 'Write-ScriptLog'
-                Implementation = (${function:Write-ScriptLog}).ToString()
-            },
-            [PSCustomObject] @{
-                Name           = 'New-RegistryKey'
-                Implementation = (${function:New-RegistryKey}).ToString()
-            }
-        )
     }
 }
-Invoke-Command @params -ScriptBlock {
+Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
     param (
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-        [string] $VMName,
-
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [string] $WacInstallerFilePathInVM,
 
@@ -223,63 +271,16 @@ Invoke-Command @params -ScriptBlock {
         [string] $WacPfxFilePathInVM,
 
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-        [SecureString] $WacPfxPassword,
-
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-        [PSCustomObject] $LabConfig,
-
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-        [PSCustomObject[]] $FunctionsToInject
+        [SecureString] $WacPfxPassword
     )
 
-    $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
-    $WarningPreference = [Management.Automation.ActionPreference]::Continue
-    $VerbosePreference = [Management.Automation.ActionPreference]::Continue
-    $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
-
-    # Create injected functions.
-    foreach ($func in $FunctionsToInject) {
-        New-Item -Path 'function:' -Name $func.Name -Value $func.Implementation -Force | Out-Null
-    }
-
-    'Stop Server Manager launch at logon.' | Write-ScriptLog -Context $VMName -UseInScriptBlock
-    Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotOpenServerManagerAtLogon' -Value 1
-
-    'Stop Windows Admin Center popup at Server Manager launch.' | Write-ScriptLog -Context $VMName -UseInScriptBlock
-    Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotPopWACConsoleAtSMLaunch' -Value 1
-
-    'Hide the Network Location wizard. All networks will be Public.' | Write-ScriptLog -Context $VMName -UseInScriptBlock
-    New-RegistryKey -ParentPath 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -KeyName 'NewNetworkWindowOff'
-
-    'Setting to hide the first run experience of Microsoft Edge.' | Write-ScriptLog -Context $VMName -UseInScriptBlock
-    New-RegistryKey -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft' -KeyName 'Edge'
-    Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Edge' -Name 'HideFirstRunExperience' -Value 1
-
-    'Renaming the network adapters...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
-    Get-NetAdapterAdvancedProperty -RegistryKeyword 'HyperVNetworkAdapterName' | ForEach-Object -Process {
-        Rename-NetAdapter -Name $_.Name -NewName $_.DisplayValue
-    }
-
-    'Setting the IP configuration on the network adapter...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
-    $params = @{
-        AddressFamily  = 'IPv4'
-        IPAddress      = $LabConfig.wac.netAdapter.management.ipAddress
-        PrefixLength   = $LabConfig.wac.netAdapter.management.prefixLength
-        DefaultGateway = $LabConfig.wac.netAdapter.management.defaultGateway
-    }
-    Get-NetAdapter -Name $LabConfig.wac.netAdapter.management.name | New-NetIPAddress @params
-    
-    'Setting the DNS configuration on the network adapter...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
-    Get-NetAdapter -Name $LabConfig.wac.netAdapter.management.name |
-        Set-DnsClientServerAddress -ServerAddresses $LabConfig.wac.netAdapter.management.dnsServerAddresses
-
-    # Import required to Root and My both stores.
-    'Importing Windows Admin Center certificate...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
+    # Import the certificate to Root and My both stores required.
+    'Importing Windows Admin Center certificate...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
     Import-PfxCertificate -CertStoreLocation 'Cert:\LocalMachine\Root' -FilePath $WacPfxFilePathInVM -Password $WacPfxPassword -Exportable
     $wacCert = Import-PfxCertificate -CertStoreLocation 'Cert:\LocalMachine\My' -FilePath $WacPfxFilePathInVM -Password $WacPfxPassword -Exportable
     Remove-Item -LiteralPath $WacPfxFilePathInVM -Force
 
-    'Installing Windows Admin Center...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
+    'Installing Windows Admin Center...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
     $msiArgs = @(
         '/i',
         ('"{0}"' -f $WacInstallerFilePathInVM),
@@ -298,7 +299,7 @@ Invoke-Command @params -ScriptBlock {
     }
     Remove-Item -LiteralPath $WacInstallerFilePathInVM -Force
 
-    'Updating Windows Admin Center extensions...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
+    'Updating Windows Admin Center extensions...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
     $wacExtensionToolsPSModulePath = [IO.Path]::Combine($env:ProgramFiles, 'Windows Admin Center\PowerShell\Modules\ExtensionTools\ExtensionTools.psm1')
     Import-Module -Name $wacExtensionToolsPSModulePath -Force
     [Uri] $gatewayEndpointUri = 'https://{0}' -f $env:ComputerName
@@ -317,23 +318,23 @@ Invoke-Command @params -ScriptBlock {
             break
         }
         catch {
-            'Will retry updating Windows Admin Center extensions...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
+            'Will retry updating Windows Admin Center extensions...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
             Start-Sleep -Seconds $retryInterval
         }
     }
     if ($retryCount -ge $retryLimit) {
-        'Failed Windows Admin Center extension update. Need manual update later.' | Write-ScriptLog -Context $VMName -UseInScriptBlock
+        'Failed Windows Admin Center extension update. Need manual update later.' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
     }
 
     Get-Extension -GatewayEndpoint $gatewayEndpointUri |
         Sort-Object -Property id |
         Format-table -Property id, status, version, isLatestVersion, title
 
-    'Setting Windows Integrated Authentication registry for Windows Admin Center...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
+    'Setting Windows Integrated Authentication registry for Windows Admin Center...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
     New-RegistryKey -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft' -KeyName 'Edge'
-    Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Edge' -Name 'AuthServerAllowlist' -Value $VMName
+    Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Edge' -Name 'AuthServerAllowlist' -Value $env:ComputerName
 
-    'Creating shortcut for Windows Admin Center on the desktop...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
+    'Creating shortcut for Windows Admin Center on the desktop...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
     $wshShell = New-Object -ComObject 'WScript.Shell'
     $shortcut = $wshShell.CreateShortcut('C:\Users\Public\Desktop\Windows Admin Center.lnk')
     $shortcut.TargetPath = 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
@@ -343,12 +344,20 @@ Invoke-Command @params -ScriptBlock {
     $shortcut.Save()
 } | Out-String | Write-ScriptLog -Context $vmName
 
+'Cleaning up the PowerShell Direct session...' | Write-ScriptLog -Context $vmName
+# NOTE: The shared module not be deleted within the VM at this time because it will be used afterwards.
+$localAdminCredPSSession | Remove-PSSession
+
 Wait-AddsDcDeploymentCompletion
 
 'Waiting for ready to the domain controller...' | Write-ScriptLog -Context $vmName
 $domainAdminCredential = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $adminPassword
-# The DC's computer name is the same as the VM name. It's specified in the unattend.xml.
-Wait-DomainControllerServiceReady -AddsDcVMName $labConfig.addsDC.vmName -AddsDcComputerName $labConfig.addsDC.vmName -Credential $domainAdminCredential
+$params = @{
+    AddsDcVMName       = $labConfig.addsDC.vmName
+    AddsDcComputerName = $labConfig.addsDC.vmName  # The DC's computer name is the same as the VM name. It's specified in the unattend.xml.
+    Credential         = $domainAdminCredential
+}
+Wait-DomainControllerServiceReady @params
 
 'Joining the VM to the AD domain...' | Write-ScriptLog -Context $vmName
 $params = @{
@@ -368,50 +377,43 @@ Start-VM -Name $vmName
 'Waiting for ready to the VM...' | Write-ScriptLog -Context $vmName
 Wait-PowerShellDirectReady -VMName $vmName -Credential $domainAdminCredential
 
-# NOTE: To preset WAC connections for the domain Administrator, the preset operation is required by
-# the domain Administrator because WAC connections are managed based on each user.
-'Configuring Windows Admin Center for the domain Administrator...' | Write-ScriptLog -Context $vmName
+'Create a PowerShell Direct session with the domain credential...' | Write-ScriptLog -Context $vmName
+$domainAdminCredPSSession = New-PSSession -VMName $vmName -Credential $domainAdminCredential
+
+'Setup the PowerShell Direct session...' | Write-ScriptLog -Context $vmName
 $params = @{
-    VMName      = $vmName
-    Credential  = $domainAdminCredential
     InputObject = [PSCustomObject] @{
-        VMName            = $vmName
-        LabConfig         = $labConfig
-        FunctionsToInject = @(
-            [PSCustomObject] @{
-                Name           = 'Write-ScriptLog'
-                Implementation = (${function:Write-ScriptLog}).ToString()
-            },
-            [PSCustomObject] @{
-                Name           = 'Format-HciNodeName'
-                Implementation = (${function:Format-HciNodeName}).ToString()
-            }
-        )
+        SharedModuleFilePath = $sharedModuleFilePathInVM
     }
 }
-Invoke-Command @params -ScriptBlock {
+Invoke-Command @params -Session $domainAdminCredPSSession -ScriptBlock {
     param (
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-        [string] $VMName,
-
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-        [PSCustomObject] $LabConfig,
-
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-        [PSCustomObject[]] $FunctionsToInject
+        [string] $SharedModuleFilePath
     )
 
     $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
     $WarningPreference = [Management.Automation.ActionPreference]::Continue
     $VerbosePreference = [Management.Automation.ActionPreference]::Continue
     $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
+    Import-Module -Name $SharedModuleFilePath -Force
+} #| Out-String | Write-ScriptLog -Context $vmName
 
-    # Create injected functions.
-    foreach ($func in $FunctionsToInject) {
-        New-Item -Path 'function:' -Name $func.Name -Value $func.Implementation -Force | Out-Null
+# NOTE: To preset WAC connections for the domain Administrator, the preset operation is required by
+# the domain Administrator because WAC connections are managed based on each user.
+'Configuring Windows Admin Center for the domain Administrator...' | Write-ScriptLog -Context $vmName
+$params = @{
+    InputObject = [PSCustomObject] @{
+        LabConfig = $LabConfig
     }
+}
+Invoke-Command @params -Session $domainAdminCredPSSession -ScriptBlock {
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [PSCustomObject] $LabConfig
+    )
 
-    'Importing server connections to Windows Admin Center for the domain Administrator...' | Write-ScriptLog -Context $VMName -UseInScriptBlock
+    'Importing server connections to Windows Admin Center for the domain Administrator...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
     $wacConnectionToolsPSModulePath = [IO.Path]::Combine($env:ProgramFiles, 'Windows Admin Center\PowerShell\Modules\ConnectionTools\ConnectionTools.psm1')
     Import-Module -Name $wacConnectionToolsPSModulePath -Force
 
@@ -439,6 +441,24 @@ Invoke-Command @params -ScriptBlock {
     Import-Connection -GatewayEndpoint $gatewayEndpointUri -FileName $wacConnectionFilePathInVM
     Remove-Item -LiteralPath $wacConnectionFilePathInVM -Force
 } | Out-String | Write-ScriptLog -Context $vmName
+
+'Cleaning up the PowerShell Direct session...' | Write-ScriptLog -Context $vmName
+$params = @{
+    InputObject = [PSCustomObject] @{
+        SharedModuleFilePath = $sharedModuleFilePathInVM
+    }
+}
+Invoke-Command @params -Session $domainAdminCredPSSession -ScriptBlock {
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [string] $SharedModuleFilePath
+    )
+
+    'Deleting the shared module file "{0}" within the VM...' -f $SharedModuleFilePath | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    Remove-Item -LiteralPath $SharedModuleFilePath -Force
+} | Out-String | Write-ScriptLog -Context $vmName
+
+$domainAdminCredPSSession | Remove-PSSession
 
 'The WAC VM creation has been completed.' | Write-ScriptLog -Context $vmName
 
