@@ -12,18 +12,48 @@ $labConfig = Get-LabDeploymentConfig
 Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log
 $labConfig | ConvertTo-Json -Depth 16 | Write-Host
 
-$nodes = @()
-$nodes += for ($nodeIndex = 0; $nodeIndex -lt $labConfig.hciNode.nodeCount; $nodeIndex++) {
+$nodeNames = @()
+$nodeNames += for ($nodeIndex = 0; $nodeIndex -lt $labConfig.hciNode.nodeCount; $nodeIndex++) {
     Format-HciNodeName -Format $labConfig.hciNode.vmName -Offset $labConfig.hciNode.vmNameOffset -Index $nodeIndex
 }
 
 $adminPassword = Get-Secret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName.adminPassword
 $domainCredential = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $adminPassword
 
+'Create a PowerShell Direct sessions...' | Write-ScriptLog -Context $env:ComputerName
+$domainAdminCredPSSessions = @()
+foreach ($nodeName in $nodeNames) {
+    $domainAdminCredPSSessions = New-PSSession -VMName $nodeName -Credential $domainCredential
+}
+
+'Copying the shared module file into the VMs...' | Write-ScriptLog -Context $env:ComputerName
+$sharedModuleFilePath = (Get-Module -Name 'shared').Path
+$sharedModuleFilePathInVM = [IO.Path]::Combine('C:\Windows\Temp', [IO.Path]::GetFileName($sharedModuleFilePath))
+foreach ($domainAdminCredPSSession in $domainAdminCredPSSessions) {
+    Copy-Item -ToSession $domainAdminCredPSSession -Path $sharedModuleFilePath -Destination $sharedModuleFilePathInVM
+}
+
+'Setup the PowerShell Direct sessions...' | Write-ScriptLog -Context $env:ComputerName
+$params = @{
+    InputObject = [PSCustomObject] @{
+        SharedModuleFilePath = $sharedModuleFilePathInVM
+    }
+}
+Invoke-Command @params -Session $domainAdminCredPSSessions -ScriptBlock {
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [string] $SharedModuleFilePath
+    )
+
+    $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
+    $WarningPreference = [Management.Automation.ActionPreference]::Continue
+    $VerbosePreference = [Management.Automation.ActionPreference]::Continue
+    $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
+    Import-Module -Name $SharedModuleFilePath -Force
+} #| Out-String | Write-ScriptLog -Context $vmName
+
 'Creating virtual switches within each HCI node...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
 $params = @{
-    VMName      = $nodes
-    Credential  = $domainCredential
     InputObject = [PSCustomObject] @{
         NetAdapterName = [PSCustomObject] @{
             Management = $labConfig.hciNode.netAdapter.management.name
@@ -31,16 +61,11 @@ $params = @{
         }
     }
 }
-Invoke-Command @params -ScriptBlock {
+Invoke-Command @params -Session $domainAdminCredPSSessions -ScriptBlock {
     param (
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [PSCustomObject] $NetAdapterName
     )
-
-    $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
-    $WarningPreference = [Management.Automation.ActionPreference]::Continue
-    $VerbosePreference = [Management.Automation.ActionPreference]::Continue
-    $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
     # External vSwitch for the management network.
     $params = @{
@@ -66,16 +91,7 @@ Invoke-Command @params -ScriptBlock {
     Write-ScriptLog -Context $env:ComputerName
 
 'Preparing HCI node drives...' | Write-ScriptLog -Context $env:ComputerName
-$params = @{
-    VMName     = $nodes
-    Credential = $domainCredential
-}
-Invoke-Command @params -ScriptBlock {
-    $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
-    $WarningPreference = [Management.Automation.ActionPreference]::Continue
-    $VerbosePreference = [Management.Automation.ActionPreference]::Continue
-    $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
-
+Invoke-Command -Session $domainAdminCredPSSessions -ScriptBlock {
     # Updates the cache of the service for a particular provider and associated child objects.
     Update-StorageProviderCache
 
@@ -119,11 +135,7 @@ Invoke-Command @params -ScriptBlock {
     Write-ScriptLog -Context $env:ComputerName
 
 'Getting the node''s UI culture...' | Write-ScriptLog -Context $env:ComputerName
-$params = @{
-    VMName     = $nodes[0]
-    Credential = $domainCredential
-}
-$langTag = Invoke-Command @params -ScriptBlock {
+$langTag = Invoke-Command -Session $domainAdminCredPSSessions[0] -ScriptBlock {
     (Get-UICulture).IetfLanguageTag
 }
 'The node''s UI culture is "{0}".' -f $langTag | Write-ScriptLog -Context $env:ComputerName
@@ -134,14 +146,12 @@ Import-LocalizedData -FileName $localizedDataFileName -BindingVariable 'clusterT
 
 'Testing the HCI cluster nodes...' | Write-ScriptLog -Context $env:ComputerName
 $params = @{
-    VMName      = $nodes[0]
-    Credential  = $domainCredential
     InputObject = [PSCustomObject] @{
-        Node         = $nodes
+        Node         = $nodeNames
         TestCategory = ([array] $clusterTestCategories.Values)
     }
 }
-Invoke-Command @params -ScriptBlock {
+Invoke-Command @params -Session $domainAdminCredPSSessions[0] -ScriptBlock {
     param (
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [string[]] $Node,
@@ -149,11 +159,6 @@ Invoke-Command @params -ScriptBlock {
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [string[]] $TestCategory
     )
-
-    $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
-    $WarningPreference = [Management.Automation.ActionPreference]::Continue
-    $VerbosePreference = [Management.Automation.ActionPreference]::Continue
-    $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
     $params = @{
         Node        = $Node
@@ -166,15 +171,13 @@ Invoke-Command @params -ScriptBlock {
 
 'Creating an HCI cluster...' | Write-ScriptLog -Context $env:ComputerName
 $params = @{
-    VMName      = $nodes[0]
-    Credential  = $domainCredential
     InputObject = [PSCustomObject] @{
         ClusterName      = $labConfig.hciCluster.name
         ClusterIpAddress = $labConfig.hciCluster.ipAddress
-        Node             = $nodes
+        Node             = $nodeNames
     }
 }
-Invoke-Command @params -ScriptBlock {
+Invoke-Command @params -Session $domainAdminCredPSSessions[0] -ScriptBlock {
     param (
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [string] $ClusterName,
@@ -185,11 +188,6 @@ Invoke-Command @params -ScriptBlock {
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [string[]] $Node
     )
-
-    $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
-    $WarningPreference = [Management.Automation.ActionPreference]::Continue
-    $VerbosePreference = [Management.Automation.ActionPreference]::Continue
-    $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
     $params = @{
         Name          = $ClusterName
@@ -204,13 +202,11 @@ Invoke-Command @params -ScriptBlock {
 
 'Waiting for the cluster to be ready...' | Write-ScriptLog -Context $env:ComputerName
 $params = @{
-    VMName      = $nodes[0]
-    Credential  = $domainCredential
     InputObject = [PSCustomObject] @{
         ClusterName = $labConfig.hciCluster.name
     }
 }
-Invoke-Command @params -ScriptBlock {
+Invoke-Command @params -Session $domainAdminCredPSSessions[0] -ScriptBlock {
     param (
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [string] $ClusterName,
@@ -222,11 +218,6 @@ Invoke-Command @params -ScriptBlock {
         [Parameter(Mandatory = $false)]
         [TimeSpan] $RetyTimeout = (New-TimeSpan -Minutes 10)
     )
-
-    $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
-    $WarningPreference = [Management.Automation.ActionPreference]::Continue
-    $VerbosePreference = [Management.Automation.ActionPreference]::Continue
-    $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
     $startTime = Get-Date
     while ((Get-Date) -lt ($startTime + $RetyTimeout)) {
@@ -249,15 +240,13 @@ Invoke-Command @params -ScriptBlock {
 
 'Configuring the cluster quorum...' | Write-ScriptLog -Context $env:ComputerName
 $params = @{
-    VMName      = $nodes[0]
-    Credential  = $domainCredential
     InputObject = [PSCustomObject] @{
         ClusterName             = $labConfig.hciCluster.name
         StorageAccountName      = Get-Secret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName.cloudWitnessStorageAccountName -AsPlainText
         StorageAccountAccessKey = Get-Secret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName.cloudWitnessStorageAccountKey -AsPlainText
     }
 }
-Invoke-Command @params -ScriptBlock {
+Invoke-Command @params -Session $domainAdminCredPSSessions[0] -ScriptBlock {
     param (
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [string] $ClusterName,
@@ -268,11 +257,6 @@ Invoke-Command @params -ScriptBlock {
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [string] $StorageAccountAccessKey
     )
-
-    $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
-    $WarningPreference = [Management.Automation.ActionPreference]::Continue
-    $VerbosePreference = [Management.Automation.ActionPreference]::Continue
-    $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
     $params = @{
         Cluster      = $ClusterName
@@ -287,22 +271,15 @@ Invoke-Command @params -ScriptBlock {
 
 'Enabling Storage Space Direct (S2D)...' | Write-ScriptLog -Context $env:ComputerName
 $params = @{
-    VMName      = $nodes[0]
-    Credential  = $domainCredential
     InputObject = [PSCustomObject] @{
         StoragePoolName = 'hcilab-s2d-storage-pool'
     }
 }
-Invoke-Command @params -ScriptBlock {
+Invoke-Command @params -Session $domainAdminCredPSSessions[0] -ScriptBlock {
     param (
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [string] $StoragePoolName
     )
-
-    $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
-    $WarningPreference = [Management.Automation.ActionPreference]::Continue
-    $VerbosePreference = [Management.Automation.ActionPreference]::Continue
-    $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
     $params = @{
         PoolFriendlyName = $StoragePoolName
@@ -315,14 +292,12 @@ Invoke-Command @params -ScriptBlock {
 
 'Creating a volume on S2D...' | Write-ScriptLog -Context $env:ComputerName
 $params = @{
-    VMName      = $nodes[0]
-    Credential  = $domainCredential
     InputObject = [PSCustomObject] @{
         VolumeName      = 'HciVol'
         StoragePoolName = 'hcilab-s2d-storage-pool'
     }
 }
-Invoke-Command @params -ScriptBlock {
+Invoke-Command @params -Session $domainAdminCredPSSessions[0] -ScriptBlock {
     param (
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [string] $VolumeName,
@@ -330,11 +305,6 @@ Invoke-Command @params -ScriptBlock {
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [string] $StoragePoolName
     )
-
-    $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
-    $WarningPreference = [Management.Automation.ActionPreference]::Continue
-    $VerbosePreference = [Management.Automation.ActionPreference]::Continue
-    $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
     $params = @{
         FriendlyName            = $VolumeName
@@ -348,6 +318,24 @@ Invoke-Command @params -ScriptBlock {
     }
     New-Volume @params
 } | Out-String | Write-ScriptLog -Context $env:ComputerName
+
+'Cleaning up the PowerShell Direct session...' | Write-ScriptLog -Context $env:ComputerName
+$params = @{
+    InputObject = [PSCustomObject] @{
+        SharedModuleFilePath = $sharedModuleFilePathInVM
+    }
+}
+Invoke-Command @params -Session $domainAdminCredPSSessions -ScriptBlock {
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [string] $SharedModuleFilePath
+    )
+
+    'Deleting the shared module file "{0}" within the VM...' -f $SharedModuleFilePath | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    Remove-Item -LiteralPath $SharedModuleFilePath -Force
+} | Out-String | Write-ScriptLog -Context $env:ComputerName
+
+$domainAdminCredPSSessions | Remove-PSSession
 
 'The HCI cluster creation has been completed.' | Write-ScriptLog -Context $env:ComputerName
 
