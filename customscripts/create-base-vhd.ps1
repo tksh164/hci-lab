@@ -51,18 +51,18 @@ try {
     $jobs += Start-Job -Name 'hci-node' -LiteralPath $jobScriptFilePath -InputObject ([PSCustomObject] $params)
 
     # Create a Windows Server Server Core (= index 3) VHD for AD DS domain controller VM if HCI node's OS is not Windows Server Server Core.
-    if (-not (($labConfig.hciNode.operatingSystem.sku -eq $C_OperatingSystemSku.WindowsServer2022) -and ($labConfig.hciNode.operatingSystem.imageIndex -eq 3))) {
+    if (-not (($labConfig.hciNode.operatingSystem.sku -eq $C_OperatingSystemSku.WindowsServer2022) -and ($labConfig.hciNode.operatingSystem.imageIndex -eq $C_OperatingSystemImageIndex.WSDatacenterServerCore))) {
         'Starting the Windows Server Core base VHD creation job...' | Write-ScriptLog -Context $env:ComputerName
         $params = @{
             PSModuleNameToImport = (Get-Module -Name 'shared').Path, $convertWimScriptFile.FullName
             OperatingSystem      = $C_OperatingSystemSku.WindowsServer2022
-            ImageIndex           = 3 # Datacenter (Server Core)
+            ImageIndex           = $C_OperatingSystemImageIndex.WSDatacenterServerCore  # Datacenter (Server Core)
             LogFileName          = [IO.Path]::GetFileNameWithoutExtension($jobScriptFilePath) + '-wscore'
         }
 
         # Use the for-concurrency ISO file if HCI node's OS is Windows Server with Desktop Experience (= index 4)
         # because the ISO file without suffix is already used for HCI node's VHD creation.
-        if (($labConfig.hciNode.operatingSystem.sku -eq $C_OperatingSystemSku.WindowsServer2022) -and ($labConfig.hciNode.operatingSystem.imageIndex -eq 4)) {
+        if (($labConfig.hciNode.operatingSystem.sku -eq $C_OperatingSystemSku.WindowsServer2022) -and ($labConfig.hciNode.operatingSystem.imageIndex -eq $C_OperatingSystemImageIndex.WSDatacenterDesktopExperience)) {
             $params.IsoFileNameSuffix = $isoFileNameSuffix
         }
 
@@ -70,12 +70,12 @@ try {
     }
 
     # Create a Windows Server with Desktop Experience (= index 4) VHD for Windows Admin Center VM if HCI node's OS is not Windows Server with Desktop Experience.
-    if (-not (($labConfig.hciNode.operatingSystem.sku -eq $C_OperatingSystemSku.WindowsServer2022) -and ($labConfig.hciNode.operatingSystem.imageIndex -eq 4))) {
+    if (-not (($labConfig.hciNode.operatingSystem.sku -eq $C_OperatingSystemSku.WindowsServer2022) -and ($labConfig.hciNode.operatingSystem.imageIndex -eq $C_OperatingSystemImageIndex.WSDatacenterDesktopExperience))) {
         'Starting the Windows Server Desktop Experience base VHD creation job...' | Write-ScriptLog -Context $env:ComputerName
         $params = @{
             PSModuleNameToImport = (Get-Module -Name 'shared').Path, $convertWimScriptFile.FullName
             OperatingSystem      = $C_OperatingSystemSku.WindowsServer2022
-            ImageIndex           = 4  # Datacenter with Desktop Experience
+            ImageIndex           = $C_OperatingSystemImageIndex.WSDatacenterDesktopExperience  # Datacenter with Desktop Experience
             IsoFileNameSuffix    = $isoFileNameSuffix
             LogFileName          = [IO.Path]::GetFileNameWithoutExtension($jobScriptFilePath) + '-wsdexp'
         }

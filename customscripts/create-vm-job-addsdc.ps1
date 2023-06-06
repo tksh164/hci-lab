@@ -26,7 +26,7 @@ Block-AddsDomainOperation
 'Creating the OS disk for the VM...' | Write-ScriptLog -Context $vmName
 $params = @{
     OperatingSystem = $C_OperatingSystemSku.WindowsServer2022
-    ImageIndex      = 3  # Datacenter (Server Core)
+    ImageIndex      = $C_OperatingSystemImageIndex.WSDatacenterServerCore  # Datacenter (Server Core)
     Culture         = $labConfig.guestOS.culture
 }
 $parentVhdFileName = Format-BaseVhdFileName @params
