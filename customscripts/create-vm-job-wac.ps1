@@ -67,7 +67,7 @@ $vmName = $labConfig.wac.vmName
 
 'Creating the OS disk for the VM...' | Write-ScriptLog -Context $vmName
 $params = @{
-    OperatingSystem = 'ws2022'
+    OperatingSystem = $C_OperatingSystemSku.WindowsServer2022
     ImageIndex      = 4  # Datacenter with Desktop Experience
     Culture         = $labConfig.guestOS.culture
 }

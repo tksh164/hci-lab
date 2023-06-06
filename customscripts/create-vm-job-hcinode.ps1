@@ -309,7 +309,7 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
 } #| Out-String | Write-ScriptLog -Context $nodeConfig.VMName
 
 # If the HCI node OS is Windows Server 2022 with Desktop Experience.
-if (($NodeConfig.OperatingSystem -eq 'ws2022') -and ($NodeConfig.ImageIndex -eq 4)) {
+if (($NodeConfig.OperatingSystem -eq $C_OperatingSystemSku.WindowsServer2022) -and ($NodeConfig.ImageIndex -eq 4)) {
     'Configuring registry values within the VM...' | Write-ScriptLog -Context $nodeConfig.VMName
     Invoke-Command -Session $localAdminCredPSSession -ScriptBlock {
         'Stop Server Manager launch at logon.' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock

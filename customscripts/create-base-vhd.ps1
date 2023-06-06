@@ -33,8 +33,8 @@ try {
     # because the ISO file will unmount when finish first one.
     'Copying Windows Server ISO file for concurrency...' | Write-ScriptLog -Context $env:ComputerName
     $isoFileNameSuffix = 'for-concurrent'
-    $sourceIsoFilePath = [IO.Path]::Combine($labConfig.labHost.folderPath.temp, (Format-IsoFileName -OperatingSystem 'ws2022' -Culture $labConfig.guestOS.culture))
-    $isoFilePathForConcurrency = [IO.Path]::Combine($labConfig.labHost.folderPath.temp, (Format-IsoFileName -OperatingSystem 'ws2022' -Culture $labConfig.guestOS.culture -Suffix $isoFileNameSuffix))
+    $sourceIsoFilePath = [IO.Path]::Combine($labConfig.labHost.folderPath.temp, (Format-IsoFileName -OperatingSystem $C_OperatingSystemSku.WindowsServer2022 -Culture $labConfig.guestOS.culture))
+    $isoFilePathForConcurrency = [IO.Path]::Combine($labConfig.labHost.folderPath.temp, (Format-IsoFileName -OperatingSystem $C_OperatingSystemSku.WindowsServer2022 -Culture $labConfig.guestOS.culture -Suffix $isoFileNameSuffix))
     Copy-Item -LiteralPath $sourceIsoFilePath -Destination $isoFilePathForConcurrency -Force -PassThru
 
     'Creating the base VHD creation jobs...' | Write-ScriptLog -Context $env:ComputerName
@@ -51,18 +51,18 @@ try {
     $jobs += Start-Job -Name 'hci-node' -LiteralPath $jobScriptFilePath -InputObject ([PSCustomObject] $params)
 
     # Create a Windows Server Server Core (= index 3) VHD for AD DS domain controller VM if HCI node's OS is not Windows Server Server Core.
-    if (-not (($labConfig.hciNode.operatingSystem.sku -eq 'ws2022') -and ($labConfig.hciNode.operatingSystem.imageIndex -eq 3))) {
+    if (-not (($labConfig.hciNode.operatingSystem.sku -eq $C_OperatingSystemSku.WindowsServer2022) -and ($labConfig.hciNode.operatingSystem.imageIndex -eq 3))) {
         'Starting the Windows Server Core base VHD creation job...' | Write-ScriptLog -Context $env:ComputerName
         $params = @{
             PSModuleNameToImport = (Get-Module -Name 'shared').Path, $convertWimScriptFile.FullName
-            OperatingSystem      = 'ws2022'
+            OperatingSystem      = $C_OperatingSystemSku.WindowsServer2022
             ImageIndex           = 3 # Datacenter (Server Core)
             LogFileName          = [IO.Path]::GetFileNameWithoutExtension($jobScriptFilePath) + '-wscore'
         }
 
         # Use the for-concurrency ISO file if HCI node's OS is Windows Server with Desktop Experience (= index 4)
         # because the ISO file without suffix is already used for HCI node's VHD creation.
-        if (($labConfig.hciNode.operatingSystem.sku -eq 'ws2022') -and ($labConfig.hciNode.operatingSystem.imageIndex -eq 4)) {
+        if (($labConfig.hciNode.operatingSystem.sku -eq $C_OperatingSystemSku.WindowsServer2022) -and ($labConfig.hciNode.operatingSystem.imageIndex -eq 4)) {
             $params.IsoFileNameSuffix = $isoFileNameSuffix
         }
 
@@ -70,11 +70,11 @@ try {
     }
 
     # Create a Windows Server with Desktop Experience (= index 4) VHD for Windows Admin Center VM if HCI node's OS is not Windows Server with Desktop Experience.
-    if (-not (($labConfig.hciNode.operatingSystem.sku -eq 'ws2022') -and ($labConfig.hciNode.operatingSystem.imageIndex -eq 4))) {
+    if (-not (($labConfig.hciNode.operatingSystem.sku -eq $C_OperatingSystemSku.WindowsServer2022) -and ($labConfig.hciNode.operatingSystem.imageIndex -eq 4))) {
         'Starting the Windows Server Desktop Experience base VHD creation job...' | Write-ScriptLog -Context $env:ComputerName
         $params = @{
             PSModuleNameToImport = (Get-Module -Name 'shared').Path, $convertWimScriptFile.FullName
-            OperatingSystem      = 'ws2022'
+            OperatingSystem      = $C_OperatingSystemSku.WindowsServer2022
             ImageIndex           = 4  # Datacenter with Desktop Experience
             IsoFileNameSuffix    = $isoFileNameSuffix
             LogFileName          = [IO.Path]::GetFileNameWithoutExtension($jobScriptFilePath) + '-wsdexp'
