@@ -447,6 +447,9 @@ function Install-WindowsFeatureToVhd
         [Parameter(Mandatory = $true)]
         [string[]] $FeatureName,
 
+        [Parameter(Mandatory = $false)]
+        [switch] $IncludeManagementTools,
+
         [Parameter(Mandatory = $true)]
         [ValidateScript({ Test-Path -PathType Container -LiteralPath $_ })]
         [string] $LogFolder,
@@ -475,7 +478,7 @@ function Install-WindowsFeatureToVhd
             $params = @{
                 Vhd                    = $VhdPath
                 Name                   = $FeatureName
-                IncludeManagementTools = $true
+                IncludeManagementTools = $IncludeManagementTools
                 LogPath                = $logPath
                 ErrorAction            = [Management.Automation.ActionPreference]::Stop
             }
