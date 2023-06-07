@@ -143,11 +143,13 @@ $params = @{
         'RSAT-ADDS-Tools',
         'RSAT-AD-AdminCenter',
         'RSAT-AD-PowerShell',
+        'GPMC',
         'RSAT-DNS-Server',
         'RSAT-Clustering-Mgmt',
         'RSAT-Clustering-PowerShell',
         'Hyper-V-Tools',
-        'Hyper-V-PowerShell'
+        'Hyper-V-PowerShell',
+        'RSAT-DataCenterBridging-LLDP-Tools'
     )
     LogFolder   = $labConfig.labHost.folderPath.log
 }
