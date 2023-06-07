@@ -55,11 +55,11 @@ function Get-WindowsFeatureToInstall
         'RSAT-Hyper-V-Tools',
         'RSAT-Clustering'
     )
-    if ($C_AzureStackHciOperatingSystemSkus -contains $HciNodeOperatingSystemSku) {
+    if ([HciLab.OSSku]::AzureStackHciOSSkus -contains $HciNodeOperatingSystemSku) {
         $featureNames += 'FS-Data-Deduplication'
         $featureNames += 'BitLocker'
     
-        if ($HciNodeOperatingSystemSku -ne $C_OperatingSystemSku.AzureStackHci20H2) {
+        if ($HciNodeOperatingSystemSku -ne [HciLab.OSSku]::AzureStackHci20H2) {
             $featureNames += 'NetworkATC'
         }
     }
@@ -309,7 +309,7 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
 } #| Out-String | Write-ScriptLog -Context $nodeConfig.VMName
 
 # If the HCI node OS is Windows Server 2022 with Desktop Experience.
-if (($NodeConfig.OperatingSystem -eq $C_OperatingSystemSku.WindowsServer2022) -and ($NodeConfig.ImageIndex -eq $C_OperatingSystemImageIndex.WSDatacenterDesktopExperience)) {
+if (($NodeConfig.OperatingSystem -eq [HciLab.OSSku]::WindowsServer2022) -and ($NodeConfig.ImageIndex -eq [HciLab.OSImageIndex]::WSDatacenterDesktopExperience)) {
     'Configuring registry values within the VM...' | Write-ScriptLog -Context $nodeConfig.VMName
     Invoke-Command -Session $localAdminCredPSSession -ScriptBlock {
         'Stop Server Manager launch at logon.' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock

@@ -1,26 +1,41 @@
-# Operating system symbols.
-$C_OperatingSystemSku = [PSCustomObject] @{
-    WindowsServer2022 = 'ws2022'
-    AzureStackHci20H2 = 'as20h2'
-    AzureStackHci21H2 = 'as21h2'
-    AzureStackHci22H2 = 'as22h2'
-}
+Add-Type -Language CSharp -TypeDefinition @'
+using System;
 
-# Operating system's Windows image index.
-$C_OperatingSystemImageIndex = [PSCustomObject] @{
-    AzureStackHci                 = 1
-    WSStandardServerCore          = 1
-    WSStandardDesktopExperience   = 2
-    WSDatacenterServerCore        = 3
-    WSDatacenterDesktopExperience = 4
-}
+namespace HciLab
+{
+    public static class OSSku
+    {
+        // Operating system symbols.
+        public const string WindowsServer2022 = "ws2022";
+        public const string AzureStackHci20H2 = "as20h2";
+        public const string AzureStackHci21H2 = "as21h2";
+        public const string AzureStackHci22H2 = "as22h2";
 
-# Azure Stack HCI's operating system symbols.
-$C_AzureStackHciOperatingSystemSkus = @(
-    $C_OperatingSystemSku.AzureStackHci20H2,
-    $C_OperatingSystemSku.AzureStackHci21H2,
-    $C_OperatingSystemSku.AzureStackHci22H2
-)
+        // Azure Stack HCI's operating system symbols.
+        public static string[] AzureStackHciSkus
+        {
+            get
+            {
+                return new string[] {
+                    AzureStackHci20H2,
+                    AzureStackHci21H2,
+                    AzureStackHci22H2
+                };
+            }
+        }
+    }
+
+    // Operating system's Windows image index.
+    public enum OSImageIndex : int
+    {
+        AzureStackHci                 = 1,
+        WSStandardServerCore          = 1,
+        WSStandardDesktopExperience   = 2,
+        WSDatacenterServerCore        = 3,
+        WSDatacenterDesktopExperience = 4,
+    }
+}
+'@
 
 function Start-ScriptLogging
 {
@@ -246,7 +261,7 @@ function Format-BaseVhdFileName
 
         [Parameter(Mandatory = $true)]
         [ValidateRange(1, 4)]
-        [uint32] $ImageIndex,
+        [int] $ImageIndex,
 
         [Parameter(Mandatory = $true)]
         [string] $Culture
@@ -811,11 +826,6 @@ function Add-VMToADDomain
     throw 'Domain join the VM "{0}" to the AD domain "{1}" was not complete in the acceptable time ({2}).' -f $VMName, $DomainFqdn, $RetyTimeout.ToString()
 }
 
-$exportVariables = @(
-    'C_OperatingSystemSku',
-    'C_OperatingSystemImageIndex',
-    'C_AzureStackHciOperatingSystemSkus'
-)
 $exportFunctions = @(
     'Start-ScriptLogging',
     'Stop-ScriptLogging',
@@ -839,4 +849,4 @@ $exportFunctions = @(
     'New-LogonCredential',
     'Add-VMToADDomain'
 )
-Export-ModuleMember -Function $exportFunctions -Variable $exportVariables
+Export-ModuleMember -Function $exportFunctions
