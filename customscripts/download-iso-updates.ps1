@@ -87,10 +87,10 @@ $params = @{
 Invoke-IsoFileDownload @params
 
 # The Windows Server 2022 ISO is always needed for the domain controller VM.
-if ($labConfig.hciNode.operatingSystem.sku -ne 'ws2022') {
+if ($labConfig.hciNode.operatingSystem.sku -ne [HciLab.OSSku]::WindowsServer2022) {
     'Downloading the Windows Server ISO file...' | Write-ScriptLog -Context $env:ComputerName
     $params = @{
-        OperatingSystem    = 'ws2022'
+        OperatingSystem    = [HciLab.OSSku]::WindowsServer2022
         Culture            = $labConfig.guestOS.culture
         DownloadFolderPath = $labConfig.labHost.folderPath.temp
         AssetUrls          = $assetUrls
@@ -115,10 +115,10 @@ if ($labConfig.guestOS.applyUpdates) {
     }
     Invoke-UpdateFileDonwload @params
     
-    if ($labConfig.hciNode.operatingSystem.sku -ne 'ws2022') {
+    if ($labConfig.hciNode.operatingSystem.sku -ne [HciLab.OSSku]::WindowsServer2022) {
         'Downloading the Windows Server updates...' | Write-ScriptLog -Context $env:ComputerName
         $params = @{
-            OperatingSystem        = 'ws2022'
+            OperatingSystem        = [HciLab.OSSku]::WindowsServer2022
             DownloadFolderBasePath = $labConfig.labHost.folderPath.updates
             AssetUrls              = $assetUrls
         }

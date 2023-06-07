@@ -1,3 +1,42 @@
+Add-Type -Language CSharp -TypeDefinition @'
+using System;
+
+namespace HciLab
+{
+    public static class OSSku
+    {
+        // Operating system symbols.
+        public const string WindowsServer2022 = "ws2022";
+        public const string AzureStackHci20H2 = "as20h2";
+        public const string AzureStackHci21H2 = "as21h2";
+        public const string AzureStackHci22H2 = "as22h2";
+
+        // Azure Stack HCI's operating system symbols.
+        public static string[] AzureStackHciSkus
+        {
+            get
+            {
+                return new string[] {
+                    AzureStackHci20H2,
+                    AzureStackHci21H2,
+                    AzureStackHci22H2
+                };
+            }
+        }
+    }
+
+    // Operating system's Windows image index.
+    public enum OSImageIndex : int
+    {
+        AzureStackHci                 = 1,
+        WSStandardServerCore          = 1,
+        WSStandardDesktopExperience   = 2,
+        WSDatacenterServerCore        = 3,
+        WSDatacenterDesktopExperience = 4,
+    }
+}
+'@
+
 function Start-ScriptLogging
 {
     [CmdletBinding()]
@@ -222,7 +261,7 @@ function Format-BaseVhdFileName
 
         [Parameter(Mandatory = $true)]
         [ValidateRange(1, 4)]
-        [uint32] $ImageIndex,
+        [int] $ImageIndex,
 
         [Parameter(Mandatory = $true)]
         [string] $Culture
@@ -408,6 +447,9 @@ function Install-WindowsFeatureToVhd
         [Parameter(Mandatory = $true)]
         [string[]] $FeatureName,
 
+        [Parameter(Mandatory = $false)]
+        [switch] $IncludeManagementTools,
+
         [Parameter(Mandatory = $true)]
         [ValidateScript({ Test-Path -PathType Container -LiteralPath $_ })]
         [string] $LogFolder,
@@ -436,7 +478,7 @@ function Install-WindowsFeatureToVhd
             $params = @{
                 Vhd                    = $VhdPath
                 Name                   = $FeatureName
-                IncludeManagementTools = $true
+                IncludeManagementTools = $IncludeManagementTools
                 LogPath                = $logPath
                 ErrorAction            = [Management.Automation.ActionPreference]::Stop
             }

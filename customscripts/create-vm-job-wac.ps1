@@ -67,8 +67,8 @@ $vmName = $labConfig.wac.vmName
 
 'Creating the OS disk for the VM...' | Write-ScriptLog -Context $vmName
 $params = @{
-    OperatingSystem = 'ws2022'
-    ImageIndex      = 4  # Datacenter with Desktop Experience
+    OperatingSystem = [HciLab.OSSku]::WindowsServer2022
+    ImageIndex      = [HciLab.OSImageIndex]::WSDatacenterDesktopExperience  # Datacenter with Desktop Experience
     Culture         = $labConfig.guestOS.culture
 }
 $parentVhdFileName = Format-BaseVhdFileName @params
@@ -143,11 +143,13 @@ $params = @{
         'RSAT-ADDS-Tools',
         'RSAT-AD-AdminCenter',
         'RSAT-AD-PowerShell',
+        'GPMC',
         'RSAT-DNS-Server',
         'RSAT-Clustering-Mgmt',
         'RSAT-Clustering-PowerShell',
         'Hyper-V-Tools',
-        'Hyper-V-PowerShell'
+        'Hyper-V-PowerShell',
+        'RSAT-DataCenterBridging-LLDP-Tools'
     )
     LogFolder   = $labConfig.labHost.folderPath.log
 }

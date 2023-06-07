@@ -38,6 +38,34 @@ function Invoke-HciNodeRamSizeCalculation
     return [Math]::Floor((($totalRamBytes - $labHostReservedRamBytes - $AddsDcVMRamBytes - $WacVMRamBytes) / $NodeCount) / 2MB) * 2MB
 }
 
+function Get-WindowsFeatureToInstall
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $HciNodeOperatingSystemSku
+    )
+
+    $featureNames = @(
+        'Hyper-V',  # Note: https://twitter.com/pronichkin/status/1294308601276719104
+        'Failover-Clustering',
+        'FS-FileServer',
+        'Data-Center-Bridging',
+        'RSAT-AD-PowerShell',
+        'RSAT-Hyper-V-Tools',
+        'RSAT-Clustering'
+    )
+    if ([HciLab.OSSku]::AzureStackHciOSSkus -contains $HciNodeOperatingSystemSku) {
+        $featureNames += 'FS-Data-Deduplication'
+        $featureNames += 'BitLocker'
+    
+        if ($HciNodeOperatingSystemSku -ne [HciLab.OSSku]::AzureStackHci20H2) {
+            $featureNames += 'NetworkATC'
+        }
+    }
+    return $featureNames
+}
+
 $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
 $WarningPreference = [Management.Automation.ActionPreference]::Continue
 $VerbosePreference = [Management.Automation.ActionPreference]::Continue
@@ -241,15 +269,7 @@ Set-UnattendAnswerFileToVhd @params
 'Installing the roles and features to the VHD...' | Write-ScriptLog -Context $nodeConfig.VMName
 $params = @{
     VhdPath     = $vmOSDiskVhd.Path
-    FeatureName = @(
-        'Hyper-V',  # Note: https://twitter.com/pronichkin/status/1294308601276719104
-        'Failover-Clustering',
-        'FS-FileServer',
-        'Data-Center-Bridging',  # Needs for WS2022 clsuter by WAC
-        'RSAT-Hyper-V-Tools',
-        'RSAT-Clustering',
-        'RSAT-AD-PowerShell'  # Needs for WS2022 clsuter by WAC
-    )
+    FeatureName = Get-WindowsFeatureToInstall -HciNodeOperatingSystemSku $labConfig.hciNode.operatingSystem.sku
     LogFolder   = $labConfig.labHost.folderPath.log
 }
 Install-WindowsFeatureToVhd @params
@@ -289,7 +309,7 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
 } #| Out-String | Write-ScriptLog -Context $nodeConfig.VMName
 
 # If the HCI node OS is Windows Server 2022 with Desktop Experience.
-if (($NodeConfig.OperatingSystem -eq 'ws2022') -and ($NodeConfig.ImageIndex -eq 4)) {
+if (($NodeConfig.OperatingSystem -eq [HciLab.OSSku]::WindowsServer2022) -and ($NodeConfig.ImageIndex -eq [HciLab.OSImageIndex]::WSDatacenterDesktopExperience)) {
     'Configuring registry values within the VM...' | Write-ScriptLog -Context $nodeConfig.VMName
     Invoke-Command -Session $localAdminCredPSSession -ScriptBlock {
         'Stop Server Manager launch at logon.' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock

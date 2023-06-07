@@ -25,8 +25,8 @@ Block-AddsDomainOperation
 
 'Creating the OS disk for the VM...' | Write-ScriptLog -Context $vmName
 $params = @{
-    OperatingSystem = 'ws2022'
-    ImageIndex      = 3  # Datacenter (Server Core)
+    OperatingSystem = [HciLab.OSSku]::WindowsServer2022
+    ImageIndex      = [HciLab.OSImageIndex]::WSDatacenterServerCore  # Datacenter (Server Core)
     Culture         = $labConfig.guestOS.culture
 }
 $parentVhdFileName = Format-BaseVhdFileName @params
@@ -99,6 +99,7 @@ $params = @{
     VhdPath     = $vmOSDiskVhd.Path
     FeatureName = @(
         'AD-Domain-Services'
+        # DNS, FS-FileServer, RSAT-AD-PowerShell are automatically installed as dependencies.
     )
     LogFolder   = $labConfig.labHost.folderPath.log
 }

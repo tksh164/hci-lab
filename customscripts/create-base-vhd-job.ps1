@@ -8,7 +8,7 @@ param (
 
     [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
     [ValidateRange(1, 4)]
-    [uint32] $ImageIndex,
+    [int] $ImageIndex,
 
     [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
     [string] $IsoFileNameSuffix,
