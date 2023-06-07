@@ -99,6 +99,7 @@ $params = @{
     VhdPath     = $vmOSDiskVhd.Path
     FeatureName = @(
         'AD-Domain-Services'
+        # DNS, FS-FileServer, RSAT-AD-PowerShell are automatically installed as dependencies.
     )
     LogFolder   = $labConfig.labHost.folderPath.log
 }
