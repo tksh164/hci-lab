@@ -518,7 +518,7 @@ function Start-VMWithRetry
 
         [Parameter(Mandatory = $false)]
         [ValidateRange(0, 3600)]
-        [int] $RetryIntervalSeconds = 5,
+        [int] $RetryIntervalSeconds = 15,
 
         [Parameter(Mandatory = $false)]
         [TimeSpan] $RetyTimeout = (New-TimeSpan -Minutes 30)
