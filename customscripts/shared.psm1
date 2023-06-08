@@ -527,7 +527,6 @@ function Start-VMWithRetry
     $startTime = Get-Date
     while ((Get-Date) -lt ($startTime + $RetyTimeout)) {
         try {
-            # NOTE: In sometimes, we need retry to waiting for unmount the VHD.
             $params = @{
                 Name        = $VMName
                 Passthru    = $true
@@ -539,6 +538,7 @@ function Start-VMWithRetry
             }
         }
         catch {
+            # NOTE: In sometimes, we need retry to waiting for unmount the VHD.
             (
                 'Will retry start the VM... ' +
                 '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})'
