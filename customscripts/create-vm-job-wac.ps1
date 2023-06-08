@@ -307,7 +307,7 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
     [Uri] $gatewayEndpointUri = 'https://{0}' -f $env:ComputerName
 
     $retryLimit = 50
-    $retryInterval = 5
+    $retryInterval = 15
     for ($retryCount = 0; $retryCount -lt $retryLimit; $retryCount++) {
         try {
             # NOTE: Windows Admin Center extension updating will fail sometimes due to unable to connect remote server.
