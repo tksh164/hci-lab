@@ -49,11 +49,9 @@ function Get-WindowsFeatureToInstall
     $featureNames = @(
         'Hyper-V',  # Note: https://twitter.com/pronichkin/status/1294308601276719104
         'Failover-Clustering',
-        'FS-FileServer',
         'Data-Center-Bridging',
         'RSAT-AD-PowerShell',
-        'RSAT-Hyper-V-Tools',
-        'RSAT-Clustering'
+        'Hyper-V-PowerShell'
     )
     if ([HciLab.OSSku]::AzureStackHciSkus -contains $HciNodeOperatingSystemSku) {
         $featureNames += 'FS-Data-Deduplication'
