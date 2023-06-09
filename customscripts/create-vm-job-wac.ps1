@@ -164,6 +164,10 @@ Wait-PowerShellDirectReady -VMName $vmName -Credential $localAdminCredential
 
 'Create a PowerShell Direct session...' | Write-ScriptLog -Context $vmName
 $localAdminCredPSSession = New-PSSession -VMName $vmName -Credential $localAdminCredential
+$localAdminCredPSSession |
+    Format-Table -Property 'Id', 'Name', 'ComputerName', 'ComputerType', 'State', 'Availability' |
+    Out-String |
+    Write-ScriptLog -Context $env:ComputerName
 
 'Copying the shared module file into the VM...' | Write-ScriptLog -Context $vmName
 $sharedModuleFilePath = (Get-Module -Name 'shared').Path
@@ -381,6 +385,10 @@ Wait-PowerShellDirectReady -VMName $vmName -Credential $domainAdminCredential
 
 'Create a PowerShell Direct session with the domain credential...' | Write-ScriptLog -Context $vmName
 $domainAdminCredPSSession = New-PSSession -VMName $vmName -Credential $domainAdminCredential
+$domainAdminCredPSSession |
+    Format-Table -Property 'Id', 'Name', 'ComputerName', 'ComputerType', 'State', 'Availability' |
+    Out-String |
+    Write-ScriptLog -Context $env:ComputerName
 
 'Setup the PowerShell Direct session...' | Write-ScriptLog -Context $vmName
 $params = @{

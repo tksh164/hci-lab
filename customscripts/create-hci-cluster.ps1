@@ -20,11 +20,15 @@ $nodeNames += for ($nodeIndex = 0; $nodeIndex -lt $labConfig.hciNode.nodeCount; 
 $adminPassword = Get-Secret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName.adminPassword
 $domainCredential = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $adminPassword
 
-'Create a PowerShell Direct sessions...' | Write-ScriptLog -Context $env:ComputerName
+'Create PowerShell Direct sessions...' | Write-ScriptLog -Context $env:ComputerName
 $domainAdminCredPSSessions = @()
 foreach ($nodeName in $nodeNames) {
-    $domainAdminCredPSSessions = New-PSSession -VMName $nodeName -Credential $domainCredential
+    $domainAdminCredPSSessions += New-PSSession -VMName $nodeName -Credential $domainCredential
 }
+$domainAdminCredPSSessions |
+    Format-Table -Property 'Id', 'Name', 'ComputerName', 'ComputerType', 'State', 'Availability' |
+    Out-String |
+    Write-ScriptLog -Context $env:ComputerName
 
 'Copying the shared module file into the VMs...' | Write-ScriptLog -Context $env:ComputerName
 $sharedModuleFilePath = (Get-Module -Name 'shared').Path
@@ -52,7 +56,7 @@ Invoke-Command @params -Session $domainAdminCredPSSessions -ScriptBlock {
     Import-Module -Name $SharedModuleFilePath -Force
 } #| Out-String | Write-ScriptLog -Context $vmName
 
-'Creating virtual switches within each HCI node...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+'Creating virtual switches on each HCI node...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
 $params = @{
     InputObject = [PSCustomObject] @{
         NetAdapterName = [PSCustomObject] @{

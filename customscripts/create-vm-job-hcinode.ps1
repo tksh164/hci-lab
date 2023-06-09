@@ -283,6 +283,10 @@ Wait-PowerShellDirectReady -VMName $nodeConfig.VMName -Credential $localAdminCre
 
 'Create a PowerShell Direct session...' | Write-ScriptLog -Context $nodeConfig.VMName
 $localAdminCredPSSession = New-PSSession -VMName $nodeConfig.VMName -Credential $localAdminCredential
+$localAdminCredPSSession |
+    Format-Table -Property 'Id', 'Name', 'ComputerName', 'ComputerType', 'State', 'Availability' |
+    Out-String |
+    Write-ScriptLog -Context $env:ComputerName
 
 'Copying the shared module file into the VM...' | Write-ScriptLog -Context $nodeConfig.VMName
 $sharedModuleFilePath = (Get-Module -Name 'shared').Path
