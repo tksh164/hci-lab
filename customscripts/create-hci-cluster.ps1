@@ -24,6 +24,7 @@ $domainCredential = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -
 $domainAdminCredPSSessions = @()
 foreach ($nodeName in $nodeNames) {
     $domainAdminCredPSSessions = New-PSSession -VMName $nodeName -Credential $domainCredential
+    $domainAdminCredPSSessions += New-PSSession -VMName $nodeName -Credential $domainCredential
 }
 
 'Copying the shared module file into the VMs...' | Write-ScriptLog -Context $env:ComputerName
