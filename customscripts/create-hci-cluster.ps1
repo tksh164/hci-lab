@@ -23,7 +23,6 @@ $domainCredential = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -
 'Create a PowerShell Direct sessions...' | Write-ScriptLog -Context $env:ComputerName
 $domainAdminCredPSSessions = @()
 foreach ($nodeName in $nodeNames) {
-    $domainAdminCredPSSessions = New-PSSession -VMName $nodeName -Credential $domainCredential
     $domainAdminCredPSSessions += New-PSSession -VMName $nodeName -Credential $domainCredential
 }
 
