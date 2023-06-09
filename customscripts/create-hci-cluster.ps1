@@ -25,6 +25,10 @@ $domainAdminCredPSSessions = @()
 foreach ($nodeName in $nodeNames) {
     $domainAdminCredPSSessions += New-PSSession -VMName $nodeName -Credential $domainCredential
 }
+$domainAdminCredPSSessions |
+    Format-Table -Property 'Id', 'Name', 'ComputerName', 'ComputerType', 'State', 'Availability' |
+    Out-String |
+    Write-ScriptLog -Context $env:ComputerName
 
 'Copying the shared module file into the VMs...' | Write-ScriptLog -Context $env:ComputerName
 $sharedModuleFilePath = (Get-Module -Name 'shared').Path
