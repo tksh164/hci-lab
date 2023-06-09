@@ -55,7 +55,7 @@ function Get-WindowsFeatureToInstall
         'RSAT-Hyper-V-Tools',
         'RSAT-Clustering'
     )
-    if ([HciLab.OSSku]::AzureStackHciOSSkus -contains $HciNodeOperatingSystemSku) {
+    if ([HciLab.OSSku]::AzureStackHciSkus -contains $HciNodeOperatingSystemSku) {
         $featureNames += 'FS-Data-Deduplication'
         $featureNames += 'BitLocker'
     
