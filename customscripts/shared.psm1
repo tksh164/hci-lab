@@ -829,6 +829,65 @@ function Add-VMToADDomain
     throw 'Domain join the VM "{0}" to the AD domain "{1}" was not complete in the acceptable time ({2}).' -f $VMName, $DomainFqdn, $RetyTimeout.ToString()
 }
 
+function Invoke-PSDirectSessionSetup
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [System.Management.Automation.Runspaces.PSSession[]] $Session,
+
+        [Parameter(Mandatory = $true)]
+        [string] $SharedModuleFilePathInVM
+    )
+
+    $params = @{
+        InputObject = [PSCustomObject] @{
+            SharedModuleFilePath = $SharedModuleFilePathInVM
+        }
+    }
+    Invoke-Command @params -Session $Session -ScriptBlock {
+        param (
+            [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+            [string] $SharedModuleFilePath
+        )
+    
+        $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
+        $WarningPreference = [Management.Automation.ActionPreference]::Continue
+        $VerbosePreference = [Management.Automation.ActionPreference]::Continue
+        $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
+        Import-Module -Name $SharedModuleFilePath -Force
+    }
+}
+
+function Invoke-PSDirectSessionCleanup
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [System.Management.Automation.Runspaces.PSSession[]] $Session,
+
+        [Parameter(Mandatory = $true)]
+        [string] $SharedModuleFilePathInVM
+    )
+
+    $params = @{
+        InputObject = [PSCustomObject] @{
+            SharedModuleFilePath = $SharedModuleFilePathInVM
+        }
+    }
+    Invoke-Command @params -Session $Session -ScriptBlock {
+        param (
+            [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+            [string] $SharedModuleFilePath
+        )
+    
+        'Deleting the shared module file "{0}" within the VM...' -f $SharedModuleFilePath | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+        Remove-Item -LiteralPath $SharedModuleFilePath -Force
+    } | Out-String | Write-ScriptLog -Context $env:ComputerName
+        
+    $Session | Remove-PSSession
+}
+
 $exportFunctions = @(
     'Start-ScriptLogging',
     'Stop-ScriptLogging',
@@ -850,6 +909,8 @@ $exportFunctions = @(
     'Wait-AddsDcDeploymentCompletion',
     'Wait-DomainControllerServiceReady',
     'New-LogonCredential',
-    'Add-VMToADDomain'
+    'Add-VMToADDomain',
+    'Invoke-PSDirectSessionSetup',
+    'Invoke-PSDirectSessionCleanup'
 )
 Export-ModuleMember -Function $exportFunctions
