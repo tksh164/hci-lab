@@ -51,8 +51,7 @@ function Get-WindowsFeatureToInstall
         'Failover-Clustering',
         'Data-Center-Bridging',
         'RSAT-AD-PowerShell',
-        'Hyper-V-PowerShell',
-        'RSAT-Clustering-PowerShell'  # This is not a requirement. But it is needed for the HCI cluster creation of the HCI Lab deployment.
+        'Hyper-V-PowerShell'
     )
     if ([HciLab.OSSku]::AzureStackHciSkus -contains $HciNodeOperatingSystemSku) {
         $featureNames += 'FS-Data-Deduplication'

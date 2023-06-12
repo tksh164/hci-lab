@@ -20,41 +20,23 @@ $nodeNames += for ($nodeIndex = 0; $nodeIndex -lt $labConfig.hciNode.nodeCount; 
 $adminPassword = Get-Secret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName.adminPassword
 $domainCredential = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $adminPassword
 
-'Create PowerShell Direct sessions...' | Write-ScriptLog -Context $env:ComputerName
-$domainAdminCredPSSessions = @()
+'Create PowerShell Direct session for the HCI nodes...' | Write-ScriptLog -Context $env:ComputerName
+$hciNodeDomainAdminCredPSSessions = @()
 foreach ($nodeName in $nodeNames) {
-    $domainAdminCredPSSessions += New-PSSession -VMName $nodeName -Credential $domainCredential
+    $hciNodeDomainAdminCredPSSessions += New-PSSession -VMName $nodeName -Credential $domainCredential
 }
-$domainAdminCredPSSessions |
+$hciNodeDomainAdminCredPSSessions |
     Format-Table -Property 'Id', 'Name', 'ComputerName', 'ComputerType', 'State', 'Availability' |
     Out-String |
     Write-ScriptLog -Context $env:ComputerName
 
-'Copying the shared module file into the VMs...' | Write-ScriptLog -Context $env:ComputerName
-$sharedModuleFilePath = (Get-Module -Name 'shared').Path
-$sharedModuleFilePathInVM = [IO.Path]::Combine('C:\Windows\Temp', [IO.Path]::GetFileName($sharedModuleFilePath))
-foreach ($domainAdminCredPSSession in $domainAdminCredPSSessions) {
-    Copy-Item -ToSession $domainAdminCredPSSession -Path $sharedModuleFilePath -Destination $sharedModuleFilePathInVM
+'Copying the shared module file into the HCI nodes...' | Write-ScriptLog -Context $env:ComputerName
+foreach ($domainAdminCredPSSession in $hciNodeDomainAdminCredPSSessions) {
+    $sharedModuleFilePathInVM = Copy-PSModuleIntoVM -Session $domainAdminCredPSSession -ModuleFilePathToCopy (Get-Module -Name 'shared').Path
 }
 
-'Setup the PowerShell Direct sessions...' | Write-ScriptLog -Context $env:ComputerName
-$params = @{
-    InputObject = [PSCustomObject] @{
-        SharedModuleFilePath = $sharedModuleFilePathInVM
-    }
-}
-Invoke-Command @params -Session $domainAdminCredPSSessions -ScriptBlock {
-    param (
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-        [string] $SharedModuleFilePath
-    )
-
-    $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
-    $WarningPreference = [Management.Automation.ActionPreference]::Continue
-    $VerbosePreference = [Management.Automation.ActionPreference]::Continue
-    $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
-    Import-Module -Name $SharedModuleFilePath -Force
-} #| Out-String | Write-ScriptLog -Context $vmName
+'Setup the PowerShell Direct session for the HCI nodes...' | Write-ScriptLog -Context $env:ComputerName
+Invoke-PSDirectSessionSetup -Session $hciNodeDomainAdminCredPSSessions -SharedModuleFilePathInVM $sharedModuleFilePathInVM
 
 'Creating virtual switches on each HCI node...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
 $params = @{
@@ -65,7 +47,7 @@ $params = @{
         }
     }
 }
-Invoke-Command @params -Session $domainAdminCredPSSessions -ScriptBlock {
+Invoke-Command @params -Session $hciNodeDomainAdminCredPSSessions -ScriptBlock {
     param (
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [PSCustomObject] $NetAdapterName
@@ -94,8 +76,8 @@ Invoke-Command @params -Session $domainAdminCredPSSessions -ScriptBlock {
     Out-String |
     Write-ScriptLog -Context $env:ComputerName
 
-'Preparing HCI node drives...' | Write-ScriptLog -Context $env:ComputerName
-Invoke-Command -Session $domainAdminCredPSSessions -ScriptBlock {
+'Preparing HCI node''s drives...' | Write-ScriptLog -Context $env:ComputerName
+Invoke-Command -Session $hciNodeDomainAdminCredPSSessions -ScriptBlock {
     # Updates the cache of the service for a particular provider and associated child objects.
     Update-StorageProviderCache
 
@@ -138,8 +120,24 @@ Invoke-Command -Session $domainAdminCredPSSessions -ScriptBlock {
     Out-String |
     Write-ScriptLog -Context $env:ComputerName
 
+'Cleaning up the PowerShell Direct session for the HCI nodes...' | Write-ScriptLog -Context $env:ComputerName
+Invoke-PSDirectSessionCleanup -Session $hciNodeDomainAdminCredPSSessions -SharedModuleFilePathInVM $sharedModuleFilePathInVM
+
+'Create PowerShell Direct sessions for the management machine...' | Write-ScriptLog -Context $env:ComputerName
+$wacDomainAdminCredPSSession = New-PSSession -VMName $labConfig.wac.vmName -Credential $domainCredential
+$wacDomainAdminCredPSSession |
+    Format-Table -Property 'Id', 'Name', 'ComputerName', 'ComputerType', 'State', 'Availability' |
+    Out-String |
+    Write-ScriptLog -Context $env:ComputerName
+
+'Copying the shared module file into the management machine...' | Write-ScriptLog -Context $env:ComputerName
+$sharedModuleFilePathInVM = Copy-PSModuleIntoVM -Session $wacDomainAdminCredPSSession -ModuleFilePathToCopy (Get-Module -Name 'shared').Path
+
+'Setup the PowerShell Direct session for the management machine...' | Write-ScriptLog -Context $env:ComputerName
+Invoke-PSDirectSessionSetup -Session $wacDomainAdminCredPSSession -SharedModuleFilePathInVM $sharedModuleFilePathInVM
+
 'Getting the node''s UI culture...' | Write-ScriptLog -Context $env:ComputerName
-$langTag = Invoke-Command -Session $domainAdminCredPSSessions[0] -ScriptBlock {
+$langTag = Invoke-Command -Session $wacDomainAdminCredPSSession -ScriptBlock {
     (Get-UICulture).IetfLanguageTag
 }
 'The node''s UI culture is "{0}".' -f $langTag | Write-ScriptLog -Context $env:ComputerName
@@ -155,7 +153,7 @@ $params = @{
         TestCategory = ([array] $clusterTestCategories.Values)
     }
 }
-Invoke-Command @params -Session $domainAdminCredPSSessions[0] -ScriptBlock {
+Invoke-Command @params -Session $wacDomainAdminCredPSSession -ScriptBlock {
     param (
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [string[]] $Node,
@@ -181,7 +179,7 @@ $params = @{
         Node             = $nodeNames
     }
 }
-Invoke-Command @params -Session $domainAdminCredPSSessions[0] -ScriptBlock {
+Invoke-Command @params -Session $wacDomainAdminCredPSSession -ScriptBlock {
     param (
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [string] $ClusterName,
@@ -210,7 +208,7 @@ $params = @{
         ClusterName = $labConfig.hciCluster.name
     }
 }
-Invoke-Command @params -Session $domainAdminCredPSSessions[0] -ScriptBlock {
+Invoke-Command @params -Session $wacDomainAdminCredPSSession -ScriptBlock {
     param (
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [string] $ClusterName,
@@ -250,7 +248,7 @@ $params = @{
         StorageAccountAccessKey = Get-Secret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName.cloudWitnessStorageAccountKey -AsPlainText
     }
 }
-Invoke-Command @params -Session $domainAdminCredPSSessions[0] -ScriptBlock {
+Invoke-Command @params -Session $wacDomainAdminCredPSSession -ScriptBlock {
     param (
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [string] $ClusterName,
@@ -276,33 +274,44 @@ Invoke-Command @params -Session $domainAdminCredPSSessions[0] -ScriptBlock {
 'Enabling Storage Space Direct (S2D)...' | Write-ScriptLog -Context $env:ComputerName
 $params = @{
     InputObject = [PSCustomObject] @{
+        HciNodeName     = $nodeNames[0]
         StoragePoolName = 'hcilab-s2d-storage-pool'
     }
 }
-Invoke-Command @params -Session $domainAdminCredPSSessions[0] -ScriptBlock {
+Invoke-Command @params -Session $wacDomainAdminCredPSSession -ScriptBlock {
     param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [string] $HciNodeName,
+
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [string] $StoragePoolName
     )
 
     $params = @{
+        CimSession       = New-CimSession -ComputerName $HciNodeName
         PoolFriendlyName = $StoragePoolName
         Confirm          = $false
         Verbose          = $true
         ErrorAction      = [Management.Automation.ActionPreference]::Stop
     }
     Enable-ClusterStorageSpacesDirect @params
+
+    Get-CimSession | Remove-CimSession
 } | Out-String | Write-ScriptLog -Context $env:ComputerName
 
 'Creating a volume on S2D...' | Write-ScriptLog -Context $env:ComputerName
 $params = @{
     InputObject = [PSCustomObject] @{
+        HciNodeName     = $nodeNames[0]
         VolumeName      = 'HciVol'
         StoragePoolName = 'hcilab-s2d-storage-pool'
     }
 }
-Invoke-Command @params -Session $domainAdminCredPSSessions[0] -ScriptBlock {
+Invoke-Command @params -Session $wacDomainAdminCredPSSession -ScriptBlock {
     param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [string] $HciNodeName,
+
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [string] $VolumeName,
 
@@ -311,6 +320,7 @@ Invoke-Command @params -Session $domainAdminCredPSSessions[0] -ScriptBlock {
     )
 
     $params = @{
+        CimSession              = New-CimSession -ComputerName $HciNodeName
         FriendlyName            = $VolumeName
         StoragePoolFriendlyName = $StoragePoolName
         FileSystem              = 'CSVFS_ReFS'
@@ -321,25 +331,12 @@ Invoke-Command @params -Session $domainAdminCredPSSessions[0] -ScriptBlock {
         ErrorAction             = [Management.Automation.ActionPreference]::Stop
     }
     New-Volume @params
+
+    Get-CimSession | Remove-CimSession
 } | Out-String | Write-ScriptLog -Context $env:ComputerName
 
-'Cleaning up the PowerShell Direct session...' | Write-ScriptLog -Context $env:ComputerName
-$params = @{
-    InputObject = [PSCustomObject] @{
-        SharedModuleFilePath = $sharedModuleFilePathInVM
-    }
-}
-Invoke-Command @params -Session $domainAdminCredPSSessions -ScriptBlock {
-    param (
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-        [string] $SharedModuleFilePath
-    )
-
-    'Deleting the shared module file "{0}" within the VM...' -f $SharedModuleFilePath | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
-    Remove-Item -LiteralPath $SharedModuleFilePath -Force
-} | Out-String | Write-ScriptLog -Context $env:ComputerName
-
-$domainAdminCredPSSessions | Remove-PSSession
+'Cleaning up the PowerShell Direct session for the management machine...' | Write-ScriptLog -Context $env:ComputerName
+Invoke-PSDirectSessionCleanup -Session $wacDomainAdminCredPSSession -SharedModuleFilePathInVM $sharedModuleFilePathInVM
 
 'The HCI cluster creation has been completed.' | Write-ScriptLog -Context $env:ComputerName
 
