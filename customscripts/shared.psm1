@@ -829,6 +829,22 @@ function Add-VMToADDomain
     throw 'Domain join the VM "{0}" to the AD domain "{1}" was not complete in the acceptable time ({2}).' -f $VMName, $DomainFqdn, $RetyTimeout.ToString()
 }
 
+function Copy-PSModuleIntoVM
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [System.Management.Automation.Runspaces.PSSession] $Session,
+
+        [Parameter(Mandatory = $true)]
+        [string] $ModuleFilePathToCopy
+    )
+
+    $sharedModuleFilePathInVM = [IO.Path]::Combine('C:\Windows\Temp', [IO.Path]::GetFileName($ModuleFilePathToCopy))
+    Copy-Item -ToSession $Session -Path $ModuleFilePathToCopy -Destination $sharedModuleFilePathInVM
+    return $sharedModuleFilePathInVM
+}
+
 function Invoke-PSDirectSessionSetup
 {
     [CmdletBinding()]
@@ -910,6 +926,7 @@ $exportFunctions = @(
     'Wait-DomainControllerServiceReady',
     'New-LogonCredential',
     'Add-VMToADDomain',
+    'Copy-PSModuleIntoVM',
     'Invoke-PSDirectSessionSetup',
     'Invoke-PSDirectSessionCleanup'
 )
