@@ -120,28 +120,10 @@ $localAdminCredPSSession |
     Write-ScriptLog -Context $env:ComputerName
 
 'Copying the shared module file into the VM...' | Write-ScriptLog -Context $vmName
-$sharedModuleFilePath = (Get-Module -Name 'shared').Path
-$sharedModuleFilePathInVM = [IO.Path]::Combine('C:\Windows\Temp', [IO.Path]::GetFileName($sharedModuleFilePath))
-Copy-Item -ToSession $localAdminCredPSSession -Path $sharedModuleFilePath -Destination $sharedModuleFilePathInVM
+$sharedModuleFilePathInVM = Copy-PSModuleIntoVM -Session $localAdminCredPSSession -ModuleFilePathToCopy (Get-Module -Name 'shared').Path
 
 'Setup the PowerShell Direct session...' | Write-ScriptLog -Context $vmName
-$params = @{
-    InputObject = [PSCustomObject] @{
-        SharedModuleFilePath = $sharedModuleFilePathInVM
-    }
-}
-Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
-    param (
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-        [string] $SharedModuleFilePath
-    )
-
-    $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
-    $WarningPreference = [Management.Automation.ActionPreference]::Continue
-    $VerbosePreference = [Management.Automation.ActionPreference]::Continue
-    $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
-    Import-Module -Name $SharedModuleFilePath -Force
-} #| Out-String | Write-ScriptLog -Context $vmName
+Invoke-PSDirectSessionSetup -Session $localAdminCredPSSession -SharedModuleFilePathInVM $sharedModuleFilePathInVM
 
 'Configuring registry values within the VM...' | Write-ScriptLog -Context $vmName
 Invoke-Command -Session $localAdminCredPSSession -ScriptBlock {
@@ -213,22 +195,7 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
 } | Out-String | Write-ScriptLog -Context $vmName
 
 'Cleaning up the PowerShell Direct session...' | Write-ScriptLog -Context $vmName
-$params = @{
-    InputObject = [PSCustomObject] @{
-        SharedModuleFilePath = $sharedModuleFilePathInVM
-    }
-}
-Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
-    param (
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-        [string] $SharedModuleFilePath
-    )
-
-    'Deleting the shared module file "{0}" within the VM...' -f $SharedModuleFilePath | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
-    Remove-Item -LiteralPath $SharedModuleFilePath -Force
-} | Out-String | Write-ScriptLog -Context $vmName
-
-$localAdminCredPSSession | Remove-PSSession
+Invoke-PSDirectSessionCleanup -Session $localAdminCredPSSession -SharedModuleFilePathInVM $sharedModuleFilePathInVM
 
 'Stopping the VM...' | Write-ScriptLog -Context $vmName
 Stop-VM -Name $vmName

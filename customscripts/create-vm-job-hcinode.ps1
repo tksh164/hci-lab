@@ -287,28 +287,10 @@ $localAdminCredPSSession |
     Write-ScriptLog -Context $env:ComputerName
 
 'Copying the shared module file into the VM...' | Write-ScriptLog -Context $nodeConfig.VMName
-$sharedModuleFilePath = (Get-Module -Name 'shared').Path
-$sharedModuleFilePathInVM = [IO.Path]::Combine('C:\Windows\Temp', [IO.Path]::GetFileName($sharedModuleFilePath))
-Copy-Item -ToSession $localAdminCredPSSession -Path $sharedModuleFilePath -Destination $sharedModuleFilePathInVM
+$sharedModuleFilePathInVM = Copy-PSModuleIntoVM -Session $localAdminCredPSSession -ModuleFilePathToCopy (Get-Module -Name 'shared').Path
 
 'Setup the PowerShell Direct session...' | Write-ScriptLog -Context $nodeConfig.VMName
-$params = @{
-    InputObject = [PSCustomObject] @{
-        SharedModuleFilePath = $sharedModuleFilePathInVM
-    }
-}
-Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
-    param (
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-        [string] $SharedModuleFilePath
-    )
-
-    $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
-    $WarningPreference = [Management.Automation.ActionPreference]::Continue
-    $VerbosePreference = [Management.Automation.ActionPreference]::Continue
-    $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
-    Import-Module -Name $SharedModuleFilePath -Force
-} #| Out-String | Write-ScriptLog -Context $nodeConfig.VMName
+Invoke-PSDirectSessionSetup -Session $localAdminCredPSSession -SharedModuleFilePathInVM $sharedModuleFilePathInVM
 
 # If the HCI node OS is Windows Server 2022 with Desktop Experience.
 if (($NodeConfig.OperatingSystem -eq [HciLab.OSSku]::WindowsServer2022) -and ($NodeConfig.ImageIndex -eq [HciLab.OSImageIndex]::WSDatacenterDesktopExperience)) {
@@ -387,22 +369,8 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
 } | Out-String | Write-ScriptLog -Context $nodeConfig.VMName
 
 'Cleaning up the PowerShell Direct session...' | Write-ScriptLog -Context $nodeConfig.VMName
-$params = @{
-    InputObject = [PSCustomObject] @{
-        SharedModuleFilePath = $sharedModuleFilePathInVM
-    }
-}
-Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
-    param (
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-        [string] $SharedModuleFilePath
-    )
+Invoke-PSDirectSessionCleanup -Session $localAdminCredPSSession -SharedModuleFilePathInVM $sharedModuleFilePathInVM
 
-    'Deleting the shared module file "{0}" within the VM...' -f $SharedModuleFilePath | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
-    Remove-Item -LiteralPath $SharedModuleFilePath -Force
-} | Out-String | Write-ScriptLog -Context $nodeConfig.VMName
-
-$localAdminCredPSSession | Remove-PSSession
 
 Wait-AddsDcDeploymentCompletion
 
