@@ -307,33 +307,44 @@ Invoke-Command @params -Session $wacDomainAdminCredPSSession -ScriptBlock {
 'Enabling Storage Space Direct (S2D)...' | Write-ScriptLog -Context $env:ComputerName
 $params = @{
     InputObject = [PSCustomObject] @{
+        HciNodeName     = $nodeNames[0]
         StoragePoolName = 'hcilab-s2d-storage-pool'
     }
 }
-Invoke-Command @params -Session $hciNodeDomainAdminCredPSSessions[0] -ScriptBlock {
+Invoke-Command @params -Session $wacDomainAdminCredPSSession -ScriptBlock {
     param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [string] $HciNodeName,
+
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [string] $StoragePoolName
     )
 
     $params = @{
+        CimSession       = New-CimSession -ComputerName $HciNodeName
         PoolFriendlyName = $StoragePoolName
         Confirm          = $false
         Verbose          = $true
         ErrorAction      = [Management.Automation.ActionPreference]::Stop
     }
     Enable-ClusterStorageSpacesDirect @params
+
+    Get-CimSession | Remove-CimSession
 } | Out-String | Write-ScriptLog -Context $env:ComputerName
 
 'Creating a volume on S2D...' | Write-ScriptLog -Context $env:ComputerName
 $params = @{
     InputObject = [PSCustomObject] @{
+        HciNodeName     = $nodeNames[0]
         VolumeName      = 'HciVol'
         StoragePoolName = 'hcilab-s2d-storage-pool'
     }
 }
-Invoke-Command @params -Session $hciNodeDomainAdminCredPSSessions[0] -ScriptBlock {
+Invoke-Command @params -Session $wacDomainAdminCredPSSession -ScriptBlock {
     param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [string] $HciNodeName,
+
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [string] $VolumeName,
 
@@ -342,6 +353,7 @@ Invoke-Command @params -Session $hciNodeDomainAdminCredPSSessions[0] -ScriptBloc
     )
 
     $params = @{
+        CimSession              = New-CimSession -ComputerName $HciNodeName
         FriendlyName            = $VolumeName
         StoragePoolFriendlyName = $StoragePoolName
         FileSystem              = 'CSVFS_ReFS'
@@ -368,6 +380,7 @@ Invoke-Command @params -Session $hciNodeDomainAdminCredPSSessions -ScriptBlock {
 
     'Deleting the shared module file "{0}" within the VM...' -f $SharedModuleFilePath | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
     Remove-Item -LiteralPath $SharedModuleFilePath -Force
+    Get-CimSession | Remove-CimSession
 } | Out-String | Write-ScriptLog -Context $env:ComputerName
     
 $hciNodeDomainAdminCredPSSessions | Remove-PSSession
