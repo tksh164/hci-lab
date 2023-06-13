@@ -7,9 +7,9 @@ namespace HciLab
     {
         // Operating system symbols.
         public const string WindowsServer2022 = "ws2022";
-        public const string AzureStackHci20H2 = "as20h2";
-        public const string AzureStackHci21H2 = "as21h2";
-        public const string AzureStackHci22H2 = "as22h2";
+        public const string AzureStackHci20H2 = "ashci20h2";
+        public const string AzureStackHci21H2 = "ashci21h2";
+        public const string AzureStackHci22H2 = "ashci22h2";
 
         // Azure Stack HCI's operating system symbols.
         public static string[] AzureStackHciSkus
