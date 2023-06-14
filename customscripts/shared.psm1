@@ -904,6 +904,35 @@ function Invoke-PSDirectSessionCleanup
     $Session | Remove-PSSession
 }
 
+function New-ShortcutFile
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $ShortcutFilePath,
+
+        [Parameter(Mandatory = $true)]
+        [string] $TargetPath,
+
+        [Parameter(Mandatory = $false)]
+        [string] $Arguments,
+
+        [Parameter(Mandatory = $false)]
+        [string] $Description,
+
+        [Parameter(Mandatory = $false)]
+        [string] $IconLocation
+    )
+
+    $wshShell = New-Object -ComObject 'WScript.Shell' -Property $properties
+    $shortcut = $wshShell.CreateShortcut($ShortcutFilePath)
+    $shortcut.TargetPath = $TargetPath
+    if ($PSBoundParameters.ContainsKey('Arguments')) { $shortcut.Arguments = $Arguments }
+    if ($PSBoundParameters.ContainsKey('Description')) { $shortcut.Description = $Description }
+    if ($PSBoundParameters.ContainsKey('IconLocation')) { $shortcut.IconLocation = $IconLocation }
+    $shortcut.Save()
+}
+
 $exportFunctions = @(
     'Start-ScriptLogging',
     'Stop-ScriptLogging',
@@ -928,6 +957,7 @@ $exportFunctions = @(
     'Add-VMToADDomain',
     'Copy-PSModuleIntoVM',
     'Invoke-PSDirectSessionSetup',
-    'Invoke-PSDirectSessionCleanup'
+    'Invoke-PSDirectSessionCleanup',
+    'New-ShortcutFile'
 )
 Export-ModuleMember -Function $exportFunctions

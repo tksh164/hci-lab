@@ -117,30 +117,33 @@ New-RegistryKey -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft' -KeyName 'Edge'
 Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Edge' -Name 'HideFirstRunExperience' -Value 1
 
 'Creating shortcut for Hyper-V Manager on the desktop....' | Write-ScriptLog -Context $env:ComputerName
-$wshShell = New-Object -ComObject 'WScript.Shell'
-$shortcut = $wshShell.CreateShortcut('C:\Users\Public\Desktop\Hyper-V Manager.lnk')
-$shortcut.TargetPath = '%windir%\System32\mmc.exe'
-$shortcut.Arguments = '"%windir%\System32\virtmgmt.msc"'
-$shortcut.Description = 'Hyper-V Manager provides management access to your virtualization platform.'
-$shortcut.IconLocation = '%ProgramFiles%\Hyper-V\SnapInAbout.dll,0'
-$shortcut.Save()
+$params = @{
+    ShortcutFilePath = 'C:\Users\Public\Desktop\Hyper-V Manager.lnk'
+    TargetPath       = '%windir%\System32\mmc.exe'
+    Arguments        = '"%windir%\System32\virtmgmt.msc"'
+    Description      = 'Hyper-V Manager provides management access to your virtualization platform.'
+    IconLocation     = '%ProgramFiles%\Hyper-V\SnapInAbout.dll,0'
+}
+New-ShortcutFile @params
 
 'Creating shortcut for Windows Admin Center VM on the desktop....' | Write-ScriptLog -Context $env:ComputerName
-$wshShell = New-Object -ComObject 'WScript.Shell'
-$shortcut = $wshShell.CreateShortcut('C:\Users\Public\Desktop\Windows Admin Center VM.lnk')
-$shortcut.TargetPath = '%windir%\System32\mstsc.exe'
-$shortcut.Arguments = '/v:{0}' -f $labConfig.wac.vmName  # The VM name is also the computer name.
-$shortcut.Description = 'Windows Admin Center VM provides management access to your lab environment.'
-$shortcut.Save()
+$params = @{
+    ShortcutFilePath = 'C:\Users\Public\Desktop\Windows Admin Center VM.lnk'
+    TargetPath       = '%windir%\System32\mstsc.exe'
+    Arguments        = '/v:{0}' -f $labConfig.wac.vmName  # The VM name is also the computer name.
+    Description      = 'Windows Admin Center VM provides management access to your lab environment.'
+}
+New-ShortcutFile @params
 
 'Creating shortcut for Windows Admin Center on the desktop....' | Write-ScriptLog -Context $env:ComputerName
-$wshShell = New-Object -ComObject 'WScript.Shell'
-$shortcut = $wshShell.CreateShortcut('C:\Users\Public\Desktop\Windows Admin Center.lnk')
-$shortcut.TargetPath = 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
-$shortcut.Arguments = 'https://{0}' -f $labConfig.wac.vmName  # The VM name is also the computer name.
-$shortcut.Description = 'Windows Admin Center for the lab environment.'
-$shortcut.IconLocation = 'imageres.dll,1'
-$shortcut.Save()
+$params = @{
+    ShortcutFilePath = 'C:\Users\Public\Desktop\Windows Admin Center.lnk'
+    TargetPath       = 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
+    Arguments        = 'https://{0}' -f $labConfig.wac.vmName  # The VM name is also the computer name.
+    Description      = 'Windows Admin Center for the lab environment.'
+    IconLocation     = 'imageres.dll,1'
+}
+New-ShortcutFile @params
 
 'Some tweaks have been completed.' | Write-ScriptLog -Context $env:ComputerName
 

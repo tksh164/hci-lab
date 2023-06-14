@@ -323,13 +323,14 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Edge' -Name 'AuthServerAllowlist' -Value $env:ComputerName
 
     'Creating shortcut for Windows Admin Center on the desktop...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
-    $wshShell = New-Object -ComObject 'WScript.Shell'
-    $shortcut = $wshShell.CreateShortcut('C:\Users\Public\Desktop\Windows Admin Center.lnk')
-    $shortcut.TargetPath = 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
-    $shortcut.Arguments = 'https://{0}' -f $env:ComputerName
-    $shortcut.Description = 'Windows Admin Center for the lab environment.'
-    $shortcut.IconLocation = 'imageres.dll,1'
-    $shortcut.Save()
+    $params = @{
+        ShortcutFilePath = 'C:\Users\Public\Desktop\Windows Admin Center.lnk'
+        TargetPath       = 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
+        Arguments        = 'https://{0}' -f $env:ComputerName
+        Description      = 'Windows Admin Center for the lab environment.'
+        IconLocation     = 'imageres.dll,1'
+    }
+    New-ShortcutFile @params
 } | Out-String | Write-ScriptLog -Context $vmName
 
 'Cleaning up the PowerShell Direct session...' | Write-ScriptLog -Context $vmName
