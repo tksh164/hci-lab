@@ -1191,7 +1191,7 @@
                                         "allowedValues": [
                                             {
                                                 "label": "Azure Stack HCI, version 22H2",
-                                                "description": "Azure Stack HCI, version 22H2. The latest Azure Stack HCI release.",
+                                                "description": "The latest Azure Stack HCI release.",
                                                 "value": {
                                                     "sku": "ashci22h2",
                                                     "imageIndex": 1
@@ -1206,8 +1206,8 @@
                                                 }
                                             },
                                             {
-                                                "label": "Azure Stack HCI, version 20H2 (End of Service)",
-                                                "description": "Azure Stack HCI, version 20H2. This version reached end of service on December 13, 2022.",
+                                                "label": "Azure Stack HCI, version 20H2 [End of Service]",
+                                                "description": "<strong>This version reached end of service on December 13, 2022.</strong>",
                                                 "value": {
                                                     "sku": "ashci20h2",
                                                     "imageIndex": 1
@@ -1215,7 +1215,7 @@
                                             },
                                             {
                                                 "label": "Windows Server 2022 Datacenter Evaluation (Desktop Experience)",
-                                                "description": "Windows Server 2022 Datacenter Evaluation with Desktop Experience.",
+                                                "description": "Windows Server 2022 Datacenter with the standard graphical user interface.",
                                                 "value": {
                                                     "sku": "ws2022",
                                                     "imageIndex": 4
