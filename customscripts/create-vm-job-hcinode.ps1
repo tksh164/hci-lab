@@ -51,7 +51,8 @@ function Get-WindowsFeatureToInstall
         'Failover-Clustering',
         'Data-Center-Bridging',
         'RSAT-AD-PowerShell',
-        'Hyper-V-PowerShell'
+        'Hyper-V-PowerShell',
+        'RSAT-Clustering-PowerShell'  # This is need for administration from Cluster Manager in Windows Admin Center.
     )
     if ([HciLab.OSSku]::AzureStackHciSkus -contains $HciNodeOperatingSystemSku) {
         $featureNames += 'FS-Data-Deduplication'
