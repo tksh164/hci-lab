@@ -933,6 +933,28 @@ function New-ShortcutFile
     $shortcut.Save()
 }
 
+function New-WacConnectionFileContent
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [Hashtable[]] $Connection  # Expecting each element has four keys that Name, Type, Tags, GroupId.
+    )
+
+    $builder = New-Object -TypeName 'System.Text.StringBuilder'
+    [void] $builder.AppendLine('"name","type","tags","groupId"')
+    foreach ($conn in $Connection) {
+        $values = @(
+            ('"' + $conn.Name + '"'),
+            ('"' + $conn.Type + '"'),
+            ('"' + $conn.Tags + '"'),
+            ('"' + $conn.GroupId + '"')
+        )
+        [void] $builder.AppendLine($values -join ',')
+    }
+    return $builder.ToString()
+}
+
 $exportFunctions = @(
     'Start-ScriptLogging',
     'Stop-ScriptLogging',
@@ -958,6 +980,7 @@ $exportFunctions = @(
     'Copy-PSModuleIntoVM',
     'Invoke-PSDirectSessionSetup',
     'Invoke-PSDirectSessionCleanup',
-    'New-ShortcutFile'
+    'New-ShortcutFile',
+    'New-WacConnectionFileContent'
 )
 Export-ModuleMember -Function $exportFunctions
