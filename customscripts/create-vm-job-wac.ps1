@@ -395,23 +395,17 @@ Invoke-Command @params -Session $domainAdminCredPSSession -ScriptBlock {
     Import-Module -Name $wacConnectionToolsPSModulePath -Force
 
     # Create a connection list file to import to Windows Admin Center.
-    $formatValues = @()
-    $formatValues += $LabConfig.addsDomain.fqdn
-    $formatValues += $LabConfig.addsDC.vmName
-    $formatValues += $LabConfig.wac.vmName
+    $clusterFqdn = '{0}.{1}' -f $LabConfig.hciCluster.name, $LabConfig.addsDomain.fqdn
+    $connectionEntries = @(
+        (New-WacConnectionFileEntry -Name ('{0}.{1}' -f $LabConfig.addsDC.vmName, $LabConfig.addsDomain.fqdn) -Type 'msft.sme.connection-type.server'),
+        (New-WacConnectionFileEntry -Name ('{0}.{1}' -f $LabConfig.wac.vmName, $LabConfig.addsDomain.fqdn) -Type 'msft.sme.connection-type.server')
+    )
     for ($nodeIndex = 0; $nodeIndex -lt $LabConfig.hciNode.nodeCount; $nodeIndex++) {
-        $formatValues += Format-HciNodeName -Format $LabConfig.hciNode.vmName -Offset $LabConfig.hciNode.vmNameOffset -Index $nodeIndex
+        $nodeName = Format-HciNodeName -Format $LabConfig.hciNode.vmName -Offset $LabConfig.hciNode.vmNameOffset -Index $nodeIndex
+        $connectionEntries += New-WacConnectionFileEntry -Name ('{0}.{1}' -f $nodeName, $LabConfig.addsDomain.fqdn) -Type 'msft.sme.connection-type.server' -Tag $clusterFqdn
     }
-    $formatValues += $LabConfig.hciCluster.name
     $wacConnectionFilePathInVM = [IO.Path]::Combine('C:\Windows\Temp', 'wac-connections.txt')
-    @'
-"name","type","tags","groupId"
-"{1}.{0}","msft.sme.connection-type.server","",
-"{2}.{0}","msft.sme.connection-type.server","",
-"{3}.{0}","msft.sme.connection-type.server","{5}.{0}",
-"{4}.{0}","msft.sme.connection-type.server","{5}.{0}",
-"{5}.{0}","msft.sme.connection-type.cluster","{5}.{0}",
-'@ -f $formatValues | Set-Content -LiteralPath $wacConnectionFilePathInVM -Force
+    New-WacConnectionFileContent -ConnectionEntry $connectionEntries | Set-Content -LiteralPath $wacConnectionFilePathInVM -Force
 
     # Import connections to Windows Admin Center.
     [Uri] $gatewayEndpointUri = 'https://{0}' -f $env:ComputerName

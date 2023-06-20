@@ -933,6 +933,57 @@ function New-ShortcutFile
     $shortcut.Save()
 }
 
+function New-WacConnectionFileEntry
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $Name,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('msft.sme.connection-type.server', 'msft.sme.connection-type.cluster')]
+        [string] $Type,
+
+        [Parameter(Mandatory = $false)]
+        [AllowEmptyCollection()]
+        [string[]] $Tag = @(),
+
+        [Parameter(Mandatory = $false)]
+        [AllowEmptyString()]
+        [string] $GroupId = ''
+    )
+
+    $entry = @{
+        Name = $Name
+        Type = $Type
+        Tags = $Tag -join '|'
+        GroupId = $GroupId
+    }
+    return [PSCustomObject] $entry
+}
+
+function New-WacConnectionFileContent
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject[]] $ConnectionEntry
+    )
+
+    $builder = New-Object -TypeName 'System.Text.StringBuilder'
+    [void] $builder.AppendLine('"name","type","tags","groupId"')
+    foreach ($entry in $ConnectionEntry) {
+        $values = @(
+            ('"' + $entry.Name + '"'),
+            ('"' + $entry.Type + '"'),
+            ('"' + $entry.Tags + '"'),
+            ('"' + $entry.GroupId + '"')
+        )
+        [void] $builder.AppendLine($values -join ',')
+    }
+    return $builder.ToString()
+}
+
 $exportFunctions = @(
     'Start-ScriptLogging',
     'Stop-ScriptLogging',
@@ -958,6 +1009,8 @@ $exportFunctions = @(
     'Copy-PSModuleIntoVM',
     'Invoke-PSDirectSessionSetup',
     'Invoke-PSDirectSessionCleanup',
-    'New-ShortcutFile'
+    'New-ShortcutFile',
+    'New-WacConnectionFileEntry',
+    'New-WacConnectionFileContent'
 )
 Export-ModuleMember -Function $exportFunctions

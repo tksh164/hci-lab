@@ -335,6 +335,34 @@ Invoke-Command @params -Session $wacDomainAdminCredPSSession -ScriptBlock {
     Get-CimSession | Remove-CimSession
 } | Out-String | Write-ScriptLog -Context $env:ComputerName
 
+'Importing a WAC connection for the HCI cluster...' | Write-ScriptLog -Context $env:ComputerName
+$params = @{
+    InputObject = [PSCustomObject] @{
+        ClusterFqdn = '{0}.{1}' -f $LabConfig.hciCluster.name, $LabConfig.addsDomain.fqdn
+    }
+}
+Invoke-Command @params -Session $wacDomainAdminCredPSSession -ScriptBlock {
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [string] $ClusterFqdn
+    )
+
+    $wacConnectionToolsPSModulePath = [IO.Path]::Combine($env:ProgramFiles, 'Windows Admin Center\PowerShell\Modules\ConnectionTools\ConnectionTools.psm1')
+    Import-Module -Name $wacConnectionToolsPSModulePath -Force
+
+    # Create a connection list file to import to Windows Admin Center.
+    $connectionEntries = @(
+        (New-WacConnectionFileEntry -Name $ClusterFqdn -Type 'msft.sme.connection-type.cluster' -Tag $ClusterFqdn)
+    )
+    $wacConnectionFilePathInVM = [IO.Path]::Combine('C:\Windows\Temp', 'wac-connections.txt')
+    New-WacConnectionFileContent -ConnectionEntry $connectionEntries | Set-Content -LiteralPath $wacConnectionFilePathInVM -Force
+
+    # Import connections to Windows Admin Center.
+    [Uri] $gatewayEndpointUri = 'https://{0}' -f $env:ComputerName
+    Import-Connection -GatewayEndpoint $gatewayEndpointUri -FileName $wacConnectionFilePathInVM
+    Remove-Item -LiteralPath $wacConnectionFilePathInVM -Force
+} | Out-String | Write-ScriptLog -Context $env:ComputerName
+
 'Cleaning up the PowerShell Direct session for the management machine...' | Write-ScriptLog -Context $env:ComputerName
 Invoke-PSDirectSessionCleanup -Session $wacDomainAdminCredPSSession -SharedModuleFilePathInVM $sharedModuleFilePathInVM
 
