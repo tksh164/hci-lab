@@ -938,17 +938,17 @@ function New-WacConnectionFileContent
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
-        [Hashtable[]] $Connection  # Expecting each element has four keys that Name, Type, Tags, GroupId.
+        [PSCustomObject[]] $ConnectionEntry
     )
 
     $builder = New-Object -TypeName 'System.Text.StringBuilder'
     [void] $builder.AppendLine('"name","type","tags","groupId"')
-    foreach ($conn in $Connection) {
+    foreach ($entry in $ConnectionEntry) {
         $values = @(
-            ('"' + $conn.Name + '"'),
-            ('"' + $conn.Type + '"'),
-            ('"' + $conn.Tags + '"'),
-            ('"' + $conn.GroupId + '"')
+            ('"' + $entry.Name + '"'),
+            ('"' + $entry.Type + '"'),
+            ('"' + $entry.Tags + '"'),
+            ('"' + $entry.GroupId + '"')
         )
         [void] $builder.AppendLine($values -join ',')
     }
