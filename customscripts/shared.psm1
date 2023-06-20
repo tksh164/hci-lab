@@ -933,6 +933,35 @@ function New-ShortcutFile
     $shortcut.Save()
 }
 
+function New-WacConnectionFileEntry
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $Name,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('msft.sme.connection-type.server', 'msft.sme.connection-type.cluster')]
+        [string] $Type,
+
+        [Parameter(Mandatory = $false)]
+        [AllowEmptyCollection()]
+        [string[]] $Tag = @(),
+
+        [Parameter(Mandatory = $false)]
+        [AllowEmptyString()]
+        [string] $GroupId = ''
+    )
+
+    $entry = @{
+        Name = $Name
+        Type = $Type
+        Tags = $Tag -join '|'
+        GroupId = $GroupId
+    }
+    return [PSCustomObject] $entry
+}
+
 function New-WacConnectionFileContent
 {
     [CmdletBinding()]
@@ -981,6 +1010,7 @@ $exportFunctions = @(
     'Invoke-PSDirectSessionSetup',
     'Invoke-PSDirectSessionCleanup',
     'New-ShortcutFile',
+    'New-WacConnectionFileEntry',
     'New-WacConnectionFileContent'
 )
 Export-ModuleMember -Function $exportFunctions
