@@ -82,6 +82,7 @@ function Write-ScriptLog
         [string] $Context,
 
         [Parameter(Mandatory = $true, Position = 1, ValueFromPipeline = $true)]
+        [AllowEmptyString()]
         [string] $Message,
 
         [Parameter(Mandatory = $false)]

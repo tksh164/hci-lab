@@ -333,6 +333,28 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
     New-ShortcutFile @params
 } | Out-String | Write-ScriptLog -Context $vmName
 
+$firstHciNodeName = Format-HciNodeName -Format $labConfig.hciNode.vmName -Offset $labConfig.hciNode.vmNameOffset -Index 0
+'Creating a shortcut for Remote Desktop connection to the {0} VM on the desktop...' -f $firstHciNodeName | Write-ScriptLog -Context $vmName
+$params = @{
+    InputObject = [PSCustomObject] @{
+        FirstHciNodeName = $firstHciNodeName
+    }
+}
+Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [string] $FirstHciNodeName
+    )
+
+    $params = @{
+        ShortcutFilePath = 'C:\Users\Public\Desktop\RDC - {0}.lnk' -f $FirstHciNodeName
+        TargetPath       = '%windir%\System32\mstsc.exe'
+        Arguments        = '/v:{0}' -f $FirstHciNodeName  # The VM name is also the computer name.
+        Description      = 'Make a remote desktop connection to the member node "{0}" VM of the HCI cluster in your lab environment.' -f $FirstHciNodeName
+    }
+    New-ShortcutFile @params
+} | Out-String | Write-ScriptLog -Context $vmName
+
 'Cleaning up the PowerShell Direct session...' | Write-ScriptLog -Context $vmName
 # NOTE: The shared module not be deleted within the VM at this time because it will be used afterwards.
 $localAdminCredPSSession | Remove-PSSession

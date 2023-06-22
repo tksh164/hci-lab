@@ -116,32 +116,77 @@ New-RegistryKey -ParentPath 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -Ke
 New-RegistryKey -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft' -KeyName 'Edge'
 Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Edge' -Name 'HideFirstRunExperience' -Value 1
 
-'Creating shortcut for Hyper-V Manager on the desktop....' | Write-ScriptLog -Context $env:ComputerName
-$params = @{
-    ShortcutFilePath = 'C:\Users\Public\Desktop\Hyper-V Manager.lnk'
-    TargetPath       = '%windir%\System32\mmc.exe'
-    Arguments        = '"%windir%\System32\virtmgmt.msc"'
-    Description      = 'Hyper-V Manager provides management access to your virtualization platform.'
-    IconLocation     = '%ProgramFiles%\Hyper-V\SnapInAbout.dll,0'
-}
-New-ShortcutFile @params
+# Shortcuts: Windows Admin Center
 
-'Creating shortcut for Windows Admin Center VM on the desktop....' | Write-ScriptLog -Context $env:ComputerName
-$params = @{
-    ShortcutFilePath = 'C:\Users\Public\Desktop\Windows Admin Center VM.lnk'
-    TargetPath       = '%windir%\System32\mstsc.exe'
-    Arguments        = '/v:{0}' -f $labConfig.wac.vmName  # The VM name is also the computer name.
-    Description      = 'Windows Admin Center VM provides management access to your lab environment.'
-}
-New-ShortcutFile @params
-
-'Creating shortcut for Windows Admin Center on the desktop....' | Write-ScriptLog -Context $env:ComputerName
+'Creating a shortcut for open Windows Admin Center on the desktop....' | Write-ScriptLog -Context $env:ComputerName
 $params = @{
     ShortcutFilePath = 'C:\Users\Public\Desktop\Windows Admin Center.lnk'
     TargetPath       = 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
     Arguments        = 'https://{0}' -f $labConfig.wac.vmName  # The VM name is also the computer name.
-    Description      = 'Windows Admin Center for the lab environment.'
+    Description      = 'Open Windows Admin Center for your lab environment.'
     IconLocation     = 'imageres.dll,1'
+}
+New-ShortcutFile @params
+
+# Shortcuts: Remote Desktop connection
+
+'Creating a shortcut for Remote Desktop connection to the Windows Admin Center VM on the desktop....' | Write-ScriptLog -Context $env:ComputerName
+$params = @{
+    ShortcutFilePath = 'C:\Users\Public\Desktop\RDC - WAC.lnk'
+    TargetPath       = '%windir%\System32\mstsc.exe'
+    Arguments        = '/v:{0}' -f $labConfig.wac.vmName  # The VM name is also the computer name.
+    Description      = 'Make a remote desktop connection to the Windows Admin Center VM in your lab environment.'
+}
+New-ShortcutFile @params
+
+$firstHciNodeName = Format-HciNodeName -Format $labConfig.hciNode.vmName -Offset $labConfig.hciNode.vmNameOffset -Index 0
+'Creating a shortcut for Remote Desktop connection to the {0} VM on the desktop...' -f $firstHciNodeName | Write-ScriptLog -Context $env:ComputerName
+$params = @{
+    ShortcutFilePath = 'C:\Users\Public\Desktop\RDC - {0}.lnk' -f $firstHciNodeName
+    TargetPath       = '%windir%\System32\mstsc.exe'
+    Arguments        = '/v:{0}' -f $firstHciNodeName  # The VM name is also the computer name.
+    Description      = 'Make a remote desktop connection to the member node "{0}" VM of the HCI cluster in your lab environment.' -f $firstHciNodeName
+}
+New-ShortcutFile @params
+
+# Shortcuts: VMConnect
+
+'Creating a shortcut for VMConnect to the AD DS DC VM on the desktop....' | Write-ScriptLog -Context $env:ComputerName
+$params = @{
+    ShortcutFilePath = 'C:\Users\Public\Desktop\VM - AD DS DC.lnk'
+    TargetPath       = '%windir%\System32\vmconnect.exe'
+    Arguments        = 'localhost {0}' -f $labConfig.addsDC.vmName  # The VM name is also the computer name.
+    Description      = 'Open VMConnect for the AD DS DC VM in your lab environment.'
+}
+New-ShortcutFile @params
+
+'Creating a shortcut for VMConnect to the Windows Admin Center VM on the desktop....' | Write-ScriptLog -Context $env:ComputerName
+$params = @{
+    ShortcutFilePath = 'C:\Users\Public\Desktop\VM - WAC.lnk'
+    TargetPath       = '%windir%\System32\vmconnect.exe'
+    Arguments        = 'localhost {0}' -f $labConfig.wac.vmName  # The VM name is also the computer name.
+    Description      = 'Open VMConnect for the Windows Admin Center VM in your lab environment.'
+}
+New-ShortcutFile @params
+
+'Creating a shortcut for VMConnect to the {0} VM on the desktop...' -f $firstHciNodeName | Write-ScriptLog -Context $env:ComputerName
+$params = @{
+    ShortcutFilePath = 'C:\Users\Public\Desktop\VM - {0}.lnk' -f $firstHciNodeName
+    TargetPath       = '%windir%\System32\vmconnect.exe'
+    Arguments        = 'localhost {0}' -f $firstHciNodeName  # The VM name is also the computer name.
+    Description      = 'Open VMConnect for the HCI node VM "{0}" in your lab environment.' -f $firstHciNodeName
+}
+New-ShortcutFile @params
+
+# Shortcuts: Hyper-V Manager
+
+'Creating a shortcut for Hyper-V Manager on the desktop....' | Write-ScriptLog -Context $env:ComputerName
+$params = @{
+    ShortcutFilePath = 'C:\Users\Public\Desktop\Hyper-V Manager.lnk'
+    TargetPath       = '%windir%\System32\mmc.exe'
+    Arguments        = '"%windir%\System32\virtmgmt.msc"'
+    Description      = 'Hyper-V Manager provides management access to virtual machines in your lab environment.'
+    IconLocation     = '%ProgramFiles%\Hyper-V\SnapInAbout.dll,0'
 }
 New-ShortcutFile @params
 
