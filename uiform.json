@@ -1240,11 +1240,11 @@
                                     "defaultValue": 2
                                 },
                                 {
-                                    "name": "isCreateHciCluster",
+                                    "name": "shouldCreateHciCluster",
                                     "type": "Microsoft.Common.CheckBox",
-                                    "label": "HCI cluster creation",
+                                    "label": "Create an HCI cluster during deployment?",
                                     "visible": true,
-                                    "toolTip": "By checked, will create an HCI cluster during the deployment. If not checked, just deploy HCI cluster nodes.",
+                                    "toolTip": "By checked, will create an HCI cluster during the deployment. If not checked, just deploy virtual machines for HCI cluster nodes.",
                                     "defaultValue": true,
                                     "constraints": {
                                         "required": false
@@ -1297,7 +1297,7 @@
                 "hciNodeOsImageIndex": "[steps('labConfiguration').hciClusterSection.hciNodeOperatingSystem.imageIndex]",
                 "hciNodeCount": "[steps('labConfiguration').hciClusterSection.hciNodeCount]",
                 "addsDomainFqdn": "[steps('labConfiguration').addsSection.domainName]",
-                "isCreateHciCluster": "[steps('labConfiguration').hciClusterSection.isCreateHciCluster]"
+                "shouldCreateHciCluster": "[steps('labConfiguration').hciClusterSection.shouldCreateHciCluster]",
                 "hciClusterName": "[steps('labConfiguration').hciClusterSection.hciClusterName]"
             }
         }
