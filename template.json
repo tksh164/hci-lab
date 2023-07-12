@@ -269,7 +269,7 @@
                 "description": "The Active Direcory Domain Services domain FQDN."
             }
         },
-        "isCreateHciCluster": {
+        "shouldCreateHciCluster": {
             "type": "bool",
             "defaultValue": false,
             "metadata": {
@@ -892,7 +892,7 @@
 
         // Create an HCI cluster.
         {
-            "condition": "[parameters('isCreateHciCluster')]",
+            "condition": "[parameters('shouldCreateHciCluster')]",
             "name": "[variables('customScriptParams').createHciCluster.deploymentName]",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2022-09-01",
