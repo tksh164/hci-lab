@@ -221,6 +221,13 @@
                 "description": "The operating system's culture of the lab virtual machines. This affects such as language and input method of the operating system."
             }
         },
+        "labVmOsTimeZone": {
+            "type": "string",
+            "defaultValue": "UTC",
+            "metadata": {
+                "description": "The time zone of the lab virtual machines."
+            }
+        },
         "isInstallUpdatesToLabVm": {
             "type": "bool",
             "defaultValue": false,
@@ -439,6 +446,7 @@
             },
             "guestOS": {
                 "culture": "[parameters('labVmOsCulture')]",
+                "timeZone": "[parameters('labVmOsTimeZone')]",
                 "applyUpdates": "[parameters('isInstallUpdatesToLabVm')]"
             },
             "addsDomain": {
