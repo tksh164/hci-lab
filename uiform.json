@@ -1249,6 +1249,25 @@
                                     "constraints": {
                                         "required": false
                                     }
+                                },
+                                {
+                                    "name": "hciClusterName",
+                                    "type": "Microsoft.Common.TextBox",
+                                    "visible": "[steps('labConfiguration').hciClusterSection.shouldCreateHciCluster]",
+                                    "multiLine": false,
+                                    "label": "Cluster name (cluster name object)",
+                                    "toolTip": "Specify the cluster name (cluster name object/CNO) for your HCI cluster.",
+                                    "placeholder": "e.g. hciclus",
+                                    "defaultValue": "hciclus",
+                                    "constraints": {
+                                        "required": true,
+                                        "validations": [
+                                            {
+                                                "regex": "^[A-Za-z0-9-]+$",
+                                                "message": "Invalid cluster name."
+                                            }
+                                        ]
+                                    }
                                 }
                             ]
                         }
@@ -1279,6 +1298,7 @@
                 "hciNodeCount": "[steps('labConfiguration').hciClusterSection.hciNodeCount]",
                 "addsDomainFqdn": "[steps('labConfiguration').addsSection.domainName]",
                 "isCreateHciCluster": "[steps('labConfiguration').hciClusterSection.isCreateHciCluster]"
+                "hciClusterName": "[steps('labConfiguration').hciClusterSection.hciClusterName]"
             }
         }
     }
