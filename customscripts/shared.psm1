@@ -299,7 +299,10 @@ function New-UnattendAnswerFileContent
         [securestring] $Password,
 
         [Parameter(Mandatory = $true)]
-        [string] $Culture
+        [string] $Culture,
+
+        [Parameter(Mandatory = $true)]
+        [string] $TimeZone
     )
 
     # Convert an admin password to the unattend file format.
@@ -326,13 +329,13 @@ function New-UnattendAnswerFileContent
     <settings pass="specialize">
         <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
             <ComputerName>{1}</ComputerName>
-            <TimeZone>UTC</TimeZone>
+            <TimeZone>{2}</TimeZone>
         </component>
         <component name="Microsoft-Windows-International-Core" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-            <InputLocale>{2}</InputLocale>
-            <SystemLocale>{2}</SystemLocale>
-            <UILanguage>{2}</UILanguage>
-            <UserLocale>{2}</UserLocale>
+            <InputLocale>{3}</InputLocale>
+            <SystemLocale>{3}</SystemLocale>
+            <UILanguage>{3}</UILanguage>
+            <UserLocale>{3}</UserLocale>
         </component>
         <component name="Microsoft-Windows-TerminalServices-LocalSessionManager" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
             <fDenyTSConnections>false</fDenyTSConnections>
@@ -348,7 +351,7 @@ function New-UnattendAnswerFileContent
         </component>
     </settings>
 </unattend>
-'@ -f $encodedAdminPassword, $ComputerName, $Culture
+'@ -f $encodedAdminPassword, $ComputerName, $TimeZone, $Culture
 }
 
 function WaitingForVhdDismount
