@@ -151,6 +151,9 @@ $params = @{
 }
 New-VM @params | Out-String | Write-ScriptLog -Context $vmName
 
+'Changing the VM''s automatic stop action...' | Write-ScriptLog -Context $nodeConfig.VMName
+Set-VM -Name $nodeConfig.VMName -AutomaticStopAction ShutDown
+
 'Setting processor configuration...' | Write-ScriptLog -Context $nodeConfig.VMName
 Set-VMProcessor -VMName $nodeConfig.VMName -Count 8 -ExposeVirtualizationExtensions $true
 
