@@ -276,6 +276,13 @@
                 "description": "By specifying True, automatically create an HCI cluster during the deployment."
             }
         },
+        "hciClusterName": {
+            "type": "string",
+            "defaultValue": "hciclus",
+            "metadata": {
+                "description": "The cluster name (cluster name object/CNO) for the HCI cluster."
+            }
+        },
         "repoUriBase": {
             "type": "string",
             "defaultValue": "https://raw.githubusercontent.com/tksh164/azure-demo-scripts-templates/master/arm-templates/hci-lab/",
@@ -501,7 +508,7 @@
                 }
             },
             "hciCluster": {
-                "name": "hciclus",
+                "name": "[parameters('hciClusterName')]",
                 "ipAddress": "172.16.0.200"
             },
             "keyVault": {
