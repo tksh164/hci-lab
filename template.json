@@ -269,11 +269,18 @@
                 "description": "The Active Direcory Domain Services domain FQDN."
             }
         },
-        "isCreateHciCluster": {
+        "shouldCreateHciCluster": {
             "type": "bool",
             "defaultValue": false,
             "metadata": {
                 "description": "By specifying True, automatically create an HCI cluster during the deployment."
+            }
+        },
+        "hciClusterName": {
+            "type": "string",
+            "defaultValue": "hciclus",
+            "metadata": {
+                "description": "The cluster name (cluster name object/CNO) for the HCI cluster."
             }
         },
         "repoUriBase": {
@@ -501,7 +508,7 @@
                 }
             },
             "hciCluster": {
-                "name": "hciclus",
+                "name": "[parameters('hciClusterName')]",
                 "ipAddress": "172.16.0.200"
             },
             "keyVault": {
@@ -885,7 +892,7 @@
 
         // Create an HCI cluster.
         {
-            "condition": "[parameters('isCreateHciCluster')]",
+            "condition": "[parameters('shouldCreateHciCluster')]",
             "name": "[variables('customScriptParams').createHciCluster.deploymentName]",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2022-09-01",
