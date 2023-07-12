@@ -88,6 +88,9 @@ $params = @{
 }
 New-VM @params | Out-String | Write-ScriptLog -Context $vmName
 
+'Changing the VM''s automatic stop action...' | Write-ScriptLog -Context $vmName
+Set-VM -Name $vmName -AutomaticStopAction ShutDown
+
 'Setting the VM''s processor configuration...' | Write-ScriptLog -Context $vmName
 Set-VMProcessor -VMName $vmName -Count 4
 
