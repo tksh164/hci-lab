@@ -128,6 +128,7 @@ $params = @{
     ComputerName = $vmName
     Password     = $adminPassword
     Culture      = $labConfig.guestOS.culture
+    TimeZone     = $labConfig.guestOS.timeZone
 }
 $unattendAnswerFileContent = New-UnattendAnswerFileContent @params
 

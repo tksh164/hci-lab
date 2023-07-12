@@ -257,6 +257,7 @@ $params = @{
     ComputerName = $nodeConfig.VMName
     Password     = $nodeConfig.AdminPassword
     Culture      = $labConfig.guestOS.culture
+    TimeZone     = $labConfig.guestOS.timeZone
 }
 $unattendAnswerFileContent = New-UnattendAnswerFileContent @params
 
