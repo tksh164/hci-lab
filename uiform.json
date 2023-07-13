@@ -144,7 +144,7 @@
                             "visible": true,
                             "options": {
                                 "style": "Info",
-                                "text": "<strong>Strongly recommend 128 GiB RAM or more</strong> if you deploy hybrid services on your HCI cluster. Because this lab<br>deploys multiple Hyper-V VMs such as AD DS DC, management server, HCI nodes on a single Azure Virtual machine."
+                                "text": "128 GiB RAM is the minimum. You may need more RAM if you deploy hybrid services on your HCI cluster. Because this lab deploys multiple Hyper-V VMs such as HCI nodes, Active Directory Domain Services domain controller, management tool machine on a single Azure Virtual machine.<ul><li><a href='https://learn.microsoft.com/azure/virtual-machines/sizes'>Azure Virtual Machine sizes</a></li><li><a href='https://azure.microsoft.com/pricing/details/virtual-machines/windows'>Windows Virtual Machines pricing</a></li></ul>"
                             }
                         },
                         {
@@ -252,7 +252,7 @@
                             "visible": true,
                             "options": {
                                 "style": "Info",
-                                "text": "Deployment will take <strong>about 40 to 90 minutes</strong> depending on your deployment options."
+                                "text": "Deployment will take <strong>about 25 to 90 minutes</strong> depending on your deployment options."
                             }
                         }
                     ]
@@ -1705,7 +1705,7 @@
                                 {
                                     "name": "isInstallUpdatesToLabVm",
                                     "type": "Microsoft.Common.CheckBox",
-                                    "label": "Install operating system updates during deployment?",
+                                    "label": "Install operating system updates during deployment? (recommended)",
                                     "visible": true,
                                     "toolTip": "By checked, operating system's updates will be installed to lab VMs during the deployment.",
                                     "defaultValue": false,
@@ -1719,7 +1719,7 @@
                                     "visible": "[steps('labConfiguration').generalSection.isInstallUpdatesToLabVm]",
                                     "options": {
                                         "style": "Info",
-                                        "text": "Will increase deployment time if install OS updates to lab virtual machines during deployment."
+                                        "text": "Operating system updates installation will increase the deployment time by about 15+ minutes."
                                     }
                                 }
                             ]
@@ -1784,7 +1784,7 @@
                                             },
                                             {
                                                 "label": "Azure Stack HCI, version 21H2 [End of Service]",
-                                                "description": "<strong>This version reached end of service on May 9, 2023.</strong>",
+                                                "description": "<strong>Notice:</strong> This version reached end of service on May 9, 2023.",
                                                 "value": {
                                                     "sku": "ashci21h2",
                                                     "imageIndex": 1
@@ -1792,7 +1792,7 @@
                                             },
                                             {
                                                 "label": "Azure Stack HCI, version 20H2 [End of Service]",
-                                                "description": "<strong>This version reached end of service on December 13, 2022.</strong>",
+                                                "description": "<strong>Notice:</strong> This version reached end of service on December 13, 2022.",
                                                 "value": {
                                                     "sku": "ashci20h2",
                                                     "imageIndex": 1
