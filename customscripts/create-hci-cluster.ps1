@@ -312,7 +312,7 @@ Invoke-Command @params -Session $wacDomainAdminCredPSSession -ScriptBlock {
     foreach ($clusterNetwork in $clusterNetworks) {
         foreach ($hciNodeNetwork in $HciNodeNetworks) {
             if (($clusterNetwork.Ipv4Addresses[0] -eq $hciNodeNetwork.IPAddress) -and ($clusterNetwork.Ipv4PrefixLengths[0] -eq $hciNodeNetwork.PrefixLength)) {
-                'Rename cluster network "{0}" to "{1}".' -f $clusterNetwork.Name, $hciNodeNetwork.Name | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+                'Rename the cluster network "{0}" to "{1}".' -f $clusterNetwork.Name, $hciNodeNetwork.Name | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
                 $clusterNetwork.Name = $hciNodeNetwork.Name
                 break
             }
