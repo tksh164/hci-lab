@@ -320,6 +320,35 @@ Invoke-Command @params -Session $wacDomainAdminCredPSSession -ScriptBlock {
     }
 } | Out-String | Write-ScriptLog -Context $env:ComputerName
 
+'Changing the cluster network order for live migration...' | Write-ScriptLog -Context $env:ComputerName
+$params = @{
+    InputObject = [PSCustomObject] @{
+        ClusterName           = $labConfig.hciCluster.name
+        MigrationNetworkOrder = @(
+            $labConfig.hciNode.netAdapter.storage1.name,
+            $labConfig.hciNode.netAdapter.storage2.name,
+            $labConfig.hciNode.netAdapter.management.name
+        )
+    }
+}
+Invoke-Command @params -Session $wacDomainAdminCredPSSession -ScriptBlock {
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [string] $ClusterName,
+        
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [string[]] $MigrationNetworkOrder
+    )
+
+    $migrationNetworkOrderValue = @()
+    for ($i = 0; $i -lt $MigrationNetworkOrder.Length; $i++) {
+        $migrationNetworkOrderValue += (Get-ClusterNetwork -Cluster $ClusterName -Name $MigrationNetworkOrder[$i]).Id
+    }
+    'Cluster network order for live migration: {0}' -f ($migrationNetworkOrderValue -join '; ') | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    Get-ClusterResourceType -Cluster $ClusterName -Name 'Virtual Machine' |
+        Set-ClusterParameter -Name 'MigrationNetworkOrder' -Value ($migrationNetworkOrderValue -join ';')
+} | Out-String | Write-ScriptLog -Context $env:ComputerName
+
 'Enabling Storage Space Direct (S2D)...' | Write-ScriptLog -Context $env:ComputerName
 $params = @{
     InputObject = [PSCustomObject] @{
