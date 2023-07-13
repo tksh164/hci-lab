@@ -271,6 +271,55 @@ Invoke-Command @params -Session $wacDomainAdminCredPSSession -ScriptBlock {
     Set-ClusterQuorum @params
 } | Out-String | Write-ScriptLog -Context $env:ComputerName
 
+'Renaming the cluster network names...' | Write-ScriptLog -Context $env:ComputerName
+$params = @{
+    InputObject = [PSCustomObject] @{
+        ClusterName     = $labConfig.hciCluster.name
+        HciNodeNetworks = @(
+            [PSCustomObject] @{
+                Name         = $labConfig.hciNode.netAdapter.management.name
+                IPAddress    = $labConfig.hciNode.netAdapter.management.ipAddress -f '0'
+                PrefixLength = $labConfig.hciNode.netAdapter.management.prefixLength
+            },
+            [PSCustomObject] @{
+                Name         = $labConfig.hciNode.netAdapter.compute.name
+                IPAddress    = $labConfig.hciNode.netAdapter.compute.ipAddress -f '0'
+                PrefixLength = $labConfig.hciNode.netAdapter.compute.prefixLength
+            },
+            [PSCustomObject] @{
+                Name         = $labConfig.hciNode.netAdapter.storage1.name
+                IPAddress    = $labConfig.hciNode.netAdapter.storage1.ipAddress -f '0'
+                PrefixLength = $labConfig.hciNode.netAdapter.storage1.prefixLength
+            },
+            [PSCustomObject] @{
+                Name         = $labConfig.hciNode.netAdapter.storage2.name
+                IPAddress    = $labConfig.hciNode.netAdapter.storage2.ipAddress -f '0'
+                PrefixLength = $labConfig.hciNode.netAdapter.storage2.prefixLength
+            }
+        )
+    }
+}
+Invoke-Command @params -Session $wacDomainAdminCredPSSession -ScriptBlock {
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [string] $ClusterName,
+        
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [PSCustomObject[]] $HciNodeNetworks
+    )
+
+    $clusterNetworks = Get-ClusterNetwork -Cluster $ClusterName
+    foreach ($clusterNetwork in $clusterNetworks) {
+        foreach ($hciNodeNetwork in $HciNodeNetworks) {
+            if (($clusterNetwork.Ipv4Addresses[0] -eq $hciNodeNetwork.IPAddress) -and ($clusterNetwork.Ipv4PrefixLengths[0] -eq $hciNodeNetwork.PrefixLength)) {
+                'Rename cluster network "{0}" to "{1}".' -f $clusterNetwork.Name, $hciNodeNetwork.Name | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+                $clusterNetwork.Name = $hciNodeNetwork.Name
+                break
+            }
+        }
+    }
+} | Out-String | Write-ScriptLog -Context $env:ComputerName
+
 'Enabling Storage Space Direct (S2D)...' | Write-ScriptLog -Context $env:ComputerName
 $params = @{
     InputObject = [PSCustomObject] @{
