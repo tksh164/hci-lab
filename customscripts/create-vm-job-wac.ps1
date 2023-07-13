@@ -291,6 +291,21 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
     }
     Remove-Item -LiteralPath $WacInstallerFilePathInVM -Force
 
+    &{
+        $wacConnectionTestTimeout = (New-TimeSpan -Minutes 5)
+        $wacConnectionTestIntervalSeconds = 5
+        $startTime = Get-Date
+        while ((Get-Date) -lt ($startTime + $wacConnectionTestTimeout)) {
+            'Testing connection to the ServerManagementGateway service...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+            if ((Test-NetConnection -ComputerName 'localhost' -Port 443).TcpTestSucceeded) {
+                'Connection test to the ServerManagementGateway service succeeded.' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+                return
+            }
+            Start-Sleep -Seconds $wacConnectionTestIntervalSeconds
+        }
+        'Connection test to the ServerManagementGateway service failed.' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    }
+
     'Updating Windows Admin Center extensions...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
     $wacExtensionToolsPSModulePath = [IO.Path]::Combine($env:ProgramFiles, 'Windows Admin Center\PowerShell\Modules\ExtensionTools\ExtensionTools.psm1')
     Import-Module -Name $wacExtensionToolsPSModulePath -Force
