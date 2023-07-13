@@ -291,36 +291,53 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
     }
     Remove-Item -LiteralPath $WacInstallerFilePathInVM -Force
 
+    &{
+        $wacConnectionTestTimeout = (New-TimeSpan -Minutes 5)
+        $wacConnectionTestIntervalSeconds = 5
+        $startTime = Get-Date
+        while ((Get-Date) -lt ($startTime + $wacConnectionTestTimeout)) {
+            'Testing connection to the ServerManagementGateway service...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+            if ((Test-NetConnection -ComputerName 'localhost' -Port 443).TcpTestSucceeded) {
+                'Connection test to the ServerManagementGateway service succeeded.' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+                return
+            }
+            Start-Sleep -Seconds $wacConnectionTestIntervalSeconds
+        }
+        'Connection test to the ServerManagementGateway service failed.' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    }
+
     'Updating Windows Admin Center extensions...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
     $wacExtensionToolsPSModulePath = [IO.Path]::Combine($env:ProgramFiles, 'Windows Admin Center\PowerShell\Modules\ExtensionTools\ExtensionTools.psm1')
     Import-Module -Name $wacExtensionToolsPSModulePath -Force
-    [Uri] $gatewayEndpointUri = 'https://{0}' -f $env:ComputerName
 
-    $retryLimit = 50
-    $retryInterval = 15
-    for ($retryCount = 0; $retryCount -lt $retryLimit; $retryCount++) {
-        try {
-            # NOTE: Windows Admin Center extension updating will fail sometimes due to unable to connect remote server.
-            Get-Extension -GatewayEndpoint $gatewayEndpointUri -ErrorAction Stop |
-                Where-Object -Property 'isLatestVersion' -EQ $false |
-                ForEach-Object -Process {
-                    $wacExtension = $_
-                    Update-Extension -GatewayEndpoint $gatewayEndpointUri -ExtensionId $wacExtension.id -Verbose -ErrorAction Stop | Out-Null
-                }
-            break
-        }
-        catch {
-            'Will retry updating Windows Admin Center extensions...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
-            Start-Sleep -Seconds $retryInterval
-        }
-    }
-    if ($retryCount -ge $retryLimit) {
-        'Failed Windows Admin Center extension update. Need manual update later.' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
-    }
+    &{
+        $retryLimit = 50
+        $retryInterval = 15
+        for ($retryCount = 0; $retryCount -lt $retryLimit; $retryCount++) {
+            try {
+                [Uri] $gatewayEndpointUri = 'https://{0}' -f $env:ComputerName
 
-    Get-Extension -GatewayEndpoint $gatewayEndpointUri |
-        Sort-Object -Property id |
-        Format-table -Property id, status, version, isLatestVersion, title
+                # NOTE: Windows Admin Center extension updating will fail sometimes due to unable to connect remote server.
+                Get-Extension -GatewayEndpoint $gatewayEndpointUri -ErrorAction Stop |
+                    Where-Object -Property 'isLatestVersion' -EQ $false |
+                    ForEach-Object -Process {
+                        $wacExtension = $_
+                        Update-Extension -GatewayEndpoint $gatewayEndpointUri -ExtensionId $wacExtension.id -Verbose -ErrorAction Stop | Out-Null
+                    }
+                'Windows Admin Center extension update succeeded.' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+
+                Get-Extension -GatewayEndpoint $gatewayEndpointUri |
+                    Sort-Object -Property id |
+                    Format-table -Property id, status, version, isLatestVersion, title
+                return
+            }
+            catch {
+                'Will retry updating Windows Admin Center extensions...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+                Start-Sleep -Seconds $retryInterval
+            }
+        }
+        'Windows Admin Center extension update failed. Need manual update later.' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    }
 
     'Setting Windows Integrated Authentication registry for Windows Admin Center...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
     New-RegistryKey -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft' -KeyName 'Edge'
