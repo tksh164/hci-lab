@@ -309,13 +309,14 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
     'Updating Windows Admin Center extensions...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
     $wacExtensionToolsPSModulePath = [IO.Path]::Combine($env:ProgramFiles, 'Windows Admin Center\PowerShell\Modules\ExtensionTools\ExtensionTools.psm1')
     Import-Module -Name $wacExtensionToolsPSModulePath -Force
-    [Uri] $gatewayEndpointUri = 'https://{0}' -f $env:ComputerName
 
     &{
         $retryLimit = 50
         $retryInterval = 15
         for ($retryCount = 0; $retryCount -lt $retryLimit; $retryCount++) {
             try {
+                [Uri] $gatewayEndpointUri = 'https://{0}' -f $env:ComputerName
+
                 # NOTE: Windows Admin Center extension updating will fail sometimes due to unable to connect remote server.
                 Get-Extension -GatewayEndpoint $gatewayEndpointUri -ErrorAction Stop |
                     Where-Object -Property 'isLatestVersion' -EQ $false |
@@ -324,6 +325,10 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
                         Update-Extension -GatewayEndpoint $gatewayEndpointUri -ExtensionId $wacExtension.id -Verbose -ErrorAction Stop | Out-Null
                     }
                 'Windows Admin Center extension update succeeded.' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+
+                Get-Extension -GatewayEndpoint $gatewayEndpointUri |
+                    Sort-Object -Property id |
+                    Format-table -Property id, status, version, isLatestVersion, title
                 return
             }
             catch {
@@ -333,10 +338,6 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
         }
         'Windows Admin Center extension update failed. Need manual update later.' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
     }
-
-    Get-Extension -GatewayEndpoint $gatewayEndpointUri |
-        Sort-Object -Property id |
-        Format-table -Property id, status, version, isLatestVersion, title
 
     'Setting Windows Integrated Authentication registry for Windows Admin Center...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
     New-RegistryKey -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft' -KeyName 'Edge'
