@@ -1705,7 +1705,7 @@
                                 {
                                     "name": "isInstallUpdatesToLabVm",
                                     "type": "Microsoft.Common.CheckBox",
-                                    "label": "Install operating system updates during deployment? (recommended)",
+                                    "label": "Install operating system updates during deployment? (recommend)",
                                     "visible": true,
                                     "toolTip": "By checked, operating system's updates will be installed to lab VMs during the deployment.",
                                     "defaultValue": false,
