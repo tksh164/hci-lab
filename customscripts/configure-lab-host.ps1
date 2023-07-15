@@ -6,7 +6,7 @@ $WarningPreference = [Management.Automation.ActionPreference]::Continue
 $VerbosePreference = [Management.Automation.ActionPreference]::Continue
 $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
-Import-Module -Name ([IO.Path]::Combine($PSScriptRoot, 'shared.psm1')) -Force
+Import-Module -Name ([IO.Path]::Combine($PSScriptRoot, 'common.psm1')) -Force
 
 $labConfig = Get-LabDeploymentConfig
 Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log

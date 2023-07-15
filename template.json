@@ -397,7 +397,7 @@
                 "deploymentName": "lab-host-configuration",
                 "fileUris": [
                     "[uri(variables('customScriptBaseUri'), 'configure-lab-host.ps1')]",
-                    "[uri(variables('customScriptBaseUri'), 'shared.psm1')]"
+                    "[uri(variables('customScriptBaseUri'), 'common.psm1')]"
                 ],
                 "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\configure-lab-host.ps1"
             },
@@ -406,7 +406,7 @@
                 "fileUris": [
                     "[uri(variables('customScriptBaseUri'), 'download-iso-updates.ps1')]",
                     "[uri(variables('customScriptBaseUri'), 'download-iso-updates-asset-urls.psd1')]",
-                    "[uri(variables('customScriptBaseUri'), 'shared.psm1')]"
+                    "[uri(variables('customScriptBaseUri'), 'common.psm1')]"
                 ],
                 "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\download-iso-updates.ps1"
             },
@@ -415,7 +415,7 @@
                 "fileUris": [
                     "[uri(variables('customScriptBaseUri'), 'create-base-vhd.ps1')]",
                     "[uri(variables('customScriptBaseUri'), 'create-base-vhd-job.ps1')]",
-                    "[uri(variables('customScriptBaseUri'), 'shared.psm1')]"
+                    "[uri(variables('customScriptBaseUri'), 'common.psm1')]"
                 ],
                 "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\create-base-vhd.ps1"
             },
@@ -426,7 +426,7 @@
                     "[uri(variables('customScriptBaseUri'), 'create-vm-job-addsdc.ps1')]",
                     "[uri(variables('customScriptBaseUri'), 'create-vm-job-wac.ps1')]",
                     "[uri(variables('customScriptBaseUri'), 'create-vm-job-hcinode.ps1')]",
-                    "[uri(variables('customScriptBaseUri'), 'shared.psm1')]"
+                    "[uri(variables('customScriptBaseUri'), 'common.psm1')]"
                 ],
                 "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\create-vm.ps1"
             },
@@ -436,7 +436,7 @@
                     "[uri(variables('customScriptBaseUri'), 'create-hci-cluster.ps1')]",
                     "[uri(variables('customScriptBaseUri'), 'create-hci-cluster-test-cat-en-us.psd1')]",
                     "[uri(variables('customScriptBaseUri'), 'create-hci-cluster-test-cat-ja-jp.psd1')]",
-                    "[uri(variables('customScriptBaseUri'), 'shared.psm1')]"
+                    "[uri(variables('customScriptBaseUri'), 'common.psm1')]"
                 ],
                 "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\create-hci-cluster.ps1"
             }

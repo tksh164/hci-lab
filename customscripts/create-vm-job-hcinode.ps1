@@ -292,11 +292,11 @@ $localAdminCredPSSession |
     Out-String |
     Write-ScriptLog -Context $env:ComputerName
 
-'Copying the shared module file into the VM...' | Write-ScriptLog -Context $nodeConfig.VMName
-$sharedModuleFilePathInVM = Copy-PSModuleIntoVM -Session $localAdminCredPSSession -ModuleFilePathToCopy (Get-Module -Name 'shared').Path
+'Copying the common module file into the VM...' | Write-ScriptLog -Context $nodeConfig.VMName
+$commonModuleFilePathInVM = Copy-PSModuleIntoVM -Session $localAdminCredPSSession -ModuleFilePathToCopy (Get-Module -Name 'common').Path
 
 'Setup the PowerShell Direct session...' | Write-ScriptLog -Context $nodeConfig.VMName
-Invoke-PSDirectSessionSetup -Session $localAdminCredPSSession -SharedModuleFilePathInVM $sharedModuleFilePathInVM
+Invoke-PSDirectSessionSetup -Session $localAdminCredPSSession -CommonModuleFilePathInVM $commonModuleFilePathInVM
 
 # If the HCI node OS is Windows Server 2022 with Desktop Experience.
 if (($NodeConfig.OperatingSystem -eq [HciLab.OSSku]::WindowsServer2022) -and ($NodeConfig.ImageIndex -eq [HciLab.OSImageIndex]::WSDatacenterDesktopExperience)) {
@@ -375,7 +375,7 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
 } | Out-String | Write-ScriptLog -Context $nodeConfig.VMName
 
 'Cleaning up the PowerShell Direct session...' | Write-ScriptLog -Context $nodeConfig.VMName
-Invoke-PSDirectSessionCleanup -Session $localAdminCredPSSession -SharedModuleFilePathInVM $sharedModuleFilePathInVM
+Invoke-PSDirectSessionCleanup -Session $localAdminCredPSSession -CommonModuleFilePathInVM $commonModuleFilePathInVM
 
 
 Wait-AddsDcDeploymentCompletion

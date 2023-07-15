@@ -175,11 +175,11 @@ $localAdminCredPSSession |
     Out-String |
     Write-ScriptLog -Context $env:ComputerName
 
-'Copying the shared module file into the VM...' | Write-ScriptLog -Context $vmName
-$sharedModuleFilePathInVM = Copy-PSModuleIntoVM -Session $localAdminCredPSSession -ModuleFilePathToCopy (Get-Module -Name 'shared').Path
+'Copying the common module file into the VM...' | Write-ScriptLog -Context $vmName
+$commonModuleFilePathInVM = Copy-PSModuleIntoVM -Session $localAdminCredPSSession -ModuleFilePathToCopy (Get-Module -Name 'common').Path
 
 'Setup the PowerShell Direct session...' | Write-ScriptLog -Context $vmName
-Invoke-PSDirectSessionSetup -Session $localAdminCredPSSession -SharedModuleFilePathInVM $sharedModuleFilePathInVM
+Invoke-PSDirectSessionSetup -Session $localAdminCredPSSession -CommonModuleFilePathInVM $commonModuleFilePathInVM
 
 'Configuring registry values within the VM...' | Write-ScriptLog -Context $vmName
 Invoke-Command -Session $localAdminCredPSSession -ScriptBlock {
@@ -379,7 +379,7 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
 } | Out-String | Write-ScriptLog -Context $vmName
 
 'Cleaning up the PowerShell Direct session...' | Write-ScriptLog -Context $vmName
-# NOTE: The shared module not be deleted within the VM at this time because it will be used afterwards.
+# NOTE: The common module not be deleted within the VM at this time because it will be used afterwards.
 $localAdminCredPSSession | Remove-PSSession
 
 Wait-AddsDcDeploymentCompletion
@@ -419,7 +419,7 @@ $domainAdminCredPSSession |
     Write-ScriptLog -Context $env:ComputerName
 
 'Setup the PowerShell Direct session...' | Write-ScriptLog -Context $vmName
-Invoke-PSDirectSessionSetup -Session $domainAdminCredPSSession -SharedModuleFilePathInVM $sharedModuleFilePathInVM
+Invoke-PSDirectSessionSetup -Session $domainAdminCredPSSession -CommonModuleFilePathInVM $commonModuleFilePathInVM
 
 # NOTE: To preset WAC connections for the domain Administrator, the preset operation is required by
 # the domain Administrator because WAC connections are managed based on each user.
@@ -459,7 +459,7 @@ Invoke-Command @params -Session $domainAdminCredPSSession -ScriptBlock {
 } | Out-String | Write-ScriptLog -Context $vmName
 
 'Cleaning up the PowerShell Direct session...' | Write-ScriptLog -Context $vmName
-Invoke-PSDirectSessionCleanup -Session $domainAdminCredPSSession -SharedModuleFilePathInVM $sharedModuleFilePathInVM
+Invoke-PSDirectSessionCleanup -Session $domainAdminCredPSSession -CommonModuleFilePathInVM $commonModuleFilePathInVM
 
 'The WAC VM creation has been completed.' | Write-ScriptLog -Context $vmName
 

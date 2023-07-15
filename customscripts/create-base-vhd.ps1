@@ -66,7 +66,7 @@ function Get-PracticalBaseVhdSpec
 }
 
 try {
-    Import-Module -Name ([IO.Path]::Combine($PSScriptRoot, 'shared.psm1')) -Force
+    Import-Module -Name ([IO.Path]::Combine($PSScriptRoot, 'common.psm1')) -Force
 
     $labConfig = Get-LabDeploymentConfig
     Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log
@@ -116,7 +116,7 @@ try {
     foreach ($spec in $vhdSpecs) {
         $jobName = '{0}_{1}_{2}' -f $spec.OperatingSystem, $spec.ImageIndex, $spec.Culture
         $jobParams = @{
-            PSModuleNameToImport = (Get-Module -Name 'shared').Path, $convertWimScriptFile.FullName
+            PSModuleNameToImport = (Get-Module -Name 'common').Path, $convertWimScriptFile.FullName
             OperatingSystem      = $spec.OperatingSystem
             ImageIndex           = $spec.ImageIndex
             Culture              = $spec.Culture
