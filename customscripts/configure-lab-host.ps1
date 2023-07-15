@@ -67,8 +67,9 @@ Set-VMHost @params
 
 'Creating a NAT vSwitch...' | Write-ScriptLog -Context $env:ComputerName
 $params = @{
-    Name        = $labConfig.labHost.vSwitch.nat.name
-    SwitchType  = 'Internal'
+    Name                 = $labConfig.labHost.vSwitch.nat.name
+    SwitchType           = 'Internal'
+    MinimumBandwidthMode = 'None'
 }
 New-VMSwitch @params
 
