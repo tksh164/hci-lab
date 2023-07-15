@@ -155,7 +155,8 @@ New-VM @params | Out-String | Write-ScriptLog -Context $vmName
 Set-VM -Name $nodeConfig.VMName -AutomaticStopAction ShutDown
 
 'Setting processor configuration...' | Write-ScriptLog -Context $nodeConfig.VMName
-Set-VMProcessor -VMName $nodeConfig.VMName -Count 8 -ExposeVirtualizationExtensions $true
+$vmProcessorCount = (Get-VMHost).LogicalProcessorCount
+Set-VMProcessor -VMName $nodeConfig.VMName -Count $vmProcessorCount -ExposeVirtualizationExtensions $true
 
 'Setting memory configuration...' | Write-ScriptLog -Context $nodeConfig.VMName
 $params = @{

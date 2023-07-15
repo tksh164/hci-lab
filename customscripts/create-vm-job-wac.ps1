@@ -92,7 +92,9 @@ New-VM @params | Out-String | Write-ScriptLog -Context $vmName
 Set-VM -Name $vmName -AutomaticStopAction ShutDown
 
 'Setting the VM''s processor configuration...' | Write-ScriptLog -Context $vmName
-Set-VMProcessor -VMName $vmName -Count 4
+$vmProcessorCount = 6
+if ((Get-VMHost).LogicalProcessorCount -lt $vmProcessorCount) { $vmProcessorCount = (Get-VMHost).LogicalProcessorCount }
+Set-VMProcessor -VMName $vmName -Count $vmProcessorCount
 
 'Setting the VM''s memory configuration...' | Write-ScriptLog -Context $vmName
 $params = @{
