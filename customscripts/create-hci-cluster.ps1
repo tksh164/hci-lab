@@ -59,6 +59,7 @@ Invoke-Command @params -Session $hciNodeDomainAdminCredPSSessions -ScriptBlock {
         NetAdapterName        = $NetAdapterName.Management
         AllowManagementOS     = $true
         EnableEmbeddedTeaming = $true
+        MinimumBandwidthMode  = 'Weight'
     }
     New-VMSwitch @params
 
@@ -68,6 +69,7 @@ Invoke-Command @params -Session $hciNodeDomainAdminCredPSSessions -ScriptBlock {
         NetAdapterName        = $NetAdapterName.Compute
         AllowManagementOS     = $false
         EnableEmbeddedTeaming = $true
+        MinimumBandwidthMode  = 'Weight'
     }
     New-VMSwitch @params
 } |
