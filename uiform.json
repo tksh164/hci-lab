@@ -178,7 +178,7 @@
                             "visible": true,
                             "options": {
                                 "style": "Info",
-                                "text": "128 GiB RAM is the minimum. You may need more RAM if you deploy hybrid services on your HCI cluster. Because this lab deploys multiple Hyper-V VMs such as HCI nodes, Active Directory Domain Services domain controller, management tool machine on a single Azure Virtual machine.<ul><li><a href='https://learn.microsoft.com/azure/virtual-machines/sizes'>Azure Virtual Machine sizes</a></li><li><a href='https://azure.microsoft.com/pricing/details/virtual-machines/windows'>Windows Virtual Machines pricing</a></li></ul>"
+                                "text": "128 GiB RAM is the real minimum when you deploy any workloads on your HCI cluster. You may need more RAM if you deploy hybrid services on your HCI cluster because this lab deploys multiple Hyper-V VMs such as HCI nodes, Active Directory Domain Services domain controller, management tool machine on a single Azure Virtual machine.<ul><li><a href='https://learn.microsoft.com/azure/virtual-machines/sizes'>Azure Virtual Machine sizes</a></li><li><a href='https://azure.microsoft.com/pricing/details/virtual-machines/windows'>Windows Virtual Machines pricing</a></li></ul>"
                             }
                         },
                         {
@@ -286,7 +286,7 @@
                             "visible": true,
                             "options": {
                                 "style": "Info",
-                                "text": "Deployment will take <strong>about 25 to 90 minutes</strong> depending on your deployment options."
+                                "text": "Deployment will take <strong>about 30 to 90 minutes</strong> depending on your deployment options."
                             }
                         }
                     ]
