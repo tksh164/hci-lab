@@ -844,9 +844,9 @@ function Copy-PSModuleIntoVM
         [string] $ModuleFilePathToCopy
     )
 
-    $sharedModuleFilePathInVM = [IO.Path]::Combine('C:\Windows\Temp', [IO.Path]::GetFileName($ModuleFilePathToCopy))
-    Copy-Item -ToSession $Session -Path $ModuleFilePathToCopy -Destination $sharedModuleFilePathInVM
-    return $sharedModuleFilePathInVM
+    $commonModuleFilePathInVM = [IO.Path]::Combine('C:\Windows\Temp', [IO.Path]::GetFileName($ModuleFilePathToCopy))
+    Copy-Item -ToSession $Session -Path $ModuleFilePathToCopy -Destination $commonModuleFilePathInVM
+    return $commonModuleFilePathInVM
 }
 
 function Invoke-PSDirectSessionSetup
@@ -857,25 +857,25 @@ function Invoke-PSDirectSessionSetup
         [System.Management.Automation.Runspaces.PSSession[]] $Session,
 
         [Parameter(Mandatory = $true)]
-        [string] $SharedModuleFilePathInVM
+        [string] $CommonModuleFilePathInVM
     )
 
     $params = @{
         InputObject = [PSCustomObject] @{
-            SharedModuleFilePath = $SharedModuleFilePathInVM
+            CommonModuleFilePath = $CommonModuleFilePathInVM
         }
     }
     Invoke-Command @params -Session $Session -ScriptBlock {
         param (
             [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-            [string] $SharedModuleFilePath
+            [string] $CommonModuleFilePath
         )
     
         $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
         $WarningPreference = [Management.Automation.ActionPreference]::Continue
         $VerbosePreference = [Management.Automation.ActionPreference]::Continue
         $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
-        Import-Module -Name $SharedModuleFilePath -Force
+        Import-Module -Name $CommonModuleFilePath -Force
     }
 }
 
@@ -887,22 +887,22 @@ function Invoke-PSDirectSessionCleanup
         [System.Management.Automation.Runspaces.PSSession[]] $Session,
 
         [Parameter(Mandatory = $true)]
-        [string] $SharedModuleFilePathInVM
+        [string] $CommonModuleFilePathInVM
     )
 
     $params = @{
         InputObject = [PSCustomObject] @{
-            SharedModuleFilePath = $SharedModuleFilePathInVM
+            CommonModuleFilePath = $CommonModuleFilePathInVM
         }
     }
     Invoke-Command @params -Session $Session -ScriptBlock {
         param (
             [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-            [string] $SharedModuleFilePath
+            [string] $CommonModuleFilePath
         )
     
-        'Deleting the shared module file "{0}" within the VM...' -f $SharedModuleFilePath | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
-        Remove-Item -LiteralPath $SharedModuleFilePath -Force
+        'Deleting the common module file "{0}" within the VM...' -f $CommonModuleFilePath | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+        Remove-Item -LiteralPath $CommonModuleFilePath -Force
     } | Out-String | Write-ScriptLog -Context $env:ComputerName
         
     $Session | Remove-PSSession

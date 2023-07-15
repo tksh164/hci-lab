@@ -7,7 +7,7 @@ $VerbosePreference = [Management.Automation.ActionPreference]::Continue
 $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
 try {
-    Import-Module -Name ([IO.Path]::Combine($PSScriptRoot, 'shared.psm1')) -Force
+    Import-Module -Name ([IO.Path]::Combine($PSScriptRoot, 'common.psm1')) -Force
 
     $labConfig = Get-LabDeploymentConfig
     Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log
@@ -18,7 +18,7 @@ try {
     'Creating an AD DS VM...' | Write-ScriptLog -Context $env:ComputerName
     $jobScriptFilePath = [IO.Path]::Combine($PSScriptRoot, 'create-vm-job-addsdc.ps1')
     $params = @{
-        PSModuleNameToImport = (Get-Module -Name 'shared').Path
+        PSModuleNameToImport = (Get-Module -Name 'common').Path
         LogFileName          = [IO.Path]::GetFileNameWithoutExtension($jobScriptFilePath)
     }
     $jobs += Start-Job -Name 'addsdc-vm' -LiteralPath $jobScriptFilePath -InputObject ([PSCustomObject] $params)
@@ -26,7 +26,7 @@ try {
     'Creating a WAC VM...' | Write-ScriptLog -Context $env:ComputerName
     $jobScriptFilePath = [IO.Path]::Combine($PSScriptRoot, 'create-vm-job-wac.ps1')
     $params = @{
-        PSModuleNameToImport = (Get-Module -Name 'shared').Path
+        PSModuleNameToImport = (Get-Module -Name 'common').Path
         LogFileName          = [IO.Path]::GetFileNameWithoutExtension($jobScriptFilePath)
     }
     $jobs += Start-Job -Name 'wac-vm' -LiteralPath $jobScriptFilePath -InputObject ([PSCustomObject] $params)
@@ -38,7 +38,7 @@ try {
         'Start creating a HCI node VM...' -f $vmName | Write-ScriptLog -Context $vmName
         $params = @{
             NodeIndex            = $nodeIndex
-            PSModuleNameToImport = (Get-Module -Name 'shared').Path
+            PSModuleNameToImport = (Get-Module -Name 'common').Path
             LogFileName          = [IO.Path]::GetFileNameWithoutExtension($jobScriptFilePath) + '-' + $vmName
         }
         $jobs += Start-Job -Name $vmName -LiteralPath $jobScriptFilePath -InputObject ([PSCustomObject] $params)

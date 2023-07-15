@@ -6,7 +6,7 @@ $WarningPreference = [Management.Automation.ActionPreference]::Continue
 $VerbosePreference = [Management.Automation.ActionPreference]::Continue
 $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
-Import-Module -Name ([IO.Path]::Combine($PSScriptRoot, 'shared.psm1')) -Force
+Import-Module -Name ([IO.Path]::Combine($PSScriptRoot, 'common.psm1')) -Force
 
 $labConfig = Get-LabDeploymentConfig
 Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log
@@ -30,13 +30,13 @@ $hciNodeDomainAdminCredPSSessions |
     Out-String |
     Write-ScriptLog -Context $env:ComputerName
 
-'Copying the shared module file into the HCI nodes...' | Write-ScriptLog -Context $env:ComputerName
+'Copying the common module file into the HCI nodes...' | Write-ScriptLog -Context $env:ComputerName
 foreach ($domainAdminCredPSSession in $hciNodeDomainAdminCredPSSessions) {
-    $sharedModuleFilePathInVM = Copy-PSModuleIntoVM -Session $domainAdminCredPSSession -ModuleFilePathToCopy (Get-Module -Name 'shared').Path
+    $commonModuleFilePathInVM = Copy-PSModuleIntoVM -Session $domainAdminCredPSSession -ModuleFilePathToCopy (Get-Module -Name 'common').Path
 }
 
 'Setup the PowerShell Direct session for the HCI nodes...' | Write-ScriptLog -Context $env:ComputerName
-Invoke-PSDirectSessionSetup -Session $hciNodeDomainAdminCredPSSessions -SharedModuleFilePathInVM $sharedModuleFilePathInVM
+Invoke-PSDirectSessionSetup -Session $hciNodeDomainAdminCredPSSessions -CommonModuleFilePathInVM $commonModuleFilePathInVM
 
 'Creating virtual switches on each HCI node...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
 $params = @{
@@ -123,7 +123,7 @@ Invoke-Command -Session $hciNodeDomainAdminCredPSSessions -ScriptBlock {
     Write-ScriptLog -Context $env:ComputerName
 
 'Cleaning up the PowerShell Direct session for the HCI nodes...' | Write-ScriptLog -Context $env:ComputerName
-Invoke-PSDirectSessionCleanup -Session $hciNodeDomainAdminCredPSSessions -SharedModuleFilePathInVM $sharedModuleFilePathInVM
+Invoke-PSDirectSessionCleanup -Session $hciNodeDomainAdminCredPSSessions -CommonModuleFilePathInVM $commonModuleFilePathInVM
 
 'Create PowerShell Direct sessions for the management machine...' | Write-ScriptLog -Context $env:ComputerName
 $wacDomainAdminCredPSSession = New-PSSession -VMName $labConfig.wac.vmName -Credential $domainCredential
@@ -132,11 +132,11 @@ $wacDomainAdminCredPSSession |
     Out-String |
     Write-ScriptLog -Context $env:ComputerName
 
-'Copying the shared module file into the management machine...' | Write-ScriptLog -Context $env:ComputerName
-$sharedModuleFilePathInVM = Copy-PSModuleIntoVM -Session $wacDomainAdminCredPSSession -ModuleFilePathToCopy (Get-Module -Name 'shared').Path
+'Copying the common module file into the management machine...' | Write-ScriptLog -Context $env:ComputerName
+$commonModuleFilePathInVM = Copy-PSModuleIntoVM -Session $wacDomainAdminCredPSSession -ModuleFilePathToCopy (Get-Module -Name 'common').Path
 
 'Setup the PowerShell Direct session for the management machine...' | Write-ScriptLog -Context $env:ComputerName
-Invoke-PSDirectSessionSetup -Session $wacDomainAdminCredPSSession -SharedModuleFilePathInVM $sharedModuleFilePathInVM
+Invoke-PSDirectSessionSetup -Session $wacDomainAdminCredPSSession -CommonModuleFilePathInVM $commonModuleFilePathInVM
 
 'Getting the node''s UI culture...' | Write-ScriptLog -Context $env:ComputerName
 $langTag = Invoke-Command -Session $wacDomainAdminCredPSSession -ScriptBlock {
@@ -444,7 +444,7 @@ Invoke-Command @params -Session $wacDomainAdminCredPSSession -ScriptBlock {
 } | Out-String | Write-ScriptLog -Context $env:ComputerName
 
 'Cleaning up the PowerShell Direct session for the management machine...' | Write-ScriptLog -Context $env:ComputerName
-Invoke-PSDirectSessionCleanup -Session $wacDomainAdminCredPSSession -SharedModuleFilePathInVM $sharedModuleFilePathInVM
+Invoke-PSDirectSessionCleanup -Session $wacDomainAdminCredPSSession -CommonModuleFilePathInVM $commonModuleFilePathInVM
 
 'The HCI cluster creation has been completed.' | Write-ScriptLog -Context $env:ComputerName
 

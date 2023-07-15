@@ -125,11 +125,11 @@ $localAdminCredPSSession |
     Out-String |
     Write-ScriptLog -Context $env:ComputerName
 
-'Copying the shared module file into the VM...' | Write-ScriptLog -Context $vmName
-$sharedModuleFilePathInVM = Copy-PSModuleIntoVM -Session $localAdminCredPSSession -ModuleFilePathToCopy (Get-Module -Name 'shared').Path
+'Copying the common module file into the VM...' | Write-ScriptLog -Context $vmName
+$commonModuleFilePathInVM = Copy-PSModuleIntoVM -Session $localAdminCredPSSession -ModuleFilePathToCopy (Get-Module -Name 'common').Path
 
 'Setup the PowerShell Direct session...' | Write-ScriptLog -Context $vmName
-Invoke-PSDirectSessionSetup -Session $localAdminCredPSSession -SharedModuleFilePathInVM $sharedModuleFilePathInVM
+Invoke-PSDirectSessionSetup -Session $localAdminCredPSSession -CommonModuleFilePathInVM $commonModuleFilePathInVM
 
 'Configuring registry values within the VM...' | Write-ScriptLog -Context $vmName
 Invoke-Command -Session $localAdminCredPSSession -ScriptBlock {
@@ -201,7 +201,7 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
 } | Out-String | Write-ScriptLog -Context $vmName
 
 'Cleaning up the PowerShell Direct session...' | Write-ScriptLog -Context $vmName
-Invoke-PSDirectSessionCleanup -Session $localAdminCredPSSession -SharedModuleFilePathInVM $sharedModuleFilePathInVM
+Invoke-PSDirectSessionCleanup -Session $localAdminCredPSSession -CommonModuleFilePathInVM $commonModuleFilePathInVM
 
 'Stopping the VM...' | Write-ScriptLog -Context $vmName
 Stop-VM -Name $vmName
