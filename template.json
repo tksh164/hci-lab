@@ -23,7 +23,7 @@
             "minLength": 1,
             "maxLength": 15,
             "metadata": {
-                "description": "The lab hosting virtual machine name."
+                "description": "The name of the lab host virtual machine."
             }
         },
         "labHostVmSize": {
@@ -175,7 +175,7 @@
                 "Standard_FX48mds"
             ],
             "metadata": {
-                "description": "The lab hosting virtual machine size."
+                "description": "The size of the lab host virtual machine."
             }
         },
         "labHostVmOsDiskType": {
@@ -187,7 +187,7 @@
                 "Standard_LRS"
             ],
             "metadata": {
-                "description": "The Storage type of the lab hosting virtual machine's OS disk."
+                "description": "The Storage type of the lab host virtual machine's OS disk."
             }
         },
         "labHostVmDataDiskType": {
@@ -198,7 +198,7 @@
                 "StandardSSD_LRS"
             ],
             "metadata": {
-                "description": "The Storage type of the lab hosting virtual machine's data disk."
+                "description": "The Storage type of the lab host virtual machine's data disk."
             }
         },
         "labHostVmDataDiskSize": {
