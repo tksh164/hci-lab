@@ -169,6 +169,30 @@ function Get-Secret
     return ConvertTo-SecureString -String $secretValue -AsPlainText -Force
 }
 
+function Get-InstanceMetadata
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $false)]
+        [ValidateScript({ $_.StartsWith('/') })]
+        [string] $FilterPath = '',
+
+        [Parameter(Mandatory = $false)]
+        [switch] $LeafNode
+    )
+
+    $queryFormat = if ($LeafNode) { 'text' } else { 'json' }
+    $params = @{
+        Method  = 'Get'
+        Uri     = 'http://169.254.169.254/metadata/instance' + $FilterPath + '?api-version=2021-02-01&format=' + $queryFormat
+        Headers = @{
+            Metadata = 'true'
+        }
+        UseBasicParsing = $true
+    }
+    return Invoke-RestMethod @params
+}
+
 function Invoke-FileDownload
 {
     [CmdletBinding()]
@@ -994,6 +1018,7 @@ $exportFunctions = @(
     'Write-ScriptLog',
     'Get-LabDeploymentConfig',
     'Get-Secret',
+    'Get-InstanceMetadata',
     'Invoke-FileDownload',
     'New-RegistryKey',
     'Format-IsoFileName',

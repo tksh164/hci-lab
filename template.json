@@ -23,7 +23,7 @@
             "minLength": 1,
             "maxLength": 15,
             "metadata": {
-                "description": "The lab hosting virtual machine name."
+                "description": "The name of the lab host virtual machine."
             }
         },
         "labHostVmSize": {
@@ -175,7 +175,7 @@
                 "Standard_FX48mds"
             ],
             "metadata": {
-                "description": "The lab hosting virtual machine size."
+                "description": "The size of the lab host virtual machine."
             }
         },
         "labHostVmOsDiskType": {
@@ -187,7 +187,7 @@
                 "Standard_LRS"
             ],
             "metadata": {
-                "description": "The Storage type of the lab hosting virtual machine's OS disk."
+                "description": "The Storage type of the lab host virtual machine's OS disk."
             }
         },
         "labHostVmDataDiskType": {
@@ -198,7 +198,7 @@
                 "StandardSSD_LRS"
             ],
             "metadata": {
-                "description": "The Storage type of the lab hosting virtual machine's data disk."
+                "description": "The Storage type of the lab host virtual machine's data disk."
             }
         },
         "labHostVmDataDiskSize": {
@@ -221,6 +221,13 @@
             "defaultValue": false,
             "metadata": {
                 "description": "By specifying True, you confirm you have an eligible Windows Server license with Software Assurance or Windows Server subscription to apply this Azure Hybrid Benefit. You can read more about compliance here: http://go.microsoft.com/fwlink/?LinkId=859786"
+            }
+        },
+        "toolsToInstall": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "The tools to be installed on the lab host virtual machine. Use ';' to separate tool's symbol. Supported tool's symbols are windowsterminal, vscode."
             }
         },
         "isAutoshutdownEnabled": {
@@ -476,7 +483,8 @@
                         "hostInternalIPAddress": "10.0.0.1",
                         "hostInternalPrefixLength": 16
                     }
-                ]
+                ],
+                "installedTools": "[parameters('toolsToInstall')]"
             },
             "guestOS": {
                 "culture": "[parameters('labVmOsCulture')]",

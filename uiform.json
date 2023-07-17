@@ -436,6 +436,44 @@
                             ]
                         },
                         {
+                            "name": "toolsSection",
+                            "type": "Microsoft.Common.Section",
+                            "visible": true,
+                            "label": "Tools",
+                            "elements": [
+                                {
+                                    "name": "toolsSectionText",
+                                    "type": "Microsoft.Common.TextBlock",
+                                    "visible": true,
+                                    "options": {
+                                        "text": "Some utility tools can be installed on the lab host virtual machine during deployment."
+                                    }
+                                },
+                                {
+                                    "name": "shouldInstallWindowsTerminal",
+                                    "type": "Microsoft.Common.CheckBox",
+                                    "label": "Windows Terminal",
+                                    "visible": true,
+                                    "toolTip": "Windows Terminal is a modern host application for the command-line shells you already love, like Command Prompt, PowerShell, and bash via Windows Subsystem for Linux (WSL). <a href='https://learn.microsoft.com/windows/terminal'>more</a>",
+                                    "defaultValue": false,
+                                    "constraints": {
+                                        "required": false
+                                    }
+                                },
+                                {
+                                    "name": "shouldInstallVisualStudioCode",
+                                    "type": "Microsoft.Common.CheckBox",
+                                    "label": "Visual Studio Code",
+                                    "visible": true,
+                                    "toolTip": "Visual Studio Code is a lightweight but powerful source code editor which runs on your desktop. <a href='https://code.visualstudio.com/docs'>more</a>",
+                                    "defaultValue": false,
+                                    "constraints": {
+                                        "required": false
+                                    }
+                                }
+                            ]
+                        },
+                        {
                             "name": "autoshutdownSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
@@ -1907,6 +1945,7 @@
                 "labHostVmDataDiskType": "[steps('labHostVmDetails').diskSection.dataDiskType]",
                 "labHostVmDataDiskSize": "[steps('labHostVmDetails').dataVolumeSection.dataDiskSize]",
                 "isHaveEligibleWindowsServerLicense": "[steps('basics').azureHybridBenefitSection.haveEligibleWindowsServerLicense]",
+                "toolsToInstall": "[concat(if(steps('labHostVmDetails').toolsSection.shouldInstallWindowsTerminal, 'windowsterminal', ''), ';', if(steps('labHostVmDetails').toolsSection.shouldInstallVisualStudioCode, 'vscode', ''))]",
                 "isAutoshutdownEnabled": "[steps('labHostVmDetails').autoshutdownSection.isAutoshutdownEnabled]",
                 "autoshutdownTime": "[steps('labHostVmDetails').autoshutdownSection.shutdownTime]",
                 "autoshutdownTimeZone": "[steps('labHostVmDetails').autoshutdownSection.shutdownTimeZone]",
