@@ -213,6 +213,22 @@ New-RegistryKey -ParentPath 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -Ke
 New-RegistryKey -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft' -KeyName 'Edge'
 Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Edge' -Name 'HideFirstRunExperience' -Value 1
 
+'Some tweaks have been completed.' | Write-ScriptLog -Context $env:ComputerName
+
+# Install tools
+
+$toolsToInstall = $labConfig.labHost.installedTools -split ';'
+
+if ($toolsToInstall -contains 'windowsterminal') {
+    'Executing the Windows Terminal installation pre-tasks...' | Write-ScriptLog -Context $env:ComputerName
+    Invoke-WindowsTerminalInstallation -DownloadFolderPath $labConfig.labHost.folderPath.temp
+}
+
+if ($toolsToInstall -contains 'vscode') {
+    'Installing Visual Studio Code...' | Write-ScriptLog -Context $env:ComputerName
+    Invoke-VSCodeInstallation -DownloadFolderPath $labConfig.labHost.folderPath.temp
+}
+
 # Shortcuts: Windows Admin Center
 
 'Creating a shortcut for open Windows Admin Center on the desktop....' | Write-ScriptLog -Context $env:ComputerName
@@ -287,20 +303,6 @@ $params = @{
 }
 New-ShortcutFile @params
 
-'Some tweaks have been completed.' | Write-ScriptLog -Context $env:ComputerName
-
-# Install tools
-
-$toolsToInstall = $labConfig.labHost.installedTools -split ';'
-
-if ($toolsToInstall -contains 'windowsterminal') {
-    'Executing the Windows Terminal installation pre-tasks...' | Write-ScriptLog -Context $env:ComputerName
-    Invoke-WindowsTerminalInstallation -DownloadFolderPath $labConfig.labHost.folderPath.temp
-}
-
-if ($toolsToInstall -contains 'vscode') {
-    'Installing Visual Studio Code...' | Write-ScriptLog -Context $env:ComputerName
-    Invoke-VSCodeInstallation -DownloadFolderPath $labConfig.labHost.folderPath.temp
-}
+'Shortcut creation has been completed.' | Write-ScriptLog -Context $env:ComputerName
 
 Stop-ScriptLogging
