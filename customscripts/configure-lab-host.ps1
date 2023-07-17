@@ -6,6 +6,66 @@ $WarningPreference = [Management.Automation.ActionPreference]::Continue
 $VerbosePreference = [Management.Automation.ActionPreference]::Continue
 $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
+function Invoke-WindowsTerminalInstallation
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateScript({ Test-Path -PathType Container -LiteralPath $_ })]
+        [string] $DownloadFolderPath
+    )
+
+    'Downloading the Windows 10 pre-install kit zip file...' | Write-ScriptLog -Context $env:ComputerName
+    $params = @{
+        SourceUri      = 'https://github.com/microsoft/terminal/releases/download/v1.17.11461.0/Microsoft.WindowsTerminal_1.17.11461.0_8wekyb3d8bbwe.msixbundle_Windows10_PreinstallKit.zip'
+        DownloadFolder = $DownloadFolderPath
+        FileNameToSave = 'Microsoft.WindowsTerminal_Windows10_PreinstallKit.zip'
+    }
+    $zipFile = Invoke-FileDownload @params
+
+    'Expaneding the Windows 10 pre-install kit zip file...' | Write-ScriptLog -Context $env:ComputerName
+    $fileSourceFolder = [IO.Path]::Combine([IO.Path]::GetDirectoryName($zipFile.FullName), [IO.Path]::GetFileNameWithoutExtension($zipFile.FullName))
+    Expand-Archive -LiteralPath $zipFile.FullName -DestinationPath $fileSourceFolder -Force
+
+    # Retrieve the Windows Termainl intallation files.
+    $vcLibsAppxFile = Get-ChildItem -LiteralPath $fileSourceFolder -Filter 'Microsoft.VCLibs.*.UWPDesktop_*_x64__*.appx' | Select-Object -First 1
+    $uiXamlAppxFile = Get-ChildItem -LiteralPath $fileSourceFolder -Filter 'Microsoft.UI.Xaml.*_x64__*.appx' | Select-Object -First 1
+    $msixBundleFile = Get-ChildItem -LiteralPath $fileSourceFolder -Filter '*.msixbundle' | Select-Object -First 1
+    $licenseXmlFile = Get-ChildItem -LiteralPath $fileSourceFolder -Filter '*_License1.xml' | Select-Object -First 1
+
+    'Microsoft.VCLibs: "{0}"' -f $vcLibsAppxFile.FullName | Write-ScriptLog -Context $env:ComputerName
+    'Microsoft.UI.Xaml: "{0}"' -f $uiXamlAppxFile.FullName | Write-ScriptLog -Context $env:ComputerName
+    'Microsoft.WindowsTerminal: "{0}"' -f $msixBundleFile.FullName | Write-ScriptLog -Context $env:ComputerName
+    'LicenseXml: "{0}"' -f $licenseXmlFile.FullName | Write-ScriptLog -Context $env:ComputerName
+
+    'Installing the dependency packages for Windows Terminal...' | Write-ScriptLog -Context $env:ComputerName
+    Add-AppxProvisionedPackage -Online -SkipLicense -PackagePath $vcLibsAppxFile.FullName
+    Add-AppxProvisionedPackage -Online -SkipLicense -PackagePath $uiXamlAppxFile.FullName
+
+    'Creating a script file for the Windows Terminal installation scheduled task...' | Write-ScriptLog -Context $env:ComputerName
+    $scheduledTaskName = 'WindowsTermailInstallation'
+    $scheduledTaskScriptFileContent = @"
+(Get-Host).UI.RawUI.WindowTitle = 'Windows Terminal installation'
+Write-Host 'Finishing up the Windows Terminal installation...' -ForegroundColor Yellow
+Add-AppxProvisionedPackage -Online -PackagePath '{0}' -LicensePath '{1}'
+Disable-ScheduledTask -TaskName '{2}' -TaskPath '\'
+"@ -f $msixBundleFile.FullName, $licenseXmlFile.FullName, $scheduledTaskName
+    $scheduledTaskScriptFilePath = [IO.Path]::Combine($DownloadFolderPath, $scheduledTaskName + 'Task.ps1')
+    Set-Content -LiteralPath $scheduledTaskScriptFilePath -Value $scheduledTaskScriptFileContent -Force
+
+    'Creating a scheduled task for Windows Terminal installation...' | Write-ScriptLog -Context $env:ComputerName
+    $adminUsername = Get-InstanceMetadata -FilterPath '/compute/osProfile/adminUsername' -LeafNode
+    $params = @{
+        TaskName = $scheduledTaskName
+        TaskPath = '\'
+        User     = $adminUsername
+        RunLevel = 'Highest'
+        Trigger  = New-ScheduledTaskTrigger -AtLogOn -User $adminUsername
+        Action   = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument ('-NoLogo -NonInteractive -WindowStyle Minimized -File "{0}"' -f $scheduledTaskScriptFilePath)
+        Force    = $true
+    }
+    Register-ScheduledTask @params
+}
 Import-Module -Name ([IO.Path]::Combine($PSScriptRoot, 'common.psm1')) -Force
 
 $labConfig = Get-LabDeploymentConfig
