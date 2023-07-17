@@ -223,6 +223,13 @@
                 "description": "By specifying True, you confirm you have an eligible Windows Server license with Software Assurance or Windows Server subscription to apply this Azure Hybrid Benefit. You can read more about compliance here: http://go.microsoft.com/fwlink/?LinkId=859786"
             }
         },
+        "toolsToInstall": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "The tools to be installed on the lab host virtual machine. Use ';' to separate tool's symbol. Supported tool's symbols are windowsterminal, vscode."
+            }
+        },
         "isAutoshutdownEnabled": {
             "type": "bool",
             "defaultValue": false,
