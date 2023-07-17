@@ -66,6 +66,43 @@ Disable-ScheduledTask -TaskName '{2}' -TaskPath '\'
     }
     Register-ScheduledTask @params
 }
+
+function Invoke-VSCodeInstallation
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateScript({ Test-Path -PathType Container -LiteralPath $_ })]
+        [string] $DownloadFolderPath
+    )
+
+    'Downloading the Visual Studio Code system installer...' | Write-ScriptLog -Context $env:ComputerName
+    $params = @{
+        SourceUri      = 'https://code.visualstudio.com/sha/download?build=stable&os=win32-x64'
+        DownloadFolder = $DownloadFolderPath
+        FileNameToSave = 'VSCodeSetup-x64.exe'
+    }
+    $installerFile = Invoke-FileDownload @params
+
+    'Installing the Visual Studio Code...' | Write-ScriptLog -Context $env:ComputerName
+    $mergeTasks = @(
+        'desktopicon',
+        '!quicklaunchicon',
+        'addcontextmenufiles',
+        'addcontextmenufolders',
+        'associatewithfiles',
+        'addtopath',
+        '!runcode'
+    )
+    $params = @{
+        FilePath     = $installerFile.FullName
+        ArgumentList = '/verysilent /suppressmsgboxes /mergetasks="{0}"' -f ($mergeTasks -join ',')
+        Wait         = $true
+        PassThru     = $true
+    }
+    Start-Process @params
+}
+
 Import-Module -Name ([IO.Path]::Combine($PSScriptRoot, 'common.psm1')) -Force
 
 $labConfig = Get-LabDeploymentConfig
