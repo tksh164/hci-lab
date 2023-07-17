@@ -289,4 +289,18 @@ New-ShortcutFile @params
 
 'Some tweaks have been completed.' | Write-ScriptLog -Context $env:ComputerName
 
+# Install tools
+
+$toolsToInstall = $labConfig.labHost.installedTools -split ';'
+
+if ($toolsToInstall -contains 'windowsterminal') {
+    'Executing the Windows Terminal installation pre-tasks...' | Write-ScriptLog -Context $env:ComputerName
+    Invoke-WindowsTerminalInstallation -DownloadFolderPath $labConfig.labHost.folderPath.temp
+}
+
+if ($toolsToInstall -contains 'vscode') {
+    'Installing Visual Studio Code...' | Write-ScriptLog -Context $env:ComputerName
+    Invoke-VSCodeInstallation -DownloadFolderPath $labConfig.labHost.folderPath.temp
+}
+
 Stop-ScriptLogging
