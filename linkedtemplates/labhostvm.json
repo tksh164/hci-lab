@@ -65,19 +65,19 @@
         "shouldEnabledAutoshutdown": {
             "type": "bool",
             "metadata": {
-                "description": ""
+                "description": "By specifying True, will be auto-shutdown configured to the lab host virtual machine."
             }
         },
         "autoshutdownTime": {
             "type": "string",
             "metadata": {
-                "description": "description"
+                "description": "The auto-shutdown time."
             }
         },
         "autoshutdownTimeZone": {
             "type": "string",
             "metadata": {
-                "description": "description"
+                "description": "The time zone for auto-shutdown time."
             }
         },
         "uniqueString": {

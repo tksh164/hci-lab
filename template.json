@@ -234,7 +234,7 @@
             "type": "bool",
             "defaultValue": false,
             "metadata": {
-                "description": "By specifying True, will be auto-shutdown configured."
+                "description": "By specifying True, will be auto-shutdown configured to the lab host virtual machine."
             }
         },
         "autoshutdownTime": {
