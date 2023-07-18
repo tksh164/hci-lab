@@ -459,7 +459,7 @@
                     "volumeLabel": "HCI Lab Data"
                 },
                 "folderPath": {
-                    "log": "C:\\temp",
+                    "log": "C:\\temp\\hcilab-logs",
                     "temp": "V:\\temp",
                     "updates": "V:\\temp\\updates",
                     "vhd": "V:\\vhd",
