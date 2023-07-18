@@ -484,7 +484,7 @@
                         "hostInternalPrefixLength": 16
                     }
                 ],
-                "installedTools": "[parameters('toolsToInstall')]"
+                "toolsToInstall": "[parameters('toolsToInstall')]"
             },
             "guestOS": {
                 "culture": "[parameters('labVmOsCulture')]",

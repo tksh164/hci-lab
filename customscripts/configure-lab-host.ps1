@@ -217,7 +217,7 @@ Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Edge' -Name 'HideFirst
 
 # Install tools
 
-$toolsToInstall = $labConfig.labHost.installedTools -split ';'
+$toolsToInstall = $labConfig.labHost.toolsToInstall -split ';'
 
 if ($toolsToInstall -contains 'windowsterminal') {
     'Executing the Windows Terminal installation pre-tasks...' | Write-ScriptLog -Context $env:ComputerName
