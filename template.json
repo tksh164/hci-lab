@@ -529,8 +529,8 @@
                 "vmNameOffset": 1,
                 "vmName": "hcinode{0:00}",  // vmNameOffset + ZeroBasedNodeIndex
                 "dataDiskSizeBytes": 107374182400,
+                "ipAddressOffset": 11,
                 "netAdapters": {
-                    "ipAddressOffset": 11,
                     "management": {
                         "name": "Management",
                         "ipAddress": "172.16.0.{0}",  // ipAddressOffset + ZeroBasedNodeIndex

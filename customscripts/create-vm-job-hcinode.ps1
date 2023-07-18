@@ -105,7 +105,7 @@ $nodeConfig = [PSCustomObject] @{
         Management = [PSCustomObject] @{
             Name               = $labConfig.hciNode.netAdapters.management.name
             VSwitchName        = $labConfig.labHost.vSwitch.nat.name
-            IPAddress          = $labConfig.hciNode.netAdapters.management.ipAddress -f ($labConfig.hciNode.netAdapters.ipAddressOffset + $NodeIndex)
+            IPAddress          = $labConfig.hciNode.netAdapters.management.ipAddress -f ($labConfig.hciNode.ipAddressOffset + $NodeIndex)
             PrefixLength       = $labConfig.hciNode.netAdapters.management.prefixLength
             DefaultGateway     = $labConfig.hciNode.netAdapters.management.defaultGateway
             DnsServerAddresses = $labConfig.hciNode.netAdapters.management.dnsServerAddresses
@@ -113,20 +113,20 @@ $nodeConfig = [PSCustomObject] @{
         Compute = [PSCustomObject] @{
             Name         = $labConfig.hciNode.netAdapters.compute.name
             VSwitchName  = $labConfig.labHost.vSwitch.nat.name
-            IPAddress    = $labConfig.hciNode.netAdapters.compute.ipAddress -f ($labConfig.hciNode.netAdapters.ipAddressOffset + $NodeIndex)
+            IPAddress    = $labConfig.hciNode.netAdapters.compute.ipAddress -f ($labConfig.hciNode.ipAddressOffset + $NodeIndex)
             PrefixLength = $labConfig.hciNode.netAdapters.compute.prefixLength
         }
         Storage1 = [PSCustomObject] @{
             Name         = $labConfig.hciNode.netAdapters.storage1.name
             VSwitchName  = $labConfig.labHost.vSwitch.nat.name
-            IPAddress    = $labConfig.hciNode.netAdapters.storage1.ipAddress -f ($labConfig.hciNode.netAdapters.ipAddressOffset + $NodeIndex)
+            IPAddress    = $labConfig.hciNode.netAdapters.storage1.ipAddress -f ($labConfig.hciNode.ipAddressOffset + $NodeIndex)
             PrefixLength = $labConfig.hciNode.netAdapters.storage1.prefixLength
             VlanId       = $labConfig.hciNode.netAdapters.storage1.vlanId
         }
         Storage2 = [PSCustomObject] @{
             Name         = $labConfig.hciNode.netAdapters.storage2.name
             VSwitchName  = $labConfig.labHost.vSwitch.nat.name
-            IPAddress    = $labConfig.hciNode.netAdapters.storage2.ipAddress -f ($labConfig.hciNode.netAdapters.ipAddressOffset + $NodeIndex)
+            IPAddress    = $labConfig.hciNode.netAdapters.storage2.ipAddress -f ($labConfig.hciNode.ipAddressOffset + $NodeIndex)
             PrefixLength = $labConfig.hciNode.netAdapters.storage2.prefixLength
             VlanId       = $labConfig.hciNode.netAdapters.storage2.vlanId
         }
