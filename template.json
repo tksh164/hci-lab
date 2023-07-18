@@ -331,7 +331,7 @@
                 "description": "The cluster name (cluster name object/CNO) for the HCI cluster."
             }
         },
-        "repoUriBase": {
+        "repoBaseUri": {
             "type": "string",
             "defaultValue": "https://raw.githubusercontent.com/tksh164/azure-demo-scripts-templates/master/arm-templates/hci-lab/",
             "metadata": {
@@ -351,33 +351,33 @@
 
         "location": "[resourceGroup().location]",
         "uniqueString": "[substring(uniqueString(resourceGroup().id, parameters('salt')), 0, 6)]",
-        "repoUriBase": "[if(endsWith(parameters('repoUriBase'), '/'), parameters('repoUriBase'), concat(parameters('repoUriBase'), '/'))]",
+        "repoBaseUri": "[if(endsWith(parameters('repoBaseUri'), '/'), parameters('repoBaseUri'), concat(parameters('repoBaseUri'), '/'))]",
 
         // Lab host virtual machine
 
         "labHostVmDeploymentName": "vm-and-vnet",
-        "labHostVmLinkedTemplateUri": "[uri(variables('repoUriBase'), 'linkedtemplates/labhostvm.json')]",
+        "labHostVmLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/labhostvm.json')]",
 
         // Key Vault
 
         "keyVaultDeploymentName": "key-vault",
-        "keyVaultLinkedTemplateUri": "[uri(variables('repoUriBase'), 'linkedtemplates/keyvault.json')]",
+        "keyVaultLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/keyvault.json')]",
         "keyVaultName": "[format('hcilab{0}-kv', toLower(variables('uniqueString')))]",
 
         // Storage account for Cloud Witness
 
         "cloudWitnessStorageAccountDeploymentName": "cloud-witness-storage-account",
-        "cloudWitnessStorageAccountLinkedTemplateUri": "[uri(variables('repoUriBase'), 'linkedtemplates/cloudwitness.json')]",
+        "cloudWitnessStorageAccountLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/cloudwitness.json')]",
 
         // Key Vault RBAC
 
         "keyVaultRbacDeploymentName": "key-vault-rbac",
-        "keyVaultRbacLinkedTemplateUri": "[uri(variables('repoUriBase'), 'linkedtemplates/keyvault-rbac.json')]",
+        "keyVaultRbacLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/keyvault-rbac.json')]",
 
         // DSC extension
 
-        "dscLinkedTemplateUri": "[uri(variables('repoUriBase'), 'linkedtemplates/dsc.json')]",
-        "dscBaseUri": "[uri(variables('repoUriBase'), 'dsc/')]",  // Must end with "/".
+        "dscLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/dsc.json')]",
+        "dscBaseUri": "[uri(variables('repoBaseUri'), 'dsc/')]",  // Must end with "/".
         "dscExtensionName": "hci-lab-dsc-extension",
         "dscParams": {
             "installRolesFeatures": {
@@ -396,8 +396,8 @@
 
         // Custom script extension
 
-        "customScriptLinkedTemplateUri": "[uri(variables('repoUriBase'), 'linkedtemplates/customscript.json')]",
-        "customScriptBaseUri": "[uri(variables('repoUriBase'), 'customscripts/')]",  // Must end with "/".
+        "customScriptLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/customscript.json')]",
+        "customScriptBaseUri": "[uri(variables('repoBaseUri'), 'customscripts/')]",  // Must end with "/".
         "customScriptExtensionName": "hci-lab-customscript-extension",
         "customScriptParams": {
             "configureLabHost": {
