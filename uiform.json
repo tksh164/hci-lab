@@ -256,7 +256,7 @@
                                     }
                                 },
                                 {
-                                    "name": "haveEligibleWindowsServerLicense",
+                                    "name": "hasEligibleWindowsServerLicense",
                                     "type": "Microsoft.Common.CheckBox",
                                     "label": "I confirm I have an eligible Windows Server license with Software Assurance or Windows Server subscription to apply this Azure Hybrid Benefit.",
                                     "visible": "[steps('basics').azureHybridBenefitSection.isUseExistingWindowsServerLicense]",
@@ -480,7 +480,7 @@
                             "label": "Auto-shutdown",
                             "elements": [
                                 {
-                                    "name": "isAutoshutdownEnabled",
+                                    "name": "shouldEnabledAutoshutdown",
                                     "type": "Microsoft.Common.CheckBox",
                                     "label": "Enable auto-shutdown",
                                     "visible": true,
@@ -493,7 +493,7 @@
                                 {
                                     "name": "shutdownTime",
                                     "type": "Microsoft.Common.DropDown",
-                                    "visible": "[steps('labHostVmDetails').autoshutdownSection.isAutoshutdownEnabled]",
+                                    "visible": "[steps('labHostVmDetails').autoshutdownSection.shouldEnabledAutoshutdown]",
                                     "multiselect": false,
                                     "selectAll": false,
                                     "filter": true,
@@ -705,7 +705,7 @@
                                 {
                                     "name": "shutdownTimeZone",
                                     "type": "Microsoft.Common.DropDown",
-                                    "visible": "[steps('labHostVmDetails').autoshutdownSection.isAutoshutdownEnabled]",
+                                    "visible": "[steps('labHostVmDetails').autoshutdownSection.shouldEnabledAutoshutdown]",
                                     "multiselect": false,
                                     "selectAll": false,
                                     "filter": true,
@@ -1775,7 +1775,7 @@
                                     }
                                 },
                                 {
-                                    "name": "isInstallUpdatesToLabVm",
+                                    "name": "shouldInstallUpdatesToLabVm",
                                     "type": "Microsoft.Common.CheckBox",
                                     "label": "Install operating system updates during deployment? (recommend)",
                                     "visible": true,
@@ -1788,7 +1788,7 @@
                                 {
                                     "name": "updatesInstallationInfo",
                                     "type": "Microsoft.Common.InfoBox",
-                                    "visible": "[steps('labConfiguration').generalSection.isInstallUpdatesToLabVm]",
+                                    "visible": "[steps('labConfiguration').generalSection.shouldInstallUpdatesToLabVm]",
                                     "options": {
                                         "style": "Info",
                                         "text": "Operating system updates installation will increase the deployment time by about 15+ minutes."
@@ -1944,14 +1944,14 @@
                 "labHostVmOsDiskType": "[steps('labHostVmDetails').diskSection.osDiskType]",
                 "labHostVmDataDiskType": "[steps('labHostVmDetails').diskSection.dataDiskType]",
                 "labHostVmDataDiskSize": "[steps('labHostVmDetails').dataVolumeSection.dataDiskSize]",
-                "isHaveEligibleWindowsServerLicense": "[steps('basics').azureHybridBenefitSection.haveEligibleWindowsServerLicense]",
+                "hasEligibleWindowsServerLicense": "[steps('basics').azureHybridBenefitSection.hasEligibleWindowsServerLicense]",
                 "toolsToInstall": "[concat(if(steps('labHostVmDetails').toolsSection.shouldInstallWindowsTerminal, 'windowsterminal', ''), ';', if(steps('labHostVmDetails').toolsSection.shouldInstallVisualStudioCode, 'vscode', ''))]",
-                "isAutoshutdownEnabled": "[steps('labHostVmDetails').autoshutdownSection.isAutoshutdownEnabled]",
+                "shouldEnabledAutoshutdown": "[steps('labHostVmDetails').autoshutdownSection.shouldEnabledAutoshutdown]",
                 "autoshutdownTime": "[steps('labHostVmDetails').autoshutdownSection.shutdownTime]",
                 "autoshutdownTimeZone": "[steps('labHostVmDetails').autoshutdownSection.shutdownTimeZone]",
                 "labVmOsCulture": "[steps('labConfiguration').generalSection.labVmCulture]",
                 "labVmOsTimeZone": "[steps('labConfiguration').generalSection.labVmTimeZone]",
-                "isInstallUpdatesToLabVm": "[steps('labConfiguration').generalSection.isInstallUpdatesToLabVm]",
+                "shouldInstallUpdatesToLabVm": "[steps('labConfiguration').generalSection.shouldInstallUpdatesToLabVm]",
                 "hciNodeOsSku": "[steps('labConfiguration').hciClusterSection.hciNodeOperatingSystem.sku]",
                 "hciNodeOsImageIndex": "[steps('labConfiguration').hciClusterSection.hciNodeOperatingSystem.imageIndex]",
                 "hciNodeCount": "[steps('labConfiguration').hciClusterSection.hciNodeCount]",

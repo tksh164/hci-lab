@@ -50,7 +50,7 @@
                 "description": "The size of the individual data disks in GiB."
             }
         },
-        "isHaveEligibleWindowsServerLicense": {
+        "hasEligibleWindowsServerLicense": {
             "type": "bool",
             "metadata": {
                 "description": "By specifying True, you confirm you have an eligible Windows Server license with Software Assurance or Windows Server subscription to apply this Azure Hybrid Benefit. You can read more about compliance here: http://go.microsoft.com/fwlink/?LinkId=859786"
@@ -62,22 +62,22 @@
                 "description": "THe base64 encode user data for the lab hosting virtual machine."
             }
         },
-        "isAutoshutdownEnabled": {
+        "shouldEnabledAutoshutdown": {
             "type": "bool",
             "metadata": {
-                "description": "description"
+                "description": "By specifying True, will be auto-shutdown configured to the lab host virtual machine."
             }
         },
         "autoshutdownTime": {
             "type": "string",
             "metadata": {
-                "description": "description"
+                "description": "The auto-shutdown time."
             }
         },
         "autoshutdownTimeZone": {
             "type": "string",
             "metadata": {
-                "description": "description"
+                "description": "The time zone for auto-shutdown time."
             }
         },
         "uniqueString": {
@@ -224,7 +224,7 @@
                         "provisionVmAgent": true
                     }
                 },
-                "licenseType": "[if(parameters('isHaveEligibleWindowsServerLicense'), 'Windows_Server', 'None')]",
+                "licenseType": "[if(parameters('hasEligibleWindowsServerLicense'), 'Windows_Server', 'None')]",
                 "networkProfile": {
                     "networkInterfaces": [
                         {
@@ -278,7 +278,7 @@
             }
         },
         {
-            "condition": "[parameters('isAutoshutdownEnabled')]",
+            "condition": "[parameters('shouldEnabledAutoshutdown')]",
             "name": "[concat('shutdown-computevm-', parameters('vmName'))]",
             "type": "Microsoft.DevTestLab/schedules",
             "apiVersion": "2018-09-15",
@@ -287,7 +287,7 @@
                 "[resourceId('Microsoft.Compute/virtualMachines', parameters('vmName'))]"
             ],
             "properties": {
-                "status": "[if(parameters('isAutoshutdownEnabled'), 'Enabled', 'Disabled')]",
+                "status": "[if(parameters('shouldEnabledAutoshutdown'), 'Enabled', 'Disabled')]",
                 "taskType": "ComputeVmShutdownTask",
                 "dailyRecurrence": {
                     "time": "[parameters('autoshutdownTime')]"
