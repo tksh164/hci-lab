@@ -489,7 +489,7 @@
             "guestOS": {
                 "culture": "[parameters('labVmOsCulture')]",
                 "timeZone": "[parameters('labVmOsTimeZone')]",
-                "applyUpdates": "[parameters('shouldInstallUpdatesToLabVm')]"
+                "shouldInstallUpdates": "[parameters('shouldInstallUpdatesToLabVm')]"
             },
             "addsDomain": {
                 "fqdn": "[parameters('addsDomainFqdn')]"
