@@ -256,7 +256,7 @@
                                     }
                                 },
                                 {
-                                    "name": "haveEligibleWindowsServerLicense",
+                                    "name": "hasEligibleWindowsServerLicense",
                                     "type": "Microsoft.Common.CheckBox",
                                     "label": "I confirm I have an eligible Windows Server license with Software Assurance or Windows Server subscription to apply this Azure Hybrid Benefit.",
                                     "visible": "[steps('basics').azureHybridBenefitSection.isUseExistingWindowsServerLicense]",
@@ -1944,7 +1944,7 @@
                 "labHostVmOsDiskType": "[steps('labHostVmDetails').diskSection.osDiskType]",
                 "labHostVmDataDiskType": "[steps('labHostVmDetails').diskSection.dataDiskType]",
                 "labHostVmDataDiskSize": "[steps('labHostVmDetails').dataVolumeSection.dataDiskSize]",
-                "isHaveEligibleWindowsServerLicense": "[steps('basics').azureHybridBenefitSection.haveEligibleWindowsServerLicense]",
+                "hasEligibleWindowsServerLicense": "[steps('basics').azureHybridBenefitSection.hasEligibleWindowsServerLicense]",
                 "toolsToInstall": "[concat(if(steps('labHostVmDetails').toolsSection.shouldInstallWindowsTerminal, 'windowsterminal', ''), ';', if(steps('labHostVmDetails').toolsSection.shouldInstallVisualStudioCode, 'vscode', ''))]",
                 "isAutoshutdownEnabled": "[steps('labHostVmDetails').autoshutdownSection.isAutoshutdownEnabled]",
                 "autoshutdownTime": "[steps('labHostVmDetails').autoshutdownSection.shutdownTime]",

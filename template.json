@@ -216,7 +216,7 @@
                 "description": "The size of the individual data disks in GiB."
             }
         },
-        "isHaveEligibleWindowsServerLicense": {
+        "hasEligibleWindowsServerLicense": {
             "type": "bool",
             "defaultValue": false,
             "metadata": {
@@ -633,8 +633,8 @@
                     "dataDiskSize": {
                         "value": "[parameters('labHostVmDataDiskSize')]"
                     },
-                    "isHaveEligibleWindowsServerLicense": {
-                        "value": "[parameters('isHaveEligibleWindowsServerLicense')]"
+                    "hasEligibleWindowsServerLicense": {
+                        "value": "[parameters('hasEligibleWindowsServerLicense')]"
                     },
                     "base64EncodedLabConfig": {
                         "value": "[base64(string(variables('labConfig')))]"

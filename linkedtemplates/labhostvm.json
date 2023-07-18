@@ -50,7 +50,7 @@
                 "description": "The size of the individual data disks in GiB."
             }
         },
-        "isHaveEligibleWindowsServerLicense": {
+        "hasEligibleWindowsServerLicense": {
             "type": "bool",
             "metadata": {
                 "description": "By specifying True, you confirm you have an eligible Windows Server license with Software Assurance or Windows Server subscription to apply this Azure Hybrid Benefit. You can read more about compliance here: http://go.microsoft.com/fwlink/?LinkId=859786"
@@ -224,7 +224,7 @@
                         "provisionVmAgent": true
                     }
                 },
-                "licenseType": "[if(parameters('isHaveEligibleWindowsServerLicense'), 'Windows_Server', 'None')]",
+                "licenseType": "[if(parameters('hasEligibleWindowsServerLicense'), 'Windows_Server', 'None')]",
                 "networkProfile": {
                     "networkInterfaces": [
                         {
