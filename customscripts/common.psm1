@@ -42,13 +42,16 @@ function Start-ScriptLogging
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
-        [ValidateScript({ Test-Path -PathType Container -LiteralPath $_ })]
         [string] $OutputDirectory,
 
         # The log file name suffix. The default value is the file name without extension of the caller script.
         [Parameter(Mandatory = $false)]
         [string] $FileName = [IO.Path]::GetFileNameWithoutExtension($MyInvocation.ScriptName)
     )
+
+    if (-not (Test-Path -PathType Container -LiteralPath $OutputDirectory)) {
+        New-Item -ItemType Directory -Path $OutputDirectory -Force
+    }
 
     $transcriptFileName = New-LogFileName -FileName $FileName
     $transcriptFilePath = [IO.Path]::Combine($OutputDirectory, $transcriptFileName)
