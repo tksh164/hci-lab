@@ -8,7 +8,7 @@ This template deploys an HCI lab environment with Azure Stack HCI or Windows Ser
 
 ## Notes
 
-- The log files of the custom scripts are stored under `C:\Temp` in the lab host Azure VM. Those log files are helpful for troubleshooting when deployment fails.
+- The log files of the custom scripts are stored under `C:\temp\hcilab-logs` in the lab host Azure VM. Those log files are helpful for troubleshooting when deployment fails.
 
 ## External artifacts
 
