@@ -484,12 +484,12 @@
                         "hostInternalPrefixLength": 16
                     }
                 ],
-                "installedTools": "[parameters('toolsToInstall')]"
+                "toolsToInstall": "[parameters('toolsToInstall')]"
             },
             "guestOS": {
                 "culture": "[parameters('labVmOsCulture')]",
                 "timeZone": "[parameters('labVmOsTimeZone')]",
-                "applyUpdates": "[parameters('shouldInstallUpdatesToLabVm')]"
+                "shouldInstallUpdates": "[parameters('shouldInstallUpdatesToLabVm')]"
             },
             "addsDomain": {
                 "fqdn": "[parameters('addsDomainFqdn')]"
@@ -497,7 +497,7 @@
             "addsDC": {
                 "vmName": "addsdc",
                 "maximumRamBytes": 2147483648,
-                "netAdapter": {
+                "netAdapters": {
                     "management": {
                         "name": "Management",
                         "ipAddress": "172.16.0.2",
@@ -510,7 +510,7 @@
             "wac": {
                 "vmName": "wac",
                 "maximumRamBytes": 6442450944,
-                "netAdapter": {
+                "netAdapters": {
                     "management": {
                         "name": "Management",
                         "ipAddress": "172.16.0.3",
@@ -529,8 +529,8 @@
                 "vmNameOffset": 1,
                 "vmName": "hcinode{0:00}",  // vmNameOffset + ZeroBasedNodeIndex
                 "dataDiskSizeBytes": 107374182400,
-                "netAdapter": {
-                    "ipAddressOffset": 11,
+                "ipAddressOffset": 11,
+                "netAdapters": {
                     "management": {
                         "name": "Management",
                         "ipAddress": "172.16.0.{0}",  // ipAddressOffset + ZeroBasedNodeIndex

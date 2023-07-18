@@ -102,8 +102,8 @@ if ($labConfig.hciNode.operatingSystem.sku -ne [HciLab.OSSku]::WindowsServer2022
 
 # Updates
 
-# Download the updates if the flag was true only.
-if ($labConfig.guestOS.applyUpdates) {
+# Download the updates if the flag is set.
+if ($labConfig.guestOS.shouldInstallUpdates) {
     'Creating the updates folder if it does not exist...' | Write-ScriptLog -Context $env:ComputerName
     New-Item -ItemType Directory -Path $labConfig.labHost.folderPath.updates -Force
     
@@ -128,7 +128,7 @@ if ($labConfig.guestOS.applyUpdates) {
     'The update files download has been completed.' | Write-ScriptLog -Context $env:ComputerName
 }
 else {
-    'Skipped download of updates due to applyUpdates not set.' | Write-ScriptLog -Context $env:ComputerName
+    'Skipped download of updates due to shouldInstallUpdates not set.' | Write-ScriptLog -Context $env:ComputerName
 }
 
 Stop-ScriptLogging

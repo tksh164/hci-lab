@@ -70,7 +70,7 @@ Get-VMNetworkAdapter -VMName $vmName | Remove-VMNetworkAdapter
 # Management
 $paramsForAdd = @{
     VMName       = $vmName
-    Name         = $labConfig.addsDC.netAdapter.management.name
+    Name         = $labConfig.addsDC.netAdapters.management.name
     SwitchName   = $labConfig.labHost.vSwitch.nat.name
     DeviceNaming = [Microsoft.HyperV.PowerShell.OnOffState]::On
     Passthru     = $true
@@ -163,15 +163,15 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
     'Setting the IP configuration on the network adapter...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
     $params = @{
         AddressFamily  = 'IPv4'
-        IPAddress      = $VMConfig.netAdapter.management.ipAddress
-        PrefixLength   = $VMConfig.netAdapter.management.prefixLength
-        DefaultGateway = $VMConfig.netAdapter.management.defaultGateway
+        IPAddress      = $VMConfig.netAdapters.management.ipAddress
+        PrefixLength   = $VMConfig.netAdapters.management.prefixLength
+        DefaultGateway = $VMConfig.netAdapters.management.defaultGateway
     }
-    Get-NetAdapter -Name $VMConfig.netAdapter.management.name | New-NetIPAddress @params
+    Get-NetAdapter -Name $VMConfig.netAdapters.management.name | New-NetIPAddress @params
     
     'Setting the DNS configuration on the network adapter...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
-    Get-NetAdapter -Name $VMConfig.netAdapter.management.name |
-        Set-DnsClientServerAddress -ServerAddresses $VMConfig.netAdapter.management.dnsServerAddresses
+    Get-NetAdapter -Name $VMConfig.netAdapters.management.name |
+        Set-DnsClientServerAddress -ServerAddresses $VMConfig.netAdapters.management.dnsServerAddresses
 } | Out-String | Write-ScriptLog -Context $vmName
 
 'Installing AD DS (Creating a new forest) within the VM...' | Write-ScriptLog -Context $vmName
