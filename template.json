@@ -497,7 +497,7 @@
             "addsDC": {
                 "vmName": "addsdc",
                 "maximumRamBytes": 2147483648,
-                "netAdapter": {
+                "netAdapters": {
                     "management": {
                         "name": "Management",
                         "ipAddress": "172.16.0.2",
@@ -510,7 +510,7 @@
             "wac": {
                 "vmName": "wac",
                 "maximumRamBytes": 6442450944,
-                "netAdapter": {
+                "netAdapters": {
                     "management": {
                         "name": "Management",
                         "ipAddress": "172.16.0.3",
@@ -529,7 +529,7 @@
                 "vmNameOffset": 1,
                 "vmName": "hcinode{0:00}",  // vmNameOffset + ZeroBasedNodeIndex
                 "dataDiskSizeBytes": 107374182400,
-                "netAdapter": {
+                "netAdapters": {
                     "ipAddressOffset": 11,
                     "management": {
                         "name": "Management",

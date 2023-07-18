@@ -42,8 +42,8 @@ Invoke-PSDirectSessionSetup -Session $hciNodeDomainAdminCredPSSessions -CommonMo
 $params = @{
     InputObject = [PSCustomObject] @{
         NetAdapterName = [PSCustomObject] @{
-            Management = $labConfig.hciNode.netAdapter.management.name
-            Compute    = $labConfig.hciNode.netAdapter.compute.name
+            Management = $labConfig.hciNode.netAdapters.management.name
+            Compute    = $labConfig.hciNode.netAdapters.compute.name
         }
     }
 }
@@ -279,24 +279,24 @@ $params = @{
         ClusterName     = $labConfig.hciCluster.name
         HciNodeNetworks = @(
             [PSCustomObject] @{
-                Name         = $labConfig.hciNode.netAdapter.management.name
-                IPAddress    = $labConfig.hciNode.netAdapter.management.ipAddress -f '0'
-                PrefixLength = $labConfig.hciNode.netAdapter.management.prefixLength
+                Name         = $labConfig.hciNode.netAdapters.management.name
+                IPAddress    = $labConfig.hciNode.netAdapters.management.ipAddress -f '0'
+                PrefixLength = $labConfig.hciNode.netAdapters.management.prefixLength
             },
             [PSCustomObject] @{
-                Name         = $labConfig.hciNode.netAdapter.compute.name
-                IPAddress    = $labConfig.hciNode.netAdapter.compute.ipAddress -f '0'
-                PrefixLength = $labConfig.hciNode.netAdapter.compute.prefixLength
+                Name         = $labConfig.hciNode.netAdapters.compute.name
+                IPAddress    = $labConfig.hciNode.netAdapters.compute.ipAddress -f '0'
+                PrefixLength = $labConfig.hciNode.netAdapters.compute.prefixLength
             },
             [PSCustomObject] @{
-                Name         = $labConfig.hciNode.netAdapter.storage1.name
-                IPAddress    = $labConfig.hciNode.netAdapter.storage1.ipAddress -f '0'
-                PrefixLength = $labConfig.hciNode.netAdapter.storage1.prefixLength
+                Name         = $labConfig.hciNode.netAdapters.storage1.name
+                IPAddress    = $labConfig.hciNode.netAdapters.storage1.ipAddress -f '0'
+                PrefixLength = $labConfig.hciNode.netAdapters.storage1.prefixLength
             },
             [PSCustomObject] @{
-                Name         = $labConfig.hciNode.netAdapter.storage2.name
-                IPAddress    = $labConfig.hciNode.netAdapter.storage2.ipAddress -f '0'
-                PrefixLength = $labConfig.hciNode.netAdapter.storage2.prefixLength
+                Name         = $labConfig.hciNode.netAdapters.storage2.name
+                IPAddress    = $labConfig.hciNode.netAdapters.storage2.ipAddress -f '0'
+                PrefixLength = $labConfig.hciNode.netAdapters.storage2.prefixLength
             }
         )
     }
@@ -327,9 +327,9 @@ $params = @{
     InputObject = [PSCustomObject] @{
         ClusterName           = $labConfig.hciCluster.name
         MigrationNetworkOrder = @(
-            $labConfig.hciNode.netAdapter.storage1.name,
-            $labConfig.hciNode.netAdapter.storage2.name,
-            $labConfig.hciNode.netAdapter.management.name
+            $labConfig.hciNode.netAdapters.storage1.name,
+            $labConfig.hciNode.netAdapters.storage2.name,
+            $labConfig.hciNode.netAdapters.management.name
         )
     }
 }
