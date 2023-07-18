@@ -1775,7 +1775,7 @@
                                     }
                                 },
                                 {
-                                    "name": "isInstallUpdatesToLabVm",
+                                    "name": "shouldInstallUpdatesToLabVm",
                                     "type": "Microsoft.Common.CheckBox",
                                     "label": "Install operating system updates during deployment? (recommend)",
                                     "visible": true,
@@ -1788,7 +1788,7 @@
                                 {
                                     "name": "updatesInstallationInfo",
                                     "type": "Microsoft.Common.InfoBox",
-                                    "visible": "[steps('labConfiguration').generalSection.isInstallUpdatesToLabVm]",
+                                    "visible": "[steps('labConfiguration').generalSection.shouldInstallUpdatesToLabVm]",
                                     "options": {
                                         "style": "Info",
                                         "text": "Operating system updates installation will increase the deployment time by about 15+ minutes."
@@ -1951,7 +1951,7 @@
                 "autoshutdownTimeZone": "[steps('labHostVmDetails').autoshutdownSection.shutdownTimeZone]",
                 "labVmOsCulture": "[steps('labConfiguration').generalSection.labVmCulture]",
                 "labVmOsTimeZone": "[steps('labConfiguration').generalSection.labVmTimeZone]",
-                "isInstallUpdatesToLabVm": "[steps('labConfiguration').generalSection.isInstallUpdatesToLabVm]",
+                "shouldInstallUpdatesToLabVm": "[steps('labConfiguration').generalSection.shouldInstallUpdatesToLabVm]",
                 "hciNodeOsSku": "[steps('labConfiguration').hciClusterSection.hciNodeOperatingSystem.sku]",
                 "hciNodeOsImageIndex": "[steps('labConfiguration').hciClusterSection.hciNodeOperatingSystem.imageIndex]",
                 "hciNodeCount": "[steps('labConfiguration').hciClusterSection.hciNodeCount]",
