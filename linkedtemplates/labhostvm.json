@@ -62,10 +62,10 @@
                 "description": "THe base64 encode user data for the lab hosting virtual machine."
             }
         },
-        "isAutoshutdownEnabled": {
+        "shouldEnabledAutoshutdown": {
             "type": "bool",
             "metadata": {
-                "description": "description"
+                "description": ""
             }
         },
         "autoshutdownTime": {
@@ -278,7 +278,7 @@
             }
         },
         {
-            "condition": "[parameters('isAutoshutdownEnabled')]",
+            "condition": "[parameters('shouldEnabledAutoshutdown')]",
             "name": "[concat('shutdown-computevm-', parameters('vmName'))]",
             "type": "Microsoft.DevTestLab/schedules",
             "apiVersion": "2018-09-15",
@@ -287,7 +287,7 @@
                 "[resourceId('Microsoft.Compute/virtualMachines', parameters('vmName'))]"
             ],
             "properties": {
-                "status": "[if(parameters('isAutoshutdownEnabled'), 'Enabled', 'Disabled')]",
+                "status": "[if(parameters('shouldEnabledAutoshutdown'), 'Enabled', 'Disabled')]",
                 "taskType": "ComputeVmShutdownTask",
                 "dailyRecurrence": {
                     "time": "[parameters('autoshutdownTime')]"

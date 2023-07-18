@@ -230,7 +230,7 @@
                 "description": "The tools to be installed on the lab host virtual machine. Use ';' to separate tool's symbol. Supported tool's symbols are windowsterminal, vscode."
             }
         },
-        "isAutoshutdownEnabled": {
+        "shouldEnabledAutoshutdown": {
             "type": "bool",
             "defaultValue": false,
             "metadata": {
@@ -639,8 +639,8 @@
                     "base64EncodedLabConfig": {
                         "value": "[base64(string(variables('labConfig')))]"
                     },
-                    "isAutoshutdownEnabled": {
-                        "value": "[parameters('isAutoshutdownEnabled')]"
+                    "shouldEnabledAutoshutdown": {
+                        "value": "[parameters('shouldEnabledAutoshutdown')]"
                     },
                     "autoshutdownTime": {
                         "value": "[parameters('autoshutdownTime')]"
