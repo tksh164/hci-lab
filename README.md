@@ -1,10 +1,10 @@
 # HCI Lab
 
+This template deploys an HCI lab environment with Azure Stack HCI or Windows Server 2022 on a single Azure VM in about 30 minutes.
+
+## Deploy
+
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#view/Microsoft_Azure_CreateUIDef/CustomDeploymentBlade/uri/https%3A%2F%2Fraw.githubusercontent.com%2Ftksh164%2Fhci-lab%2Fmain%2Ftemplate%2Ftemplate.json/uiFormDefinitionUri/https%3A%2F%2Fraw.githubusercontent.com%2Ftksh164%2Fhci-lab%2Fmain%2Fuiforms%2Fuiform.json)
-
-## Template overview
-
-This template deploys an HCI lab environment with Azure Stack HCI or Windows Server 2022.
 
 ## Notes
 
