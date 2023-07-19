@@ -333,7 +333,7 @@
         },
         "repoBaseUri": {
             "type": "string",
-            "defaultValue": "https://raw.githubusercontent.com/tksh164/azure-demo-scripts-templates/master/arm-templates/hci-lab/",
+            "defaultValue": "https://raw.githubusercontent.com/tksh164/hci-lab/main/template/",
             "metadata": {
                 "description": "The base URI of template's repository. The value must end with '/'."
             }
