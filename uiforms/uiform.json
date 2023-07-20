@@ -53,7 +53,7 @@
                             "type": "Microsoft.Compute.SizeSelector",
                             "visible": true,
                             "label": "Size",
-                            "toolTip": "Specify the VM size for the lab host VM.",
+                            "toolTip": "Specify the size for the lab host virtual machine.",
                             "scope": {
                                 "subscriptionId": "[steps('basics').resourceScope.subscription.subscriptionId]",
                                 "location": "[steps('basics').resourceScope.location.name]"
@@ -178,7 +178,7 @@
                             "visible": true,
                             "options": {
                                 "style": "Info",
-                                "text": "128 GiB RAM is the real minimum when you deploy any workloads on your HCI cluster. You may need more RAM if you deploy hybrid services on your HCI cluster because this lab deploys multiple Hyper-V VMs such as HCI nodes, Active Directory Domain Services domain controller, management tool machine on a single Azure Virtual machine.<ul><li><a href='https://learn.microsoft.com/azure/virtual-machines/sizes'>Azure Virtual Machine sizes</a></li><li><a href='https://azure.microsoft.com/pricing/details/virtual-machines/windows'>Windows Virtual Machines pricing</a></li></ul>"
+                                "text": "128 GiB memory is the real minimum when you deploy any workloads on your HCI cluster. You may need more memory if you deploy hybrid services on your HCI cluster because this lab environment deploys multiple Hyper-V VMs such as HCI nodes, Active Directory Domain Services domain controller, management tool machine on a single Azure Virtual machine.<ul><li><a href='https://learn.microsoft.com/azure/virtual-machines/sizes'>Azure Virtual Machine sizes</a></li><li><a href='https://azure.microsoft.com/pricing/details/virtual-machines/windows'>Windows Virtual Machines pricing</a></li></ul>"
                             }
                         },
                         {
@@ -393,9 +393,9 @@
                                     "multiLine": true,
                                     "label": "Data volume capacity",
                                     "toolTip": "Data volume capacity on the lab host virtual machine.",
-                                    "placeholder": "Select the data disk size...",
+                                    "placeholder": "Select the data volume capacity...",
                                     "defaultDescription": "---",
-                                    "filterPlaceholder": "Filter data disk sizes...",
+                                    "filterPlaceholder": "Filter data volume capacities...",
                                     "defaultValue": "503 GB (64 GiB x 8 disks)",
                                     "constraints": {
                                         "required": true,
@@ -498,11 +498,11 @@
                                     "selectAll": false,
                                     "filter": true,
                                     "multiLine": false,
-                                    "label": "Scheduled shutdown time",
+                                    "label": "Shutdown time",
                                     "toolTip": "Configures the time when the virtual machine shuts down daily.",
                                     "placeholder": "",
                                     "defaultDescription": "---",
-                                    "filterPlaceholder": "Filter items...",
+                                    "filterPlaceholder": "Filter shutdown time...",
                                     "defaultValue": "10:00 PM (22:00)",
                                     "constraints": {
                                         "required": true,
@@ -1169,11 +1169,11 @@
                                     "selectAll": false,
                                     "filter": false,
                                     "multiLine": false,
-                                    "label": "UI language, locale, input method",
-                                    "toolTip": "Configure display language, locale, input method of the operating system of lab virtual machines.",
-                                    "placeholder": "Select the culture...",
+                                    "label": "UI language, locale and input method",
+                                    "toolTip": "Specify display language, locale and input method of the operating system of lab virtual machines.",
+                                    "placeholder": "Select the UI language, locale and input method...",
                                     "defaultDescription": "---",
-                                    "filterPlaceholder": "Filter culture...",
+                                    "filterPlaceholder": "Filter UI language, locale and input method...",
                                     "defaultValue": "English (en-US)",
                                     "constraints": {
                                         "required": true,
@@ -1198,7 +1198,7 @@
                                     "filter": true,
                                     "multiLine": false,
                                     "label": "Time zone",
-                                    "toolTip": "Configure the time zone of the operating system of lab virtual machines.",
+                                    "toolTip": "Specify the time zone of the operating system of lab virtual machines.",
                                     "placeholder": "",
                                     "defaultDescription": "---",
                                     "filterPlaceholder": "Filter time zones...",
@@ -1791,7 +1791,7 @@
                                     "visible": "[steps('labConfiguration').generalSection.shouldInstallUpdatesToLabVm]",
                                     "options": {
                                         "style": "Info",
-                                        "text": "Operating system updates installation will increase the deployment time by about 15+ minutes."
+                                        "text": "Operating system updates installation will increase the deployment time by about 15 minutes or more."
                                     }
                                 }
                             ]
@@ -1816,7 +1816,7 @@
                                         "validations": [
                                             {
                                                 "regex": "^(?!-)[A-Za-z0-9-]+([\\-\\.]{1}[a-z0-9]+)*\\.[A-Za-z]{2,6}$",
-                                                "message": "Invalid domain name."
+                                                "message": "Invalid AD DS domain FQDN."
                                             }
                                         ]
                                     }
@@ -1855,8 +1855,8 @@
                                                 }
                                             },
                                             {
-                                                "label": "Azure Stack HCI, version 21H2 [End of Service]",
-                                                "description": "<strong>Notice:</strong> This version reached end of service on May 9, 2023.",
+                                                "label": "Azure Stack HCI, version 21H2",
+                                                "description": "Supported Azure Stack HCI release.",
                                                 "value": {
                                                     "sku": "ashci21h2",
                                                     "imageIndex": 1
@@ -1864,7 +1864,7 @@
                                             },
                                             {
                                                 "label": "Azure Stack HCI, version 20H2 [End of Service]",
-                                                "description": "<strong>Notice:</strong> This version reached end of service on December 13, 2022.",
+                                                "description": "<strong>Notice:</strong> This version reached the end of service on December 13, 2022.",
                                                 "value": {
                                                     "sku": "ashci20h2",
                                                     "imageIndex": 1
