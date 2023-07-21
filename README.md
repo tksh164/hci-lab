@@ -15,11 +15,11 @@ This template deploys an HCI lab environment with Azure Stack HCI or Windows Ser
 
 3. The deployment will be complete in about 30 minutes if the deployment starts with default values.
 
-4. After completing the deployment, you need to allow Remote Desktop access to your lab Azure VM from your local machine. It can be by [enabling JIT VM access](https://learn.microsoft.com/en-us/azure/defender-for-cloud/just-in-time-access-usage) or [adding an inbound security rule in the Network Security Group](https://learn.microsoft.com/en-us/azure/virtual-network/tutorial-filter-network-traffic#create-security-rules). The recommended way is using JIT VM access.
+4. After completing the deployment, you need to allow Remote Desktop access to your lab host Azure VM from your local machine. It can be by [enabling JIT VM access](https://learn.microsoft.com/en-us/azure/defender-for-cloud/just-in-time-access-usage) or [adding an inbound security rule in the Network Security Group](https://learn.microsoft.com/en-us/azure/virtual-network/tutorial-filter-network-traffic#create-security-rules). The recommended way is using JIT VM access.
 
-5. Connect your lab Azure VM using your favorite Remote Desktop client.
+5. Connect your lab host Azure VM using your favorite Remote Desktop client.
 
-6. You can start accessing your HCI lab environment from the icons on the desktop of your lab Azure VM.
+6. You can start accessing your HCI lab environment from the icons on the desktop of your lab host Azure VM.
 
 ## ✒️ Notes
 
