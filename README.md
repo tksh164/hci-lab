@@ -19,7 +19,7 @@ This template deploys an HCI lab environment with Azure Stack HCI or Windows Ser
 
 5. Connect your lab Azure VM using your favorite Remote Desktop client.
 
-6. You can access your HCI lab environment from the icons on the desktop of your lab Azure VM.
+6. You can start accessing your HCI lab environment from the icons on the desktop of your lab Azure VM.
 
 ## ✒️ Notes
 
