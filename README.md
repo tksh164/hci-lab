@@ -17,9 +17,9 @@ This template deploys an HCI lab environment with Azure Stack HCI or Windows Ser
 
 4. After completing the deployment, you need to allow Remote Desktop access to your lab host Azure VM from your local machine. It can be by [enabling JIT VM access](https://learn.microsoft.com/en-us/azure/defender-for-cloud/just-in-time-access-usage) or [adding an inbound security rule in the Network Security Group](https://learn.microsoft.com/en-us/azure/virtual-network/tutorial-filter-network-traffic#create-security-rules). The recommended way is using JIT VM access.
 
-5. Connect your lab host Azure VM using your favorite Remote Desktop client.
+5. Connect to your lab host Azure VM using your favorite Remote Desktop client. To connect, use the credentials that you specified at deployment.
 
-6. You can start accessing your HCI lab environment from the icons on the desktop of your lab host Azure VM.
+6. You can start accessing your HCI lab environment from the icons on the desktop of your lab host Azure VM. To access the Hyper-V VMs in the HCI lab environment, use Administrator account and the password that you specified at deployment (the same password as the lab host Azure VM).
 
 ## ✒️ Notes
 
