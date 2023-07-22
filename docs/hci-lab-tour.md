@@ -14,8 +14,8 @@ The HCI lab environment consists of three roles of Hyper-V VMs on a single Azure
 ### Lab host VM (Azure VM)
 
 - Deploy options
-    - Windows Terminal: You can install Windows Terminal during the deployment if you choose the deployment option.
-    - Visual Studio Code: You can install Visual Studio Code during the deployment if you choose the deployment option.
+    - **Windows Terminal:** You can install Windows Terminal during the deployment if you choose the deployment option.
+    - **Visual Studio Code:** You can install Visual Studio Code during the deployment if you choose the deployment option.
 
 - Credentials
 
@@ -28,10 +28,13 @@ The HCI lab environment consists of three roles of Hyper-V VMs on a single Azure
     - The recommended way is using JIT VM access.
 
 - Desktop icons
-    - Remote Desktop - WAC: Connect to the wac VM using Remote Desktop.
-    - Windows Admin Center: Open Windows Admin Center on the wac VM with Microsoft Edge. 
-    - Hyper-V Manager
-    - Visual Studio Code (if installed via deployment option)
+
+    | Icon | Notes |
+    | ---- | ---- |
+    | Remote Desktop - WAC | Connect to the wac VM using Remote Desktop. |
+    | Windows Admin Center | Open Windows Admin Center on the wac VM with Microsoft Edge.  |
+    | Hyper-V Manager |  |
+    | Visual Studio Code | There is an icon if installed via deployment option. |
 
 - Data volume
     - Volume **V:** is the data volume. Hyper-V VM files, VHD files, ISO file and other working files are stored on this volume.
@@ -41,7 +44,7 @@ The HCI lab environment consists of three roles of Hyper-V VMs on a single Azure
 ### VMs in the lab environment (Hyper-V VMs)
 
 - Deploy options
-    - HCI cluster creation: You can automatically create an HCI cluster during the deployment if you choose the deployment option. Also, by not choosing it, you can manually create an HCI cluster for cluster creation with custom configuration such as Network ATC.
+    - **HCI cluster creation:** You can automatically create an HCI cluster during the deployment if you choose the deployment option. Also, by not choosing it, you can manually create an HCI cluster for cluster creation with custom configuration such as Network ATC.
 
 - AD DS domain name: **hci.local** (default)
 
@@ -57,7 +60,10 @@ The HCI lab environment consists of three roles of Hyper-V VMs on a single Azure
     - Traditional server management tools (RSAT) are installed on the **wac** VM.
 
 - Desktop icons on the wac VM
-    - Windows Admin Center: Open Windows Admin Center on the wac VM with Microsoft Edge. 
+
+    | Icon | Notes |
+    | ---- | ---- |
+    | Windows Admin Center | Open Windows Admin Center on the wac VM with Microsoft Edge.  |
 
 - Windows Server 2022 Datacenter Evaluation expires in **180 days**.
 
