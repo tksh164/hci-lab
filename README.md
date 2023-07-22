@@ -21,7 +21,9 @@ This template deploys an HCI lab environment with Azure Stack HCI or Windows Ser
 
 6. You can start accessing your HCI lab environment from the icons on the desktop of your lab host Azure VM. To access the Hyper-V VMs in the HCI lab environment, use Administrator account and the password that you specified at deployment (the same password as the lab host Azure VM).
 
-Learn more about the HCI lab in [🗺️ HCI Lab tour](./docs/hci-lab-tour.md).
+## 🗺️ HCI Lab tour
+
+Learn more about the HCI lab in [HCI Lab tour](./docs/hci-lab-tour.md).
 
 ## 📦 External artifacts
 
