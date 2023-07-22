@@ -1,4 +1,4 @@
-# 🗺️ HCI Lab tour
+# HCI Lab tour
 
 ## Virtual machines
 
