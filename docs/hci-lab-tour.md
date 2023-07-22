@@ -13,6 +13,10 @@ The HCI lab environment consists of three roles of Hyper-V VMs on a single Azure
 
 ### Lab host VM (Azure VM)
 
+- Deploy options
+    - Windows Terminal: You can install Windows Terminal during the deployment if you choose the deployment option.
+    - Visual Studio Code: You can install Visual Studio Code during the deployment if you choose the deployment option.
+
 - Credentials
 
     | Account type | User name | Password |
@@ -34,11 +38,10 @@ The HCI lab environment consists of three roles of Hyper-V VMs on a single Azure
 
 - The log files of the custom scripts are stored under `C:\temp\hcilab-logs` in the lab host Azure VM. Those log files are helpful for troubleshooting when deployment fails.
 
-- Deploy options
-    - Windows Terminal: You can install Windows Terminal during the deployment if you choose the deployment option.
-    - Visual Studio Code: You can install Visual Studio Code during the deployment if you choose the deployment option.
-
 ### VMs in the lab environment (Hyper-V VMs)
+
+- Deploy options
+    - HCI cluster creation: You can automatically create an HCI cluster during the deployment if you choose the deployment option. Also, by not choosing it, you can manually create an HCI cluster for cluster creation with custom configuration such as Network ATC.
 
 - AD DS domain name: **hci.local** (default)
 
@@ -55,9 +58,6 @@ The HCI lab environment consists of three roles of Hyper-V VMs on a single Azure
 
 - Desktop icons on the wac VM
     - Windows Admin Center: Open Windows Admin Center on the wac VM with Microsoft Edge. 
-
-- Deploy options
-    - HCI cluster creation: You can automatically create an HCI cluster during the deployment if you choose the deployment option. Also, by not choosing it, you can manually create an HCI cluster for cluster creation with custom configuration such as Network ATC.
 
 - Windows Server 2022 Datacenter Evaluation expires in **180 days**.
 
