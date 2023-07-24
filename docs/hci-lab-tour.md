@@ -46,8 +46,6 @@ The HCI lab environment consists of three roles of Hyper-V VMs on a single Azure
 - Deploy options
     - **HCI cluster creation:** You can automatically create an HCI cluster during the deployment if you choose the deployment option. Also, by not choosing it, you can manually create an HCI cluster for cluster creation with custom configuration such as Network ATC.
 
-- AD DS domain name: **hci.local** (default)
-
 - Credentials
 
     | Account type | User name | Password |
@@ -55,25 +53,31 @@ The HCI lab environment consists of three roles of Hyper-V VMs on a single Azure
     | Domain administrator | HCI\\Administrator | Your supplied password at Azure VM deployment. |
     | Local administrator | Administrator | Your supplied password at Azure VM deployment. |
 
-- Management tools
-    - Windows Admin Center works on the **wac** VM as gateway mode. You can access via `https://wac/` from the **wac** VM and the lab host VM.
-    - Traditional server management tools (RSAT) are installed on the **wac** VM.
+- AD DS domain name (default): **hci.local**
 
-- Desktop icons on the wac VM
-
-    | Icon | Notes |
-    | ---- | ---- |
-    | Windows Admin Center | Open Windows Admin Center on the **wac** VM with Microsoft Edge.  |
+- You can access each Hyper-V VM such as **wac**, **hcinode##**, **addsdc** in you lab environment via Remote Desktop connection (mstsc.exe) and Virtual Machine connection (vmconnect.exe) from the lab host VM (Azure VM).
 
 - Windows Server 2022 Datacenter Evaluation expires in **180 days**.
 
+- Management tools server (**wac** VM)
+
+    - Windows Admin Center works on the **wac** VM as gateway mode. You can access via `https://wac/` from the **wac** VM and the lab host VM.
+    - Traditional server management tools (RSAT) are installed on the **wac** VM.
+
+    - Desktop icons on the wac VM
+
+        | Icon | Notes |
+        | ---- | ---- |
+        | Windows Admin Center | Open Windows Admin Center on the **wac** VM with Microsoft Edge.  |
+
+
 ## Networking
 
-### The HCI lab networking deployment with the HCI cluster creation option
+### The HCI lab networking deployment _with_ the HCI cluster creation option
 
 ![](./media/hci-lab-networking-with-hci-cluster.svg)
 
-### The HCI lab networking deployment without the HCI cluster creation option
+### The HCI lab networking deployment _without_ the HCI cluster creation option
 
 ![](./media/hci-lab-networking-without-hci-cluster.svg)
 
