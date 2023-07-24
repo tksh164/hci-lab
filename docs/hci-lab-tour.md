@@ -70,14 +70,16 @@ The HCI lab environment consists of three roles of Hyper-V VMs on a single Azure
         | ---- | ---- |
         | Windows Admin Center | Open Windows Admin Center on the **wac** VM with Microsoft Edge.  |
 
-
 ## Networking
 
-### The HCI lab networking deployment _with_ the HCI cluster creation option
+### Simplified logical networking
+
+![](./media/hci-lab-networking-logical-simplified.svg)
+
+### _With_ the HCI cluster creation option deployment
 
 ![](./media/hci-lab-networking-with-hci-cluster.svg)
 
-### The HCI lab networking deployment _without_ the HCI cluster creation option
+### _Without_ the HCI cluster creation option deployment
 
 ![](./media/hci-lab-networking-without-hci-cluster.svg)
-
