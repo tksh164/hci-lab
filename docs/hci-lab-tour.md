@@ -39,6 +39,10 @@ The HCI lab environment consists of three roles of Hyper-V VMs on a single Azure
 - Data volume
     - Volume **V:** is the data volume. Hyper-V VM files, VHD files, ISO file and other working files are stored on this volume.
 
+- If you deallocate your Azure VM, all Hyper-V VMs that run on your Azure VM are shutting down according to the Automatic Stop Action of the Hyper-V setting.
+    - Sometimes, you will see the unexpected shutdown dialog at the next sign-in to the Hyper-V VMs. It means the Hyper-V VM could not complete shutting down in acceptable time. It's rare that unexpected shutdown has impacts on your lab environment.
+    - You can manually shutdown the Hyper-V VMs before Azure VM deallocation safely.
+
 - The log files of the custom scripts are stored under `C:\temp\hcilab-logs` in the lab host Azure VM. Those log files are helpful for troubleshooting when deployment fails.
 
 ### VMs in the lab environment (Hyper-V VMs)
