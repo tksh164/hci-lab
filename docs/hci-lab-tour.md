@@ -72,7 +72,7 @@ The HCI lab environment consists of three roles of Hyper-V VMs on a single Azure
 
 ## Networking
 
-### Simplified logical networking
+### Simplified logical networking configuration
 
 ![](./media/hci-lab-networking-logical-simplified.svg)
 
