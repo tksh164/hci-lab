@@ -243,9 +243,9 @@ New-ShortcutFile @params
 
 # Shortcuts: Remote Desktop connection
 
-'Creating a shortcut for Remote Desktop connection to the Windows Admin Center VM on the desktop....' | Write-ScriptLog -Context $env:ComputerName
+'Creating a shortcut for Remote Desktop connection to the management tools server VM on the desktop....' | Write-ScriptLog -Context $env:ComputerName
 $params = @{
-    ShortcutFilePath = 'C:\Users\Public\Desktop\RDC - WAC.lnk'
+    ShortcutFilePath = 'C:\Users\Public\Desktop\Management tools server.lnk'
     TargetPath       = '%windir%\System32\mstsc.exe'
     Arguments        = '/v:{0}' -f $labConfig.wac.vmName  # The VM name is also the computer name.
     Description      = 'Make a remote desktop connection to the Windows Admin Center VM in your lab environment.'
@@ -255,7 +255,7 @@ New-ShortcutFile @params
 $firstHciNodeName = Format-HciNodeName -Format $labConfig.hciNode.vmName -Offset $labConfig.hciNode.vmNameOffset -Index 0
 'Creating a shortcut for Remote Desktop connection to the {0} VM on the desktop...' -f $firstHciNodeName | Write-ScriptLog -Context $env:ComputerName
 $params = @{
-    ShortcutFilePath = 'C:\Users\Public\Desktop\RDC - {0}.lnk' -f $firstHciNodeName
+    ShortcutFilePath = 'C:\Users\Public\Desktop\{0}.lnk' -f $firstHciNodeName
     TargetPath       = '%windir%\System32\mstsc.exe'
     Arguments        = '/v:{0}' -f $firstHciNodeName  # The VM name is also the computer name.
     Description      = 'Make a remote desktop connection to the member node "{0}" VM of the HCI cluster in your lab environment.' -f $firstHciNodeName
