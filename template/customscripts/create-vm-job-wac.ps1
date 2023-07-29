@@ -370,7 +370,7 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
     )
 
     $params = @{
-        ShortcutFilePath = 'C:\Users\Public\Desktop\RDC - {0}.lnk' -f $FirstHciNodeName
+        ShortcutFilePath = 'C:\Users\Public\Desktop\{0}.lnk' -f $FirstHciNodeName
         TargetPath       = '%windir%\System32\mstsc.exe'
         Arguments        = '/v:{0}' -f $FirstHciNodeName  # The VM name is also the computer name.
         Description      = 'Make a remote desktop connection to the member node "{0}" VM of the HCI cluster in your lab environment.' -f $FirstHciNodeName
