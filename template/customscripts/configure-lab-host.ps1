@@ -243,9 +243,9 @@ New-ShortcutFile @params
 
 # Shortcuts: Remote Desktop connection
 
-'Creating a shortcut for Remote Desktop connection to the Windows Admin Center VM on the desktop....' | Write-ScriptLog -Context $env:ComputerName
+'Creating a shortcut for Remote Desktop connection to the management tools server VM on the desktop....' | Write-ScriptLog -Context $env:ComputerName
 $params = @{
-    ShortcutFilePath = 'C:\Users\Public\Desktop\RDC - WAC.lnk'
+    ShortcutFilePath = 'C:\Users\Public\Desktop\Management tools server.lnk'
     TargetPath       = '%windir%\System32\mstsc.exe'
     Arguments        = '/v:{0}' -f $labConfig.wac.vmName  # The VM name is also the computer name.
     Description      = 'Make a remote desktop connection to the Windows Admin Center VM in your lab environment.'
@@ -255,39 +255,10 @@ New-ShortcutFile @params
 $firstHciNodeName = Format-HciNodeName -Format $labConfig.hciNode.vmName -Offset $labConfig.hciNode.vmNameOffset -Index 0
 'Creating a shortcut for Remote Desktop connection to the {0} VM on the desktop...' -f $firstHciNodeName | Write-ScriptLog -Context $env:ComputerName
 $params = @{
-    ShortcutFilePath = 'C:\Users\Public\Desktop\RDC - {0}.lnk' -f $firstHciNodeName
+    ShortcutFilePath = 'C:\Users\Public\Desktop\{0}.lnk' -f $firstHciNodeName
     TargetPath       = '%windir%\System32\mstsc.exe'
     Arguments        = '/v:{0}' -f $firstHciNodeName  # The VM name is also the computer name.
     Description      = 'Make a remote desktop connection to the member node "{0}" VM of the HCI cluster in your lab environment.' -f $firstHciNodeName
-}
-New-ShortcutFile @params
-
-# Shortcuts: VMConnect
-
-'Creating a shortcut for VMConnect to the AD DS DC VM on the desktop....' | Write-ScriptLog -Context $env:ComputerName
-$params = @{
-    ShortcutFilePath = 'C:\Users\Public\Desktop\VM - AD DS DC.lnk'
-    TargetPath       = '%windir%\System32\vmconnect.exe'
-    Arguments        = 'localhost {0}' -f $labConfig.addsDC.vmName  # The VM name is also the computer name.
-    Description      = 'Open VMConnect for the AD DS DC VM in your lab environment.'
-}
-New-ShortcutFile @params
-
-'Creating a shortcut for VMConnect to the Windows Admin Center VM on the desktop....' | Write-ScriptLog -Context $env:ComputerName
-$params = @{
-    ShortcutFilePath = 'C:\Users\Public\Desktop\VM - WAC.lnk'
-    TargetPath       = '%windir%\System32\vmconnect.exe'
-    Arguments        = 'localhost {0}' -f $labConfig.wac.vmName  # The VM name is also the computer name.
-    Description      = 'Open VMConnect for the Windows Admin Center VM in your lab environment.'
-}
-New-ShortcutFile @params
-
-'Creating a shortcut for VMConnect to the {0} VM on the desktop...' -f $firstHciNodeName | Write-ScriptLog -Context $env:ComputerName
-$params = @{
-    ShortcutFilePath = 'C:\Users\Public\Desktop\VM - {0}.lnk' -f $firstHciNodeName
-    TargetPath       = '%windir%\System32\vmconnect.exe'
-    Arguments        = 'localhost {0}' -f $firstHciNodeName  # The VM name is also the computer name.
-    Description      = 'Open VMConnect for the HCI node VM "{0}" in your lab environment.' -f $firstHciNodeName
 }
 New-ShortcutFile @params
 
