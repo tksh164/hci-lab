@@ -1,0 +1,33 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "shouldInstallUpdatesToLabVm": {
+            "value": false
+        },
+        "shouldCreateHciCluster": {
+            "value": false
+        },
+        // "hciClusterName": {
+        //     "value": "hciclus123"
+        // },
+        "hciNodeCount": {
+            "value": 2
+        },
+        // "labVmOsTimeZone": {
+        //     "value": "Tokyo Standard Time"
+        // },
+        // "toolsToInstall": {
+        //     "value": "windowsterminal;vscode"
+        // },
+        "hciNodeOsSku": {
+            "value": "ws2022"
+        },
+        "hciNodeOsImageIndex": {
+            "value": 4
+        },
+        "repoBaseUri": {
+            "value": "https://storage-account-name.xxx.web.core.windows.net/template/"
+        }
+    }
+}
