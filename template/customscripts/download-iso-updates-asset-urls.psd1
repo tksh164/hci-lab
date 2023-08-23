@@ -31,9 +31,9 @@
         }
         'updates' = @(
             # OS
-            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2023/07/windows10.0-kb5028171-x64_df2198a9a9ac5cf4b2d60af6b2c14d5902df0594.msu',
+            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2023/08/windows10.0-kb5029250-x64_10f33f68c6bb539c5f2d96a43977f35b51a95177.msu',
             # .NET Framework
-            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/updt/2023/06/windows10.0-kb5028858-x64-ndp48_6609e3df97400e4f5c9c43af16b23e8269e65fdb.msu'
+            'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2023/07/windows10.0-kb5028956-x64_81b5156928f938f82ce1f16ba39cb41e2d37c99e.msu'
         )
     }
     'ashci21h2' = @{
@@ -43,9 +43,9 @@
         }
         'updates' = @(
             # OS
-            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2023/07/windows10.0-kb5028171-x64_df2198a9a9ac5cf4b2d60af6b2c14d5902df0594.msu',
+            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2023/08/windows10.0-kb5029250-x64_10f33f68c6bb539c5f2d96a43977f35b51a95177.msu',
             # .NET Framework
-            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/updt/2023/06/windows10.0-kb5028858-x64-ndp48_6609e3df97400e4f5c9c43af16b23e8269e65fdb.msu',
+            'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2023/07/windows10.0-kb5028956-x64_81b5156928f938f82ce1f16ba39cb41e2d37c99e.msu',
             # OS - KB5012170
             'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2022/08/windows10.0-kb5012170-x64_a9d0e4a03991230936232ace729f8f9de3bbfa7f.msu'
         )
@@ -71,10 +71,10 @@
         }
         'updates' = @(
             # OS
-            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2023/07/windows10.0-kb5028171-x64_df2198a9a9ac5cf4b2d60af6b2c14d5902df0594.msu',
+            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2023/08/windows10.0-kb5029250-x64_10f33f68c6bb539c5f2d96a43977f35b51a95177.msu',
             # .NET Framework
-            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/updt/2023/06/windows10.0-kb5028858-x64-ndp48_6609e3df97400e4f5c9c43af16b23e8269e65fdb.msu',
-            'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/updt/2023/06/windows10.0-kb5028852-x64-ndp481_9e53a1316e2925c1781ba7cb80f832c55bcc981e.msu',
+            'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2023/07/windows10.0-kb5028950-x64_cbc5842a87b7599d8b82089f6144dee6d20253f7.msu',
+            'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2023/07/windows10.0-kb5028956-x64_81b5156928f938f82ce1f16ba39cb41e2d37c99e.msu',
             # OS - KB5012170
             'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2022/08/windows10.0-kb5012170-x64_a9d0e4a03991230936232ace729f8f9de3bbfa7f.msu'
         )
