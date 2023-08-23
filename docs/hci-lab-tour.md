@@ -31,8 +31,9 @@ The HCI lab environment consists of three roles of Hyper-V VMs on a single Azure
 
     | Icon | Notes |
     | ---- | ---- |
-    | Remote Desktop - WAC | Connect to the **wac** VM using Remote Desktop. |
-    | Windows Admin Center | Open Windows Admin Center on the **wac** VM with Microsoft Edge.  |
+    | Windows Admin Center | Open Windows Admin Center on the management tools server (**wac**) Hyper-V VM with Microsoft Edge.  |
+    | Management tools server | Connect to the management tools server (**wac**) Hyper-V VM using Remote Desktop. |
+    | hcinode01 | Connect to a HCI node (**hcinode01**) Hyper-V VM using Remote Desktop. |
     | Hyper-V Manager | Open the Hyper-V Manager to manage Hyper-V VMs for the HCI lab environment. |
     | Visual Studio Code | There is an icon if installed via deployment option. |
 
@@ -72,7 +73,8 @@ The HCI lab environment consists of three roles of Hyper-V VMs on a single Azure
 
         | Icon | Notes |
         | ---- | ---- |
-        | Windows Admin Center | Open Windows Admin Center on the **wac** VM with Microsoft Edge.  |
+        | Windows Admin Center | Open Windows Admin Center on the management tools server (**wac**) Hyper-V VM with Microsoft Edge.  |
+        | hcinode01 | Connect to a HCI node (**hcinode01**) Hyper-V VM using Remote Desktop. |
 
 ## Networking
 
