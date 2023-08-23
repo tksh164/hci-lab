@@ -80,12 +80,18 @@ The HCI lab environment consists of three roles of Hyper-V VMs on a single Azure
 
 ### Simplified logical networking configuration
 
+- [Large image](https://raw.githubusercontent.com/tksh164/hci-lab/main/docs/media/hci-lab-networking-logical-simplified.svg)
+
 ![](./media/hci-lab-networking-logical-simplified.svg)
 
 ### _With_ the HCI cluster creation option deployment
 
+- [Large image](https://raw.githubusercontent.com/tksh164/hci-lab/main/docs/media/hci-lab-networking-with-hci-cluster.svg)
+
 ![](./media/hci-lab-networking-with-hci-cluster.svg)
 
 ### _Without_ the HCI cluster creation option deployment
+
+- [Large image](https://raw.githubusercontent.com/tksh164/hci-lab/main/docs/media/hci-lab-networking-without-hci-cluster.svg)
 
 ![](./media/hci-lab-networking-without-hci-cluster.svg)
