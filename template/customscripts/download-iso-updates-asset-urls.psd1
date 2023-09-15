@@ -31,9 +31,9 @@
         }
         'updates' = @(
             # OS
-            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2023/08/windows10.0-kb5029250-x64_10f33f68c6bb539c5f2d96a43977f35b51a95177.msu',
+            'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2023/09/windows10.0-kb5030216-x64_cbe587155f9818548b75f65d5cd41d341ed2fc61.msu',
             # .NET Framework
-            'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2023/07/windows10.0-kb5028956-x64_81b5156928f938f82ce1f16ba39cb41e2d37c99e.msu'
+            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2023/08/windows10.0-kb5029928-x64-ndp48_f6cb85805fa5fe22ad1cc8deb6db20c673dbbf04.msu'
         )
     }
     'ashci21h2' = @{
