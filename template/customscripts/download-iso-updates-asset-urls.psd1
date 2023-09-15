@@ -9,7 +9,7 @@
 # .NET: https://support.microsoft.com/en-us/help/5022726
 #
 # Azure Stack HCI 21H2 - OS build: 20348
-# End of service: 2023-05-09
+# End of service: 2023-11-14
 # OS: https://support.microsoft.com/en-us/help/5004047
 # .NET: https://support.microsoft.com/en-us/help/5023809
 #
