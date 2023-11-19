@@ -1848,15 +1848,15 @@
                                         "allowedValues": [
                                             {
                                                 "label": "Azure Stack HCI, version 22H2",
-                                                "description": "The latest Azure Stack HCI release.",
+                                                "description": "The supported Azure Stack HCI release.",
                                                 "value": {
                                                     "sku": "ashci22h2",
                                                     "imageIndex": 1
                                                 }
                                             },
                                             {
-                                                "label": "Azure Stack HCI, version 21H2",
-                                                "description": "Supported Azure Stack HCI release.",
+                                                "label": "Azure Stack HCI, version 21H2 [End of Service]",
+                                                "description": "<strong>Notice:</strong> This version reached the end of service on November 14, 2023.",
                                                 "value": {
                                                     "sku": "ashci21h2",
                                                     "imageIndex": 1
