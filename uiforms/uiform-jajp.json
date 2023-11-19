@@ -1848,15 +1848,15 @@
                                         "allowedValues": [
                                             {
                                                 "label": "Azure Stack HCI, version 22H2",
-                                                "description": "最新の Azure Stack HCI リリースです。",
+                                                "description": "サポートされている Azure Stack HCI リリースです。",
                                                 "value": {
                                                     "sku": "ashci22h2",
                                                     "imageIndex": 1
                                                 }
                                             },
                                             {
-                                                "label": "Azure Stack HCI, version 21H2",
-                                                "description": "サポートされている Azure Stack HCI リリースです。",
+                                                "label": "Azure Stack HCI, version 21H2 [サービス終了]",
+                                                "description": "<strong>注意:</strong> このバージョンは 2023 年 11 月 14 日にサービス終了しました。",
                                                 "value": {
                                                     "sku": "ashci21h2",
                                                     "imageIndex": 1
