@@ -1856,7 +1856,7 @@
                                             },
                                             {
                                                 "label": "Azure Stack HCI, version 22H2",
-                                                "description": "The supported Azure Stack HCI release.",
+                                                "description": "The supported latest Azure Stack HCI release.",
                                                 "value": {
                                                     "sku": "ashci22h2",
                                                     "imageIndex": 1

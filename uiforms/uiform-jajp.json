@@ -1856,7 +1856,7 @@
                                             },
                                             {
                                                 "label": "Azure Stack HCI, version 22H2",
-                                                "description": "サポートされている Azure Stack HCI リリースです。",
+                                                "description": "サポートされている最新の Azure Stack HCI リリースです。",
                                                 "value": {
                                                     "sku": "ashci22h2",
                                                     "imageIndex": 1
