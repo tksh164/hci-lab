@@ -10,6 +10,7 @@ namespace HciLab
         public const string AzureStackHci20H2 = "ashci20h2";
         public const string AzureStackHci21H2 = "ashci21h2";
         public const string AzureStackHci22H2 = "ashci22h2";
+        public const string AzureStackHci23H2 = "ashci23h2";
 
         // Azure Stack HCI's operating system symbols.
         public static string[] AzureStackHciSkus
@@ -19,7 +20,8 @@ namespace HciLab
                 return new string[] {
                     AzureStackHci20H2,
                     AzureStackHci21H2,
-                    AzureStackHci22H2
+                    AzureStackHci22H2,
+                    AzureStackHci23H2
                 };
             }
         }

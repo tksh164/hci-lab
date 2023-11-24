@@ -280,6 +280,7 @@
             "type": "string",
             "defaultValue": "ashci22h2",
             "allowedValues": [
+                "ashci23h2",  // Azure Stack HCI 23H2
                 "ashci22h2",  // Azure Stack HCI 22H2
                 "ashci21h2",  // Azure Stack HCI 21H2
                 "ashci20h2",  // Azure Stack HCI 20H2

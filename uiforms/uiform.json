@@ -1847,6 +1847,14 @@
                                         "required": true,
                                         "allowedValues": [
                                             {
+                                                "label": "Azure Stack HCI, version 23H2 (Preview)",
+                                                "description": "Azure Stack HCI preview release.",
+                                                "value": {
+                                                    "sku": "ashci23h2",
+                                                    "imageIndex": 1
+                                                }
+                                            },
+                                            {
                                                 "label": "Azure Stack HCI, version 22H2",
                                                 "description": "The supported Azure Stack HCI release.",
                                                 "value": {
