@@ -4,26 +4,42 @@
 # Azure Stack HCI
 # OS: https://learn.microsoft.com/en-us/azure-stack/hci/release-information
 #
+# Azure Stack HCI 23H2 - OS build: 25398
+# OS: https://support.microsoft.com/en-us/topic/018b9b10-a75b-4ad7-b9d1-7755f81e5b0b
+# .NET: https://support.microsoft.com/en-us/topic/e3c9b0d9-ec46-4e8e-ba87-6c831bc11ef3
+#
 # Azure Stack HCI 22H2 - OS build: 20349
-# OS: https://support.microsoft.com/en-us/help/5018894
-# .NET: https://support.microsoft.com/en-us/help/5022726
+# OS: https://support.microsoft.com/en-us/topic/fea63106-a0a9-4b6c-bb72-a07985c98a56
+# .NET: https://support.microsoft.com/en-us/topic/bbf02b18-7147-42c2-9d1b-d8d5d5195bc6
 #
 # Azure Stack HCI 21H2 - OS build: 20348
 # End of service: 2023-11-14
-# OS: https://support.microsoft.com/en-us/help/5004047
-# .NET: https://support.microsoft.com/en-us/help/5023809
+# OS: https://support.microsoft.com/en-us/topic/5c5e6adf-e006-4a29-be22-f6faeff90173
+# .NET: https://support.microsoft.com/en-us/topic/78075158-2c2f-4315-ba95-c5ee0e2ee871
 #
 # Azure Stack HCI 20H2 - OS build: 17784
 # End of service: 2022-12-13
-# OS: https://support.microsoft.com/en-us/help/4595086
+# OS: https://support.microsoft.com/en-us/topic/64c79b7f-d536-015d-b8dd-575f01090efd
 # .NET: n/a
 #
 # Windows Server 2022 - OS buidl: 20348
-# OS: https://support.microsoft.com/en-us/help/5005454
-# .NET: https://support.microsoft.com/en-us/help/5006918
+# OS: https://support.microsoft.com/en-us/topic/e1caa597-00c5-4ab9-9f3e-8212fe80b2ee
+# .NET: https://support.microsoft.com/en-us/topic/4fbab26b-493a-4ee5-9766-d6448e73bfb1
 #
 
 @{
+    'ashci23h2' = @{
+        'iso' = @{
+            'en-us' = 'https://software-static.download.prss.microsoft.com/dbazure/888969d5-f34g-4e03-ac9d-1f9786c66749/25398.469.231004-1141.zn_release_svc_refresh_SERVERAZURESTACKHCICOR_OEMRET_x64FRE_en-us.iso'  # Preview version
+            'ja-jp' = 'https://software-static.download.prss.microsoft.com/dbazure/888969d5-f34g-4e03-ac9d-1f9786c66749/25398.469.231004-1141.zn_release_svc_refresh_SERVERAZURESTACKHCICOR_OEMRET_x64FRE_ja-jp.iso'  # Preview version
+        }
+        'updates' = @(
+            # OS
+            'https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/e8dac153-0752-4fb5-ba45-a536c05b361d/public/windows11.0-kb5032202-x64_4adcdf7b5de0c8498b4739583eb36f89b3865494.msu',
+            # .NET Framework
+            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2023/11/windows11.0-kb5032004-x64-ndp481_942259f90644ba04a1d2fbacbaac7e34f4909abf.msu'
+        )
+    }
     'ashci22h2' = @{
         'iso' = @{
             'en-us' = 'https://software-static.download.prss.microsoft.com/dbazure/988969d5-f34g-4e03-ac9d-1f9786c66751/20349.1129.221007-2120.fe_release_hciv3_svc_refresh_SERVERAZURESTACKHCICOR_OEMRET_x64FRE_en-us.iso'
