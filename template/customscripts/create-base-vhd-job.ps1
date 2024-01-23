@@ -75,7 +75,7 @@ $params = @{
     VHDPath       = $vhdFilePath
     VHDFormat     = 'VHDX'
     DiskLayout    = 'UEFI'
-    SizeBytes     = 40GB
+    SizeBytes     = 500GB
     TempDirectory = $labConfig.labHost.folderPath.temp
     Verbose       = $true
 }
