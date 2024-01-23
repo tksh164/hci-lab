@@ -242,7 +242,7 @@ Set-VMNetworkAdapter @paramsForSet |
 Set-VMNetworkAdapterVlan @paramsForVlan
 
 'Creating the data disks...' | Write-ScriptLog -Context $nodeConfig.VMName
-$diskCount = 6
+$diskCount = 8
 for ($diskIndex = 1; $diskIndex -le $diskCount; $diskIndex++) {
     $params = @{
         Path      = [IO.Path]::Combine($labConfig.labHost.folderPath.vm, $nodeConfig.VMName, ('datadisk{0}.vhdx' -f $diskIndex))

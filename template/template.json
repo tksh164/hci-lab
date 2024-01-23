@@ -529,7 +529,7 @@
                 "nodeCount": "[parameters('hciNodeCount')]",
                 "vmNameOffset": 1,
                 "vmName": "hcinode{0:00}",  // vmNameOffset + ZeroBasedNodeIndex
-                "dataDiskSizeBytes": 107374182400,
+                "dataDiskSizeBytes": 1099511627776,
                 "ipAddressOffset": 11,
                 "netAdapters": {
                     "management": {
