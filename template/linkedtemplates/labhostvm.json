@@ -122,7 +122,7 @@
         {
             "name": "[variables('subnetNetworkSecurityGroupName')]",
             "type": "Microsoft.Network/networkSecurityGroups",
-            "apiVersion": "2022-09-01",
+            "apiVersion": "2023-04-01",
             "location": "[parameters('location')]",
             "properties": {
                 "securityRules": []
@@ -134,7 +134,7 @@
         {
             "name": "[variables('virtualNetworkName')]",
             "type": "Microsoft.Network/virtualNetworks",
-            "apiVersion": "2022-09-01",
+            "apiVersion": "2023-04-01",
             "location": "[parameters('location')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/networkSecurityGroups', variables('subnetNetworkSecurityGroupName'))]"
@@ -164,7 +164,7 @@
         {
             "name": "[variables('publicIpAddressName')]",
             "type": "Microsoft.Network/publicIpAddresses",
-            "apiVersion": "2022-09-01",
+            "apiVersion": "2023-04-01",
             "location": "[parameters('location')]",
             "sku": {
                 "name": "Standard"
@@ -179,7 +179,7 @@
         {
             "name": "[variables('networkInterfaceName')]",
             "type": "Microsoft.Network/networkInterfaces",
-            "apiVersion": "2022-09-01",
+            "apiVersion": "2023-04-01",
             "location": "[parameters('location')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
@@ -207,7 +207,7 @@
         {
             "name": "[parameters('vmName')]",
             "type": "Microsoft.Compute/virtualMachines",
-            "apiVersion": "2022-11-01",
+            "apiVersion": "2023-03-01",
             "location": "[parameters('location')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfaceName'))]"
@@ -217,11 +217,20 @@
                     "vmSize": "[parameters('vmSize')]"
                 },
                 "osProfile": {
-                    "computerName": "[parameters('vmName')]",
+                    "computerName": "hcilabhost",
                     "adminUsername": "[parameters('adminUserName')]",
                     "adminPassword": "[parameters('adminPassword')]",
                     "windowsConfiguration": {
-                        "provisionVmAgent": true
+                        "provisionVmAgent": true,
+                        "enableAutomaticUpdates": true,
+                        "patchSettings": {
+                            "patchMode": "AutomaticByPlatform",
+                            "automaticByPlatformSettings": {
+                                "rebootSetting": "Never"
+                            },
+                            "enableHotpatching": true,
+                            "assessmentMode": "ImageDefault"
+                        }
                     }
                 },
                 "licenseType": "[if(parameters('hasEligibleWindowsServerLicense'), 'Windows_Server', 'None')]",
@@ -245,7 +254,7 @@
                     "imageReference": {
                         "publisher": "MicrosoftWindowsServer",
                         "offer": "WindowsServer",
-                        "sku": "2022-datacenter-azure-edition-smalldisk",
+                        "sku": "2022-datacenter-azure-edition-hotpatch-smalldisk",
                         "version": "latest"
                     },
                     "copy": [
@@ -279,7 +288,7 @@
         },
         {
             "condition": "[parameters('shouldEnabledAutoshutdown')]",
-            "name": "[concat('shutdown-computevm-', parameters('vmName'))]",
+            "name": "[format('shutdown-computevm-{0}', parameters('vmName'))]",
             "type": "Microsoft.DevTestLab/schedules",
             "apiVersion": "2018-09-15",
             "location": "[parameters('location')]",
@@ -302,7 +311,7 @@
         {
             "name": "[format('{0}/{1}', parameters('keyVaultName'), parameters('secretNameForAdminPassword'))]",
             "type": "Microsoft.KeyVault/vaults/secrets",
-            "apiVersion": "2022-11-01",
+            "apiVersion": "2023-02-01",
             "properties": {
                 "value": "[parameters('adminPassword')]"
             }
