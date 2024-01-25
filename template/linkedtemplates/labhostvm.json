@@ -221,7 +221,16 @@
                     "adminUsername": "[parameters('adminUserName')]",
                     "adminPassword": "[parameters('adminPassword')]",
                     "windowsConfiguration": {
-                        "provisionVmAgent": true
+                        "provisionVmAgent": true,
+                        "enableAutomaticUpdates": true,
+                        "patchSettings": {
+                            "patchMode": "AutomaticByPlatform",
+                            "automaticByPlatformSettings": {
+                                "rebootSetting": "Never"
+                            },
+                            "enableHotpatching": true,
+                            "assessmentMode": "ImageDefault"
+                        }
                     }
                 },
                 "licenseType": "[if(parameters('hasEligibleWindowsServerLicense'), 'Windows_Server', 'None')]",
