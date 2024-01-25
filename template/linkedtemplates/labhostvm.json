@@ -245,7 +245,7 @@
                     "imageReference": {
                         "publisher": "MicrosoftWindowsServer",
                         "offer": "WindowsServer",
-                        "sku": "2022-datacenter-azure-edition-smalldisk",
+                        "sku": "2022-datacenter-azure-edition-hotpatch-smalldisk",
                         "version": "latest"
                     },
                     "copy": [
