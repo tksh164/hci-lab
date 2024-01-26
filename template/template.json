@@ -308,7 +308,14 @@
             "minValue": 2,
             "maxValue": 8,
             "metadata": {
-                "description": "Number of HCI nodes to deploy."
+                "description": "The number of HCI nodes to deploy."
+            }
+        },
+        "shouldHciNodeJoinToAddsDomain": {
+            "type": "bool",
+            "defaultValue": true,
+            "metadata": {
+                "description": "By specifying True, the HCI nodes join to the AD DS domain during the deployment."
             }
         },
         "addsDomainFqdn": {
