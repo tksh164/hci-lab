@@ -106,6 +106,14 @@ $params = @{
 }
 Set-VMMemory @params
 
+'Enabling vTPM...' | Write-ScriptLog -Context $vmName
+$params = @{
+    VMName               = $vmName
+    NewLocalKeyProtector = $true
+    Passthru             = $true
+}
+Set-VMKeyProtector @params | Enable-VMTPM
+
 'Setting the VM''s network adapter configuration...' | Write-ScriptLog -Context $vmName
 Get-VMNetworkAdapter -VMName $vmName | Remove-VMNetworkAdapter
 
