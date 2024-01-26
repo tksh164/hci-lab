@@ -567,6 +567,7 @@
                 }
             },
             "hciCluster": {
+                "shouldCreateCluster": "[and(parameters('shouldHciNodeJoinToAddsDomain'), parameters('shouldCreateHciCluster'))]",
                 "name": "[parameters('hciClusterName')]",
                 "ipAddress": "172.16.0.200"
             },
@@ -951,7 +952,7 @@
 
         // Create an HCI cluster.
         {
-            "condition": "[parameters('shouldCreateHciCluster')]",
+            "condition": "[variables('labConfig').hciCluster.shouldCreateCluster]",
             "name": "[variables('customScriptParams').createHciCluster.deploymentName]",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2022-09-01",
