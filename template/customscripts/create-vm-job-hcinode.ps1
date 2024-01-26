@@ -385,27 +385,29 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
 'Cleaning up the PowerShell Direct session...' | Write-ScriptLog -Context $nodeConfig.VMName
 Invoke-PSDirectSessionCleanup -Session $localAdminCredPSSession -CommonModuleFilePathInVM $commonModuleFilePathInVM
 
+if ($labConfig.hciNode.shouldJoinToAddsDomain) {
+    'Waiting for the domain controller to complete deployment...' | Write-ScriptLog -Context $nodeConfig.VMName
+    Wait-AddsDcDeploymentCompletion
 
-Wait-AddsDcDeploymentCompletion
-
-'Waiting for ready to the domain controller...' | Write-ScriptLog -Context $nodeConfig.VMName
-$domainAdminCredential = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $nodeConfig.AdminPassword
-# The DC's computer name is the same as the VM name. It's specified in the unattend.xml.
-$params = @{
-    AddsDcVMName       = $labConfig.addsDC.vmName
-    AddsDcComputerName = $labConfig.addsDC.vmName
-    Credential         = $domainAdminCredential
+    'Waiting for the domain controller to be ready...' | Write-ScriptLog -Context $nodeConfig.VMName
+    $domainAdminCredential = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $nodeConfig.AdminPassword
+    # The DC's computer name is the same as the VM name. It's specified in the unattend.xml.
+    $params = @{
+        AddsDcVMName       = $labConfig.addsDC.vmName
+        AddsDcComputerName = $labConfig.addsDC.vmName
+        Credential         = $domainAdminCredential
+    }
+    Wait-DomainControllerServiceReady @params
+    
+    'Joining the VM to the AD domain...'  | Write-ScriptLog -Context $nodeConfig.VMName
+    $params = @{
+        VMName                = $nodeConfig.VMName
+        LocalAdminCredential  = $localAdminCredential
+        DomainFqdn            = $labConfig.addsDomain.fqdn
+        DomainAdminCredential = $domainAdminCredential
+    }
+    Add-VMToADDomain @params
 }
-Wait-DomainControllerServiceReady @params
-
-'Joining the VM to the AD domain...'  | Write-ScriptLog -Context $nodeConfig.VMName
-$params = @{
-    VMName                = $nodeConfig.VMName
-    LocalAdminCredential  = $localAdminCredential
-    DomainFqdn            = $labConfig.addsDomain.fqdn
-    DomainAdminCredential = $domainAdminCredential
-}
-Add-VMToADDomain @params
 
 'Stopping the VM...' | Write-ScriptLog -Context $nodeConfig.VMName
 Stop-VM -Name $nodeConfig.VMName
@@ -414,8 +416,13 @@ Stop-VM -Name $nodeConfig.VMName
 Start-VM -Name $nodeConfig.VMName
 
 'Waiting for ready to the VM...' | Write-ScriptLog -Context $nodeConfig.VMName
-$domainAdminCredential = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $nodeConfig.AdminPassword
-Wait-PowerShellDirectReady -VMName $nodeConfig.VMName -Credential $domainAdminCredential
+$credentialForWaiting = if ($labConfig.hciNode.shouldJoinToAddsDomain) {
+    New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $nodeConfig.AdminPassword
+}
+else {
+    $localAdminCredential
+}
+Wait-PowerShellDirectReady -VMName $nodeConfig.VMName -Credential $credentialForWaiting
 
 'The HCI node VM creation has been completed.' | Write-ScriptLog -Context $nodeConfig.VMName
 
