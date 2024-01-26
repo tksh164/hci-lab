@@ -529,13 +529,13 @@
                 }
             },
             "hciNode": {
+                "vmName": "hcinode{0:00}",  // vmNameOffset + ZeroBasedNodeIndex
+                "vmNameOffset": 1,
                 "operatingSystem": {
                     "sku": "[parameters('hciNodeOsSku')]",
                     "imageIndex": "[parameters('hciNodeOsImageIndex')]"
                 },
                 "nodeCount": "[parameters('hciNodeCount')]",
-                "vmNameOffset": 1,
-                "vmName": "hcinode{0:00}",  // vmNameOffset + ZeroBasedNodeIndex
                 "shouldJoinToAddsDomain": "[parameters('shouldHciNodeJoinToAddsDomain')]",
                 "dataDiskSizeBytes": 1099511627776,
                 "ipAddressOffset": 11,
