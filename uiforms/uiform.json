@@ -1247,8 +1247,8 @@
                                 {
                                     "name": "shouldJoinToAddsDomain",
                                     "type": "Microsoft.Common.OptionsGroup",
-                                    "label": "Join to the AD domain",
                                     "visible": true,
+                                    "label": "Join to the AD domain",
                                     "toolTip": "Choose whether or not the HCI nodes are to be joined to the AD domain.",
                                     "defaultValue": "Join",
                                     "constraints": {
@@ -1295,8 +1295,8 @@
                                 {
                                     "name": "shouldCreateHciCluster",
                                     "type": "Microsoft.Common.OptionsGroup",
-                                    "label": "Create HCI cluster",
                                     "visible": true,
+                                    "label": "Create HCI cluster",
                                     "toolTip": "Choose whether or not the HCI cluster is created.",
                                     "defaultValue": "Create",
                                     "constraints": {
@@ -2007,8 +2007,8 @@
                                 {
                                     "name": "shouldInstallUpdatesToLabVm",
                                     "type": "Microsoft.Common.OptionsGroup",
-                                    "label": "Operating system's updates",
                                     "visible": true,
+                                    "label": "Operating system's updates",
                                     "toolTip": "Choose whether or not to install the operating system's updates.",
                                     "defaultValue": "Not install",
                                     "constraints": {
