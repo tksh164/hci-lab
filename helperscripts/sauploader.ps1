@@ -13,7 +13,7 @@ param (
 $ErrorActionPreference = 'Stop'
 $WarningPreference = 'Continue'
 
-function Get-WebContainerOrCreateIfNotExists
+function Get-DestinationWebContainer
 {
     [CmdletBinding()]
     param (
@@ -44,40 +44,42 @@ function Get-WebContainerOrCreateIfNotExists
     return $webContainer
 }
 
-function Get-TemplateFolderPath
-{
-    [CmdletBinding()]
-    param ()
-    
-    $folderStructureRootPath = [IO.Path]::GetDirectoryName($PSScriptRoot)
-    $templateFolderName = 'template'
-    $templateFolderPath = [IO.Path]::Combine($folderStructureRootPath, $templateFolderName)
-    if (-not (Test-Path -PathType Container -LiteralPath $templateFolderPath)) {
-        throw ('The "{0}" folder does not exist. Your folder structure is different from the expected folder structure.' -f $templateFolderPath)
-    }
-    return $templateFolderPath
-}
-
-function Invoke-HciLabTemplateUpload
+function Get-SourceFolderPath
 {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
-        [Microsoft.WindowsAzure.Commands.Common.Storage.ResourceModel.AzureStorageContainer] $WebContainer,
-    
-        [Parameter(Mandatory = $true)]
-        [string] $TemplateFolderPath
+        [string] $FolderName
     )
 
-    $folderStructureRootPath = [IO.Path]::GetDirectoryName($TemplateFolderPath)
+    $folderStructureRootPath = [IO.Path]::GetDirectoryName($PSScriptRoot)
+    $sourceFolderPath = [IO.Path]::Combine($folderStructureRootPath, $FolderName)
+    if (-not (Test-Path -PathType Container -LiteralPath $sourceFolderPath)) {
+        throw ('The "{0}" folder does not exists. Your folder structure is different from the expected folder structure.' -f $sourceFolderPath)
+    }
+    return $sourceFolderPath
+}
 
-    Get-ChildItem -LiteralPath $TemplateFolderPath -Recurse -File | ForEach-Object -Process {
+function Invoke-HciLabArtifactsUpload
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $SourceFolderPath,
+
+        [Parameter(Mandatory = $true)]
+        [Microsoft.WindowsAzure.Commands.Common.Storage.ResourceModel.AzureStorageContainer] $DestinationContainer
+    )
+
+    $folderStructureRootPath = [IO.Path]::GetDirectoryName($SourceFolderPath)
+
+    Get-ChildItem -LiteralPath $SourceFolderPath -Recurse -File | ForEach-Object -Process {
         $filePath = $_.FullName
         $blobName = $filePath.Replace(($folderStructureRootPath + '\'), '')
 
         $params = @{
-            Context            = $WebContainer.Context
-            CloudBlobContainer = $WebContainer.CloudBlobContainer
+            Context            = $DestinationContainer.Context
+            CloudBlobContainer = $DestinationContainer.CloudBlobContainer
             File               = $filePath
             Blob               = $blobName
             BlobType           = 'Block'
@@ -87,7 +89,7 @@ function Invoke-HciLabTemplateUpload
     }
 }
 
-function Write-WebEndpoint
+function Get-WebEndpoint
 {
     [CmdletBinding()]
     param (
@@ -99,15 +101,23 @@ function Write-WebEndpoint
     )
 
     $storageAccount = Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $StorageAccountName
-    Write-Host
-    Write-Host ('Web Primary Endpoint: {0}' -f $storageAccount.PrimaryEndpoints.Web) -ForegroundColor Cyan
-    Write-Host
+    return $storageAccount.PrimaryEndpoints.Web
 }
 
-$params = @{
-    WebContainer       = Get-WebContainerOrCreateIfNotExists -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName
-    TemplateFolderPath = Get-TemplateFolderPath
+$sourceFolderNames = @('template', 'uiforms')
+$sourceFolderNames | ForEach-Object -Process {
+    $params = @{
+        SourceFolderPath     = Get-SourceFolderPath -FolderName $_
+        DestinationContainer = Get-DestinationWebContainer -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName
+    }
+    Invoke-HciLabArtifactsUpload @params
 }
-Invoke-HciLabTemplateUpload @params
 
-Write-WebEndpoint -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName
+$webEndpoint = Get-WebEndpoint -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName
+
+Write-Host
+Write-Host ('Web Primary Endpoint: {0}' -f $webEndpoint) -ForegroundColor Cyan
+$sourceFolderNames | ForEach-Object -Process {
+    Write-Host ('The {1} folder URI: {0}{1}' -f $webEndpoint, $_) -ForegroundColor Cyan
+}
+Write-Host
