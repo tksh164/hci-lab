@@ -308,7 +308,14 @@
             "minValue": 2,
             "maxValue": 8,
             "metadata": {
-                "description": "Number of HCI nodes to deploy."
+                "description": "The number of HCI nodes to deploy."
+            }
+        },
+        "shouldHciNodeJoinToAddsDomain": {
+            "type": "bool",
+            "defaultValue": true,
+            "metadata": {
+                "description": "By specifying True, the HCI nodes join to the AD DS domain during the deployment."
             }
         },
         "addsDomainFqdn": {
@@ -522,13 +529,14 @@
                 }
             },
             "hciNode": {
+                "vmName": "hcinode{0:00}",  // vmNameOffset + ZeroBasedNodeIndex
+                "vmNameOffset": 1,
                 "operatingSystem": {
                     "sku": "[parameters('hciNodeOsSku')]",
                     "imageIndex": "[parameters('hciNodeOsImageIndex')]"
                 },
                 "nodeCount": "[parameters('hciNodeCount')]",
-                "vmNameOffset": 1,
-                "vmName": "hcinode{0:00}",  // vmNameOffset + ZeroBasedNodeIndex
+                "shouldJoinToAddsDomain": "[parameters('shouldHciNodeJoinToAddsDomain')]",
                 "dataDiskSizeBytes": 1099511627776,
                 "ipAddressOffset": 11,
                 "netAdapters": {
@@ -559,6 +567,7 @@
                 }
             },
             "hciCluster": {
+                "shouldCreateCluster": "[and(parameters('shouldHciNodeJoinToAddsDomain'), parameters('shouldCreateHciCluster'))]",
                 "name": "[parameters('hciClusterName')]",
                 "ipAddress": "172.16.0.200"
             },
@@ -943,7 +952,7 @@
 
         // Create an HCI cluster.
         {
-            "condition": "[parameters('shouldCreateHciCluster')]",
+            "condition": "[variables('labConfig').hciCluster.shouldCreateCluster]",
             "name": "[variables('customScriptParams').createHciCluster.deploymentName]",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2022-09-01",

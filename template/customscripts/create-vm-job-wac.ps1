@@ -390,9 +390,10 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
 # NOTE: The common module not be deleted within the VM at this time because it will be used afterwards.
 $localAdminCredPSSession | Remove-PSSession
 
+'Waiting for the domain controller to complete deployment...' | Write-ScriptLog -Context $vmName
 Wait-AddsDcDeploymentCompletion
 
-'Waiting for ready to the domain controller...' | Write-ScriptLog -Context $vmName
+'Waiting for the domain controller to be ready...' | Write-ScriptLog -Context $vmName
 $domainAdminCredential = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $adminPassword
 $params = @{
     AddsDcVMName       = $labConfig.addsDC.vmName
@@ -447,16 +448,34 @@ Invoke-Command @params -Session $domainAdminCredPSSession -ScriptBlock {
     $wacConnectionToolsPSModulePath = [IO.Path]::Combine($env:ProgramFiles, 'Windows Admin Center\PowerShell\Modules\ConnectionTools\ConnectionTools.psm1')
     Import-Module -Name $wacConnectionToolsPSModulePath -Force
 
-    # Create a connection list file to import to Windows Admin Center.
-    $clusterFqdn = '{0}.{1}' -f $LabConfig.hciCluster.name, $LabConfig.addsDomain.fqdn
+    # Create a connection entry list to import to Windows Admin Center.
     $connectionEntries = @(
-        (New-WacConnectionFileEntry -Name ('{0}.{1}' -f $LabConfig.addsDC.vmName, $LabConfig.addsDomain.fqdn) -Type 'msft.sme.connection-type.server'),
-        (New-WacConnectionFileEntry -Name ('{0}.{1}' -f $LabConfig.wac.vmName, $LabConfig.addsDomain.fqdn) -Type 'msft.sme.connection-type.server')
+        (New-WacConnectionFileEntry -Name ('{0}.{1}' -f $LabConfig.addsDC.vmName, $LabConfig.addsDomain.fqdn) -Type 'msft.sme.connection-type.server'),  # Entry for the AD DS DC.
+        (New-WacConnectionFileEntry -Name ('{0}.{1}' -f $LabConfig.wac.vmName, $LabConfig.addsDomain.fqdn) -Type 'msft.sme.connection-type.server')  # Entry for the management server (WAC).
     )
-    for ($nodeIndex = 0; $nodeIndex -lt $LabConfig.hciNode.nodeCount; $nodeIndex++) {
-        $nodeName = Format-HciNodeName -Format $LabConfig.hciNode.vmName -Offset $LabConfig.hciNode.vmNameOffset -Index $nodeIndex
-        $connectionEntries += New-WacConnectionFileEntry -Name ('{0}.{1}' -f $nodeName, $LabConfig.addsDomain.fqdn) -Type 'msft.sme.connection-type.server' -Tag $clusterFqdn
+
+    # Entry for the HCI nodes.
+    if ($LabConfig.hciNode.shouldJoinToAddsDomain) {
+        $tagParam = @{}
+        if ($LabConfig.hciCluster.shouldCreateCluster) {
+            # Add the cluster's FQDN to tag if the cluster will be created.
+            $tagParam.Tag = '{0}.{1}' -f $LabConfig.hciCluster.name, $LabConfig.addsDomain.fqdn
+        }
+
+        for ($nodeIndex = 0; $nodeIndex -lt $LabConfig.hciNode.nodeCount; $nodeIndex++) {
+            $nodeName = Format-HciNodeName -Format $LabConfig.hciNode.vmName -Offset $LabConfig.hciNode.vmNameOffset -Index $nodeIndex
+            $nodeFqdn = '{0}.{1}' -f $nodeName, $LabConfig.addsDomain.fqdn
+            $connectionEntries += New-WacConnectionFileEntry -Name $nodeFqdn -Type 'msft.sme.connection-type.server' @tagParam
+        }
     }
+    else {
+        for ($nodeIndex = 0; $nodeIndex -lt $LabConfig.hciNode.nodeCount; $nodeIndex++) {
+            $nodeName = Format-HciNodeName -Format $LabConfig.hciNode.vmName -Offset $LabConfig.hciNode.vmNameOffset -Index $nodeIndex
+            $connectionEntries += New-WacConnectionFileEntry -Name $nodeName -Type 'msft.sme.connection-type.server'
+        }
+    }
+
+    # Create a connection list file to import to Windows Admin Center.
     $wacConnectionFilePathInVM = [IO.Path]::Combine('C:\Windows\Temp', 'wac-connections.txt')
     New-WacConnectionFileContent -ConnectionEntry $connectionEntries | Set-Content -LiteralPath $wacConnectionFilePathInVM -Force
 

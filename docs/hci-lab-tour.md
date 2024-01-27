@@ -4,14 +4,14 @@
 
 The HCI lab environment consists of three roles of Hyper-V VMs on a single Azure VM.
 
-| Computer/VM name | Role | VM type (Host) | AD DS domain joined | Operating system | Notes |
+| Computer/VM name | Role | VM kind<br/>(Host) | AD domain joined | Operating system | Notes |
 | ---- | ---- | ---- | ---- | ---- | --- |
-| hcilab-vm1 (default) | Lab host | Azure VM (Azure) | No | Windows Server 2022 Datacenter Azure Edition | |
-| hcinode## | HCI node | Hyper-V VM (Lab host) | Yes | Depends on your deploy option. You can choose Azure Stack HCI or Windows Server 2022 Datacenter Evaluation. | **##** in the name is changed depending on the number of HCI nodes such as 01, 02, 03, ... |
-| addsdc | Active Directory Domain Services Domain Controller | Hyper-V VM (Lab host) | Yes | Windows Server 2022 Datacenter Evaluation (Server Core) | |
-| wac | Management tools server | Hyper-V VM (Lab host) | Yes | Windows Server 2022 Datacenter Evaluation (with Desktop Experience) | Windows Admin Center works on this machine as gateway mode, and many server management tools are installed on this machine. |
+| hcilab-vm1 (default) | Lab host | Azure VM<br/>(Azure) | No | Windows Server 2022 Datacenter Azure Edition Hotpatch | |
+| hcinode## | HCI node | Hyper-V VM<br/>(Lab host) | Depends on your deploy option | Depends on your deploy option. You can choose Azure Stack HCI or Windows Server 2022 Datacenter Evaluation (Desktop Experience). | `##` in the name is changed depending on the number of HCI nodes such as `01`, `02`, `03`, ... |
+| addsdc | Domain controller of Active Directory Domain Services | Hyper-V VM<br/>(Lab host) | Yes | Windows Server 2022 Datacenter Evaluation (Server Core) | |
+| wac | Management tools server | Hyper-V VM<br/>(Lab host) | Yes | Windows Server 2022 Datacenter Evaluation (with Desktop Experience) | Windows Admin Center works on this server with gateway mode, and many server management tools are installed on this server. |
 
-### Lab host VM (Azure VM)
+### Lab host (Azure VM)
 
 - Deploy options
     - **Windows Terminal:** You can install Windows Terminal during the deployment if you choose the deployment option.
@@ -49,16 +49,17 @@ The HCI lab environment consists of three roles of Hyper-V VMs on a single Azure
 ### VMs in the lab environment (Hyper-V VMs)
 
 - Deploy options
-    - **HCI cluster creation:** You can automatically create an HCI cluster during the deployment if you choose the deployment option. Also, by not choosing it, you can manually create an HCI cluster for cluster creation with custom configuration such as Network ATC.
+    - **Join to the AD DS domain:** Should you choose to **Not join** if you plan to [provisioning your HCI cluster from Azure portal](https://learn.microsoft.com/en-us/azure-stack/hci/deploy/deploy-via-portal).
+    - **Create HCI cluster:** You can automatically create your HCI cluster during the deployment if you choose the deployment option. Also, by not choosing it, you can manually create an HCI cluster for cluster creation with custom configuration such as Network ATC.
+
+- AD domain name (default): **hci.local**
 
 - Credentials
 
     | Account type | User name | Password |
     | ---- | ---- | ---- |
-    | Domain administrator | HCI\\Administrator | Your supplied password at Azure VM deployment. |
-    | Local administrator | Administrator | Your supplied password at Azure VM deployment. |
-
-- AD DS domain name (default): **hci.local**
+    | Domain administrator | HCI\\Administrator | Your supplied password in the HCI Lab deployment. |
+    | Local administrator | Administrator | Your supplied password in the HCI Lab deployment. |
 
 - You can access each Hyper-V VM such as **wac**, **hcinode##**, **addsdc** in you lab environment via Remote Desktop connection (mstsc.exe) and Virtual Machine connection (vmconnect.exe) from the lab host VM (Azure VM).
 
