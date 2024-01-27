@@ -451,24 +451,44 @@
                                 },
                                 {
                                     "name": "shouldInstallWindowsTerminal",
-                                    "type": "Microsoft.Common.CheckBox",
-                                    "label": "Windows ターミナル",
+                                    "type": "Microsoft.Common.OptionsGroup",
                                     "visible": true,
+                                    "label": "Windows ターミナル",
                                     "toolTip": "Windows ターミナルは、コマンド プロンプト、PowerShell、Linux 用 Windows サブシステム (WSL) 経由の bash など、使い慣れたコマンド ライン シェル用の最新のホスト アプリケーションです。<a href='https://learn.microsoft.com/windows/terminal'>詳細情報</a>",
-                                    "defaultValue": false,
+                                    "defaultValue": "インストールしない",
                                     "constraints": {
-                                        "required": false
+                                        "required": true,
+                                        "allowedValues": [
+                                            {
+                                                "label": "インストールする",
+                                                "value": true
+                                            },
+                                            {
+                                                "label": "インストールしない",
+                                                "value": false
+                                            }
+                                        ]
                                     }
                                 },
                                 {
                                     "name": "shouldInstallVisualStudioCode",
-                                    "type": "Microsoft.Common.CheckBox",
-                                    "label": "Visual Studio Code",
+                                    "type": "Microsoft.Common.OptionsGroup",
                                     "visible": true,
+                                    "label": "Visual Studio Code",
                                     "toolTip": "Visual Studio Codeは、デスクトップ上で動作する軽量かつ強力なソース コード エディターです。<a href='https://code.visualstudio.com/docs'>詳細情報</a>",
-                                    "defaultValue": false,
+                                    "defaultValue": "インストールしない",
                                     "constraints": {
-                                        "required": false
+                                        "required": true,
+                                        "allowedValues": [
+                                            {
+                                                "label": "インストールする",
+                                                "value": true
+                                            },
+                                            {
+                                                "label": "インストールしない",
+                                                "value": false
+                                            }
+                                        ]
                                     }
                                 }
                             ]

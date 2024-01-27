@@ -451,24 +451,44 @@
                                 },
                                 {
                                     "name": "shouldInstallWindowsTerminal",
-                                    "type": "Microsoft.Common.CheckBox",
-                                    "label": "Windows Terminal",
+                                    "type": "Microsoft.Common.OptionsGroup",
                                     "visible": true,
+                                    "label": "Windows Terminal",
                                     "toolTip": "Windows Terminal is a modern host application for the command-line shells you already love, like Command Prompt, PowerShell, and bash via Windows Subsystem for Linux (WSL). <a href='https://learn.microsoft.com/windows/terminal'>more</a>",
-                                    "defaultValue": false,
+                                    "defaultValue": "Not install",
                                     "constraints": {
-                                        "required": false
+                                        "required": true,
+                                        "allowedValues": [
+                                            {
+                                                "label": "Install",
+                                                "value": true
+                                            },
+                                            {
+                                                "label": "Not install",
+                                                "value": false
+                                            }
+                                        ]
                                     }
                                 },
                                 {
                                     "name": "shouldInstallVisualStudioCode",
-                                    "type": "Microsoft.Common.CheckBox",
-                                    "label": "Visual Studio Code",
+                                    "type": "Microsoft.Common.OptionsGroup",
                                     "visible": true,
+                                    "label": "Visual Studio Code",
                                     "toolTip": "Visual Studio Code is a lightweight but powerful source code editor which runs on your desktop. <a href='https://code.visualstudio.com/docs'>more</a>",
-                                    "defaultValue": false,
+                                    "defaultValue": "Not install",
                                     "constraints": {
-                                        "required": false
+                                        "required": true,
+                                        "allowedValues": [
+                                            {
+                                                "label": "Install",
+                                                "value": true
+                                            },
+                                            {
+                                                "label": "Not install",
+                                                "value": false
+                                            }
+                                        ]
                                     }
                                 }
                             ]
