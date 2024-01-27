@@ -1792,19 +1792,19 @@
                                 {
                                     "name": "shouldInstallUpdatesToLabVm",
                                     "type": "Microsoft.Common.OptionsGroup",
-                                    "label": "オペレーティング システムの更新プログラムのインストール",
+                                    "label": "オペレーティング システムの更新プログラム",
                                     "visible": true,
                                     "toolTip": "オペレーティング システムの更新プログラムをインストールするかどうかを選択します。",
-                                    "defaultValue": "更新プログラムをインストールしない",
+                                    "defaultValue": "インストールしない",
                                     "constraints": {
                                         "required": true,
                                         "allowedValues": [
                                             {
-                                                "label": "更新プログラムをインストールする (推奨)",
+                                                "label": "インストールする (推奨)",
                                                 "value": true
                                             },
                                             {
-                                                "label": "更新プログラムをインストールしない",
+                                                "label": "インストールしない",
                                                 "value": false
                                             }
                                         ]
@@ -1823,14 +1823,14 @@
                             "name": "addsSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
-                            "label": "Active Directory Domain Services (AD DS)",
+                            "label": "Active Directory Domain Services",
                             "elements": [
                                 {
                                     "name": "addsSectionText",
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "HCI ラボのデプロイの一部として作成する Active Directory Domain Services (AD DS) ドメインの構成を選択します。"
+                                        "text": "HCI ラボのデプロイの一部として作成する Active Directory Domain Services ドメインの構成を選択します。"
                                     }
                                 },
                                 {
@@ -1838,8 +1838,8 @@
                                     "type": "Microsoft.Common.TextBox",
                                     "visible": true,
                                     "multiLine": false,
-                                    "label": "AD DS ドメイン FQDN",
-                                    "toolTip": "ラボ環境の AD DS ドメイン FQDN を指定します。",
+                                    "label": "AD ドメイン FQDN",
+                                    "toolTip": "ラボ環境の AD ドメイン FQDN を指定します。",
                                     "placeholder": "例: hci.local",
                                     "defaultValue": "hci.local",
                                     "constraints": {
@@ -1847,7 +1847,7 @@
                                         "validations": [
                                             {
                                                 "regex": "^(?!-)[A-Za-z0-9-]+([\\-\\.]{1}[a-z0-9]+)*\\.[A-Za-z]{2,6}$",
-                                                "message": "無効な AD DS ドメイン FQDN です。"
+                                                "message": "無効な AD ドメイン FQDN です。"
                                             }
                                         ]
                                     }
@@ -1946,9 +1946,9 @@
                                 {
                                     "name": "shouldJoinToAddsDomain",
                                     "type": "Microsoft.Common.OptionsGroup",
-                                    "label": "AD DS ドメインへの参加",
+                                    "label": "AD ドメインへの参加",
                                     "visible": true,
-                                    "toolTip": "AD DS ドメインに HCI ノードを参加させるかどうかを選択します。",
+                                    "toolTip": "AD ドメインに HCI ノードを参加させるかどうかを選択します。",
                                     "defaultValue": "参加させる",
                                     "constraints": {
                                         "required": true,
@@ -1967,7 +1967,11 @@
                                         {
                                             "visible": true,
                                             "style": "Info",
-                                            "text": "HCI クラスターを Azure portal から作成することを予定している場合は、<strong>参加させない</strong>を選択する必要があります。"
+                                            "text": "HCI クラスターを Azure portal から作成することを予定している場合は、<strong>参加させない</strong>を選択する必要があります。",
+                                            "uri": {
+                                                "value": "https://learn.microsoft.com/ja-jp/azure-stack/hci/deploy/deploy-via-portal",
+                                                "text": "詳細情報"
+                                            }
                                         }
                                     ]
                                 }

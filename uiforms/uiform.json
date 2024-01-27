@@ -1792,19 +1792,19 @@
                                 {
                                     "name": "shouldInstallUpdatesToLabVm",
                                     "type": "Microsoft.Common.OptionsGroup",
-                                    "label": "Install operating system's updates",
+                                    "label": "Operating system's updates",
                                     "visible": true,
                                     "toolTip": "Choose whether or not to install the operating system's updates.",
-                                    "defaultValue": "Not install updates",
+                                    "defaultValue": "Not install",
                                     "constraints": {
                                         "required": true,
                                         "allowedValues": [
                                             {
-                                                "label": "Install updates (recommended)",
+                                                "label": "Install (recommended)",
                                                 "value": true
                                             },
                                             {
-                                                "label": "Not install updates",
+                                                "label": "Not install",
                                                 "value": false
                                             }
                                         ]
@@ -1823,14 +1823,14 @@
                             "name": "addsSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
-                            "label": "Active Directory Domain Services (AD DS)",
+                            "label": "Active Directory Domain Services",
                             "elements": [
                                 {
                                     "name": "addsSectionText",
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "Choose the Active Directory Domain Services (AD DS) domain configuration that will be created as a part of your HCI lab deployment."
+                                        "text": "Choose the Active Directory Domain Services domain configuration that will be created as a part of your HCI lab deployment."
                                     }
                                 },
                                 {
@@ -1838,8 +1838,8 @@
                                     "type": "Microsoft.Common.TextBox",
                                     "visible": true,
                                     "multiLine": false,
-                                    "label": "AD DS domain FQDN",
-                                    "toolTip": "Specify the AD DS domain FQDN for the lab environment.",
+                                    "label": "AD domain FQDN",
+                                    "toolTip": "Specify the AD domain FQDN for the lab environment.",
                                     "placeholder": "e.g. hci.local",
                                     "defaultValue": "hci.local",
                                     "constraints": {
@@ -1847,7 +1847,7 @@
                                         "validations": [
                                             {
                                                 "regex": "^(?!-)[A-Za-z0-9-]+([\\-\\.]{1}[a-z0-9]+)*\\.[A-Za-z]{2,6}$",
-                                                "message": "Invalid AD DS domain FQDN."
+                                                "message": "Invalid AD domain FQDN."
                                             }
                                         ]
                                     }
@@ -1946,9 +1946,9 @@
                                 {
                                     "name": "shouldJoinToAddsDomain",
                                     "type": "Microsoft.Common.OptionsGroup",
-                                    "label": "Join to the AD DS domain",
+                                    "label": "Join to the AD domain",
                                     "visible": true,
-                                    "toolTip": "Choose whether or not the HCI nodes are to be joined to the AD DS domain.",
+                                    "toolTip": "Choose whether or not the HCI nodes are to be joined to the AD domain.",
                                     "defaultValue": "Join",
                                     "constraints": {
                                         "required": true,
@@ -1967,7 +1967,11 @@
                                         {
                                             "visible": true,
                                             "style": "Info",
-                                            "text": "Should choose to <strong>Not join</strong> if you plan to provisioning the HCI cluster from Azure portal."
+                                            "text": "You should choose <strong>Not join</strong> if you plan to provisioning your HCI cluster from Azure portal.",
+                                            "uri": {
+                                                "value": "https://learn.microsoft.com/en-us/azure-stack/hci/deploy/deploy-via-portal",
+                                                "text": "Learn more"
+                                            }                                            
                                         }
                                     ]
                                 }
