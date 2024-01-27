@@ -501,13 +501,23 @@
                             "elements": [
                                 {
                                     "name": "shouldEnabledAutoshutdown",
-                                    "type": "Microsoft.Common.CheckBox",
-                                    "label": "自動シャットダウンを有効にする",
+                                    "type": "Microsoft.Common.OptionsGroup",
                                     "visible": true,
+                                    "label": "自動シャットダウン",
                                     "toolTip": "仮想マシンを自動的に毎日シャットダウンするよう構成します。",
-                                    "defaultValue": false,
+                                    "defaultValue": "無効にする",
                                     "constraints": {
-                                        "required": false
+                                        "required": true,
+                                        "allowedValues": [
+                                            {
+                                                "label": "有効にする",
+                                                "value": true
+                                            },
+                                            {
+                                                "label": "無効にする",
+                                                "value": false
+                                            }
+                                        ]
                                     }
                                 },
                                 {

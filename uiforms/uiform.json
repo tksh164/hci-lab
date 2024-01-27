@@ -501,13 +501,23 @@
                             "elements": [
                                 {
                                     "name": "shouldEnabledAutoshutdown",
-                                    "type": "Microsoft.Common.CheckBox",
-                                    "label": "Enable auto-shutdown",
+                                    "type": "Microsoft.Common.OptionsGroup",
                                     "visible": true,
+                                    "label": "Auto-shutdown",
                                     "toolTip": "Configures your virtual machine to automatically shutdown daily.",
-                                    "defaultValue": false,
+                                    "defaultValue": "Disable",
                                     "constraints": {
-                                        "required": false
+                                        "required": true,
+                                        "allowedValues": [
+                                            {
+                                                "label": "Enable",
+                                                "value": true
+                                            },
+                                            {
+                                                "label": "Disable",
+                                                "value": false
+                                            }
+                                        ]
                                     }
                                 },
                                 {
