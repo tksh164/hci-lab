@@ -3,7 +3,7 @@
     "view": {
         "kind": "Form",
         "properties": {
-            "title": "Azure 仮想マシン 1 台による HCI ラボ環境",
+            "title": "HCI ラボ",
             "steps": [
                 {
                     "name": "basics",
@@ -178,7 +178,7 @@
                             "visible": true,
                             "options": {
                                 "style": "Info",
-                                "text": "HCI クラスターにワークロードをデプロイする場合は、128 GiB のメモリが現実的な最小値です。このラボ環境では、HCI ノード、Active Directory Domain Services ドメイン コントローラー、管理ツール マシンなどの複数の Hyper-V VM を 1 台の Azure 仮想マシン上にデプロイするため、HCI クラスター上にハイブリッド サービスをデプロイする場合は、より多くのメモリが必要になる可能性があります。<ul><li><a href='https://learn.microsoft.com/azure/virtual-machines/sizes'>Azure の仮想マシンのサイズ</a></li><li><a href='https://azure.microsoft.com/pricing/details/virtual-machines/windows'>Windows Virtual Machines の料金</a></li></ul>"
+                                "text": "HCI クラスターにワークロードをデプロイする場合は、128 GiB のメモリが現実的な最小値です。このラボ環境では、HCI ノード、Active Directory Domain Services のドメイン コントローラー、管理ツール サーバーなどの複数の Hyper-V VM が 1 台の Azure 仮想マシン上にあるため、HCI クラスター上にハイブリッド サービスをデプロイする場合は、より多くのメモリが必要になる可能性があります。<ul><li><a href='https://learn.microsoft.com/azure/virtual-machines/sizes'>Azure の仮想マシンのサイズ</a></li><li><a href='https://azure.microsoft.com/pricing/details/virtual-machines/windows'>Windows Virtual Machines の料金</a></li></ul>"
                             }
                         },
                         {
@@ -293,8 +293,8 @@
                 },
                 {
                     "name": "labHostVmDetails",
-                    "label": "ラボ ホスト VM の詳細",
-                    "description": "ラボ ホスト仮想マシンの詳細を構成します。ラボ ホスト仮想マシンは Azure 仮想マシンです。",
+                    "label": "ラボ ホストの詳細",
+                    "description": "ラボ ホストの詳細を構成します。ラボ ホストは 1 台の Azure 仮想マシンです。",
                     "elements": [
                         {
                             "name": "diskSection",
@@ -380,7 +380,7 @@
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "VM、VHD、ISO などのすべてのラボ アセットと成果物は、ラボ ホスト仮想マシン上の単一のデータ ボリュームに保存されます。デプロイ完了後、データ ボリュームの容量を変更することはできません。"
+                                        "text": "VM、VHD、ISO などのすべてのラボ アセットと成果物は、ラボ ホスト上の単一のデータ ボリュームに保存されます。デプロイ完了後、データ ボリュームの容量を変更することはできません。"
                                     }
                                 },
                                 {
@@ -439,14 +439,14 @@
                             "name": "toolsSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
-                            "label": "ツール",
+                            "label": "アプリ",
                             "elements": [
                                 {
                                     "name": "toolsSectionText",
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "いくつかのユーティリティ ツールをデプロイ時にラボ ホスト仮想マシンにインストールできます。"
+                                        "text": "ラボ ホストにインストールするアプリを選択します。"
                                     }
                                 },
                                 {
@@ -499,6 +499,18 @@
                             "visible": true,
                             "label": "自動シャットダウン",
                             "elements": [
+                                {
+                                    "name": "autoshutdownSectionText",
+                                    "type": "Microsoft.Common.TextBlock",
+                                    "visible": true,
+                                    "options": {
+                                        "text": "ラボ ホストの自動シャットダウンを有効にするかどうかを選択します。",
+                                        "link": {
+                                            "label": "詳細情報",
+                                            "uri": "https://learn.microsoft.com/ja-jp/azure/virtual-machines/auto-shutdown-vm"
+                                        }
+                                    }
+                                },
                                 {
                                     "name": "shouldEnabledAutoshutdown",
                                     "type": "Microsoft.Common.OptionsGroup",
@@ -1182,7 +1194,7 @@
                 },
                 {
                     "name": "labConfiguration",
-                    "label": "ラボの構成",
+                    "label": "ラボ環境",
                     "description": "ラボ環境の詳細を設定します。ラボ環境は、ネストされた仮想化技術を使用して、1 台の Azure 仮想マシン内に複数台の Hyper-V 仮想マシンとして構築されます。",
                     "elements": [
                         {
@@ -1196,7 +1208,7 @@
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "HCI ラボのデプロイの一部として作成する HCI ノードの構成を選択します。"
+                                        "text": "HCI ノードの構成を選択します。"
                                     }
                                 },
                                 {
@@ -1208,7 +1220,7 @@
                                     "filter": true,
                                     "multiLine": true,
                                     "label": "オペレーティング システム",
-                                    "toolTip": "HCI ノードのオペレーティング システムです。",
+                                    "toolTip": "HCI ノードのオペレーティング システムを選択します。",
                                     "placeholder": "HCI ノードのオペレーティング システムを選択...",
                                     "defaultDescription": "---",
                                     "filterPlaceholder": "HCI ノードのオペレーティング システムをフィルター...",
@@ -1319,7 +1331,7 @@
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "HCI ラボのデプロイの一部として作成する HCI クラスターの構成を選択します。"
+                                        "text": "HCI クラスターの構成を選択します。"
                                     }
                                 },
                                 {
@@ -1348,9 +1360,9 @@
                                     "type": "Microsoft.Common.TextBox",
                                     "visible": "[steps('labConfiguration').hciClusterSection.shouldCreateHciCluster]",
                                     "multiLine": false,
-                                    "label": "クラスター名<br/>(クラスター名オブジェクト/CNO)",
+                                    "label": "クラスター名",
                                     "subLabel": "[concat('.', steps('labConfiguration').addsSection.domainName)]",
-                                    "toolTip": "HCI クラスターのクラスター名 (クラスター名オブジェクト/CNO) を指定します。",
+                                    "toolTip": "HCI クラスターのクラスター名 (クラスター名オブジェクト/CNO 名) を指定します。",
                                     "placeholder": "例: hciclus",
                                     "defaultValue": "hciclus",
                                     "constraints": {
@@ -1376,7 +1388,7 @@
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "HCI ラボのデプロイの一部として作成する Active Directory Domain Services ドメインの構成を選択します。"
+                                        "text": "ラボ環境の一部として作成される Active Directory Domain Services ドメインの構成を選択します。"
                                     }
                                 },
                                 {
@@ -1404,14 +1416,14 @@
                             "name": "generalSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
-                            "label": "すべてのラボ仮想マシンに共通する構成",
+                            "label": "ラボ環境内のすべての仮想マシン",
                             "elements": [
                                 {
                                     "name": "generalSectionText",
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "すべてのラボ仮想マシンに共通する構成を選択します。"
+                                        "text": "HCI ノード、Active Directory ドメイン サービスのドメイン コントローラー、管理ツール サーバーなど、ラボ環境内のすべての仮想マシンに共通する構成を選択します。"
                                     }
                                 },
                                 {
@@ -1445,7 +1457,7 @@
                                         {
                                             "visible": true,
                                             "style": "Info",
-                                            "text": "カルチャは、UI 言語、ロケール、入力方法を意味ます。"
+                                            "text": "カルチャは、UI 言語、ロケール、入力方法を表します。"
                                         }
                                     ]
                                 },
@@ -2058,7 +2070,7 @@
                                         {
                                             "visible": true,
                                             "style": "Info",
-                                            "text": "オペレーティング システムの更新プログラムをインストールするとデプロイ時間が約 15 分、またはそれ以上長くなります。"
+                                            "text": "オペレーティング システムの更新プログラムをインストールすると、デプロイ時間が約 15 分、またはそれ以上長くなります。"
                                         }
                                     ]
                                 }
