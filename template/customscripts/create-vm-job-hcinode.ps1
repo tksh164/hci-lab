@@ -289,7 +289,7 @@ Install-WindowsFeatureToVhd @params
 'Starting the VM...' | Write-ScriptLog -Context $nodeConfig.VMName
 Start-VMWithRetry -VMName $nodeConfig.VMName
 
-'Waiting for ready to the VM...' | Write-ScriptLog -Context $nodeConfig.VMName
+'Waiting for the VM to be ready...' | Write-ScriptLog -Context $nodeConfig.VMName
 $localAdminCredential = New-LogonCredential -DomainFqdn '.' -Password $nodeConfig.AdminPassword
 Wait-PowerShellDirectReady -VMName $nodeConfig.VMName -Credential $localAdminCredential
 
@@ -415,7 +415,7 @@ Stop-VM -Name $nodeConfig.VMName
 'Starting the VM...' | Write-ScriptLog -Context $nodeConfig.VMName
 Start-VM -Name $nodeConfig.VMName
 
-'Waiting for ready to the VM...' | Write-ScriptLog -Context $nodeConfig.VMName
+'Waiting for the VM to be ready...' | Write-ScriptLog -Context $nodeConfig.VMName
 $credentialForWaiting = if ($labConfig.hciNode.shouldJoinToAddsDomain) {
     New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $nodeConfig.AdminPassword
 }
