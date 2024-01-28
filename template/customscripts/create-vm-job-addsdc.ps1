@@ -122,7 +122,7 @@ Install-WindowsFeatureToVhd @params
 'Starting the VM...' | Write-ScriptLog -Context $vmName
 Start-VMWithRetry -VMName $vmName
 
-'Waiting for ready to the VM...' | Write-ScriptLog -Context $vmName
+'Waiting for the VM to be ready...' | Write-ScriptLog -Context $vmName
 $localAdminCredential = New-LogonCredential -DomainFqdn '.' -Password $adminPassword
 Wait-PowerShellDirectReady -VMName $vmName -Credential $localAdminCredential
 
