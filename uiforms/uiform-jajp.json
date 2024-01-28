@@ -1195,228 +1195,13 @@
                 {
                     "name": "labConfiguration",
                     "label": "ラボ環境",
-                    "description": "ラボ環境の詳細を設定します。ラボ環境は、ネストされた仮想化技術を使用して、1 台の Azure 仮想マシン内に複数台の Hyper-V 仮想マシンとして構築されます。",
+                    "description": "ラボ環境の詳細を構成します。ラボ環境は、ネストされた仮想化技術を使用して、1 台の Azure 仮想マシン内に複数台の Hyper-V 仮想マシンとして構築されます。",
                     "elements": [
-                        {
-                            "name": "hciClusterNodesSection",
-                            "type": "Microsoft.Common.Section",
-                            "visible": true,
-                            "label": "HCI クラスター ノード",
-                            "elements": [
-                                {
-                                    "name": "hciClusterNodesSectionText",
-                                    "type": "Microsoft.Common.TextBlock",
-                                    "visible": true,
-                                    "options": {
-                                        "text": "HCI ノードの構成を選択します。"
-                                    }
-                                },
-                                {
-                                    "name": "hciNodeOperatingSystem",
-                                    "type": "Microsoft.Common.DropDown",
-                                    "visible": true,
-                                    "multiselect": false,
-                                    "selectAll": false,
-                                    "filter": true,
-                                    "multiLine": true,
-                                    "label": "オペレーティング システム",
-                                    "toolTip": "HCI ノードのオペレーティング システムを選択します。",
-                                    "placeholder": "HCI ノードのオペレーティング システムを選択...",
-                                    "defaultDescription": "---",
-                                    "filterPlaceholder": "HCI ノードのオペレーティング システムをフィルター...",
-                                    "defaultValue": "Azure Stack HCI, version 22H2",
-                                    "constraints": {
-                                        "required": true,
-                                        "allowedValues": [
-                                            {
-                                                "label": "Azure Stack HCI, version 23H2 (プレビュー)",
-                                                "description": "Azure Stack HCI プレビュー リリースです。",
-                                                "value": {
-                                                    "sku": "ashci23h2",
-                                                    "imageIndex": 1
-                                                }
-                                            },
-                                            {
-                                                "label": "Azure Stack HCI, version 22H2",
-                                                "description": "サポートされている最新の Azure Stack HCI リリースです。",
-                                                "value": {
-                                                    "sku": "ashci22h2",
-                                                    "imageIndex": 1
-                                                }
-                                            },
-                                            {
-                                                "label": "Azure Stack HCI, version 21H2 [サービス終了]",
-                                                "description": "<strong>注意:</strong> このバージョンは 2023 年 11 月 14 日にサービス終了しました。",
-                                                "value": {
-                                                    "sku": "ashci21h2",
-                                                    "imageIndex": 1
-                                                }
-                                            },
-                                            {
-                                                "label": "Azure Stack HCI, version 20H2 [サービス終了]",
-                                                "description": "<strong>注意:</strong> このバージョンは 2022 年 12 月 13 日にサービス終了しました。",
-                                                "value": {
-                                                    "sku": "ashci20h2",
-                                                    "imageIndex": 1
-                                                }
-                                            },
-                                            {
-                                                "label": "Windows Server 2022 Datacenter Evaluation (Desktop Experience)",
-                                                "description": "標準グラフィカル ユーザー インターフェイスを備えた Windows Server 2022 Datacenter です。",
-                                                "value": {
-                                                    "sku": "ws2022",
-                                                    "imageIndex": 4
-                                                }
-                                            }
-                                        ]
-                                    }
-                                },
-                                {
-                                    "name": "hciNodeCount",
-                                    "type": "Microsoft.Common.Slider",
-                                    "visible": true,
-                                    "label": "ノード数",
-                                    "subLabel": "ノード",
-                                    "toolTip": "デプロイする HCI ノードの台数を選びます。",
-                                    "showStepMarkers": true,
-                                    "constraints": {
-                                        "required": true
-                                    },
-                                    "min": 2,
-                                    "max": 8,
-                                    "defaultValue": 2
-                                },
-                                {
-                                    "name": "shouldJoinToAddsDomain",
-                                    "type": "Microsoft.Common.OptionsGroup",
-                                    "label": "AD ドメインへの参加",
-                                    "visible": true,
-                                    "toolTip": "AD ドメインに HCI ノードを参加させるかどうかを選択します。",
-                                    "defaultValue": "参加させる",
-                                    "constraints": {
-                                        "required": true,
-                                        "allowedValues": [
-                                            {
-                                                "label": "参加させる",
-                                                "value": true
-                                            },
-                                            {
-                                                "label": "参加させない",
-                                                "value": false
-                                            }
-                                        ]
-                                    },
-                                    "infoMessages": [
-                                        {
-                                            "visible": true,
-                                            "style": "Info",
-                                            "text": "HCI クラスターを Azure portal から作成することを予定している場合は、<strong>参加させない</strong>を選択する必要があります。",
-                                            "uri": {
-                                                "value": "https://learn.microsoft.com/ja-jp/azure-stack/hci/deploy/deploy-via-portal",
-                                                "text": "詳細情報"
-                                            }
-                                        }
-                                    ]
-                                }
-                            ]
-                        },
-                        {
-                            "name": "hciClusterSection",
-                            "type": "Microsoft.Common.Section",
-                            "visible": "[steps('labConfiguration').hciClusterNodesSection.shouldJoinToAddsDomain]",
-                            "label": "HCI クラスター",
-                            "elements": [
-                                {
-                                    "name": "hciClusterSectionText",
-                                    "type": "Microsoft.Common.TextBlock",
-                                    "visible": true,
-                                    "options": {
-                                        "text": "HCI クラスターの構成を選択します。"
-                                    }
-                                },
-                                {
-                                    "name": "shouldCreateHciCluster",
-                                    "type": "Microsoft.Common.OptionsGroup",
-                                    "label": "HCI クラスターの作成",
-                                    "visible": true,
-                                    "toolTip": "HCI クラスターを作成するかどうかを選択します。",
-                                    "defaultValue": "作成する",
-                                    "constraints": {
-                                        "required": true,
-                                        "allowedValues": [
-                                            {
-                                                "label": "作成する",
-                                                "value": true
-                                            },
-                                            {
-                                                "label": "作成しない",
-                                                "value": false
-                                            }
-                                        ]
-                                    }
-                                },
-                                {
-                                    "name": "hciClusterName",
-                                    "type": "Microsoft.Common.TextBox",
-                                    "visible": "[steps('labConfiguration').hciClusterSection.shouldCreateHciCluster]",
-                                    "multiLine": false,
-                                    "label": "クラスター名",
-                                    "subLabel": "[concat('.', steps('labConfiguration').addsSection.domainName)]",
-                                    "toolTip": "HCI クラスターのクラスター名 (クラスター名オブジェクト/CNO 名) を指定します。",
-                                    "placeholder": "例: hciclus",
-                                    "defaultValue": "hciclus",
-                                    "constraints": {
-                                        "required": true,
-                                        "validations": [
-                                            {
-                                                "regex": "^[A-Za-z0-9-]+$",
-                                                "message": "無効なクラスター名です。"
-                                            }
-                                        ]
-                                    }
-                                }
-                            ]
-                        },
-                        {
-                            "name": "addsSection",
-                            "type": "Microsoft.Common.Section",
-                            "visible": true,
-                            "label": "Active Directory Domain Services",
-                            "elements": [
-                                {
-                                    "name": "addsSectionText",
-                                    "type": "Microsoft.Common.TextBlock",
-                                    "visible": true,
-                                    "options": {
-                                        "text": "ラボ環境の一部として作成される Active Directory Domain Services ドメインの構成を選択します。"
-                                    }
-                                },
-                                {
-                                    "name": "domainName",
-                                    "type": "Microsoft.Common.TextBox",
-                                    "visible": true,
-                                    "multiLine": false,
-                                    "label": "AD ドメイン FQDN",
-                                    "toolTip": "ラボ環境の AD ドメイン FQDN を指定します。",
-                                    "placeholder": "例: hci.local",
-                                    "defaultValue": "hci.local",
-                                    "constraints": {
-                                        "required": true,
-                                        "validations": [
-                                            {
-                                                "regex": "^(?!-)[A-Za-z0-9-]+([\\-\\.]{1}[a-z0-9]+)*\\.[A-Za-z]+$",
-                                                "message": "無効な AD ドメイン FQDN です。"
-                                            }
-                                        ]
-                                    }
-                                }
-                            ]
-                        },
                         {
                             "name": "generalSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
-                            "label": "ラボ環境内のすべての仮想マシン",
+                            "label": "共通構成",
                             "elements": [
                                 {
                                     "name": "generalSectionText",
@@ -2073,6 +1858,221 @@
                                             "text": "オペレーティング システムの更新プログラムをインストールすると、デプロイ時間が約 15 分、またはそれ以上長くなります。"
                                         }
                                     ]
+                                }
+                            ]
+                        },                        
+                        {
+                            "name": "hciClusterNodesSection",
+                            "type": "Microsoft.Common.Section",
+                            "visible": true,
+                            "label": "HCI クラスター ノード",
+                            "elements": [
+                                {
+                                    "name": "hciClusterNodesSectionText",
+                                    "type": "Microsoft.Common.TextBlock",
+                                    "visible": true,
+                                    "options": {
+                                        "text": "HCI ノードの構成を選択します。"
+                                    }
+                                },
+                                {
+                                    "name": "hciNodeOperatingSystem",
+                                    "type": "Microsoft.Common.DropDown",
+                                    "visible": true,
+                                    "multiselect": false,
+                                    "selectAll": false,
+                                    "filter": true,
+                                    "multiLine": true,
+                                    "label": "オペレーティング システム",
+                                    "toolTip": "HCI ノードのオペレーティング システムを選択します。",
+                                    "placeholder": "HCI ノードのオペレーティング システムを選択...",
+                                    "defaultDescription": "---",
+                                    "filterPlaceholder": "HCI ノードのオペレーティング システムをフィルター...",
+                                    "defaultValue": "Azure Stack HCI, version 22H2",
+                                    "constraints": {
+                                        "required": true,
+                                        "allowedValues": [
+                                            {
+                                                "label": "Azure Stack HCI, version 23H2 (プレビュー)",
+                                                "description": "Azure Stack HCI プレビュー リリースです。",
+                                                "value": {
+                                                    "sku": "ashci23h2",
+                                                    "imageIndex": 1
+                                                }
+                                            },
+                                            {
+                                                "label": "Azure Stack HCI, version 22H2",
+                                                "description": "サポートされている最新の Azure Stack HCI リリースです。",
+                                                "value": {
+                                                    "sku": "ashci22h2",
+                                                    "imageIndex": 1
+                                                }
+                                            },
+                                            {
+                                                "label": "Azure Stack HCI, version 21H2 [サービス終了]",
+                                                "description": "<strong>注意:</strong> このバージョンは 2023 年 11 月 14 日にサービス終了しました。",
+                                                "value": {
+                                                    "sku": "ashci21h2",
+                                                    "imageIndex": 1
+                                                }
+                                            },
+                                            {
+                                                "label": "Azure Stack HCI, version 20H2 [サービス終了]",
+                                                "description": "<strong>注意:</strong> このバージョンは 2022 年 12 月 13 日にサービス終了しました。",
+                                                "value": {
+                                                    "sku": "ashci20h2",
+                                                    "imageIndex": 1
+                                                }
+                                            },
+                                            {
+                                                "label": "Windows Server 2022 Datacenter Evaluation (Desktop Experience)",
+                                                "description": "標準グラフィカル ユーザー インターフェイスを備えた Windows Server 2022 Datacenter です。",
+                                                "value": {
+                                                    "sku": "ws2022",
+                                                    "imageIndex": 4
+                                                }
+                                            }
+                                        ]
+                                    }
+                                },
+                                {
+                                    "name": "hciNodeCount",
+                                    "type": "Microsoft.Common.Slider",
+                                    "visible": true,
+                                    "label": "ノード数",
+                                    "subLabel": "ノード",
+                                    "toolTip": "デプロイする HCI ノードの台数を選びます。",
+                                    "showStepMarkers": true,
+                                    "constraints": {
+                                        "required": true
+                                    },
+                                    "min": 2,
+                                    "max": 8,
+                                    "defaultValue": 2
+                                },
+                                {
+                                    "name": "shouldJoinToAddsDomain",
+                                    "type": "Microsoft.Common.OptionsGroup",
+                                    "label": "AD ドメインへの参加",
+                                    "visible": true,
+                                    "toolTip": "AD ドメインに HCI ノードを参加させるかどうかを選択します。",
+                                    "defaultValue": "参加させる",
+                                    "constraints": {
+                                        "required": true,
+                                        "allowedValues": [
+                                            {
+                                                "label": "参加させる",
+                                                "value": true
+                                            },
+                                            {
+                                                "label": "参加させない",
+                                                "value": false
+                                            }
+                                        ]
+                                    },
+                                    "infoMessages": [
+                                        {
+                                            "visible": true,
+                                            "style": "Info",
+                                            "text": "HCI クラスターを Azure portal から作成することを予定している場合は、<strong>参加させない</strong>を選択する必要があります。",
+                                            "uri": {
+                                                "value": "https://learn.microsoft.com/ja-jp/azure-stack/hci/deploy/deploy-via-portal",
+                                                "text": "詳細情報"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "name": "hciClusterSection",
+                            "type": "Microsoft.Common.Section",
+                            "visible": "[steps('labConfiguration').hciClusterNodesSection.shouldJoinToAddsDomain]",
+                            "label": "HCI クラスター",
+                            "elements": [
+                                {
+                                    "name": "hciClusterSectionText",
+                                    "type": "Microsoft.Common.TextBlock",
+                                    "visible": true,
+                                    "options": {
+                                        "text": "HCI クラスターの構成を選択します。"
+                                    }
+                                },
+                                {
+                                    "name": "shouldCreateHciCluster",
+                                    "type": "Microsoft.Common.OptionsGroup",
+                                    "label": "HCI クラスターの作成",
+                                    "visible": true,
+                                    "toolTip": "HCI クラスターを作成するかどうかを選択します。",
+                                    "defaultValue": "作成する",
+                                    "constraints": {
+                                        "required": true,
+                                        "allowedValues": [
+                                            {
+                                                "label": "作成する",
+                                                "value": true
+                                            },
+                                            {
+                                                "label": "作成しない",
+                                                "value": false
+                                            }
+                                        ]
+                                    }
+                                },
+                                {
+                                    "name": "hciClusterName",
+                                    "type": "Microsoft.Common.TextBox",
+                                    "visible": "[steps('labConfiguration').hciClusterSection.shouldCreateHciCluster]",
+                                    "multiLine": false,
+                                    "label": "クラスター名",
+                                    "subLabel": "[concat('.', steps('labConfiguration').addsSection.domainName)]",
+                                    "toolTip": "HCI クラスターのクラスター名 (クラスター名オブジェクト/CNO 名) を指定します。",
+                                    "placeholder": "例: hciclus",
+                                    "defaultValue": "hciclus",
+                                    "constraints": {
+                                        "required": true,
+                                        "validations": [
+                                            {
+                                                "regex": "^[A-Za-z0-9-]+$",
+                                                "message": "無効なクラスター名です。"
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "addsSection",
+                            "type": "Microsoft.Common.Section",
+                            "visible": true,
+                            "label": "Active Directory Domain Services",
+                            "elements": [
+                                {
+                                    "name": "addsSectionText",
+                                    "type": "Microsoft.Common.TextBlock",
+                                    "visible": true,
+                                    "options": {
+                                        "text": "ラボ環境の一部として作成される Active Directory Domain Services ドメインの構成を選択します。"
+                                    }
+                                },
+                                {
+                                    "name": "domainName",
+                                    "type": "Microsoft.Common.TextBox",
+                                    "visible": true,
+                                    "multiLine": false,
+                                    "label": "AD ドメイン FQDN",
+                                    "toolTip": "ラボ環境の AD ドメイン FQDN を指定します。",
+                                    "placeholder": "例: hci.local",
+                                    "defaultValue": "hci.local",
+                                    "constraints": {
+                                        "required": true,
+                                        "validations": [
+                                            {
+                                                "regex": "^(?!-)[A-Za-z0-9-]+([\\-\\.]{1}[a-z0-9]+)*\\.[A-Za-z]+$",
+                                                "message": "無効な AD ドメイン FQDN です。"
+                                            }
+                                        ]
+                                    }
                                 }
                             ]
                         }

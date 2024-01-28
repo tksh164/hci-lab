@@ -1198,225 +1198,10 @@
                     "description": "Configure your lab environment details. The lab environment is built as a set of Hyper-V virtual machines within an Azure virtual machine using nested virtualization technology.",
                     "elements": [
                         {
-                            "name": "hciClusterNodesSection",
-                            "type": "Microsoft.Common.Section",
-                            "visible": true,
-                            "label": "HCI cluster node",
-                            "elements": [
-                                {
-                                    "name": "hciClusterNodesSectionText",
-                                    "type": "Microsoft.Common.TextBlock",
-                                    "visible": true,
-                                    "options": {
-                                        "text": "Select the HCI node configuration."
-                                    }
-                                },
-                                {
-                                    "name": "hciNodeOperatingSystem",
-                                    "type": "Microsoft.Common.DropDown",
-                                    "visible": true,
-                                    "multiselect": false,
-                                    "selectAll": false,
-                                    "filter": true,
-                                    "multiLine": true,
-                                    "label": "Operating system",
-                                    "toolTip": "Select the operating system for the HCI nodes.",
-                                    "placeholder": "Select the HCI node's operating system...",
-                                    "defaultDescription": "---",
-                                    "filterPlaceholder": "Filter HCI node's operating systems...",
-                                    "defaultValue": "Azure Stack HCI, version 22H2",
-                                    "constraints": {
-                                        "required": true,
-                                        "allowedValues": [
-                                            {
-                                                "label": "Azure Stack HCI, version 23H2 (Preview)",
-                                                "description": "Azure Stack HCI preview release.",
-                                                "value": {
-                                                    "sku": "ashci23h2",
-                                                    "imageIndex": 1
-                                                }
-                                            },
-                                            {
-                                                "label": "Azure Stack HCI, version 22H2",
-                                                "description": "The supported latest Azure Stack HCI release.",
-                                                "value": {
-                                                    "sku": "ashci22h2",
-                                                    "imageIndex": 1
-                                                }
-                                            },
-                                            {
-                                                "label": "Azure Stack HCI, version 21H2 [End of Service]",
-                                                "description": "<strong>Notice:</strong> This version reached the end of service on November 14, 2023.",
-                                                "value": {
-                                                    "sku": "ashci21h2",
-                                                    "imageIndex": 1
-                                                }
-                                            },
-                                            {
-                                                "label": "Azure Stack HCI, version 20H2 [End of Service]",
-                                                "description": "<strong>Notice:</strong> This version reached the end of service on December 13, 2022.",
-                                                "value": {
-                                                    "sku": "ashci20h2",
-                                                    "imageIndex": 1
-                                                }
-                                            },
-                                            {
-                                                "label": "Windows Server 2022 Datacenter Evaluation (Desktop Experience)",
-                                                "description": "Windows Server 2022 Datacenter with the standard graphical user interface.",
-                                                "value": {
-                                                    "sku": "ws2022",
-                                                    "imageIndex": 4
-                                                }
-                                            }
-                                        ]
-                                    }
-                                },
-                                {
-                                    "name": "hciNodeCount",
-                                    "type": "Microsoft.Common.Slider",
-                                    "visible": true,
-                                    "label": "Node count",
-                                    "subLabel": "nodes",
-                                    "toolTip": "Pick the HCI node count to deploy.",
-                                    "showStepMarkers": true,
-                                    "constraints": {
-                                        "required": true
-                                    },
-                                    "min": 2,
-                                    "max": 8,
-                                    "defaultValue": 2
-                                },
-                                {
-                                    "name": "shouldJoinToAddsDomain",
-                                    "type": "Microsoft.Common.OptionsGroup",
-                                    "visible": true,
-                                    "label": "Join to the AD domain",
-                                    "toolTip": "Select whether or not the HCI nodes are to be joined to the AD domain.",
-                                    "defaultValue": "Join",
-                                    "constraints": {
-                                        "required": true,
-                                        "allowedValues": [
-                                            {
-                                                "label": "Join",
-                                                "value": true
-                                            },
-                                            {
-                                                "label": "Not join",
-                                                "value": false
-                                            }
-                                        ]
-                                    },
-                                    "infoMessages": [
-                                        {
-                                            "visible": true,
-                                            "style": "Info",
-                                            "text": "You should select <strong>Not join</strong> if you plan to provisioning your HCI cluster from Azure portal.",
-                                            "uri": {
-                                                "value": "https://learn.microsoft.com/en-us/azure-stack/hci/deploy/deploy-via-portal",
-                                                "text": "Learn more"
-                                            }                                            
-                                        }
-                                    ]
-                                }
-                            ]
-                        },
-                        {
-                            "name": "hciClusterSection",
-                            "type": "Microsoft.Common.Section",
-                            "visible": "[steps('labConfiguration').hciClusterNodesSection.shouldJoinToAddsDomain]",
-                            "label": "HCI cluster",
-                            "elements": [
-                                {
-                                    "name": "hciClusterSectionText",
-                                    "type": "Microsoft.Common.TextBlock",
-                                    "visible": true,
-                                    "options": {
-                                        "text": "Select the HCI cluster configuration."
-                                    }
-                                },
-                                {
-                                    "name": "shouldCreateHciCluster",
-                                    "type": "Microsoft.Common.OptionsGroup",
-                                    "visible": true,
-                                    "label": "Create HCI cluster",
-                                    "toolTip": "Select whether or not the HCI cluster is created.",
-                                    "defaultValue": "Create",
-                                    "constraints": {
-                                        "required": true,
-                                        "allowedValues": [
-                                            {
-                                                "label": "Create",
-                                                "value": true
-                                            },
-                                            {
-                                                "label": "Not create",
-                                                "value": false
-                                            }
-                                        ]
-                                    }
-                                },
-                                {
-                                    "name": "hciClusterName",
-                                    "type": "Microsoft.Common.TextBox",
-                                    "visible": "[steps('labConfiguration').hciClusterSection.shouldCreateHciCluster]",
-                                    "multiLine": false,
-                                    "label": "Cluster name",
-                                    "subLabel": "[concat('.', steps('labConfiguration').addsSection.domainName)]",
-                                    "toolTip": "Specify the cluster name (cluster name object/CNO name) for your HCI cluster.",
-                                    "placeholder": "e.g. hciclus",
-                                    "defaultValue": "hciclus",
-                                    "constraints": {
-                                        "required": true,
-                                        "validations": [
-                                            {
-                                                "regex": "^[A-Za-z0-9-]+$",
-                                                "message": "Invalid cluster name."
-                                            }
-                                        ]
-                                    }
-                                }
-                            ]
-                        },
-                        {
-                            "name": "addsSection",
-                            "type": "Microsoft.Common.Section",
-                            "visible": true,
-                            "label": "Active Directory Domain Services",
-                            "elements": [
-                                {
-                                    "name": "addsSectionText",
-                                    "type": "Microsoft.Common.TextBlock",
-                                    "visible": true,
-                                    "options": {
-                                        "text": "Select the Active Directory Domain Services domain configuration that will be created as a part of your lab environment."
-                                    }
-                                },
-                                {
-                                    "name": "domainName",
-                                    "type": "Microsoft.Common.TextBox",
-                                    "visible": true,
-                                    "multiLine": false,
-                                    "label": "AD domain FQDN",
-                                    "toolTip": "Specify the AD domain FQDN for the lab environment.",
-                                    "placeholder": "e.g. hci.local",
-                                    "defaultValue": "hci.local",
-                                    "constraints": {
-                                        "required": true,
-                                        "validations": [
-                                            {
-                                                "regex": "^(?!-)[A-Za-z0-9-]+([\\-\\.]{1}[a-z0-9]+)*\\.[A-Za-z]+$",
-                                                "message": "Invalid AD domain FQDN."
-                                            }
-                                        ]
-                                    }
-                                }
-                            ]
-                        },
-                        {
                             "name": "generalSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
-                            "label": "All virtual machines in the lab environment",
+                            "label": "Common configuration",
                             "elements": [
                                 {
                                     "name": "generalSectionText",
@@ -2073,6 +1858,221 @@
                                             "text": "The operating system's updates installation will increase the deployment time by about 15 minutes or more."
                                         }
                                     ]
+                                }
+                            ]
+                        },                        
+                        {
+                            "name": "hciClusterNodesSection",
+                            "type": "Microsoft.Common.Section",
+                            "visible": true,
+                            "label": "HCI cluster node",
+                            "elements": [
+                                {
+                                    "name": "hciClusterNodesSectionText",
+                                    "type": "Microsoft.Common.TextBlock",
+                                    "visible": true,
+                                    "options": {
+                                        "text": "Select the HCI node configuration."
+                                    }
+                                },
+                                {
+                                    "name": "hciNodeOperatingSystem",
+                                    "type": "Microsoft.Common.DropDown",
+                                    "visible": true,
+                                    "multiselect": false,
+                                    "selectAll": false,
+                                    "filter": true,
+                                    "multiLine": true,
+                                    "label": "Operating system",
+                                    "toolTip": "Select the operating system for the HCI nodes.",
+                                    "placeholder": "Select the HCI node's operating system...",
+                                    "defaultDescription": "---",
+                                    "filterPlaceholder": "Filter HCI node's operating systems...",
+                                    "defaultValue": "Azure Stack HCI, version 22H2",
+                                    "constraints": {
+                                        "required": true,
+                                        "allowedValues": [
+                                            {
+                                                "label": "Azure Stack HCI, version 23H2 (Preview)",
+                                                "description": "Azure Stack HCI preview release.",
+                                                "value": {
+                                                    "sku": "ashci23h2",
+                                                    "imageIndex": 1
+                                                }
+                                            },
+                                            {
+                                                "label": "Azure Stack HCI, version 22H2",
+                                                "description": "The supported latest Azure Stack HCI release.",
+                                                "value": {
+                                                    "sku": "ashci22h2",
+                                                    "imageIndex": 1
+                                                }
+                                            },
+                                            {
+                                                "label": "Azure Stack HCI, version 21H2 [End of Service]",
+                                                "description": "<strong>Notice:</strong> This version reached the end of service on November 14, 2023.",
+                                                "value": {
+                                                    "sku": "ashci21h2",
+                                                    "imageIndex": 1
+                                                }
+                                            },
+                                            {
+                                                "label": "Azure Stack HCI, version 20H2 [End of Service]",
+                                                "description": "<strong>Notice:</strong> This version reached the end of service on December 13, 2022.",
+                                                "value": {
+                                                    "sku": "ashci20h2",
+                                                    "imageIndex": 1
+                                                }
+                                            },
+                                            {
+                                                "label": "Windows Server 2022 Datacenter Evaluation (Desktop Experience)",
+                                                "description": "Windows Server 2022 Datacenter with the standard graphical user interface.",
+                                                "value": {
+                                                    "sku": "ws2022",
+                                                    "imageIndex": 4
+                                                }
+                                            }
+                                        ]
+                                    }
+                                },
+                                {
+                                    "name": "hciNodeCount",
+                                    "type": "Microsoft.Common.Slider",
+                                    "visible": true,
+                                    "label": "Node count",
+                                    "subLabel": "nodes",
+                                    "toolTip": "Pick the HCI node count to deploy.",
+                                    "showStepMarkers": true,
+                                    "constraints": {
+                                        "required": true
+                                    },
+                                    "min": 2,
+                                    "max": 8,
+                                    "defaultValue": 2
+                                },
+                                {
+                                    "name": "shouldJoinToAddsDomain",
+                                    "type": "Microsoft.Common.OptionsGroup",
+                                    "visible": true,
+                                    "label": "Join to the AD domain",
+                                    "toolTip": "Select whether or not the HCI nodes are to be joined to the AD domain.",
+                                    "defaultValue": "Join",
+                                    "constraints": {
+                                        "required": true,
+                                        "allowedValues": [
+                                            {
+                                                "label": "Join",
+                                                "value": true
+                                            },
+                                            {
+                                                "label": "Not join",
+                                                "value": false
+                                            }
+                                        ]
+                                    },
+                                    "infoMessages": [
+                                        {
+                                            "visible": true,
+                                            "style": "Info",
+                                            "text": "You should select <strong>Not join</strong> if you plan to provisioning your HCI cluster from Azure portal.",
+                                            "uri": {
+                                                "value": "https://learn.microsoft.com/en-us/azure-stack/hci/deploy/deploy-via-portal",
+                                                "text": "Learn more"
+                                            }                                            
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "name": "hciClusterSection",
+                            "type": "Microsoft.Common.Section",
+                            "visible": "[steps('labConfiguration').hciClusterNodesSection.shouldJoinToAddsDomain]",
+                            "label": "HCI cluster",
+                            "elements": [
+                                {
+                                    "name": "hciClusterSectionText",
+                                    "type": "Microsoft.Common.TextBlock",
+                                    "visible": true,
+                                    "options": {
+                                        "text": "Select the HCI cluster configuration."
+                                    }
+                                },
+                                {
+                                    "name": "shouldCreateHciCluster",
+                                    "type": "Microsoft.Common.OptionsGroup",
+                                    "visible": true,
+                                    "label": "Create HCI cluster",
+                                    "toolTip": "Select whether or not the HCI cluster is created.",
+                                    "defaultValue": "Create",
+                                    "constraints": {
+                                        "required": true,
+                                        "allowedValues": [
+                                            {
+                                                "label": "Create",
+                                                "value": true
+                                            },
+                                            {
+                                                "label": "Not create",
+                                                "value": false
+                                            }
+                                        ]
+                                    }
+                                },
+                                {
+                                    "name": "hciClusterName",
+                                    "type": "Microsoft.Common.TextBox",
+                                    "visible": "[steps('labConfiguration').hciClusterSection.shouldCreateHciCluster]",
+                                    "multiLine": false,
+                                    "label": "Cluster name",
+                                    "subLabel": "[concat('.', steps('labConfiguration').addsSection.domainName)]",
+                                    "toolTip": "Specify the cluster name (cluster name object/CNO name) for your HCI cluster.",
+                                    "placeholder": "e.g. hciclus",
+                                    "defaultValue": "hciclus",
+                                    "constraints": {
+                                        "required": true,
+                                        "validations": [
+                                            {
+                                                "regex": "^[A-Za-z0-9-]+$",
+                                                "message": "Invalid cluster name."
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "addsSection",
+                            "type": "Microsoft.Common.Section",
+                            "visible": true,
+                            "label": "Active Directory Domain Services",
+                            "elements": [
+                                {
+                                    "name": "addsSectionText",
+                                    "type": "Microsoft.Common.TextBlock",
+                                    "visible": true,
+                                    "options": {
+                                        "text": "Select the Active Directory Domain Services domain configuration that will be created as a part of your lab environment."
+                                    }
+                                },
+                                {
+                                    "name": "domainName",
+                                    "type": "Microsoft.Common.TextBox",
+                                    "visible": true,
+                                    "multiLine": false,
+                                    "label": "AD domain FQDN",
+                                    "toolTip": "Specify the AD domain FQDN for the lab environment.",
+                                    "placeholder": "e.g. hci.local",
+                                    "defaultValue": "hci.local",
+                                    "constraints": {
+                                        "required": true,
+                                        "validations": [
+                                            {
+                                                "regex": "^(?!-)[A-Za-z0-9-]+([\\-\\.]{1}[a-z0-9]+)*\\.[A-Za-z]+$",
+                                                "message": "Invalid AD domain FQDN."
+                                            }
+                                        ]
+                                    }
                                 }
                             ]
                         }
