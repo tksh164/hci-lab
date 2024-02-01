@@ -17,7 +17,7 @@ function Invoke-WindowsTerminalInstallation
 
     'Downloading the Windows 10 pre-install kit zip file...' | Write-ScriptLog -Context $env:ComputerName
     $params = @{
-        SourceUri      = 'https://github.com/microsoft/terminal/releases/download/v1.18.2681.0/Microsoft.WindowsTerminal_1.18.2681.0_8wekyb3d8bbwe.msixbundle_Windows10_PreinstallKit.zip'
+        SourceUri      = 'https://github.com/microsoft/terminal/releases/download/v1.19.10302.0/Microsoft.WindowsTerminal_1.19.10302.0_8wekyb3d8bbwe.msixbundle_Windows10_PreinstallKit.zip'
         DownloadFolder = $DownloadFolderPath
         FileNameToSave = 'Microsoft.WindowsTerminal_Windows10_PreinstallKit.zip'
     }
