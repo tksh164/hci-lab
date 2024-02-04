@@ -1865,7 +1865,7 @@
                             "name": "hciClusterNodesSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
-                            "label": "HCI cluster node",
+                            "label": "HCI node",
                             "elements": [
                                 {
                                     "name": "hciClusterNodesSectionText",
@@ -1893,8 +1893,8 @@
                                         "required": true,
                                         "allowedValues": [
                                             {
-                                                "label": "Azure Stack HCI, version 23H2 (Preview)",
-                                                "description": "Azure Stack HCI preview release.",
+                                                "label": "Azure Stack HCI, version 23H2",
+                                                "description": "The latest generally available version.",
                                                 "value": {
                                                     "sku": "ashci23h2",
                                                     "imageIndex": 1
@@ -1902,7 +1902,7 @@
                                             },
                                             {
                                                 "label": "Azure Stack HCI, version 22H2",
-                                                "description": "The supported latest Azure Stack HCI release.",
+                                                "description": "This version is supported.",
                                                 "value": {
                                                     "sku": "ashci22h2",
                                                     "imageIndex": 1
