@@ -190,9 +190,11 @@ $paramsForAdd = @{
 $paramsForSet = @{
     MacAddressSpoofing = [Microsoft.HyperV.PowerShell.OnOffState]::On
     AllowTeaming       = [Microsoft.HyperV.PowerShell.OnOffState]::On
+    Passthru           = $true
 }
 Add-VMNetworkAdapter @paramsForAdd |
-Set-VMNetworkAdapter @paramsForSet
+Set-VMNetworkAdapter @paramsForSet |
+Set-VMNetworkAdapterVlan -Trunk -NativeVlanId 0 -AllowedVlanIdList '1-4094'
 
 # Compute
 $paramsForAdd = @{
@@ -205,9 +207,11 @@ $paramsForAdd = @{
 $paramsForSet = @{
     MacAddressSpoofing = [Microsoft.HyperV.PowerShell.OnOffState]::On
     AllowTeaming       = [Microsoft.HyperV.PowerShell.OnOffState]::On
+    Passthru           = $true
 }
 Add-VMNetworkAdapter @paramsForAdd |
-Set-VMNetworkAdapter @paramsForSet
+Set-VMNetworkAdapter @paramsForSet |
+Set-VMNetworkAdapterVlan -Trunk -NativeVlanId 0 -AllowedVlanIdList '1-4094'
 
 # Storage 1
 $paramsForAdd = @{
@@ -221,13 +225,9 @@ $paramsForSet = @{
     AllowTeaming = [Microsoft.HyperV.PowerShell.OnOffState]::On
     Passthru     = $true
 }
-$paramsForVlan = @{
-    Access = $true
-    VlanId = $nodeConfig.NetAdapters.Storage1.VlanId
-}
 Add-VMNetworkAdapter @paramsForAdd |
 Set-VMNetworkAdapter @paramsForSet |
-Set-VMNetworkAdapterVlan @paramsForVlan
+Set-VMNetworkAdapterVlan -Trunk -NativeVlanId 0 -AllowedVlanIdList '1-4094'
 
 # Storage 2
 $paramsForAdd = @{
@@ -241,13 +241,9 @@ $paramsForSet = @{
     AllowTeaming = [Microsoft.HyperV.PowerShell.OnOffState]::On
     Passthru     = $true
 }
-$paramsForVlan = @{
-    Access = $true
-    VlanId = $nodeConfig.NetAdapters.Storage2.VlanId
-}
 Add-VMNetworkAdapter @paramsForAdd |
 Set-VMNetworkAdapter @paramsForSet |
-Set-VMNetworkAdapterVlan @paramsForVlan
+Set-VMNetworkAdapterVlan -Trunk -NativeVlanId 0 -AllowedVlanIdList '1-4094'
 
 'Creating the data disks...' | Write-ScriptLog -Context $nodeConfig.VMName
 $diskCount = 8
