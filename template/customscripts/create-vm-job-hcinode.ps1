@@ -362,20 +362,34 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
     Get-NetAdapter -Name $VMConfig.NetAdapters.Compute.Name | New-NetIPAddress @params
 
     # Storage 1
-    $params = @{
+    $paramsForSetNetAdapter = @{
+        VlanID   = $VMConfig.NetAdapters.Storage1.VlanId
+        Confirm  = $false
+        PassThru = $true
+    }
+    $paramsForNewIPAddress = @{
         AddressFamily = 'IPv4'
         IPAddress     = $VMConfig.NetAdapters.Storage1.IPAddress
         PrefixLength  = $VMConfig.NetAdapters.Storage1.PrefixLength
     }
-    Get-NetAdapter -Name $VMConfig.NetAdapters.Storage1.Name | New-NetIPAddress @params
+    Get-NetAdapter -Name $VMConfig.NetAdapters.Storage1.Name |
+    Set-NetAdapter @paramsForSetNetAdapter |
+    New-NetIPAddress @paramsForNewIPAddress
 
     # Storage 2
-    $params = @{
+    $paramsForSetNetAdapter = @{
+        VlanID   = $VMConfig.NetAdapters.Storage2.VlanId
+        Confirm  = $false
+        PassThru = $true
+    }
+    $paramsForNewIPAddress = @{
         AddressFamily = 'IPv4'
         IPAddress     = $VMConfig.NetAdapters.Storage2.IPAddress
         PrefixLength  = $VMConfig.NetAdapters.Storage2.PrefixLength
     }
-    Get-NetAdapter -Name $VMConfig.NetAdapters.Storage2.Name | New-NetIPAddress @params
+    Get-NetAdapter -Name $VMConfig.NetAdapters.Storage2.Name |
+    Set-NetAdapter @paramsForSetNetAdapter |
+    New-NetIPAddress @paramsForNewIPAddress
 } | Out-String | Write-ScriptLog -Context $nodeConfig.VMName
 
 'Cleaning up the PowerShell Direct session...' | Write-ScriptLog -Context $nodeConfig.VMName
