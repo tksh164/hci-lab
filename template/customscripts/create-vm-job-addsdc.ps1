@@ -69,8 +69,22 @@ $params = @{
     VMName               = $vmName
     NewLocalKeyProtector = $true
     Passthru             = $true
+    ErrorAction          = [Management.Automation.ActionPreference]::Stop
 }
-Set-VMKeyProtector @params | Enable-VMTPM
+try {
+    Set-VMKeyProtector @params | Enable-VMTPM
+}
+catch {
+    (
+        'Caught exception on enable vTPM, will retry to enable vTPM... ' +
+        '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})'
+    ) -f @(
+        $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message
+    ) | Write-ScriptLog -Context $vmName
+
+    # Rescue only once by retry.
+    Set-VMKeyProtector @params | Enable-VMTPM
+}
 
 'Setting the VM''s network adapter configuration...' | Write-ScriptLog -Context $vmName
 Get-VMNetworkAdapter -VMName $vmName | Remove-VMNetworkAdapter
