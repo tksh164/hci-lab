@@ -1865,7 +1865,7 @@
                             "name": "hciClusterNodesSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
-                            "label": "HCI cluster node",
+                            "label": "HCI node",
                             "elements": [
                                 {
                                     "name": "hciClusterNodesSectionText",
