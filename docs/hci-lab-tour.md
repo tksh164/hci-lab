@@ -52,7 +52,7 @@ The HCI lab environment consists of three roles of Hyper-V VMs on a single Azure
     - **Join to the AD DS domain:** Should you choose to **Not join** if you plan to [provisioning your HCI cluster from Azure portal](https://learn.microsoft.com/en-us/azure-stack/hci/deploy/deploy-via-portal).
     - **Create HCI cluster:** You can automatically create your HCI cluster during the deployment if you choose the deployment option. Also, by not choosing it, you can manually create an HCI cluster for cluster creation with custom configuration such as Network ATC.
 
-- AD domain name (default): **hci.local**
+- AD domain name (default): **hci.internal**
 
 - Credentials
 

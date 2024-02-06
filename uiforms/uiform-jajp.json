@@ -2062,8 +2062,8 @@
                                     "multiLine": false,
                                     "label": "AD ドメイン FQDN",
                                     "toolTip": "ラボ環境の AD ドメイン FQDN を指定します。",
-                                    "placeholder": "例: hci.local",
-                                    "defaultValue": "hci.local",
+                                    "placeholder": "例: hci.internal",
+                                    "defaultValue": "hci.internal",
                                     "constraints": {
                                         "required": true,
                                         "validations": [

@@ -2062,8 +2062,8 @@
                                     "multiLine": false,
                                     "label": "AD domain FQDN",
                                     "toolTip": "Specify the AD domain FQDN for the lab environment.",
-                                    "placeholder": "e.g. hci.local",
-                                    "defaultValue": "hci.local",
+                                    "placeholder": "e.g. hci.internal",
+                                    "defaultValue": "hci.internal",
                                     "constraints": {
                                         "required": true,
                                         "validations": [
