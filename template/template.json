@@ -554,13 +554,13 @@
                     },
                     "storage1": {
                         "name": "Storage1",
-                        "vlanId": 4001,
+                        "vlanId": 711,
                         "ipAddress": "172.20.1.{0}",  // ipAddressOffset + ZeroBasedNodeIndex
                         "prefixLength": 24
                     },
                     "storage2": {
                         "name": "Storage2",
-                        "vlanId": 4002,
+                        "vlanId": 712,
                         "ipAddress": "172.20.2.{0}",  // ipAddressOffset + ZeroBasedNodeIndex
                         "prefixLength": 24
                     }

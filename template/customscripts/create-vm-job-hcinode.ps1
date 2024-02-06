@@ -204,9 +204,11 @@ $paramsForAdd = @{
 $paramsForSet = @{
     MacAddressSpoofing = [Microsoft.HyperV.PowerShell.OnOffState]::On
     AllowTeaming       = [Microsoft.HyperV.PowerShell.OnOffState]::On
+    Passthru           = $true
 }
 Add-VMNetworkAdapter @paramsForAdd |
-Set-VMNetworkAdapter @paramsForSet
+Set-VMNetworkAdapter @paramsForSet |
+Set-VMNetworkAdapterVlan -Trunk -NativeVlanId 0 -AllowedVlanIdList '1-4094'
 
 # Compute
 $paramsForAdd = @{
@@ -219,9 +221,11 @@ $paramsForAdd = @{
 $paramsForSet = @{
     MacAddressSpoofing = [Microsoft.HyperV.PowerShell.OnOffState]::On
     AllowTeaming       = [Microsoft.HyperV.PowerShell.OnOffState]::On
+    Passthru           = $true
 }
 Add-VMNetworkAdapter @paramsForAdd |
-Set-VMNetworkAdapter @paramsForSet
+Set-VMNetworkAdapter @paramsForSet |
+Set-VMNetworkAdapterVlan -Trunk -NativeVlanId 0 -AllowedVlanIdList '1-4094'
 
 # Storage 1
 $paramsForAdd = @{
@@ -235,13 +239,9 @@ $paramsForSet = @{
     AllowTeaming = [Microsoft.HyperV.PowerShell.OnOffState]::On
     Passthru     = $true
 }
-$paramsForVlan = @{
-    Access = $true
-    VlanId = $nodeConfig.NetAdapters.Storage1.VlanId
-}
 Add-VMNetworkAdapter @paramsForAdd |
 Set-VMNetworkAdapter @paramsForSet |
-Set-VMNetworkAdapterVlan @paramsForVlan
+Set-VMNetworkAdapterVlan -Trunk -NativeVlanId 0 -AllowedVlanIdList '1-4094'
 
 # Storage 2
 $paramsForAdd = @{
@@ -255,13 +255,9 @@ $paramsForSet = @{
     AllowTeaming = [Microsoft.HyperV.PowerShell.OnOffState]::On
     Passthru     = $true
 }
-$paramsForVlan = @{
-    Access = $true
-    VlanId = $nodeConfig.NetAdapters.Storage2.VlanId
-}
 Add-VMNetworkAdapter @paramsForAdd |
 Set-VMNetworkAdapter @paramsForSet |
-Set-VMNetworkAdapterVlan @paramsForVlan
+Set-VMNetworkAdapterVlan -Trunk -NativeVlanId 0 -AllowedVlanIdList '1-4094'
 
 'Creating the data disks...' | Write-ScriptLog -Context $nodeConfig.VMName
 $diskCount = 8
@@ -380,20 +376,34 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
     Get-NetAdapter -Name $VMConfig.NetAdapters.Compute.Name | New-NetIPAddress @params
 
     # Storage 1
-    $params = @{
+    $paramsForSetNetAdapter = @{
+        VlanID   = $VMConfig.NetAdapters.Storage1.VlanId
+        Confirm  = $false
+        PassThru = $true
+    }
+    $paramsForNewIPAddress = @{
         AddressFamily = 'IPv4'
         IPAddress     = $VMConfig.NetAdapters.Storage1.IPAddress
         PrefixLength  = $VMConfig.NetAdapters.Storage1.PrefixLength
     }
-    Get-NetAdapter -Name $VMConfig.NetAdapters.Storage1.Name | New-NetIPAddress @params
+    Get-NetAdapter -Name $VMConfig.NetAdapters.Storage1.Name |
+    Set-NetAdapter @paramsForSetNetAdapter |
+    New-NetIPAddress @paramsForNewIPAddress
 
     # Storage 2
-    $params = @{
+    $paramsForSetNetAdapter = @{
+        VlanID   = $VMConfig.NetAdapters.Storage2.VlanId
+        Confirm  = $false
+        PassThru = $true
+    }
+    $paramsForNewIPAddress = @{
         AddressFamily = 'IPv4'
         IPAddress     = $VMConfig.NetAdapters.Storage2.IPAddress
         PrefixLength  = $VMConfig.NetAdapters.Storage2.PrefixLength
     }
-    Get-NetAdapter -Name $VMConfig.NetAdapters.Storage2.Name | New-NetIPAddress @params
+    Get-NetAdapter -Name $VMConfig.NetAdapters.Storage2.Name |
+    Set-NetAdapter @paramsForSetNetAdapter |
+    New-NetIPAddress @paramsForNewIPAddress
 } | Out-String | Write-ScriptLog -Context $nodeConfig.VMName
 
 'Cleaning up the PowerShell Direct session...' | Write-ScriptLog -Context $nodeConfig.VMName

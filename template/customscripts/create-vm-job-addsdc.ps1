@@ -100,9 +100,11 @@ $paramsForAdd = @{
 $paramsForSet = @{
     MacAddressSpoofing = [Microsoft.HyperV.PowerShell.OnOffState]::On
     AllowTeaming       = [Microsoft.HyperV.PowerShell.OnOffState]::On
+    Passthru           = $true
 }
 Add-VMNetworkAdapter @paramsForAdd |
-Set-VMNetworkAdapter @paramsForSet
+Set-VMNetworkAdapter @paramsForSet |
+Set-VMNetworkAdapterVlan -Trunk -NativeVlanId 0 -AllowedVlanIdList '1-4094'
 
 'Generating the unattend answer XML...' | Write-ScriptLog -Context $vmName
 $adminPassword = Get-Secret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName.adminPassword
