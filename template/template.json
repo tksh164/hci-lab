@@ -320,7 +320,7 @@
         },
         "addsDomainFqdn": {
             "type": "string",
-            "defaultValue": "hci.local",
+            "defaultValue": "hci.internal",
             "metadata": {
                 "description": "The Active Direcory Domain Services domain FQDN."
             }
