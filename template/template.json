@@ -615,9 +615,6 @@
             "name": "[variables('labHostVmDeploymentName')]",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2022-09-01",
-            "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', variables('keyVaultDeploymentName'))]"
-            ],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
@@ -743,9 +740,7 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2022-09-01",
             "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', variables('keyVaultRbacDeploymentName'))]",
-                "[resourceId('Microsoft.Resources/deployments', variables('labHostVmDeploymentName'))]",
-                "[resourceId('Microsoft.Resources/deployments', variables('cloudWitnessStorageAccountDeploymentName'))]"
+                "[resourceId('Microsoft.Resources/deployments', variables('labHostVmDeploymentName'))]"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -782,6 +777,7 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2022-09-01",
             "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', variables('keyVaultRbacDeploymentName'))]",
                 "[resourceId('Microsoft.Resources/deployments', variables('dscParams').installRolesFeatures.deploymentName)]"
             ],
             "properties": {
@@ -921,7 +917,6 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2022-09-01",
             "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', variables('keyVaultRbacDeploymentName'))]",  // Use secrets by VM's managed identity in the custom script.
                 "[resourceId('Microsoft.Resources/deployments', variables('dscParams').rebootLabHost.deploymentName)]"
             ],
             "properties": {
@@ -957,6 +952,7 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2022-09-01",
             "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', variables('cloudWitnessStorageAccountDeploymentName'))]",
                 "[resourceId('Microsoft.Resources/deployments', variables('customScriptParams').createVm.deploymentName)]"
             ],
             "properties": {
