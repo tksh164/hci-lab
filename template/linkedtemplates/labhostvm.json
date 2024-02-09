@@ -85,18 +85,6 @@
             "metadata": {
                 "description": "The string for uniqueness of resource names."
             }
-        },
-        "keyVaultName": {
-            "type": "string",
-            "metadata": {
-                "description": "The Key Vault name to store the admin password."
-            }
-        },
-        "secretNameForAdminPassword": {
-            "type": "string",
-            "metadata": {
-                "description": "The secret's name of the admin password in the Key Vault."
-            }
         }
     },
     "variables": {
@@ -303,17 +291,6 @@
                 },
                 "timeZoneId": "[parameters('autoshutdownTimeZone')]",
                 "targetResourceId": "[resourceId('Microsoft.Compute/virtualMachines', parameters('vmName'))]"
-            }
-        },
-
-        // Store the admin password to the Key Vault.
-
-        {
-            "name": "[format('{0}/{1}', parameters('keyVaultName'), parameters('secretNameForAdminPassword'))]",
-            "type": "Microsoft.KeyVault/vaults/secrets",
-            "apiVersion": "2023-02-01",
-            "properties": {
-                "value": "[parameters('adminPassword')]"
             }
         }
     ],
