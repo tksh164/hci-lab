@@ -599,6 +599,12 @@
                     },
                     "keyVaultName": {
                         "value": "[variables('keyVaultName')]"
+                    },
+                    "secretNameForLabHostAdminPassword": {
+                        "value": "[variables('labConfig').keyVault.secretName.adminPassword]"
+                    },
+                    "labHostAdminPassword": {
+                        "value": "[parameters('adminPassword')]"
                     }
                 }
             }
@@ -660,12 +666,6 @@
                     },
                     "uniqueString": {
                         "value": "[variables('uniqueString')]"
-                    },
-                    "keyVaultName": {
-                        "value": "[variables('keyVaultName')]"
-                    },
-                    "secretNameForAdminPassword": {
-                        "value": "[variables('labConfig').keyVault.secretName.adminPassword]"
                     }
                 }
             }
