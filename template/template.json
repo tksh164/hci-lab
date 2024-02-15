@@ -462,7 +462,7 @@
         "labConfig": {
             "labHost": {
                 "storage": {
-                    "poolName": "hcisandboxpool",
+                    "poolName": "hcilabpool",
                     "driveLetter": "V",
                     "volumeLabel": "HCI Lab Data"
                 },
