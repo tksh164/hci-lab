@@ -11,7 +11,7 @@
         "vmName": {
             "type": "string",
             "metadata": {
-                "description": "The lab hosting virtual machine name."
+                "description": "The lab host virtual machine name."
             }
         },
         "adminUserName": {
@@ -29,25 +29,27 @@
         "vmSize": {
             "type": "string",
             "metadata": {
-                "description": "The lab hosting virtual machine size."
+                "description": "The lab host virtual machine size."
             }
         },
         "osDiskType": {
             "type": "string",
             "metadata": {
-                "description": "The Storage type of the lab hosting virtual machine's OS disk."
+                "description": "The storage type of the lab host virtual machine's OS disk."
             }
         },
         "dataDiskType": {
             "type": "string",
             "metadata": {
-                "description": "The Storage type of the lab hosting virtual machine's data disk."
+                "description": "The storage type of the lab host virtual machine's data disk."
             }
         },
         "dataDiskSize": {
             "type": "int",
             "metadata": {
-                "description": "The size of the individual data disks in GiB."
+                "description": "The size of individual disk of the lab host virtual machine's data disks in GiB."
+            }
+        },
         "dataDiskCount": {
             "type": "int",
             "minValue": 8,
@@ -65,7 +67,7 @@
         "base64EncodedLabConfig": {
             "type": "string",
             "metadata": {
-                "description": "THe base64 encode user data for the lab hosting virtual machine."
+                "description": "THe base64 encode user data for the lab host virtual machine."
             }
         },
         "shouldEnabledAutoshutdown": {
@@ -152,7 +154,7 @@
             }
         },
 
-        // Lab hosting virtual machine.
+        // Lab host virtual machine.
 
         {
             "name": "[variables('publicIpAddressName')]",
