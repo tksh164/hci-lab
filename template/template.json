@@ -214,6 +214,13 @@
             ],
             "metadata": {
                 "description": "The size of the individual data disks in GiB."
+        "labHostVmDataDiskCount": {
+            "type": "int",
+            "defaultValue": 8,
+            "minValue": 8,
+            "maxValue": 32,
+            "metadata": {
+                "description": "The number of data disks on the lab host virtual machine."
             }
         },
         "hasEligibleWindowsServerLicense": {
@@ -645,6 +652,9 @@
                     },
                     "dataDiskSize": {
                         "value": "[parameters('labHostVmDataDiskSize')]"
+                    },
+                    "dataDiskCount": {
+                        "value": "[parameters('labHostVmDataDiskCount')]"
                     },
                     "hasEligibleWindowsServerLicense": {
                         "value": "[parameters('hasEligibleWindowsServerLicense')]"

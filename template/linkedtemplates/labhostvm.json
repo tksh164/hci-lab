@@ -48,6 +48,12 @@
             "type": "int",
             "metadata": {
                 "description": "The size of the individual data disks in GiB."
+        "dataDiskCount": {
+            "type": "int",
+            "minValue": 8,
+            "maxValue": 32,
+            "metadata": {
+                "description": "The number of data disks on the lab host virtual machine."
             }
         },
         "hasEligibleWindowsServerLicense": {
@@ -98,7 +104,6 @@
 
         // Virtual machine
 
-        "dataDisksCount": 8,
         "networkInterfaceName": "[format('{0}-nic1', parameters('vmName'))]",
         "privateIPAddress": "192.168.0.4",
         "publicIpAddressName": "[format('{0}-ip1', parameters('vmName'))]",
@@ -248,9 +253,9 @@
                     "copy": [
                         {
                             "name": "dataDisks",
-                            "count": "[variables('dataDisksCount')]",
+                            "count": "[parameters('dataDiskCount')]",
                             "input": {
-                                "name": "[format('{0}-datadisk{1}', parameters('vmName'), copyIndex('dataDisks'))]",
+                                "name": "[format('{0}-datadisk{1:00}', parameters('vmName'), copyIndex('dataDisks'))]",
                                 "lun": "[copyIndex('dataDisks')]",
                                 "managedDisk": {
                                     "storageAccountType": "[parameters('dataDiskType')]"
