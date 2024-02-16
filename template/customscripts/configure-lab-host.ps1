@@ -114,8 +114,9 @@ $params = @{
     StorageSubSystemFriendlyName = '*storage*'
     PhysicalDisks                = Get-PhysicalDisk -CanPool $true
 }
-New-StoragePool @params
-if ((Get-StoragePool -FriendlyName $params.FriendlyName -ErrorAction SilentlyContinue).OperationalStatus -ne 'OK') {
+$storagePool = New-StoragePool @params
+$storagePool | Format-List -Property '*'
+if ($storagePool.OperationalStatus -ne 'OK') {
     throw 'Storage pool creation failed.'
 }
 
@@ -125,17 +126,20 @@ $params = @{
     FileSystem              = 'ReFS'
     AllocationUnitSize      = 4KB
     ResiliencySettingName   = 'Simple'
+    NumberOfColumns         = ($storagePool | Get-PhysicalDisk).Length
     UseMaximumSize          = $true
     DriveLetter             = $labConfig.labHost.storage.driveLetter
     FriendlyName            = $labConfig.labHost.storage.volumeLabel
 }
-New-Volume @params
-if ((Get-Volume -DriveLetter $params.DriveLetter -ErrorAction SilentlyContinue).OperationalStatus -ne 'OK') {
+$storageVolume = New-Volume @params
+$storageVolume | Format-List -Property '*'
+if ($storageVolume.OperationalStatus -ne 'OK') {
     throw 'Volume creation failed.'
 }
+Get-VirtualDisk -FriendlyName $storageVolume.FileSystemLabel | Format-List -Property '*'
 
 'Setting Defender exclusions...' | Write-ScriptLog -Context $env:ComputerName
-$exclusionPath = $labConfig.labHost.storage.driveLetter + ':\'
+$exclusionPath = $storageVolume.DriveLetter + ':\'
 Add-MpPreference -ExclusionPath $exclusionPath
 if ((Get-MpPreference).ExclusionPath -notcontains $exclusionPath) {
     throw 'Defender exclusion setting failed.'
