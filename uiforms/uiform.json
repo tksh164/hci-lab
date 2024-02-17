@@ -182,6 +182,18 @@
                             }
                         },
                         {
+                            "name": "getVmSkuArmApi",
+                            "type": "Microsoft.Solutions.ArmApiControl",
+                            "condition": "[not(empty(steps('basics').vmSize))]",
+                            "request": {
+                                "method": "GET",
+                                "path": "[format('{0}/providers/Microsoft.Compute/skus?api-version=2021-07-01&$filter=location eq %27{1}%27', steps('basics').resourceScope.subscription.id, steps('basics').resourceScope.location.name)]",
+                                "transforms": {
+                                    "list": "value[?resourceType == `virtualMachines`] | [*].{name:name, maxDataDiskCount:capabilities[?name == `MaxDataDiskCount`] | [0].value}"
+                                }
+                            }
+                        },
+                        {
                             "name": "adminAccountSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
@@ -389,48 +401,57 @@
                                     "visible": true,
                                     "multiselect": false,
                                     "selectAll": false,
-                                    "filter": true,
+                                    "filter": false,
                                     "multiLine": true,
                                     "label": "Data volume capacity",
                                     "toolTip": "Data volume capacity on the lab host virtual machine.",
                                     "placeholder": "Select the data volume capacity...",
                                     "defaultDescription": "---",
                                     "filterPlaceholder": "Filter data volume capacities...",
-                                    "defaultValue": "503 GB (64 GiB x 8 disks)",
+                                    "defaultValue": "[format('{0} GiB', mul(64, first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount))))]",
                                     "constraints": {
                                         "required": true,
                                         "allowedValues": [
                                             {
-                                                "label": "247 GB (32 GiB x 8 disks)",
+                                                "label": "[format('{0} GiB', mul(32, first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount))))]",
                                                 "value": 32,
-                                                "description": "For just trying to deploy a HCI cluster only. Not enough to try any hybrid services such as Azure Arc resource bridge, AKS hybrid, etc."
+                                                "description": "[format('32 GiB x {0} disks.', first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount)))]"
                                             },
                                             {
-                                                "label": "503 GB (64 GiB x 8 disks)",
+                                                "label": "[format('{0} GiB', mul(64, first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount))))]",
                                                 "value": 64,
-                                                "description": "For just trying a single hybrid service on your HCI cluster at a time. Not enough to try multiple hybrid services on your HCI cluster at once."
+                                                "description": "[format('64 GiB x {0} disks.', first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount)))]"
                                             },
                                             {
-                                                "label": "1015 GiB (128 GiB x 8 disks)",
+                                                "label": "[format('{0} GiB', mul(128, first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount))))]",
                                                 "value": 128,
-                                                "description": "For just trying a few hybrid services on your HCI cluster at a time. Not enough to try multiple hybrid services on your HCI cluster at once."
+                                                "description": "[format('128 GiB x {0} disks.', first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount)))]"
                                             },
                                             {
-                                                "label": "2039 GiB (256 GiB x 8 disks)",
+                                                "label": "[format('{0} GiB', mul(256, first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount))))]",
                                                 "value": 256,
-                                                "description": "Enough to try multiple hybrid services simultaneously on your HCI cluster."
+                                                "description": "[format('256 GiB x {0} disks.', first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount)))]"
                                             },
                                             {
-                                                "label": "4087 GiB (512 GiB x 8 disks)",
+                                                "label": "[format('{0} GiB', mul(512, first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount))))]",
                                                 "value": 512,
-                                                "description": "Enough to try multiple hybrid services simultaneously on your HCI cluster."
+                                                "description": "[format('512 GiB x {0} disks.', first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount)))]"
                                             },
                                             {
-                                                "label": "8183 GiB (1024 GiB x 8 disks)",
+                                                "label": "[format('{0} GiB', mul(1024, first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount))))]",
                                                 "value": 1024,
-                                                "description": "Enough to try multiple hybrid services simultaneously on your HCI cluster."
+                                                "description": "[format('1024 GiB x {0} disks.', first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount)))]"
                                             }
                                         ]
+                                    }
+                                },
+                                {
+                                    "name": "vmSkuInfo",
+                                    "type": "Microsoft.Common.InfoBox",
+                                    "visible": true,
+                                    "options": {
+                                        "style": "Info",
+                                        "text": "[format('The selected VM size <strong>{0}</strong> supports <strong>{1}</strong> disks.', replace(steps('basics').vmSize, '_', ' '), first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount)))]"
                                     }
                                 }
                             ]
@@ -2123,6 +2144,7 @@
                 "labHostVmOsDiskType": "[steps('labHostVmDetails').diskSection.osDiskType]",
                 "labHostVmDataDiskType": "[steps('labHostVmDetails').diskSection.dataDiskType]",
                 "labHostVmDataDiskSize": "[steps('labHostVmDetails').dataVolumeSection.dataDiskSize]",
+                "labHostVmDataDiskCount": "[first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount))]",
                 "hasEligibleWindowsServerLicense": "[steps('basics').azureHybridBenefitSection.hasEligibleWindowsServerLicense]",
                 "toolsToInstall": "[concat(if(steps('labHostVmDetails').toolsSection.shouldInstallWindowsTerminal, 'windowsterminal', ''), ';', if(steps('labHostVmDetails').toolsSection.shouldInstallVisualStudioCode, 'vscode', ''))]",
                 "shouldEnabledAutoshutdown": "[steps('labHostVmDetails').autoshutdownSection.shouldEnabledAutoshutdown]",
