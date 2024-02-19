@@ -116,27 +116,45 @@ $params = @{
 }
 $storagePool = New-StoragePool @params
 $storagePool | Format-List -Property '*'
-if ($storagePool.OperationalStatus -ne 'OK') {
-    throw 'Storage pool creation failed.'
-}
 
-'Creating a volume...' | Write-ScriptLog -Context $env:ComputerName
+'Creating a virtual disk...' | Write-ScriptLog -Context $env:ComputerName
 $params = @{
     StoragePoolFriendlyName = $labConfig.labHost.storage.poolName
-    FileSystem              = 'ReFS'
-    AllocationUnitSize      = 4KB
+    FriendlyName            = $labConfig.labHost.storage.volumeLabel
+    UseMaximumSize          = $true
+    AllocationUnitSize      = 1GB
     ResiliencySettingName   = 'Simple'
     NumberOfColumns         = ($storagePool | Get-PhysicalDisk).Length
-    UseMaximumSize          = $true
-    DriveLetter             = $labConfig.labHost.storage.driveLetter
-    FriendlyName            = $labConfig.labHost.storage.volumeLabel
+    Interleave              = 64KB
 }
-$storageVolume = New-Volume @params
-$storageVolume | Format-List -Property '*'
-if ($storageVolume.OperationalStatus -ne 'OK') {
-    throw 'Volume creation failed.'
+$virtualDisk = New-VirtualDisk @params
+$virtualDisk | Format-List -Property '*'
+
+'Initializing the virtual disk...' | Write-ScriptLog -Context $env:ComputerName
+$params = @{
+    UniqueId       = $virtualDisk.UniqueId
+    PartitionStyle = 'GPT'
+    Passthru       = $true
 }
-Get-VirtualDisk -FriendlyName $storageVolume.FileSystemLabel | Format-List -Property '*'
+$disk = Initialize-Disk @params
+$disk | Format-List -Property '*'
+
+'Creating a partition...' | Write-ScriptLog -Context $env:ComputerName
+$params = @{
+    DriveLetter    = $labConfig.labHost.storage.driveLetter
+    UseMaximumSize = $true
+}
+$partition = $disk | New-Partition @params
+$partition | Format-List -Property '*'
+
+'Formating the volume...' | Write-ScriptLog -Context $env:ComputerName
+$params = @{
+    FileSystem         = 'ReFS'
+    AllocationUnitSize = 4KB
+    NewFileSystemLabel = $labConfig.labHost.storage.volumeLabel
+}
+$volume = $partition | Format-Volume @params
+$volume | Format-List -Property '*'
 
 'Setting Defender exclusions...' | Write-ScriptLog -Context $env:ComputerName
 $exclusionPath = $storageVolume.DriveLetter + ':\'
