@@ -114,28 +114,50 @@ $params = @{
     StorageSubSystemFriendlyName = '*storage*'
     PhysicalDisks                = Get-PhysicalDisk -CanPool $true
 }
-New-StoragePool @params
-if ((Get-StoragePool -FriendlyName $params.FriendlyName -ErrorAction SilentlyContinue).OperationalStatus -ne 'OK') {
-    throw 'Storage pool creation failed.'
-}
+$storagePool = New-StoragePool @params
+$storagePool | Format-List -Property '*'
 
-'Creating a volume...' | Write-ScriptLog -Context $env:ComputerName
+'Creating a virtual disk...' | Write-ScriptLog -Context $env:ComputerName
 $params = @{
     StoragePoolFriendlyName = $labConfig.labHost.storage.poolName
-    FileSystem              = 'ReFS'
-    AllocationUnitSize      = 4KB
-    ResiliencySettingName   = 'Simple'
-    UseMaximumSize          = $true
-    DriveLetter             = $labConfig.labHost.storage.driveLetter
     FriendlyName            = $labConfig.labHost.storage.volumeLabel
+    UseMaximumSize          = $true
+    AllocationUnitSize      = 1GB
+    ResiliencySettingName   = 'Simple'
+    NumberOfColumns         = ($storagePool | Get-PhysicalDisk).Length
+    Interleave              = 64KB
 }
-New-Volume @params
-if ((Get-Volume -DriveLetter $params.DriveLetter -ErrorAction SilentlyContinue).OperationalStatus -ne 'OK') {
-    throw 'Volume creation failed.'
+$virtualDisk = New-VirtualDisk @params
+$virtualDisk | Format-List -Property '*'
+
+'Initializing the virtual disk...' | Write-ScriptLog -Context $env:ComputerName
+$params = @{
+    UniqueId       = $virtualDisk.UniqueId
+    PartitionStyle = 'GPT'
+    Passthru       = $true
 }
+$disk = Initialize-Disk @params
+$disk | Format-List -Property '*'
+
+'Creating a partition...' | Write-ScriptLog -Context $env:ComputerName
+$params = @{
+    DriveLetter    = $labConfig.labHost.storage.driveLetter
+    UseMaximumSize = $true
+}
+$partition = $disk | New-Partition @params
+$partition | Format-List -Property '*'
+
+'Formating the volume...' | Write-ScriptLog -Context $env:ComputerName
+$params = @{
+    FileSystem         = 'ReFS'
+    AllocationUnitSize = 4KB
+    NewFileSystemLabel = $labConfig.labHost.storage.volumeLabel
+}
+$volume = $partition | Format-Volume @params
+$volume | Format-List -Property '*'
 
 'Setting Defender exclusions...' | Write-ScriptLog -Context $env:ComputerName
-$exclusionPath = $labConfig.labHost.storage.driveLetter + ':\'
+$exclusionPath = $storageVolume.DriveLetter + ':\'
 Add-MpPreference -ExclusionPath $exclusionPath
 if ((Get-MpPreference).ExclusionPath -notcontains $exclusionPath) {
     throw 'Defender exclusion setting failed.'
