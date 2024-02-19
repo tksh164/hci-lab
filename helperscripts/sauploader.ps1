@@ -116,8 +116,11 @@ $sourceFolderNames | ForEach-Object -Process {
 $webEndpoint = Get-WebEndpoint -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName
 
 Write-Host
-Write-Host ('Web Primary Endpoint: {0}' -f $webEndpoint) -ForegroundColor Cyan
+Write-Host 'Web Primary Endpoint: ' -NoNewline
+Write-Host ('{0}' -f $webEndpoint) -ForegroundColor Cyan
 $sourceFolderNames | ForEach-Object -Process {
-    Write-Host ('The {1} folder URI: {0}{1}' -f $webEndpoint, $_) -ForegroundColor Cyan
+    Write-Host ('The {0} folder URI: ' -f $_) -NoNewline
+    Write-Host ('{0}{1}' -f $webEndpoint, $_) -ForegroundColor Cyan
 }
+Write-Host 'Use the template folder URI as the base URI for artifacts.'
 Write-Host
