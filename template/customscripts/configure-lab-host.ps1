@@ -147,7 +147,7 @@ $params = @{
 $partition = $disk | New-Partition @params
 $partition | Format-List -Property '*'
 
-'Formating the volume...' | Write-ScriptLog -Context $env:ComputerName
+'Formatting the volume...' | Write-ScriptLog -Context $env:ComputerName
 $params = @{
     FileSystem         = 'ReFS'
     AllocationUnitSize = 4KB
