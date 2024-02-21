@@ -109,7 +109,7 @@
         "networkInterfaceName": "[format('{0}-nic1', parameters('vmName'))]",
         "privateIPAddress": "192.168.0.4",
         "publicIpAddressName": "[format('{0}-ip1', parameters('vmName'))]",
-        "dnsNameForPublicIP": "[toLower(format('{0}-{1}-{2}', resourceGroup().name, parameters('vmName'), toLower(parameters('uniqueString'))))]"
+        "dnsNameForPublicIP": "[toLower(format('{0}-{1}-{2}', take(resourceGroup().name, 27), take(parameters('vmName'), 27), toLower(parameters('uniqueString'))))]"
     },
     "resources": [
         // Network security group for the subnet.
