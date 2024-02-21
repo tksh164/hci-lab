@@ -21,9 +21,9 @@
             "type": "string",
             "defaultValue": "hcilab-vm1",
             "minLength": 1,
-            "maxLength": 15,
+            "maxLength": 64,
             "metadata": {
-                "description": "The name of the lab host virtual machine."
+                "description": "The name of the lab host virtual machine resource name. This value is not used for the virtual machine's computer name."
             }
         },
         "labHostVmSize": {
