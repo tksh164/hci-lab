@@ -367,7 +367,7 @@
         // General
 
         "location": "[resourceGroup().location]",
-        "uniqueString": "[substring(uniqueString(resourceGroup().id, parameters('salt')), 0, 6)]",
+        "uniqueString": "[substring(uniqueString(resourceGroup().id, parameters('salt')), 0, 5)]",
         "repoBaseUri": "[if(endsWith(parameters('repoBaseUri'), '/'), parameters('repoBaseUri'), concat(parameters('repoBaseUri'), '/'))]",
 
         // Lab host virtual machine
