@@ -184,18 +184,28 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
         Rename-NetAdapter -Name $_.Name -NewName $_.DisplayValue
     }
 
-    'Setting the IP configuration on the network adapter...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
-    $params = @{
+    # Management
+    'Setting the IP & DNS configuration on the {0} network adapter...' -f $VMConfig.netAdapters.management.name | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    $paramsForSetNetIPInterface = @{
+        AddressFamily = 'IPv4'
+        Dhcp          = 'Disabled'
+        PassThru      = $true
+    }
+    $paramsForNewIPAddress = @{
         AddressFamily  = 'IPv4'
         IPAddress      = $VMConfig.netAdapters.management.ipAddress
         PrefixLength   = $VMConfig.netAdapters.management.prefixLength
         DefaultGateway = $VMConfig.netAdapters.management.defaultGateway
     }
-    Get-NetAdapter -Name $VMConfig.netAdapters.management.name | New-NetIPAddress @params
-    
-    'Setting the DNS configuration on the network adapter...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    $paramsForSetDnsClientServerAddress = @{
+        ServerAddresses = $VMConfig.netAdapters.management.dnsServerAddresses
+    }
     Get-NetAdapter -Name $VMConfig.netAdapters.management.name |
-        Set-DnsClientServerAddress -ServerAddresses $VMConfig.netAdapters.management.dnsServerAddresses
+    Set-NetIPInterface @paramsForSetNetIPInterface |
+    New-NetIPAddress @paramsForNewIPAddress |
+    Set-DnsClientServerAddress @paramsForSetDnsClientServerAddress
+    'The IP & DNS configuration on the {0} network adapter is completed.' -f $VMConfig.netAdapters.management.name | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+
 } | Out-String | Write-ScriptLog -Context $vmName
 
 'Installing AD DS (Creating a new forest) within the VM...' | Write-ScriptLog -Context $vmName

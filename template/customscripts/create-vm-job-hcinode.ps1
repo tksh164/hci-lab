@@ -352,34 +352,56 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
         Rename-NetAdapter -Name $_.Name -NewName $_.DisplayValue
     }
 
-    'Setting the IP configuration on the network adapters...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
-
     # Management
-    $params = @{
+    'Setting the IP & DNS configuration on the {0} network adapter...' -f $VMConfig.NetAdapters.Management.Name | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    $paramsForSetNetIPInterface = @{
+        AddressFamily = 'IPv4'
+        Dhcp          = 'Disabled'
+        PassThru      = $true
+    }
+    $paramsForNewIPAddress = @{
         AddressFamily  = 'IPv4'
         IPAddress      = $VMConfig.NetAdapters.Management.IPAddress
         PrefixLength   = $VMConfig.NetAdapters.Management.PrefixLength
         DefaultGateway = $VMConfig.NetAdapters.Management.DefaultGateway
     }
-    Get-NetAdapter -Name $VMConfig.NetAdapters.Management.Name | New-NetIPAddress @params
-
-    'Setting the DNS configuration on the {0} network adapter...' -f $VMConfig.NetAdapters.Management.Name | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    $paramsForSetDnsClientServerAddress = @{
+        ServerAddresses = $VMConfig.netAdapters.management.dnsServerAddresses
+    }
     Get-NetAdapter -Name $VMConfig.NetAdapters.Management.Name |
-        Set-DnsClientServerAddress -ServerAddresses $VMConfig.NetAdapters.Management.DnsServerAddresses
+    Set-NetIPInterface @paramsForSetNetIPInterface |
+    New-NetIPAddress @paramsForNewIPAddress |
+    Set-DnsClientServerAddress @paramsForSetDnsClientServerAddress
+    'The IP & DNS configuration on the {0} network adapter is completed.' -f $VMConfig.NetAdapters.Management.Name | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
 
     # Compute
-    $params = @{
+    'Setting the IP & DNS configuration on the {0} network adapter...' -f $VMConfig.NetAdapters.Compute.Name | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    $paramsForSetNetIPInterface = @{
+        AddressFamily = 'IPv4'
+        Dhcp          = 'Disabled'
+        PassThru      = $true
+    }
+    $paramsForNewIPAddress = @{
         AddressFamily  = 'IPv4'
         IPAddress      = $VMConfig.NetAdapters.Compute.IPAddress
         PrefixLength   = $VMConfig.NetAdapters.Compute.PrefixLength
     }
-    Get-NetAdapter -Name $VMConfig.NetAdapters.Compute.Name | New-NetIPAddress @params
+    Get-NetAdapter -Name $VMConfig.NetAdapters.Compute.Name |
+    Set-NetIPInterface @paramsForSetNetIPInterface |
+    New-NetIPAddress @paramsForNewIPAddress
+    'The IP & DNS configuration on the {0} network adapter is completed.' -f $VMConfig.NetAdapters.Compute.Name | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
 
     # Storage 1
+    'Setting the IP & DNS configuration on the {0} network adapter...' -f $VMConfig.NetAdapters.Storage1.Name | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
     $paramsForSetNetAdapter = @{
         VlanID   = $VMConfig.NetAdapters.Storage1.VlanId
         Confirm  = $false
         PassThru = $true
+    }
+    $paramsForSetNetIPInterface = @{
+        AddressFamily = 'IPv4'
+        Dhcp          = 'Disabled'
+        PassThru      = $true
     }
     $paramsForNewIPAddress = @{
         AddressFamily = 'IPv4'
@@ -388,13 +410,21 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
     }
     Get-NetAdapter -Name $VMConfig.NetAdapters.Storage1.Name |
     Set-NetAdapter @paramsForSetNetAdapter |
+    Set-NetIPInterface @paramsForSetNetIPInterface |
     New-NetIPAddress @paramsForNewIPAddress
+    'The IP & DNS configuration on the {0} network adapter is completed.' -f $VMConfig.NetAdapters.Storage1.Name | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
 
     # Storage 2
+    'Setting the IP & DNS configuration on the {0} network adapter...' -f $VMConfig.NetAdapters.Storage2.Name | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
     $paramsForSetNetAdapter = @{
         VlanID   = $VMConfig.NetAdapters.Storage2.VlanId
         Confirm  = $false
         PassThru = $true
+    }
+    $paramsForSetNetIPInterface = @{
+        AddressFamily = 'IPv4'
+        Dhcp          = 'Disabled'
+        PassThru      = $true
     }
     $paramsForNewIPAddress = @{
         AddressFamily = 'IPv4'
@@ -403,7 +433,10 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
     }
     Get-NetAdapter -Name $VMConfig.NetAdapters.Storage2.Name |
     Set-NetAdapter @paramsForSetNetAdapter |
+    Set-NetIPInterface @paramsForSetNetIPInterface |
     New-NetIPAddress @paramsForNewIPAddress
+    'The IP & DNS configuration on the {0} network adapter is completed.' -f $VMConfig.NetAdapters.Storage2.Name | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+
 } | Out-String | Write-ScriptLog -Context $nodeConfig.VMName
 
 'Cleaning up the PowerShell Direct session...' | Write-ScriptLog -Context $nodeConfig.VMName
