@@ -372,23 +372,23 @@
 
         // Lab host virtual machine
 
-        "labHostVmDeploymentName": "vm-and-vnet",
+        "labHostVmDeploymentName": "deploy-lab-host",
         "labHostVmLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/labhostvm.json')]",
 
         // Key Vault
 
-        "keyVaultDeploymentName": "key-vault",
+        "keyVaultDeploymentName": "deploy-key-vault",
         "keyVaultLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/keyvault.json')]",
         "keyVaultName": "[format('hcilab{0}-kv', toLower(variables('uniqueString')))]",
 
         // Storage account for Cloud Witness
 
-        "cloudWitnessStorageAccountDeploymentName": "cloud-witness-storage-account",
+        "cloudWitnessStorageAccountDeploymentName": "deploy-storage-account-for-cloud-witness",
         "cloudWitnessStorageAccountLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/cloudwitness.json')]",
 
         // Key Vault RBAC
 
-        "keyVaultRbacDeploymentName": "key-vault-rbac",
+        "keyVaultRbacDeploymentName": "assign-key-vault-rbac-with-lab-host-managed-id",
         "keyVaultRbacLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/keyvault-rbac.json')]",
 
         // DSC extension
@@ -398,13 +398,13 @@
         "dscExtensionName": "hci-lab-dsc-extension",
         "dscParams": {
             "installRolesFeatures": {
-                "deploymentName": "lab-host-roles-and-features-installation",
+                "deploymentName": "install-roles-and-features-on-lab-host",
                 "zipUri": "[uri(variables('dscBaseUri'), 'install-roles-and-features.zip')]",
                 "scriptName": "install-roles-and-features.ps1",
                 "functionName": "install-roles-and-features"
             },
             "rebootLabHost": {
-                "deploymentName": "lab-host-reboot-before-vm-creation",
+                "deploymentName": "reboot-lab-host",
                 "zipUri": "[uri(variables('dscBaseUri'), 'reboot.zip')]",
                 "scriptName": "reboot.ps1",
                 "functionName": "reboot"
@@ -418,7 +418,7 @@
         "customScriptExtensionName": "hci-lab-customscript-extension",
         "customScriptParams": {
             "configureLabHost": {
-                "deploymentName": "lab-host-configuration",
+                "deploymentName": "configure-lab-host",
                 "fileUris": [
                     "[uri(variables('customScriptBaseUri'), 'configure-lab-host.ps1')]",
                     "[uri(variables('customScriptBaseUri'), 'common.psm1')]"
@@ -426,7 +426,7 @@
                 "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\configure-lab-host.ps1"
             },
             "downloadIsoUpdates": {
-                "deploymentName": "iso-and-updates-download",
+                "deploymentName": "download-materials",
                 "fileUris": [
                     "[uri(variables('customScriptBaseUri'), 'download-iso-updates.ps1')]",
                     "[uri(variables('customScriptBaseUri'), 'download-iso-updates-asset-urls.psd1')]",
@@ -435,7 +435,7 @@
                 "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\download-iso-updates.ps1"
             },
             "createBaseVhd": {
-                "deploymentName": "base-vhd-creation",
+                "deploymentName": "create-base-vhd",
                 "fileUris": [
                     "[uri(variables('customScriptBaseUri'), 'create-base-vhd.ps1')]",
                     "[uri(variables('customScriptBaseUri'), 'create-base-vhd-job.ps1')]",
@@ -444,7 +444,7 @@
                 "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\create-base-vhd.ps1"
             },
             "createVm": {
-                "deploymentName": "vm-creation",
+                "deploymentName": "create-lab-vms",
                 "fileUris": [
                     "[uri(variables('customScriptBaseUri'), 'create-vm.ps1')]",
                     "[uri(variables('customScriptBaseUri'), 'create-vm-job-addsdc.ps1')]",
@@ -455,7 +455,7 @@
                 "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\create-vm.ps1"
             },
             "createHciCluster": {
-                "deploymentName": "hci-cluster-creation",
+                "deploymentName": "create-hci-cluster",
                 "fileUris": [
                     "[uri(variables('customScriptBaseUri'), 'create-hci-cluster.ps1')]",
                     "[uri(variables('customScriptBaseUri'), 'create-hci-cluster-test-cat-en-us.psd1')]",
