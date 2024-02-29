@@ -91,30 +91,32 @@ function Write-ScriptLog
         [string] $Message,
 
         [Parameter(Mandatory = $false)]
-        [ValidateSet('Verbose', 'Warning', 'Error', 'Debug', 'Otput', 'Host')]
-        [string] $Type = 'Verbose',
+        [ValidateSet('Info', 'Warning', 'Error')]
+        [string] $Level = 'Info',
+
+        [Parameter(Mandatory = $false)]
+        [string] $AdditionalContext,
 
         [Parameter(Mandatory = $false)]
         [switch] $UseInScriptBlock
     )
 
-    $builtMessage = '[{0:yyyy-MM-dd HH:mm:ss}] [{1}] {2}' -f [DateTime]::Now, $Context, $Message
-    switch ($Type) {
-        'Warning' { Write-Warning -Message $builtMessage }
-        'Error'   { Write-Error -Message $builtMessage }
-        'Debug'   { Write-Debug -Message $builtMessage }
-        'Otput'   { Write-Output -InputObject $builtMessage }
-        'Host'    { Write-Host -Object $builtMessage }
-        default   {
-            if ($UseInScriptBlock) {
-                # NOTE: Redirecting a verbose message because verbose messages are not showing it come from script blocks.
-                Write-Verbose -Message ('VERBOSE: ' + $builtMessage) 4>&1
-            }
-            else {
-                Write-Verbose -Message $builtMessage
-            }
-        }
+    $timestamp = '{0:yyyy-MM-dd HH:mm:ss}' -f [DateTime]::Now
+    $computerName = $env:ComputerName.ToLower()
+    $contextPart = if ($PSBoundParameters.ContainsKey('AdditionalContext')) {
+        '[{0}][{1}]:' -f $computerName, $AdditionalContext
     }
+    else {
+        '[{0}]:' -f $computerName
+    }
+
+    $logParts = @(
+        $timestamp,
+        $Level.ToUpper(),
+        $contextPart,
+        $Message
+    )
+    Write-Host -Object ($logParts -join ' ') -ForegroundColor Cyan
 }
 
 function Get-LabDeploymentConfig
