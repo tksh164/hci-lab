@@ -95,10 +95,7 @@ function Write-ScriptLog
         [string] $Level = 'Info',
 
         [Parameter(Mandatory = $false)]
-        [string] $AdditionalContext,
-
-        [Parameter(Mandatory = $false)]
-        [switch] $UseInScriptBlock
+        [string] $AdditionalContext
     )
 
     $timestamp = '{0:yyyy-MM-dd HH:mm:ss}' -f [DateTime]::Now
@@ -110,12 +107,7 @@ function Write-ScriptLog
         '[{0}]:' -f $computerName
     }
 
-    $logParts = @(
-        $timestamp,
-        $Level.ToUpper(),
-        $contextPart,
-        $Message
-    )
+    $logParts = $timestamp, $Level.ToUpper(), $contextPart, $Message
     Write-Host -Object ($logParts -join ' ') -ForegroundColor Cyan
 }
 
@@ -932,7 +924,7 @@ function Invoke-PSDirectSessionCleanup
             [string] $CommonModuleFilePath
         )
     
-        'Deleting the common module file "{0}" within the VM...' -f $CommonModuleFilePath | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+        'Deleting the common module file "{0}" within the VM...' -f $CommonModuleFilePath | Write-ScriptLog -Context $env:ComputerName
         Remove-Item -LiteralPath $CommonModuleFilePath -Force
     } | Out-String | Write-ScriptLog -Context $env:ComputerName
         

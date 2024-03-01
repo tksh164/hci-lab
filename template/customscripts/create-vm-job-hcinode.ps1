@@ -320,16 +320,16 @@ Invoke-PSDirectSessionSetup -Session $localAdminCredPSSession -CommonModuleFileP
 if (($NodeConfig.OperatingSystem -eq [HciLab.OSSku]::WindowsServer2022) -and ($NodeConfig.ImageIndex -eq [HciLab.OSImageIndex]::WSDatacenterDesktopExperience)) {
     'Configuring registry values within the VM...' | Write-ScriptLog -Context $nodeConfig.VMName
     Invoke-Command -Session $localAdminCredPSSession -ScriptBlock {
-        'Stop Server Manager launch at logon.' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+        'Stop Server Manager launch at logon.' | Write-ScriptLog -Context $env:ComputerName
         Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotOpenServerManagerAtLogon' -Value 1
     
-        'Stop Windows Admin Center popup at Server Manager launch.' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+        'Stop Windows Admin Center popup at Server Manager launch.' | Write-ScriptLog -Context $env:ComputerName
         Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotPopWACConsoleAtSMLaunch' -Value 1
     
-        'Hide the Network Location wizard. All networks will be Public.' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+        'Hide the Network Location wizard. All networks will be Public.' | Write-ScriptLog -Context $env:ComputerName
         New-RegistryKey -ParentPath 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -KeyName 'NewNetworkWindowOff'
 
-        'Setting to hide the first run experience of Microsoft Edge.' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+        'Setting to hide the first run experience of Microsoft Edge.' | Write-ScriptLog -Context $env:ComputerName
         New-RegistryKey -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft' -KeyName 'Edge'
         Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Edge' -Name 'HideFirstRunExperience' -Value 1
     } | Out-String | Write-ScriptLog -Context $nodeConfig.VMName
@@ -347,13 +347,13 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
         [PSCustomObject] $VMConfig
     )
 
-    'Renaming the network adapters...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    'Renaming the network adapters...' | Write-ScriptLog -Context $env:ComputerName
     Get-NetAdapterAdvancedProperty -RegistryKeyword 'HyperVNetworkAdapterName' | ForEach-Object -Process {
         Rename-NetAdapter -Name $_.Name -NewName $_.DisplayValue
     }
 
     # Management
-    'Setting the IP & DNS configuration on the {0} network adapter...' -f $VMConfig.NetAdapters.Management.Name | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    'Setting the IP & DNS configuration on the {0} network adapter...' -f $VMConfig.NetAdapters.Management.Name | Write-ScriptLog -Context $env:ComputerName
     $paramsForSetNetIPInterface = @{
         AddressFamily = 'IPv4'
         Dhcp          = 'Disabled'
@@ -372,10 +372,10 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
     Set-NetIPInterface @paramsForSetNetIPInterface |
     New-NetIPAddress @paramsForNewIPAddress |
     Set-DnsClientServerAddress @paramsForSetDnsClientServerAddress
-    'The IP & DNS configuration on the {0} network adapter is completed.' -f $VMConfig.NetAdapters.Management.Name | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    'The IP & DNS configuration on the {0} network adapter is completed.' -f $VMConfig.NetAdapters.Management.Name | Write-ScriptLog -Context $env:ComputerName
 
     # Compute
-    'Setting the IP & DNS configuration on the {0} network adapter...' -f $VMConfig.NetAdapters.Compute.Name | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    'Setting the IP & DNS configuration on the {0} network adapter...' -f $VMConfig.NetAdapters.Compute.Name | Write-ScriptLog -Context $env:ComputerName
     $paramsForSetNetIPInterface = @{
         AddressFamily = 'IPv4'
         Dhcp          = 'Disabled'
@@ -389,10 +389,10 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
     Get-NetAdapter -Name $VMConfig.NetAdapters.Compute.Name |
     Set-NetIPInterface @paramsForSetNetIPInterface |
     New-NetIPAddress @paramsForNewIPAddress
-    'The IP & DNS configuration on the {0} network adapter is completed.' -f $VMConfig.NetAdapters.Compute.Name | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    'The IP & DNS configuration on the {0} network adapter is completed.' -f $VMConfig.NetAdapters.Compute.Name | Write-ScriptLog -Context $env:ComputerName
 
     # Storage 1
-    'Setting the IP & DNS configuration on the {0} network adapter...' -f $VMConfig.NetAdapters.Storage1.Name | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    'Setting the IP & DNS configuration on the {0} network adapter...' -f $VMConfig.NetAdapters.Storage1.Name | Write-ScriptLog -Context $env:ComputerName
     $paramsForSetNetAdapter = @{
         VlanID   = $VMConfig.NetAdapters.Storage1.VlanId
         Confirm  = $false
@@ -412,10 +412,10 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
     Set-NetAdapter @paramsForSetNetAdapter |
     Set-NetIPInterface @paramsForSetNetIPInterface |
     New-NetIPAddress @paramsForNewIPAddress
-    'The IP & DNS configuration on the {0} network adapter is completed.' -f $VMConfig.NetAdapters.Storage1.Name | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    'The IP & DNS configuration on the {0} network adapter is completed.' -f $VMConfig.NetAdapters.Storage1.Name | Write-ScriptLog -Context $env:ComputerName
 
     # Storage 2
-    'Setting the IP & DNS configuration on the {0} network adapter...' -f $VMConfig.NetAdapters.Storage2.Name | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    'Setting the IP & DNS configuration on the {0} network adapter...' -f $VMConfig.NetAdapters.Storage2.Name | Write-ScriptLog -Context $env:ComputerName
     $paramsForSetNetAdapter = @{
         VlanID   = $VMConfig.NetAdapters.Storage2.VlanId
         Confirm  = $false
@@ -435,7 +435,7 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
     Set-NetAdapter @paramsForSetNetAdapter |
     Set-NetIPInterface @paramsForSetNetIPInterface |
     New-NetIPAddress @paramsForNewIPAddress
-    'The IP & DNS configuration on the {0} network adapter is completed.' -f $VMConfig.NetAdapters.Storage2.Name | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    'The IP & DNS configuration on the {0} network adapter is completed.' -f $VMConfig.NetAdapters.Storage2.Name | Write-ScriptLog -Context $env:ComputerName
 
 } | Out-String | Write-ScriptLog -Context $nodeConfig.VMName
 

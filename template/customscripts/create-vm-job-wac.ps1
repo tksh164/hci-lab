@@ -207,16 +207,16 @@ Invoke-PSDirectSessionSetup -Session $localAdminCredPSSession -CommonModuleFileP
 
 'Configuring registry values within the VM...' | Write-ScriptLog -Context $vmName
 Invoke-Command -Session $localAdminCredPSSession -ScriptBlock {
-    'Stop Server Manager launch at logon.' | Write-ScriptLog -Context $env:ComputerName-UseInScriptBlock
+    'Stop Server Manager launch at logon.' | Write-ScriptLog -Context $env:ComputerName
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotOpenServerManagerAtLogon' -Value 1
 
-    'Stop Windows Admin Center popup at Server Manager launch.' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    'Stop Windows Admin Center popup at Server Manager launch.' | Write-ScriptLog -Context $env:ComputerName
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotPopWACConsoleAtSMLaunch' -Value 1
 
-    'Hide the Network Location wizard. All networks will be Public.' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    'Hide the Network Location wizard. All networks will be Public.' | Write-ScriptLog -Context $env:ComputerName
     New-RegistryKey -ParentPath 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -KeyName 'NewNetworkWindowOff'
 
-    'Setting to hide the first run experience of Microsoft Edge.' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    'Setting to hide the first run experience of Microsoft Edge.' | Write-ScriptLog -Context $env:ComputerName
     New-RegistryKey -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft' -KeyName 'Edge'
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Edge' -Name 'HideFirstRunExperience' -Value 1
 } | Out-String | Write-ScriptLog -Context $vmName
@@ -233,13 +233,13 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
         [PSCustomObject] $VMConfig
     )
 
-    'Renaming the network adapters...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    'Renaming the network adapters...' | Write-ScriptLog -Context $env:ComputerName
     Get-NetAdapterAdvancedProperty -RegistryKeyword 'HyperVNetworkAdapterName' | ForEach-Object -Process {
         Rename-NetAdapter -Name $_.Name -NewName $_.DisplayValue
     }
 
     # Management
-    'Setting the IP & DNS configuration on the {0} network adapter...' -f $VMConfig.netAdapters.management.name | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    'Setting the IP & DNS configuration on the {0} network adapter...' -f $VMConfig.netAdapters.management.name | Write-ScriptLog -Context $env:ComputerName
     $paramsForSetNetIPInterface = @{
         AddressFamily = 'IPv4'
         Dhcp          = 'Disabled'
@@ -258,7 +258,7 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
     Set-NetIPInterface @paramsForSetNetIPInterface |
     New-NetIPAddress @paramsForNewIPAddress |
     Set-DnsClientServerAddress @paramsForSetDnsClientServerAddress
-    'The IP & DNS configuration on the {0} network adapter is completed.' -f $VMConfig.NetAdapters.Management.Name | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    'The IP & DNS configuration on the {0} network adapter is completed.' -f $VMConfig.NetAdapters.Management.Name | Write-ScriptLog -Context $env:ComputerName
 
 } | Out-String | Write-ScriptLog -Context $vmName
 
@@ -303,12 +303,12 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
     )
 
     # Import the certificate to Root and My both stores required.
-    'Importing Windows Admin Center certificate...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    'Importing Windows Admin Center certificate...' | Write-ScriptLog -Context $env:ComputerName
     Import-PfxCertificate -CertStoreLocation 'Cert:\LocalMachine\Root' -FilePath $WacPfxFilePathInVM -Password $WacPfxPassword -Exportable
     $wacCert = Import-PfxCertificate -CertStoreLocation 'Cert:\LocalMachine\My' -FilePath $WacPfxFilePathInVM -Password $WacPfxPassword -Exportable
     Remove-Item -LiteralPath $WacPfxFilePathInVM -Force
 
-    'Installing Windows Admin Center...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    'Installing Windows Admin Center...' | Write-ScriptLog -Context $env:ComputerName
     $msiArgs = @(
         '/i',
         ('"{0}"' -f $WacInstallerFilePathInVM),
@@ -332,17 +332,17 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
         $wacConnectionTestIntervalSeconds = 5
         $startTime = Get-Date
         while ((Get-Date) -lt ($startTime + $wacConnectionTestTimeout)) {
-            'Testing connection to the ServerManagementGateway service...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+            'Testing connection to the ServerManagementGateway service...' | Write-ScriptLog -Context $env:ComputerName
             if ((Test-NetConnection -ComputerName 'localhost' -Port 443).TcpTestSucceeded) {
-                'Connection test to the ServerManagementGateway service succeeded.' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+                'Connection test to the ServerManagementGateway service succeeded.' | Write-ScriptLog -Context $env:ComputerName
                 return
             }
             Start-Sleep -Seconds $wacConnectionTestIntervalSeconds
         }
-        'Connection test to the ServerManagementGateway service failed.' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+        'Connection test to the ServerManagementGateway service failed.' | Write-ScriptLog -Context $env:ComputerName
     }
 
-    'Updating Windows Admin Center extensions...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    'Updating Windows Admin Center extensions...' | Write-ScriptLog -Context $env:ComputerName
     $wacExtensionToolsPSModulePath = [IO.Path]::Combine($env:ProgramFiles, 'Windows Admin Center\PowerShell\Modules\ExtensionTools\ExtensionTools.psm1')
     Import-Module -Name $wacExtensionToolsPSModulePath -Force
 
@@ -360,7 +360,7 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
                         $wacExtension = $_
                         Update-Extension -GatewayEndpoint $gatewayEndpointUri -ExtensionId $wacExtension.id -Verbose -ErrorAction Stop | Out-Null
                     }
-                'Windows Admin Center extension update succeeded.' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+                'Windows Admin Center extension update succeeded.' | Write-ScriptLog -Context $env:ComputerName
 
                 Get-Extension -GatewayEndpoint $gatewayEndpointUri |
                     Sort-Object -Property id |
@@ -368,18 +368,18 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
                 return
             }
             catch {
-                'Will retry updating Windows Admin Center extensions...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+                'Will retry updating Windows Admin Center extensions...' | Write-ScriptLog -Context $env:ComputerName
                 Start-Sleep -Seconds $retryInterval
             }
         }
-        'Windows Admin Center extension update failed. Need manual update later.' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+        'Windows Admin Center extension update failed. Need manual update later.' | Write-ScriptLog -Context $env:ComputerName
     }
 
-    'Setting Windows Integrated Authentication registry for Windows Admin Center...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    'Setting Windows Integrated Authentication registry for Windows Admin Center...' | Write-ScriptLog -Context $env:ComputerName
     New-RegistryKey -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft' -KeyName 'Edge'
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Edge' -Name 'AuthServerAllowlist' -Value $env:ComputerName
 
-    'Creating shortcut for Windows Admin Center on the desktop...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    'Creating shortcut for Windows Admin Center on the desktop...' | Write-ScriptLog -Context $env:ComputerName
     $params = @{
         ShortcutFilePath = 'C:\Users\Public\Desktop\Windows Admin Center.lnk'
         TargetPath       = 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
@@ -470,7 +470,7 @@ Invoke-Command @params -Session $domainAdminCredPSSession -ScriptBlock {
         [PSCustomObject] $LabConfig
     )
 
-    'Importing server connections to Windows Admin Center for the domain Administrator...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    'Importing server connections to Windows Admin Center for the domain Administrator...' | Write-ScriptLog -Context $env:ComputerName
     $wacConnectionToolsPSModulePath = [IO.Path]::Combine($env:ProgramFiles, 'Windows Admin Center\PowerShell\Modules\ConnectionTools\ConnectionTools.psm1')
     Import-Module -Name $wacConnectionToolsPSModulePath -Force
 

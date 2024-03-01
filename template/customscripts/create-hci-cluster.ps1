@@ -38,7 +38,7 @@ foreach ($domainAdminCredPSSession in $hciNodeDomainAdminCredPSSessions) {
 'Setup the PowerShell Direct session for the HCI nodes...' | Write-ScriptLog -Context $env:ComputerName
 Invoke-PSDirectSessionSetup -Session $hciNodeDomainAdminCredPSSessions -CommonModuleFilePathInVM $commonModuleFilePathInVM
 
-'Creating virtual switches on each HCI node...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+'Creating virtual switches on each HCI node...' | Write-ScriptLog -Context $env:ComputerName
 $params = @{
     InputObject = [PSCustomObject] @{
         NetAdapterName = [PSCustomObject] @{
@@ -314,7 +314,7 @@ Invoke-Command @params -Session $wacDomainAdminCredPSSession -ScriptBlock {
     foreach ($clusterNetwork in $clusterNetworks) {
         foreach ($hciNodeNetwork in $HciNodeNetworks) {
             if (($clusterNetwork.Ipv4Addresses[0] -eq $hciNodeNetwork.IPAddress) -and ($clusterNetwork.Ipv4PrefixLengths[0] -eq $hciNodeNetwork.PrefixLength)) {
-                'Rename the cluster network "{0}" to "{1}".' -f $clusterNetwork.Name, $hciNodeNetwork.Name | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+                'Rename the cluster network "{0}" to "{1}".' -f $clusterNetwork.Name, $hciNodeNetwork.Name | Write-ScriptLog -Context $env:ComputerName
                 $clusterNetwork.Name = $hciNodeNetwork.Name
                 break
             }
@@ -346,7 +346,7 @@ Invoke-Command @params -Session $wacDomainAdminCredPSSession -ScriptBlock {
     for ($i = 0; $i -lt $MigrationNetworkOrder.Length; $i++) {
         $migrationNetworkOrderValue += (Get-ClusterNetwork -Cluster $ClusterName -Name $MigrationNetworkOrder[$i]).Id
     }
-    'Cluster network order for live migration: {0}' -f ($migrationNetworkOrderValue -join '; ') | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    'Cluster network order for live migration: {0}' -f ($migrationNetworkOrderValue -join '; ') | Write-ScriptLog -Context $env:ComputerName
     Get-ClusterResourceType -Cluster $ClusterName -Name 'Virtual Machine' |
         Set-ClusterParameter -Name 'MigrationNetworkOrder' -Value ($migrationNetworkOrderValue -join ';')
 } | Out-String | Write-ScriptLog -Context $env:ComputerName
