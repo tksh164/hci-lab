@@ -15,7 +15,7 @@ function Invoke-WindowsTerminalInstallation
         [string] $DownloadFolderPath
     )
 
-    'Downloading the Windows 10 pre-install kit zip file...' | Write-ScriptLog -Context $env:ComputerName
+    'Downloading the Windows 10 pre-install kit zip file...' | Write-ScriptLog
     $params = @{
         SourceUri      = 'https://github.com/microsoft/terminal/releases/download/v1.19.10302.0/Microsoft.WindowsTerminal_1.19.10302.0_8wekyb3d8bbwe.msixbundle_Windows10_PreinstallKit.zip'
         DownloadFolder = $DownloadFolderPath
@@ -23,7 +23,7 @@ function Invoke-WindowsTerminalInstallation
     }
     $zipFile = Invoke-FileDownload @params
 
-    'Expaneding the Windows 10 pre-install kit zip file...' | Write-ScriptLog -Context $env:ComputerName
+    'Expaneding the Windows 10 pre-install kit zip file...' | Write-ScriptLog
     $fileSourceFolder = [IO.Path]::Combine([IO.Path]::GetDirectoryName($zipFile.FullName), [IO.Path]::GetFileNameWithoutExtension($zipFile.FullName))
     Expand-Archive -LiteralPath $zipFile.FullName -DestinationPath $fileSourceFolder -Force
 
@@ -32,14 +32,14 @@ function Invoke-WindowsTerminalInstallation
     $msixBundleFile = Get-ChildItem -LiteralPath $fileSourceFolder -Filter '*.msixbundle' | Select-Object -First 1
     $licenseXmlFile = Get-ChildItem -LiteralPath $fileSourceFolder -Filter '*_License1.xml' | Select-Object -First 1
 
-    'Microsoft.UI.Xaml: "{0}"' -f $uiXamlAppxFile.FullName | Write-ScriptLog -Context $env:ComputerName
-    'Microsoft.WindowsTerminal: "{0}"' -f $msixBundleFile.FullName | Write-ScriptLog -Context $env:ComputerName
-    'LicenseXml: "{0}"' -f $licenseXmlFile.FullName | Write-ScriptLog -Context $env:ComputerName
+    'Microsoft.UI.Xaml: "{0}"' -f $uiXamlAppxFile.FullName | Write-ScriptLog
+    'Microsoft.WindowsTerminal: "{0}"' -f $msixBundleFile.FullName | Write-ScriptLog
+    'LicenseXml: "{0}"' -f $licenseXmlFile.FullName | Write-ScriptLog
 
-    'Installing the dependency packages for Windows Terminal...' | Write-ScriptLog -Context $env:ComputerName
+    'Installing the dependency packages for Windows Terminal...' | Write-ScriptLog
     Add-AppxProvisionedPackage -Online -SkipLicense -PackagePath $uiXamlAppxFile.FullName
 
-    'Creating a script file for the Windows Terminal installation scheduled task...' | Write-ScriptLog -Context $env:ComputerName
+    'Creating a script file for the Windows Terminal installation scheduled task...' | Write-ScriptLog
     $scheduledTaskName = 'WindowsTermailInstallation'
     $scheduledTaskScriptFileContent = @"
 (Get-Host).UI.RawUI.WindowTitle = 'Windows Terminal installation'
@@ -50,7 +50,7 @@ Disable-ScheduledTask -TaskName '{2}' -TaskPath '\'
     $scheduledTaskScriptFilePath = [IO.Path]::Combine($DownloadFolderPath, $scheduledTaskName + 'Task.ps1')
     Set-Content -LiteralPath $scheduledTaskScriptFilePath -Value $scheduledTaskScriptFileContent -Force
 
-    'Creating a scheduled task for Windows Terminal installation...' | Write-ScriptLog -Context $env:ComputerName
+    'Creating a scheduled task for Windows Terminal installation...' | Write-ScriptLog
     $adminUsername = Get-InstanceMetadata -FilterPath '/compute/osProfile/adminUsername' -LeafNode
     $params = @{
         TaskName = $scheduledTaskName
@@ -73,7 +73,7 @@ function Invoke-VSCodeInstallation
         [string] $DownloadFolderPath
     )
 
-    'Downloading the Visual Studio Code system installer...' | Write-ScriptLog -Context $env:ComputerName
+    'Downloading the Visual Studio Code system installer...' | Write-ScriptLog
     $params = @{
         SourceUri      = 'https://code.visualstudio.com/sha/download?build=stable&os=win32-x64'
         DownloadFolder = $DownloadFolderPath
@@ -81,7 +81,7 @@ function Invoke-VSCodeInstallation
     }
     $installerFile = Invoke-FileDownload @params
 
-    'Installing the Visual Studio Code...' | Write-ScriptLog -Context $env:ComputerName
+    'Installing the Visual Studio Code...' | Write-ScriptLog
     $mergeTasks = @(
         'desktopicon',
         '!quicklaunchicon',
@@ -108,7 +108,7 @@ $labConfig | ConvertTo-Json -Depth 16 | Write-Host
 
 # Volume
 
-'Creating a storage pool...' | Write-ScriptLog -Context $env:ComputerName
+'Creating a storage pool...' | Write-ScriptLog
 $params = @{
     FriendlyName                 = $labConfig.labHost.storage.poolName
     StorageSubSystemFriendlyName = '*storage*'
@@ -117,7 +117,7 @@ $params = @{
 $storagePool = New-StoragePool @params
 $storagePool | Format-List -Property '*'
 
-'Creating a virtual disk...' | Write-ScriptLog -Context $env:ComputerName
+'Creating a virtual disk...' | Write-ScriptLog
 $params = @{
     StoragePoolFriendlyName = $labConfig.labHost.storage.poolName
     FriendlyName            = $labConfig.labHost.storage.volumeLabel
@@ -130,7 +130,7 @@ $params = @{
 $virtualDisk = New-VirtualDisk @params
 $virtualDisk | Format-List -Property '*'
 
-'Initializing the virtual disk...' | Write-ScriptLog -Context $env:ComputerName
+'Initializing the virtual disk...' | Write-ScriptLog
 $params = @{
     UniqueId       = $virtualDisk.UniqueId
     PartitionStyle = 'GPT'
@@ -139,7 +139,7 @@ $params = @{
 $disk = Initialize-Disk @params
 $disk | Format-List -Property '*'
 
-'Creating a partition...' | Write-ScriptLog -Context $env:ComputerName
+'Creating a partition...' | Write-ScriptLog
 $params = @{
     DriveLetter    = $labConfig.labHost.storage.driveLetter
     UseMaximumSize = $true
@@ -147,7 +147,7 @@ $params = @{
 $partition = $disk | New-Partition @params
 $partition | Format-List -Property '*'
 
-'Formatting the volume...' | Write-ScriptLog -Context $env:ComputerName
+'Formatting the volume...' | Write-ScriptLog
 $params = @{
     FileSystem         = 'ReFS'
     AllocationUnitSize = 4KB
@@ -156,24 +156,24 @@ $params = @{
 $volume = $partition | Format-Volume @params
 $volume | Format-List -Property '*'
 
-'Setting Defender exclusions...' | Write-ScriptLog -Context $env:ComputerName
+'Setting Defender exclusions...' | Write-ScriptLog
 $exclusionPath = $storageVolume.DriveLetter + ':\'
 Add-MpPreference -ExclusionPath $exclusionPath
 if ((Get-MpPreference).ExclusionPath -notcontains $exclusionPath) {
     throw 'Defender exclusion setting failed.'
 }
 
-'Creating the folder structure on the volume...' | Write-ScriptLog -Context $env:ComputerName
+'Creating the folder structure on the volume...' | Write-ScriptLog
 New-Item -ItemType Directory -Path $labConfig.labHost.folderPath.temp -Force
 New-Item -ItemType Directory -Path $labConfig.labHost.folderPath.updates -Force
 New-Item -ItemType Directory -Path $labConfig.labHost.folderPath.vhd -Force
 New-Item -ItemType Directory -Path $labConfig.labHost.folderPath.vm -Force
 
-'The volume creation has been completed.' | Write-ScriptLog -Context $env:ComputerName
+'The volume creation has been completed.' | Write-ScriptLog
 
 # Hyper-V
 
-'Configuring Hyper-V host settings...' | Write-ScriptLog -Context $env:ComputerName
+'Configuring Hyper-V host settings...' | Write-ScriptLog
 $params = @{
     VirtualMachinePath        = $labConfig.labHost.folderPath.vm
     VirtualHardDiskPath       = $labConfig.labHost.folderPath.vhd
@@ -181,14 +181,14 @@ $params = @{
 }
 Set-VMHost @params
 
-'Creating a NAT vSwitch...' | Write-ScriptLog -Context $env:ComputerName
+'Creating a NAT vSwitch...' | Write-ScriptLog
 $params = @{
     Name       = $labConfig.labHost.vSwitch.nat.name
     SwitchType = 'Internal'
 }
 New-VMSwitch @params
 
-'Enabling forwarding on the host''s NAT network interfaces...' | Write-ScriptLog -Context $env:ComputerName
+'Enabling forwarding on the host''s NAT network interfaces...' | Write-ScriptLog
 $paramsForGet = @{
     InterfaceAlias = '*{0}*' -f $labConfig.labHost.vSwitch.nat.name
 }
@@ -198,14 +198,14 @@ $paramsForSet = @{
 Get-NetIPInterface @paramsForGet | Set-NetIPInterface @paramsForSet
 
 foreach ($netNat in $labConfig.labHost.netNat) {
-    'Creating a network NAT "{0}"...' -f $netNat.name | Write-ScriptLog -Context $env:ComputerName
+    'Creating a network NAT "{0}"...' -f $netNat.name | Write-ScriptLog
     $params = @{
         Name                             = $netNat.name
         InternalIPInterfaceAddressPrefix = $netNat.InternalAddressPrefix
     }
     New-NetNat @params
 
-    'Assigning an internal IP configuration to the host''s NAT network interface...' | Write-ScriptLog -Context $env:ComputerName
+    'Assigning an internal IP configuration to the host''s NAT network interface...' | Write-ScriptLog
     $params= @{
         InterfaceIndex = (Get-NetAdapter -Name ('*{0}*' -f $labConfig.labHost.vSwitch.nat.name)).ifIndex
         AddressFamily  = 'IPv4'
@@ -215,42 +215,42 @@ foreach ($netNat in $labConfig.labHost.netNat) {
     New-NetIPAddress @params
 }
 
-'The Hyper-V configuration has been completed.' | Write-ScriptLog -Context $env:ComputerName
+'The Hyper-V configuration has been completed.' | Write-ScriptLog
 
 # Tweaks
 
-'Setting to stop Server Manager launch at logon.' | Write-ScriptLog -Context $env:ComputerName
+'Setting to stop Server Manager launch at logon.' | Write-ScriptLog
 Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotOpenServerManagerAtLogon' -Value 1
 
-'Setting to stop Windows Admin Center popup at Server Manager launch.' | Write-ScriptLog -Context $env:ComputerName
+'Setting to stop Windows Admin Center popup at Server Manager launch.' | Write-ScriptLog
 Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotPopWACConsoleAtSMLaunch' -Value 1
 
-'Setting to hide the Network Location wizard. All networks will be Public.' | Write-ScriptLog -Context $env:ComputerName
+'Setting to hide the Network Location wizard. All networks will be Public.' | Write-ScriptLog
 New-RegistryKey -ParentPath 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -KeyName 'NewNetworkWindowOff'
 
-'Setting to hide the first run experience of Microsoft Edge.' | Write-ScriptLog -Context $env:ComputerName
+'Setting to hide the first run experience of Microsoft Edge.' | Write-ScriptLog
 New-RegistryKey -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft' -KeyName 'Edge'
 Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Edge' -Name 'HideFirstRunExperience' -Value 1
 
-'Some tweaks have been completed.' | Write-ScriptLog -Context $env:ComputerName
+'Some tweaks have been completed.' | Write-ScriptLog
 
 # Install tools
 
 $toolsToInstall = $labConfig.labHost.toolsToInstall -split ';'
 
 if ($toolsToInstall -contains 'windowsterminal') {
-    'Executing the Windows Terminal installation pre-tasks...' | Write-ScriptLog -Context $env:ComputerName
+    'Executing the Windows Terminal installation pre-tasks...' | Write-ScriptLog
     Invoke-WindowsTerminalInstallation -DownloadFolderPath $labConfig.labHost.folderPath.temp
 }
 
 if ($toolsToInstall -contains 'vscode') {
-    'Installing Visual Studio Code...' | Write-ScriptLog -Context $env:ComputerName
+    'Installing Visual Studio Code...' | Write-ScriptLog
     Invoke-VSCodeInstallation -DownloadFolderPath $labConfig.labHost.folderPath.temp
 }
 
 # Shortcuts: Windows Admin Center
 
-'Creating a shortcut for open Windows Admin Center on the desktop....' | Write-ScriptLog -Context $env:ComputerName
+'Creating a shortcut for open Windows Admin Center on the desktop....' | Write-ScriptLog
 $params = @{
     ShortcutFilePath = 'C:\Users\Public\Desktop\Windows Admin Center.lnk'
     TargetPath       = 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
@@ -262,7 +262,7 @@ New-ShortcutFile @params
 
 # Shortcuts: Remote Desktop connection
 
-'Creating a shortcut for Remote Desktop connection to the management tools server VM on the desktop....' | Write-ScriptLog -Context $env:ComputerName
+'Creating a shortcut for Remote Desktop connection to the management tools server VM on the desktop....' | Write-ScriptLog
 $params = @{
     ShortcutFilePath = 'C:\Users\Public\Desktop\Management tools server.lnk'
     TargetPath       = '%windir%\System32\mstsc.exe'
@@ -272,7 +272,7 @@ $params = @{
 New-ShortcutFile @params
 
 $firstHciNodeName = Format-HciNodeName -Format $labConfig.hciNode.vmName -Offset $labConfig.hciNode.vmNameOffset -Index 0
-'Creating a shortcut for Remote Desktop connection to the {0} VM on the desktop...' -f $firstHciNodeName | Write-ScriptLog -Context $env:ComputerName
+'Creating a shortcut for Remote Desktop connection to the {0} VM on the desktop...' -f $firstHciNodeName | Write-ScriptLog
 $params = @{
     ShortcutFilePath = 'C:\Users\Public\Desktop\{0}.lnk' -f $firstHciNodeName
     TargetPath       = '%windir%\System32\mstsc.exe'
@@ -283,7 +283,7 @@ New-ShortcutFile @params
 
 # Shortcuts: Hyper-V Manager
 
-'Creating a shortcut for Hyper-V Manager on the desktop....' | Write-ScriptLog -Context $env:ComputerName
+'Creating a shortcut for Hyper-V Manager on the desktop....' | Write-ScriptLog
 $params = @{
     ShortcutFilePath = 'C:\Users\Public\Desktop\Hyper-V Manager.lnk'
     TargetPath       = '%windir%\System32\mmc.exe'
@@ -293,6 +293,6 @@ $params = @{
 }
 New-ShortcutFile @params
 
-'Shortcut creation has been completed.' | Write-ScriptLog -Context $env:ComputerName
+'Shortcut creation has been completed.' | Write-ScriptLog
 
 Stop-ScriptLogging

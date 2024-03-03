@@ -49,12 +49,12 @@ if ($PSBoundParameters.Keys.Contains('IsoFileNameSuffix')) {
         Suffix          = $IsoFileNameSuffix
     }
     $copiedIsoFilePath = [IO.Path]::Combine($labConfig.labHost.folderPath.temp, (Format-IsoFileName @params))
-    'Copying an ISO file for concurrency from "{0}" to "{1}"...' -f $isoFilePath, $copiedIsoFilePath | Write-ScriptLog -Context $env:ComputerName
-    Copy-Item -LiteralPath $isoFilePath -Destination $copiedIsoFilePath -Force -PassThru | Format-List -Property '*' | Out-String | Write-ScriptLog -Context $env:ComputerName
+    'Copying an ISO file for concurrency from "{0}" to "{1}"...' -f $isoFilePath, $copiedIsoFilePath | Write-ScriptLog
+    Copy-Item -LiteralPath $isoFilePath -Destination $copiedIsoFilePath -Force -PassThru | Format-List -Property '*' | Out-String | Write-ScriptLog
     $isoFilePath = $copiedIsoFilePath
 }
 
-'Converting the ISO file to a VHD file...' | Write-ScriptLog -Context $env:ComputerName
+'Converting the ISO file to a VHD file...' | Write-ScriptLog
 
 $params = @{
     OperatingSystem = $OperatingSystem

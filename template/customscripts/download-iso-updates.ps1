@@ -69,15 +69,15 @@ function Invoke-UpdateFileDonwload
     }
 }
 
-'Reading the asset URL data file...' | Write-ScriptLog -Context $env:ComputerName
+'Reading the asset URL data file...' | Write-ScriptLog
 $assetUrls = Import-PowerShellDataFile -LiteralPath ([IO.Path]::Combine($PSScriptRoot, 'download-iso-updates-asset-urls.psd1'))
 
 # ISO
 
-'Creating the download folder if it does not exist...' | Write-ScriptLog -Context $env:ComputerName
+'Creating the download folder if it does not exist...' | Write-ScriptLog
 New-Item -ItemType Directory -Path $labConfig.labHost.folderPath.temp -Force
 
-'Downloading the ISO file for HCI nodes...' | Write-ScriptLog -Context $env:ComputerName
+'Downloading the ISO file for HCI nodes...' | Write-ScriptLog
 $params = @{
     OperatingSystem    = $labConfig.hciNode.operatingSystem.sku
     Culture            = $labConfig.guestOS.culture
@@ -88,7 +88,7 @@ Invoke-IsoFileDownload @params
 
 # The Windows Server 2022 ISO is always needed for the domain controller VM.
 if ($labConfig.hciNode.operatingSystem.sku -ne [HciLab.OSSku]::WindowsServer2022) {
-    'Downloading the Windows Server ISO file...' | Write-ScriptLog -Context $env:ComputerName
+    'Downloading the Windows Server ISO file...' | Write-ScriptLog
     $params = @{
         OperatingSystem    = [HciLab.OSSku]::WindowsServer2022
         Culture            = $labConfig.guestOS.culture
@@ -98,16 +98,16 @@ if ($labConfig.hciNode.operatingSystem.sku -ne [HciLab.OSSku]::WindowsServer2022
     Invoke-IsoFileDownload @params
 }
 
-'The ISO files download has been completed.' | Write-ScriptLog -Context $env:ComputerName
+'The ISO files download has been completed.' | Write-ScriptLog
 
 # Updates
 
 # Download the updates if the flag is set.
 if ($labConfig.guestOS.shouldInstallUpdates) {
-    'Creating the updates folder if it does not exist...' | Write-ScriptLog -Context $env:ComputerName
+    'Creating the updates folder if it does not exist...' | Write-ScriptLog
     New-Item -ItemType Directory -Path $labConfig.labHost.folderPath.updates -Force
     
-    'Downloading updates...' | Write-ScriptLog -Context $env:ComputerName
+    'Downloading updates...' | Write-ScriptLog
     $params = @{
         OperatingSystem        = $labConfig.hciNode.operatingSystem.sku
         DownloadFolderBasePath = $labConfig.labHost.folderPath.updates
@@ -116,7 +116,7 @@ if ($labConfig.guestOS.shouldInstallUpdates) {
     Invoke-UpdateFileDonwload @params
     
     if ($labConfig.hciNode.operatingSystem.sku -ne [HciLab.OSSku]::WindowsServer2022) {
-        'Downloading the Windows Server updates...' | Write-ScriptLog -Context $env:ComputerName
+        'Downloading the Windows Server updates...' | Write-ScriptLog
         $params = @{
             OperatingSystem        = [HciLab.OSSku]::WindowsServer2022
             DownloadFolderBasePath = $labConfig.labHost.folderPath.updates
@@ -125,10 +125,10 @@ if ($labConfig.guestOS.shouldInstallUpdates) {
         Invoke-UpdateFileDonwload @params
     }
 
-    'The update files download has been completed.' | Write-ScriptLog -Context $env:ComputerName
+    'The update files download has been completed.' | Write-ScriptLog
 }
 else {
-    'Skipped download of updates due to shouldInstallUpdates not set.' | Write-ScriptLog -Context $env:ComputerName
+    'Skipped download of updates due to shouldInstallUpdates not set.' | Write-ScriptLog
 }
 
 Stop-ScriptLogging

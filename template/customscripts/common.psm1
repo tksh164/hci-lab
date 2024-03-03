@@ -83,9 +83,6 @@ function Write-ScriptLog
 {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true, Position = 0)]
-        [string] $Context,
-
         [Parameter(Mandatory = $true, Position = 1, ValueFromPipeline = $true)]
         [AllowEmptyString()]
         [string] $Message,
@@ -106,7 +103,6 @@ function Write-ScriptLog
     else {
         '[{0}]:' -f $computerName
     }
-
     $logParts = $timestamp, $Level.ToUpper(), $contextPart, $Message
     Write-Host -Object ($logParts -join ' ') -ForegroundColor Cyan
 }
@@ -219,7 +215,7 @@ function Invoke-FileDownload
 
     for ($retryCount = 0; $retryCount -lt $MaxRetryCount; $retryCount++) {
         try {
-            'Downloading the file from "{0}" to "{1}".' -f $SourceUri, $destinationFilePath | Write-ScriptLog -Context $env:ComputerName
+            'Downloading the file from "{0}" to "{1}".' -f $SourceUri, $destinationFilePath | Write-ScriptLog
             Start-BitsTransfer -Source $SourceUri -Destination $destinationFilePath
             Get-Item -LiteralPath $destinationFilePath
             return
@@ -230,7 +226,7 @@ function Invoke-FileDownload
                 '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})'
             ) -f @(
                 $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message
-            ) | Write-ScriptLog -Context $env:ComputerName
+            ) | Write-ScriptLog
 
             Remove-Item -LiteralPath $destinationFilePath -Force -ErrorAction Continue
         }
@@ -391,10 +387,10 @@ function WaitingForVhdDismount
     )
 
     while((Get-WindowsImage -Mounted | Where-Object -Property 'ImagePath' -EQ -Value $VhdPath) -ne $null) {
-        'Waiting for VHD dismount completion...' | Write-ScriptLog -Context $VhdPath
+        'Waiting for VHD dismount completion...' | Write-ScriptLog -AdditionalContext $VhdPath
         Start-Sleep -Seconds $ProbeIntervalSeconds
     }
-    'The VHD dismount completed.' | Write-ScriptLog -Context $VhdPath
+    'The VHD dismount completed.' | Write-ScriptLog -AdditionalContext $VhdPath
 }
 
 function Set-UnattendAnswerFileToVhd
@@ -415,29 +411,29 @@ function Set-UnattendAnswerFileToVhd
 
     $baseFolderName = [IO.Path]::GetFileNameWithoutExtension([IO.Path]::GetDirectoryName($VhdPath)) + '-' + (New-Guid).Guid.Substring(0, 4)
 
-    'Mouting the VHD...' | Write-ScriptLog -Context $VhdPath
+    'Mouting the VHD...' | Write-ScriptLog -AdditionalContext $VhdPath
 
     $vhdMountPath = [IO.Path]::Combine('C:\', $baseFolderName + '-mount')
-    'vhdMountPath: {0}' -f $vhdMountPath | Write-ScriptLog -Context $VhdPath
-    New-Item -ItemType Directory -Path $vhdMountPath -Force | Out-String | Write-ScriptLog -Context $VhdPath
+    'vhdMountPath: {0}' -f $vhdMountPath | Write-ScriptLog -AdditionalContext $VhdPath
+    New-Item -ItemType Directory -Path $vhdMountPath -Force | Out-String | Write-ScriptLog -AdditionalContext $VhdPath
 
     $scratchDirectory = [IO.Path]::Combine('C:\', $baseFolderName + '-scratch')
-    'scratchDirectory: {0}' -f $scratchDirectory | Write-ScriptLog -Context $VhdPath
-    New-Item -ItemType Directory -Path $scratchDirectory -Force | Out-String | Write-ScriptLog -Context $VhdPath
+    'scratchDirectory: {0}' -f $scratchDirectory | Write-ScriptLog -AdditionalContext $VhdPath
+    New-Item -ItemType Directory -Path $scratchDirectory -Force | Out-String | Write-ScriptLog -AdditionalContext $VhdPath
 
     $logPath = [IO.Path]::Combine($LogFolder, (New-LogFileName -FileName ('injectunattend-' + [IO.Path]::GetFileNameWithoutExtension([IO.Path]::GetDirectoryName($VhdPath)))))
-    'logPath: {0}' -f $logPath | Write-ScriptLog -Context $VhdPath
-    Mount-WindowsImage -Path $vhdMountPath -Index 1 -ImagePath $VhdPath -ScratchDirectory $scratchDirectory -LogPath $logPath | Out-String | Write-ScriptLog -Context $VhdPath
+    'logPath: {0}' -f $logPath | Write-ScriptLog -AdditionalContext $VhdPath
+    Mount-WindowsImage -Path $vhdMountPath -Index 1 -ImagePath $VhdPath -ScratchDirectory $scratchDirectory -LogPath $logPath | Out-String | Write-ScriptLog -AdditionalContext $VhdPath
 
-    'Create the unattend answer file in the VHD...' | Write-ScriptLog -Context $VhdPath
+    'Create the unattend answer file in the VHD...' | Write-ScriptLog -AdditionalContext $VhdPath
     $pantherPath = [IO.Path]::Combine($vhdMountPath, 'Windows', 'Panther')
-    New-Item -ItemType Directory -Path $pantherPath -Force | Out-String | Write-ScriptLog -Context $VhdPath
+    New-Item -ItemType Directory -Path $pantherPath -Force | Out-String | Write-ScriptLog -AdditionalContext $VhdPath
     Set-Content -Path ([IO.Path]::Combine($pantherPath, 'unattend.xml')) -Value $UnattendAnswerFileContent -Force
 
-    'Dismouting the VHD...' | Write-ScriptLog -Context $VhdPath
-    Dismount-WindowsImage -Path $vhdMountPath -Save -ScratchDirectory $scratchDirectory -LogPath $logPath | Out-String | Write-ScriptLog -Context $VhdPath
+    'Dismouting the VHD...' | Write-ScriptLog -AdditionalContext $VhdPath
+    Dismount-WindowsImage -Path $vhdMountPath -Save -ScratchDirectory $scratchDirectory -LogPath $logPath | Out-String | Write-ScriptLog -AdditionalContext $VhdPath
 
-    'Waiting for VHD dismount completion (MountPath: "{0}")...' -f $vhdMountPath | Write-ScriptLog -Context $VhdPath
+    'Waiting for VHD dismount completion (MountPath: "{0}")...' -f $vhdMountPath | Write-ScriptLog -AdditionalContext $VhdPath
     WaitingForVhdDismount -VhdPath $VhdPath
 
     Remove-Item $vhdMountPath -Force
@@ -490,15 +486,15 @@ function Install-WindowsFeatureToVhd
     )
 
     $logPath = [IO.Path]::Combine($LogFolder, (New-LogFileName -FileName ('installwinfeature-' + [IO.Path]::GetFileNameWithoutExtension([IO.Path]::GetDirectoryName($VhdPath)))))
-    'logPath: {0}' -f $logPath | Write-ScriptLog -Context $VhdPath
+    'logPath: {0}' -f $logPath | Write-ScriptLog -AdditionalContext $VhdPath
 
     $startTime = Get-Date
     while ((Get-Date) -lt ($startTime + $RetyTimeout)) {
         # NOTE: Effort to prevent collision of concurrent DISM operations.
         $waitHandle = CreateWaitHandleForSerialization -SyncEventName 'Local\hcilab-install-windows-feature-to-vhd'
-        'Waiting the turn to doing the Install-WindowsFeature cmdlet''s DISM operations...' | Write-ScriptLog -Context $VhdPath
+        'Waiting the turn to doing the Install-WindowsFeature cmdlet''s DISM operations...' | Write-ScriptLog -AdditionalContext $VhdPath
         $waitHandle.WaitOne()
-        'Acquired the turn to doing the Install-WindowsFeature cmdlet''s DISM operation.' | Write-ScriptLog -Context $VhdPath
+        'Acquired the turn to doing the Install-WindowsFeature cmdlet''s DISM operation.' | Write-ScriptLog -AdditionalContext $VhdPath
 
         try {
             # NOTE: Install-WindowsFeature cmdlet will fail sometimes due to concurrent operations, etc.
@@ -509,13 +505,13 @@ function Install-WindowsFeatureToVhd
                 LogPath                = $logPath
                 ErrorAction            = [Management.Automation.ActionPreference]::Stop
             }
-            Install-WindowsFeature @params | Out-String | Write-ScriptLog -Context $VhdPath
+            Install-WindowsFeature @params | Out-String | Write-ScriptLog -AdditionalContext $VhdPath
 
             # NOTE: The DISM mount point is still remain after the Install-WindowsFeature cmdlet completed.
-            'Waiting for VHD dismount completion by the Install-WindowsFeature cmdlet execution...' | Write-ScriptLog -Context $VhdPath
+            'Waiting for VHD dismount completion by the Install-WindowsFeature cmdlet execution...' | Write-ScriptLog -AdditionalContext $VhdPath
             WaitingForVhdDismount -VhdPath $VhdPath
 
-            'Windows features installation to VHD was completed.' | Write-ScriptLog -Context $VhdPath
+            'Windows features installation to VHD was completed.' | Write-ScriptLog -AdditionalContext $VhdPath
             return
         }
         catch {
@@ -524,10 +520,10 @@ function Install-WindowsFeatureToVhd
                 '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})'
             ) -f @(
                 $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message
-            ) | Write-ScriptLog -Context $VhdPath
+            ) | Write-ScriptLog -AdditionalContext $VhdPath
         }
         finally {
-            'Releasing the turn to doing the Install-WindowsFeature cmdlet''s DISM operation...' | Write-ScriptLog -Context $VhdPath
+            'Releasing the turn to doing the Install-WindowsFeature cmdlet''s DISM operation...' | Write-ScriptLog -AdditionalContext $VhdPath
             $waitHandle.Set()
             $waitHandle.Dispose()
         }
@@ -560,7 +556,7 @@ function Start-VMWithRetry
                 ErrorAction = [Management.Automation.ActionPreference]::Stop
             }
             if ((Start-VM @params) -ne $null) {
-                'The VM was started.' | Write-ScriptLog -Context $VMName
+                'The VM was started.' | Write-ScriptLog -AdditionalContext $VMName
                 return
             }
         }
@@ -571,7 +567,7 @@ function Start-VMWithRetry
                 '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})'
             ) -f @(
                 $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message
-            ) | Write-ScriptLog -Context $VMName
+            ) | Write-ScriptLog -AdditionalContext $VMName
         }
         Start-Sleep -Seconds $RetryIntervalSeconds
     }
@@ -606,7 +602,7 @@ function Wait-PowerShellDirectReady
                 ErrorAction = [Management.Automation.ActionPreference]::Stop
             }
             if ((Invoke-Command @params) -eq 'ready') {
-                'The VM is ready.' | Write-ScriptLog -Context $VMName
+                'The VM is ready.' | Write-ScriptLog -AdditionalContext $VMName
                 return
             }
         }
@@ -616,7 +612,7 @@ function Wait-PowerShellDirectReady
                 '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})'
             ) -f @(
                 $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message
-            ) | Write-ScriptLog -Context $VMName
+            ) | Write-ScriptLog -AdditionalContext $VMName
         }
         Start-Sleep -Seconds $RetryIntervalSeconds
     }
@@ -632,7 +628,7 @@ function Block-AddsDomainOperation
     [CmdletBinding()]
     param ()
 
-    'Block the AD DS domain operations until the AD DS DC VM deployment is completed...' | Write-ScriptLog -Context $env:ComputerName
+    'Block the AD DS domain operations until the AD DS DC VM deployment is completed...' | Write-ScriptLog
     $params = @{
         TypeName     = 'System.Threading.EventWaitHandle'
         ArgumentList = @(
@@ -654,7 +650,7 @@ function Unblock-AddsDomainOperation
             throw 'The wait event handle for AD DS VM ready is not initialized.'
         }
         $script:addsDcDeploymentCompletionWaitHandle.Set()
-        'Unblocked the AD DS domain operations. The AD DS DC VM has been deployed.' | Write-ScriptLog -Context $env:ComputerName
+        'Unblocked the AD DS domain operations. The AD DS DC VM has been deployed.' | Write-ScriptLog
     }
     finally {
         $script:addsDcDeploymentCompletionWaitHandle.Dispose()
@@ -669,16 +665,16 @@ function Wait-AddsDcDeploymentCompletion
     $waitHandle = $null
     if ([System.Threading.EventWaitHandle]::TryOpenExisting($script:addsDcDeploymentCompletionSyncEventName, [ref] $waitHandle)) {
         try {
-            'Waiting for the AD DS DC deployment completion...' | Write-ScriptLog -Context $env:ComputerName
+            'Waiting for the AD DS DC deployment completion...' | Write-ScriptLog
             $waitHandle.WaitOne()
-            'The AD DS DC has been deployed.' | Write-ScriptLog -Context $env:ComputerName
+            'The AD DS DC has been deployed.' | Write-ScriptLog
         }
         finally {
             $waitHandle.Dispose()
         }
     }
     else {
-        'The AD DS DC is already deployed. (The wait handle did not exist)' | Write-ScriptLog -Context $env:ComputerName
+        'The AD DS DC is already deployed. (The wait handle did not exist)' | Write-ScriptLog
     }
 }
 
@@ -717,7 +713,7 @@ function Wait-DomainControllerServiceReady
                 ErrorAction  = [Management.Automation.ActionPreference]::Stop
             }
             if ((Invoke-Command @params) -eq $true) {
-                'The AD DS DC is ready.' | Write-ScriptLog -Context $AddsDcVMName
+                'The AD DS DC is ready.' | Write-ScriptLog -AdditionalContext $AddsDcVMName
                 return
             }
         }
@@ -732,30 +728,30 @@ function Wait-DomainControllerServiceReady
                     '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})'
                 ) -f @(
                     $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message
-                ) | Write-ScriptLog -Context $AddsDcVMName
+                ) | Write-ScriptLog -AdditionalContext $AddsDcVMName
 
                 $waitHandle = CreateWaitHandleForSerialization -SyncEventName 'Local\hcilab-adds-dc-vm-reboot'
-                'Waiting the turn to doing the AD DS DC VM reboot...' | Write-ScriptLog -Context $AddsDcVMName
+                'Waiting the turn to doing the AD DS DC VM reboot...' | Write-ScriptLog -AdditionalContext $AddsDcVMName
                 $waitHandle.WaitOne()
-                'Acquired the turn to doing the AD DS DC VM reboot.' | Write-ScriptLog -Context $AddsDcVMName
+                'Acquired the turn to doing the AD DS DC VM reboot.' | Write-ScriptLog -AdditionalContext $AddsDcVMName
     
                 try {
                     $uptimeThresholdMinutes = 15
                     $addsDcVM = Get-VM -Name $AddsDcVMName
                     # NOTE: Skip rebooting if the VM is young because it means the VM already rebooted recently by other jobs.
                     if ($addsDcVM.UpTime -gt (New-TimeSpan -Minutes $uptimeThresholdMinutes)) {
-                        'Stopping the AD DS DC VM due to PowerShell Direct exception...' | Write-ScriptLog -Context $AddsDcVMName
+                        'Stopping the AD DS DC VM due to PowerShell Direct exception...' | Write-ScriptLog -AdditionalContext $AddsDcVMName
                         Stop-VM -Name $AddsDcVMName -ErrorAction Continue
             
-                        'Starting the AD DS DC VM due to PowerShell Direct exception...' | Write-ScriptLog -Context $AddsDcVMName
+                        'Starting the AD DS DC VM due to PowerShell Direct exception...' | Write-ScriptLog -AdditionalContext $AddsDcVMName
                         Start-VM -Name $AddsDcVMName -ErrorAction Continue
                     }
                     else {
-                        'Skip the AD DS DC VM rebooting because the VM''s uptime is too short (less than {0} minutes).' -f $uptimeThresholdMinutes | Write-ScriptLog -Context $AddsDcVMName
+                        'Skip the AD DS DC VM rebooting because the VM''s uptime is too short (less than {0} minutes).' -f $uptimeThresholdMinutes | Write-ScriptLog -AdditionalContext $AddsDcVMName
                     }
                 }
                 finally {
-                    'Releasing the turn to doing the AD DS DC VM reboot...' | Write-ScriptLog -Context $AddsDcVMName
+                    'Releasing the turn to doing the AD DS DC VM reboot...' | Write-ScriptLog -AdditionalContext $AddsDcVMName
                     $waitHandle.Set()
                     $waitHandle.Dispose()
                 }
@@ -766,7 +762,7 @@ function Wait-DomainControllerServiceReady
                     '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})'
                 ) -f @(
                     $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message
-                ) | Write-ScriptLog -Context $AddsDcVMName
+                ) | Write-ScriptLog -AdditionalContext $AddsDcVMName
             }
         }
         Start-Sleep -Seconds $RetryIntervalSeconds
@@ -822,7 +818,7 @@ function Add-VMToADDomain
         [TimeSpan] $RetyTimeout = (New-TimeSpan -Minutes 30)
     )
 
-    'Joining the VM "{0}" to the AD domain "{1}"...' -f $VMName, $DomainFqdn | Write-ScriptLog -Context $VMName
+    'Joining the VM "{0}" to the AD domain "{1}"...' -f $VMName, $DomainFqdn | Write-ScriptLog -AdditionalContext $VMName
 
     $startTime = Get-Date
     while ((Get-Date) -lt ($startTime + $RetyTimeout)) {
@@ -840,7 +836,7 @@ function Add-VMToADDomain
                 ErrorAction  = [Management.Automation.ActionPreference]::Stop
             }
             Invoke-Command @params
-            'The VM "{0}" was joined to the AD domain "{1}".' -f $VMName, $DomainFqdn | Write-ScriptLog -Context $VMName
+            'The VM "{0}" was joined to the AD domain "{1}".' -f $VMName, $DomainFqdn | Write-ScriptLog -AdditionalContext $VMName
             return
         }
         catch {
@@ -849,7 +845,7 @@ function Add-VMToADDomain
                 '(ExceptionMessage: {2} | Exception: {3} | FullyQualifiedErrorId: {4} | CategoryInfo: {5} | ErrorDetailsMessage: {6})'
             ) -f @(
                 $VMName, $DomainFqdn, $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message
-            ) | Write-ScriptLog -Context $VMName
+            ) | Write-ScriptLog -AdditionalContext $VMName
         }
         Start-Sleep -Seconds $RetryIntervalSeconds
     }
@@ -924,9 +920,9 @@ function Invoke-PSDirectSessionCleanup
             [string] $CommonModuleFilePath
         )
     
-        'Deleting the common module file "{0}" within the VM...' -f $CommonModuleFilePath | Write-ScriptLog -Context $env:ComputerName
+        'Deleting the common module file "{0}" within the VM...' -f $CommonModuleFilePath | Write-ScriptLog
         Remove-Item -LiteralPath $CommonModuleFilePath -Force
-    } | Out-String | Write-ScriptLog -Context $env:ComputerName
+    } | Out-String | Write-ScriptLog
         
     $Session | Remove-PSSession
 }

@@ -16,14 +16,14 @@ Import-Module -Name $PSModuleNameToImport -Force
 
 $labConfig = Get-LabDeploymentConfig
 Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log -FileName $LogFileName
-$labConfig | ConvertTo-Json -Depth 16 | Out-String | Write-ScriptLog -Context $env:ComputerName
+$labConfig | ConvertTo-Json -Depth 16 | Out-String | Write-ScriptLog
 
 $vmName = $labConfig.addsDC.vmName
 
-'Block the AD DS domain operations on other VMs.' | Write-ScriptLog -Context $vmName
+'Block the AD DS domain operations on other VMs.' | Write-ScriptLog -AdditionalContext $vmName
 Block-AddsDomainOperation
 
-'Creating the OS disk for the VM...' | Write-ScriptLog -Context $vmName
+'Creating the OS disk for the VM...' | Write-ScriptLog -AdditionalContext $vmName
 $params = @{
     OperatingSystem = [HciLab.OSSku]::WindowsServer2022
     ImageIndex      = [HciLab.OSImageIndex]::WSDatacenterServerCore  # Datacenter (Server Core)
@@ -37,24 +37,24 @@ $params = @{
 }
 $vmOSDiskVhd = New-VHD  @params
 
-'Creating the VM...' | Write-ScriptLog -Context $vmName
+'Creating the VM...' | Write-ScriptLog -AdditionalContext $vmName
 $params = @{
     Name       = $vmName
     Path       = $labConfig.labHost.folderPath.vm
     VHDPath    = $vmOSDiskVhd.Path
     Generation = 2
 }
-New-VM @params | Out-String | Write-ScriptLog -Context $vmName
+New-VM @params | Out-String | Write-ScriptLog -AdditionalContext $vmName
 
-'Changing the VM''s automatic stop action...' | Write-ScriptLog -Context $vmName
+'Changing the VM''s automatic stop action...' | Write-ScriptLog -AdditionalContext $vmName
 Set-VM -Name $vmName -AutomaticStopAction ShutDown
 
-'Setting the VM''s processor configuration...' | Write-ScriptLog -Context $vmName
+'Setting the VM''s processor configuration...' | Write-ScriptLog -AdditionalContext $vmName
 $vmProcessorCount = 4
 if ((Get-VMHost).LogicalProcessorCount -lt $vmProcessorCount) { $vmProcessorCount = (Get-VMHost).LogicalProcessorCount }
 Set-VMProcessor -VMName $vmName -Count $vmProcessorCount
 
-'Setting the VM''s memory configuration...' | Write-ScriptLog -Context $vmName
+'Setting the VM''s memory configuration...' | Write-ScriptLog -AdditionalContext $vmName
 $params = @{
     VMName               = $vmName
     StartupBytes         = 1GB
@@ -64,7 +64,7 @@ $params = @{
 }
 Set-VMMemory @params
 
-'Enabling vTPM...' | Write-ScriptLog -Context $vmName
+'Enabling vTPM...' | Write-ScriptLog -AdditionalContext $vmName
 $params = @{
     VMName               = $vmName
     NewLocalKeyProtector = $true
@@ -80,13 +80,13 @@ catch {
         '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})'
     ) -f @(
         $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message
-    ) | Write-ScriptLog -Context $vmName
+    ) | Write-ScriptLog -AdditionalContext $vmName
 
     # Rescue only once by retry.
     Set-VMKeyProtector @params | Enable-VMTPM
 }
 
-'Setting the VM''s network adapter configuration...' | Write-ScriptLog -Context $vmName
+'Setting the VM''s network adapter configuration...' | Write-ScriptLog -AdditionalContext $vmName
 Get-VMNetworkAdapter -VMName $vmName | Remove-VMNetworkAdapter
 
 # Management
@@ -106,7 +106,7 @@ Add-VMNetworkAdapter @paramsForAdd |
 Set-VMNetworkAdapter @paramsForSet |
 Set-VMNetworkAdapterVlan -Trunk -NativeVlanId 0 -AllowedVlanIdList '1-4094'
 
-'Generating the unattend answer XML...' | Write-ScriptLog -Context $vmName
+'Generating the unattend answer XML...' | Write-ScriptLog -AdditionalContext $vmName
 $adminPassword = Get-Secret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName.adminPassword
 $params = @{
     ComputerName = $vmName
@@ -116,7 +116,7 @@ $params = @{
 }
 $unattendAnswerFileContent = New-UnattendAnswerFileContent @params
 
-'Injecting the unattend answer file to the VM...' | Write-ScriptLog -Context $vmName
+'Injecting the unattend answer file to the VM...' | Write-ScriptLog -AdditionalContext $vmName
 $params = @{
     VhdPath                   = $vmOSDiskVhd.Path
     UnattendAnswerFileContent = $unattendAnswerFileContent
@@ -124,7 +124,7 @@ $params = @{
 }
 Set-UnattendAnswerFileToVhd @params
 
-'Installing the roles and features to the VHD...' | Write-ScriptLog -Context $vmName
+'Installing the roles and features to the VHD...' | Write-ScriptLog -AdditionalContext $vmName
 $params = @{
     VhdPath     = $vmOSDiskVhd.Path
     FeatureName = @(
@@ -135,39 +135,36 @@ $params = @{
 }
 Install-WindowsFeatureToVhd @params
 
-'Starting the VM...' | Write-ScriptLog -Context $vmName
+'Starting the VM...' | Write-ScriptLog -AdditionalContext $vmName
 Start-VMWithRetry -VMName $vmName
 
-'Waiting for the VM to be ready...' | Write-ScriptLog -Context $vmName
+'Waiting for the VM to be ready...' | Write-ScriptLog -AdditionalContext $vmName
 $localAdminCredential = New-LogonCredential -DomainFqdn '.' -Password $adminPassword
 Wait-PowerShellDirectReady -VMName $vmName -Credential $localAdminCredential
 
-'Create a PowerShell Direct session...' | Write-ScriptLog -Context $vmName
+'Create a PowerShell Direct session...' | Write-ScriptLog -AdditionalContext $vmName
 $localAdminCredPSSession = New-PSSession -VMName $vmName -Credential $localAdminCredential
-$localAdminCredPSSession |
-    Format-Table -Property 'Id', 'Name', 'ComputerName', 'ComputerType', 'State', 'Availability' |
-    Out-String |
-    Write-ScriptLog -Context $env:ComputerName
+$localAdminCredPSSession | Format-Table -Property 'Id', 'Name', 'ComputerName', 'ComputerType', 'State', 'Availability' | Out-String | Write-ScriptLog
 
-'Copying the common module file into the VM...' | Write-ScriptLog -Context $vmName
+'Copying the common module file into the VM...' | Write-ScriptLog -AdditionalContext $vmName
 $commonModuleFilePathInVM = Copy-PSModuleIntoVM -Session $localAdminCredPSSession -ModuleFilePathToCopy (Get-Module -Name 'common').Path
 
-'Setup the PowerShell Direct session...' | Write-ScriptLog -Context $vmName
+'Setup the PowerShell Direct session...' | Write-ScriptLog -AdditionalContext $vmName
 Invoke-PSDirectSessionSetup -Session $localAdminCredPSSession -CommonModuleFilePathInVM $commonModuleFilePathInVM
 
-'Configuring registry values within the VM...' | Write-ScriptLog -Context $vmName
+'Configuring registry values within the VM...' | Write-ScriptLog -AdditionalContext $vmName
 Invoke-Command -Session $localAdminCredPSSession -ScriptBlock {
-    'Stop Server Manager launch at logon.' | Write-ScriptLog -Context $env:ComputerName
+    'Stop Server Manager launch at logon.' | Write-ScriptLog
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotOpenServerManagerAtLogon' -Value 1
 
-    'Stop Windows Admin Center popup at Server Manager launch.' | Write-ScriptLog -Context $env:ComputerName
+    'Stop Windows Admin Center popup at Server Manager launch.' | Write-ScriptLog
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotPopWACConsoleAtSMLaunch' -Value 1
 
-    'Hide the Network Location wizard. All networks will be Public.' | Write-ScriptLog -Context $env:ComputerName
+    'Hide the Network Location wizard. All networks will be Public.' | Write-ScriptLog
     New-RegistryKey -ParentPath 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -KeyName 'NewNetworkWindowOff'
-} | Out-String | Write-ScriptLog -Context $vmName
+} | Out-String | Write-ScriptLog -AdditionalContext $vmName
 
-'Configuring network settings within the VM...' | Write-ScriptLog -Context $vmName
+'Configuring network settings within the VM...' | Write-ScriptLog -AdditionalContext $vmName
 $params = @{
     InputObject = [PSCustomObject] @{
         VMConfig = $LabConfig.addsDC
@@ -179,13 +176,13 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
         [PSCustomObject] $VMConfig
     )
 
-    'Renaming the network adapters...' | Write-ScriptLog -Context $env:ComputerName
+    'Renaming the network adapters...' | Write-ScriptLog
     Get-NetAdapterAdvancedProperty -RegistryKeyword 'HyperVNetworkAdapterName' | ForEach-Object -Process {
         Rename-NetAdapter -Name $_.Name -NewName $_.DisplayValue
     }
 
     # Management
-    'Setting the IP & DNS configuration on the {0} network adapter...' -f $VMConfig.netAdapters.management.name | Write-ScriptLog -Context $env:ComputerName
+    'Setting the IP & DNS configuration on the {0} network adapter...' -f $VMConfig.netAdapters.management.name | Write-ScriptLog
     $paramsForSetNetIPInterface = @{
         AddressFamily = 'IPv4'
         Dhcp          = 'Disabled'
@@ -204,11 +201,11 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
     Set-NetIPInterface @paramsForSetNetIPInterface |
     New-NetIPAddress @paramsForNewIPAddress |
     Set-DnsClientServerAddress @paramsForSetDnsClientServerAddress
-    'The IP & DNS configuration on the {0} network adapter is completed.' -f $VMConfig.netAdapters.management.name | Write-ScriptLog -Context $env:ComputerName
+    'The IP & DNS configuration on the {0} network adapter is completed.' -f $VMConfig.netAdapters.management.name | Write-ScriptLog
 
-} | Out-String | Write-ScriptLog -Context $vmName
+} | Out-String | Write-ScriptLog -AdditionalContext $vmName
 
-'Installing AD DS (Creating a new forest) within the VM...' | Write-ScriptLog -Context $vmName
+'Installing AD DS (Creating a new forest) within the VM...' | Write-ScriptLog -AdditionalContext $vmName
 $params = @{
     InputObject = [PSCustomObject] @{
         DomainName    = $labConfig.addsDomain.fqdn
@@ -232,25 +229,25 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
         Force                         = $true
     }
     Install-ADDSForest @params
-} | Out-String | Write-ScriptLog -Context $vmName
+} | Out-String | Write-ScriptLog -AdditionalContext $vmName
 
-'Cleaning up the PowerShell Direct session...' | Write-ScriptLog -Context $vmName
+'Cleaning up the PowerShell Direct session...' | Write-ScriptLog -AdditionalContext $vmName
 Invoke-PSDirectSessionCleanup -Session $localAdminCredPSSession -CommonModuleFilePathInVM $commonModuleFilePathInVM
 
-'Stopping the VM...' | Write-ScriptLog -Context $vmName
+'Stopping the VM...' | Write-ScriptLog -AdditionalContext $vmName
 Stop-VM -Name $vmName
 
-'Starting the VM...' | Write-ScriptLog -Context $vmName
+'Starting the VM...' | Write-ScriptLog -AdditionalContext $vmName
 Start-VM -Name $vmName
 
-'Waiting for ready to the domain controller...' | Write-ScriptLog -Context $vmName
+'Waiting for ready to the domain controller...' | Write-ScriptLog -AdditionalContext $vmName
 $domainAdminCredential = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $adminPassword
 # The DC's computer name is the same as the VM name. It's specified in the unattend.xml.
 Wait-DomainControllerServiceReady -AddsDcVMName $vmName -AddsDcComputerName $vmName -Credential $domainAdminCredential
 
-'Allow the AD DS domain operations on other VMs.' | Write-ScriptLog -Context $vmName
+'Allow the AD DS domain operations on other VMs.' | Write-ScriptLog -AdditionalContext $vmName
 Unblock-AddsDomainOperation
 
-'The AD DS Domain Controller VM creation has been completed.' | Write-ScriptLog -Context $vmName
+'The AD DS Domain Controller VM creation has been completed.' | Write-ScriptLog -AdditionalContext $vmName
 
 Stop-ScriptLogging
