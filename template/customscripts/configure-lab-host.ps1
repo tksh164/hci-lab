@@ -301,7 +301,7 @@ $params = @{
     Description      = 'Make a remote desktop connection to the member node "{0}" VM of the HCI cluster in your lab environment.' -f $firstHciNodeName
 }
 New-ShortcutFile @params
-'Create a new shortcut on the desktop for connecting to the first HCI node using Remote Desktop connection completed.' -f $firstHciNodeName | Write-ScriptLog
+'Create a new shortcut on the desktop for connecting to the first HCI node using Remote Desktop connection completed.' | Write-ScriptLog
 
 # Shortcuts: Hyper-V Manager
 
