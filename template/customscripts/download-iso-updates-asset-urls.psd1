@@ -5,7 +5,8 @@
 # OS: https://learn.microsoft.com/en-us/azure-stack/hci/release-information
 #
 # Azure Stack HCI 23H2 - OS build: 25398
-# OS: https://support.microsoft.com/en-us/topic/018b9b10-a75b-4ad7-b9d1-7755f81e5b0b
+# OS: https://learn.microsoft.com/en-us/azure-stack/hci/release-information-23h2
+# OS (legacy): https://support.microsoft.com/en-us/topic/018b9b10-a75b-4ad7-b9d1-7755f81e5b0b
 # .NET: https://support.microsoft.com/en-us/topic/e3c9b0d9-ec46-4e8e-ba87-6c831bc11ef3
 #
 # Azure Stack HCI 22H2 - OS build: 20349
@@ -35,7 +36,7 @@
         }
         'updates' = @(
             # OS
-            'https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/8c967aa7-8dc8-483c-8fc5-4dd79592b6e2/public/windows11.0-kb5034769-x64_f6c61967e274c98a43fbf5ebe0e699e291e45597.msu',
+            'https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/0c4d4b88-5202-4686-995a-1d48d4180f33/public/windows11.0-kb5035856-x64_525ab9115a9c6deadd33cec85da911b2ebe34cc4.msu',
             # .NET Framework
             'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/updt/2024/01/windows11.0-kb5034626-x64-ndp481_32dd3d13fc5195866d4cb30cbf343a3bdf581bfc.msu'
         )
@@ -47,7 +48,7 @@
         }
         'updates' = @(
             # OS
-            'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2024/02/windows10.0-kb5034770-x64_484dd9d8bb43378fcae003dbaa3e87193de1dd61.msu',
+            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2024/03/windows10.0-kb5035857-x64_f699534e61e7e8e750a7f751f6a1ff4d03bd3ebb.msu',
             # .NET Framework
             'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/updt/2024/01/windows10.0-kb5034613-x64-ndp48_466f9e69310db89749e1da1f4f2a5ebc2b6adb1c.msu',
             'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/updt/2024/01/windows10.0-kb5034611-x64-ndp481_761e979f2ae4ba4011e614fee94a13d3baf98421.msu'
@@ -89,7 +90,7 @@
         }
         'updates' = @(
             # OS
-            'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2024/02/windows10.0-kb5034770-x64_484dd9d8bb43378fcae003dbaa3e87193de1dd61.msu',
+            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2024/03/windows10.0-kb5035857-x64_f699534e61e7e8e750a7f751f6a1ff4d03bd3ebb.msu',
             # .NET Framework
             'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/updt/2024/01/windows10.0-kb5034613-x64-ndp48_466f9e69310db89749e1da1f4f2a5ebc2b6adb1c.msu',
             'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/updt/2024/01/windows10.0-kb5034611-x64-ndp481_761e979f2ae4ba4011e614fee94a13d3baf98421.msu',
