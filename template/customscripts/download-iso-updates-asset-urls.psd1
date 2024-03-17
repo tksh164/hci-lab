@@ -5,7 +5,8 @@
 # OS: https://learn.microsoft.com/en-us/azure-stack/hci/release-information
 #
 # Azure Stack HCI 23H2 - OS build: 25398
-# OS: https://support.microsoft.com/en-us/topic/018b9b10-a75b-4ad7-b9d1-7755f81e5b0b
+# OS: https://learn.microsoft.com/en-us/azure-stack/hci/release-information-23h2
+# OS (legacy): https://support.microsoft.com/en-us/topic/018b9b10-a75b-4ad7-b9d1-7755f81e5b0b
 # .NET: https://support.microsoft.com/en-us/topic/e3c9b0d9-ec46-4e8e-ba87-6c831bc11ef3
 #
 # Azure Stack HCI 22H2 - OS build: 20349
@@ -35,7 +36,7 @@
         }
         'updates' = @(
             # OS
-            'https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/8c967aa7-8dc8-483c-8fc5-4dd79592b6e2/public/windows11.0-kb5034769-x64_f6c61967e274c98a43fbf5ebe0e699e291e45597.msu',
+            'https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/0c4d4b88-5202-4686-995a-1d48d4180f33/public/windows11.0-kb5035856-x64_525ab9115a9c6deadd33cec85da911b2ebe34cc4.msu',
             # .NET Framework
             'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/updt/2024/01/windows11.0-kb5034626-x64-ndp481_32dd3d13fc5195866d4cb30cbf343a3bdf581bfc.msu'
         )
