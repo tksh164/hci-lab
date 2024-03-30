@@ -10,6 +10,7 @@ Import-Module -Name ([IO.Path]::Combine($PSScriptRoot, 'common.psm1')) -Force
 
 $labConfig = Get-LabDeploymentConfig
 Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log
+'Lab deployment config:' | Write-ScriptLog
 $labConfig | ConvertTo-Json -Depth 16 | Write-Host
 
 $nodeNames = @()
@@ -20,25 +21,25 @@ $nodeNames += for ($nodeIndex = 0; $nodeIndex -lt $labConfig.hciNode.nodeCount; 
 $adminPassword = Get-Secret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName.adminPassword
 $domainCredential = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $adminPassword
 
-'Create PowerShell Direct session for the HCI nodes...' | Write-ScriptLog -Context $env:ComputerName
+'Create PowerShell Direct session for the HCI nodes.' | Write-ScriptLog
 $hciNodeDomainAdminCredPSSessions = @()
 foreach ($nodeName in $nodeNames) {
     $hciNodeDomainAdminCredPSSessions += New-PSSession -VMName $nodeName -Credential $domainCredential
 }
-$hciNodeDomainAdminCredPSSessions |
-    Format-Table -Property 'Id', 'Name', 'ComputerName', 'ComputerType', 'State', 'Availability' |
-    Out-String |
-    Write-ScriptLog -Context $env:ComputerName
+$hciNodeDomainAdminCredPSSessions | Format-Table -Property 'Id', 'Name', 'ComputerName', 'ComputerType', 'State', 'Availability' | Out-String | Write-ScriptLog
+'Create PowerShell Direct session for the HCI nodes completed.' | Write-ScriptLog
 
-'Copying the common module file into the HCI nodes...' | Write-ScriptLog -Context $env:ComputerName
+'Copy the common module file into the HCI nodes.' | Write-ScriptLog
 foreach ($domainAdminCredPSSession in $hciNodeDomainAdminCredPSSessions) {
     $commonModuleFilePathInVM = Copy-PSModuleIntoVM -Session $domainAdminCredPSSession -ModuleFilePathToCopy (Get-Module -Name 'common').Path
 }
+'Copy the common module file into the HCI nodes completed.' | Write-ScriptLog
 
-'Setup the PowerShell Direct session for the HCI nodes...' | Write-ScriptLog -Context $env:ComputerName
+'Setup the PowerShell Direct session for the HCI nodes.' | Write-ScriptLog
 Invoke-PSDirectSessionSetup -Session $hciNodeDomainAdminCredPSSessions -CommonModuleFilePathInVM $commonModuleFilePathInVM
+'Setup the PowerShell Direct session for the HCI nodes completed.' | Write-ScriptLog
 
-'Creating virtual switches on each HCI node...' | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+'Create virtual switches on each HCI node.' | Write-ScriptLog
 $params = @{
     InputObject = [PSCustomObject] @{
         NetAdapterName = [PSCustomObject] @{
@@ -76,26 +77,38 @@ Invoke-Command @params -Session $hciNodeDomainAdminCredPSSessions -ScriptBlock {
     Sort-Object -Property 'PSComputerName' |
     Format-Table -Property 'PSComputerName', 'Name', 'SwitchType', 'AllowManagementOS', 'EmbeddedTeamingEnabled' |
     Out-String |
-    Write-ScriptLog -Context $env:ComputerName
+    Write-ScriptLog
+'Create virtual switches on each HCI node completed.' | Write-ScriptLog
 
-'Preparing HCI node''s drives...' | Write-ScriptLog -Context $env:ComputerName
+'Prepare HCI node''s drives.' | Write-ScriptLog
 Invoke-Command -Session $hciNodeDomainAdminCredPSSessions -ScriptBlock {
     # Updates the cache of the service for a particular provider and associated child objects.
+    'Update the storage provider cache.' | Write-ScriptLog
     Update-StorageProviderCache
+    'Update the storage provider cache completed.' | Write-ScriptLog
 
     # Disable read-only state of storage pools except the Primordial pool.
+    'Disable read-only state of the storage pool.' | Write-ScriptLog
     Get-StoragePool | Where-Object -Property 'IsPrimordial' -EQ -Value $false | Set-StoragePool -IsReadOnly:$false
+    'Disable read-only state of the storage pool completed.' | Write-ScriptLog
 
     # Delete virtual disks in storage pools except the Primordial pool.
+    'Delete virtual disks in the storage pool.' | Write-ScriptLog
     Get-StoragePool | Where-Object -Property 'IsPrimordial' -EQ -Value $false | Get-VirtualDisk | Remove-VirtualDisk -Confirm:$false -ErrorAction Continue
+    'Delete virtual disks in the storage pool completed.' | Write-ScriptLog
 
     # Delete storage pools except the Primordial pool.
+    'Delete the storage pool.' | Write-ScriptLog
     Get-StoragePool | Where-Object -Property 'IsPrimordial' -EQ -Value $false | Remove-StoragePool -Confirm:$false
+    'Delete the storage pool completed.' | Write-ScriptLog
 
-    # Reset the status of a physical disks. (Delete the storage pool's metadata from physical disks)
+    # Reset the status of physical disks. (Delete the storage pool's metadata from physical disks)
+    'Delete the storage pool''s metadata from physical disks.' | Write-ScriptLog
     Get-PhysicalDisk | Reset-PhysicalDisk
+    'Delete the storage pool''s metadata from physical disks completed.' | Write-ScriptLog
 
     # Cleans disks by removing all partition information and un-initializing it, erasing all data on the disks.
+    'Erase all data on the disks.' | Write-ScriptLog
     Get-Disk |
         Where-Object -Property 'Number' -NE $null |
         Where-Object -Property 'IsBoot' -NE $true |
@@ -108,6 +121,7 @@ Invoke-Command -Session $hciNodeDomainAdminCredPSSessions -ScriptBlock {
             $_ | Set-Disk -IsReadOnly:$true
             $_ | Set-Disk -IsOffline:$true
         }
+    'Erase all data on the disks completed.' | Write-ScriptLog
 
     Get-Disk |
         Where-Object -Property 'Number' -NE $null |
@@ -120,35 +134,39 @@ Invoke-Command -Session $hciNodeDomainAdminCredPSSessions -ScriptBlock {
     Sort-Object -Property 'PSComputerName' |
     Format-Table -Property 'PSComputerName', 'Count', 'Name' |
     Out-String |
-    Write-ScriptLog -Context $env:ComputerName
+    Write-ScriptLog
+'Prepare HCI node''s drives completed.' | Write-ScriptLog
 
-'Cleaning up the PowerShell Direct session for the HCI nodes...' | Write-ScriptLog -Context $env:ComputerName
+'Clean up the PowerShell Direct session for the HCI nodes.' | Write-ScriptLog
 Invoke-PSDirectSessionCleanup -Session $hciNodeDomainAdminCredPSSessions -CommonModuleFilePathInVM $commonModuleFilePathInVM
+'Clean up the PowerShell Direct session for the HCI nodes completed.' | Write-ScriptLog
 
-'Create PowerShell Direct sessions for the management machine...' | Write-ScriptLog -Context $env:ComputerName
+'Create PowerShell Direct sessions for the management server.' | Write-ScriptLog
 $wacDomainAdminCredPSSession = New-PSSession -VMName $labConfig.wac.vmName -Credential $domainCredential
 $wacDomainAdminCredPSSession |
-    Format-Table -Property 'Id', 'Name', 'ComputerName', 'ComputerType', 'State', 'Availability' |
-    Out-String |
-    Write-ScriptLog -Context $env:ComputerName
+    Format-Table -Property 'Id', 'Name', 'ComputerName', 'ComputerType', 'State', 'Availability' | Out-String | Write-ScriptLog
+'Create PowerShell Direct sessions for the management server completed.' | Write-ScriptLog
 
-'Copying the common module file into the management machine...' | Write-ScriptLog -Context $env:ComputerName
+'Copy the common module file into the management server.' | Write-ScriptLog
 $commonModuleFilePathInVM = Copy-PSModuleIntoVM -Session $wacDomainAdminCredPSSession -ModuleFilePathToCopy (Get-Module -Name 'common').Path
+'Copy the common module file into the management server completed.' | Write-ScriptLog
 
-'Setup the PowerShell Direct session for the management machine...' | Write-ScriptLog -Context $env:ComputerName
+'Setup the PowerShell Direct session for the management server.' | Write-ScriptLog
 Invoke-PSDirectSessionSetup -Session $wacDomainAdminCredPSSession -CommonModuleFilePathInVM $commonModuleFilePathInVM
+'Setup the PowerShell Direct session for the management server completed.' | Write-ScriptLog
 
-'Getting the node''s UI culture...' | Write-ScriptLog -Context $env:ComputerName
+'Get the node''s UI culture.' | Write-ScriptLog
 $langTag = Invoke-Command -Session $wacDomainAdminCredPSSession -ScriptBlock {
     (Get-UICulture).IetfLanguageTag
 }
-'The node''s UI culture is "{0}".' -f $langTag | Write-ScriptLog -Context $env:ComputerName
+'The node''s UI culture is "{0}".' -f $langTag | Write-ScriptLog
 
 $localizedDataFileName = ('create-hci-cluster-test-cat-{0}.psd1' -f $langTag).ToLower()
-'Localized data file name: {0}' -f $localizedDataFileName | Write-ScriptLog -Context $env:ComputerName
+'Localized data file name: {0}' -f $localizedDataFileName | Write-ScriptLog
 Import-LocalizedData -FileName $localizedDataFileName -BindingVariable 'clusterTestCategories'
+'Import the localized data completed.' | Write-ScriptLog
 
-'Testing the HCI cluster nodes...' | Write-ScriptLog -Context $env:ComputerName
+'Test the HCI cluster nodes.' | Write-ScriptLog
 $params = @{
     InputObject = [PSCustomObject] @{
         Node         = $nodeNames
@@ -171,9 +189,10 @@ Invoke-Command @params -Session $wacDomainAdminCredPSSession -ScriptBlock {
         ErrorAction = [Management.Automation.ActionPreference]::Stop
     }
     Test-Cluster @params
-} | Out-String | Write-ScriptLog -Context $env:ComputerName
+} | Out-String | Write-ScriptLog
+'Test the HCI cluster nodes completed.' | Write-ScriptLog
 
-'Creating an HCI cluster...' | Write-ScriptLog -Context $env:ComputerName
+'Create an HCI cluster.' | Write-ScriptLog
 $params = @{
     InputObject = [PSCustomObject] @{
         ClusterName      = $labConfig.hciCluster.name
@@ -202,9 +221,10 @@ Invoke-Command @params -Session $wacDomainAdminCredPSSession -ScriptBlock {
         ErrorAction   = [Management.Automation.ActionPreference]::Stop
     }
     New-Cluster @params
-} | Out-String | Write-ScriptLog -Context $env:ComputerName
+} | Out-String | Write-ScriptLog
+'Create an HCI cluster completed.' | Write-ScriptLog
 
-'Waiting for the cluster to be ready...' | Write-ScriptLog -Context $env:ComputerName
+'Wait for the HCI cluster to be ready.' | Write-ScriptLog
 $params = @{
     InputObject = [PSCustomObject] @{
         ClusterName = $labConfig.hciCluster.name
@@ -230,19 +250,25 @@ Invoke-Command @params -Session $wacDomainAdminCredPSSession -ScriptBlock {
             return
         }
         catch {
-            (
-                'Probing the cluster ready state... ' +
-                '(ExceptionMessage: {0} | Exception: {1} | FullyQualifiedErrorId: {2} | CategoryInfo: {3} | ErrorDetailsMessage: {4})'
-            ) -f @(
-                $_.Exception.Message, $_.Exception.GetType().FullName, $_.FullyQualifiedErrorId, $_.CategoryInfo.ToString(), $_.ErrorDetails.Message
-            ) | Write-Host
+            '{0} (ExceptionMessage: {1} | Exception: {2} | FullyQualifiedErrorId: {3} | CategoryInfo: {4} | ErrorDetailsMessage: {5})' -f @(
+                'Probing the cluster ready state...',
+                $_.Exception.Message,
+                $_.Exception.GetType().FullName,
+                $_.FullyQualifiedErrorId,
+                $_.CategoryInfo.ToString(),
+                $_.ErrorDetails.Message
+            ) | Write-ScriptLog -Level Warning
         }
         Start-Sleep -Seconds $RetryIntervalSeconds
     }
-    throw 'The cluster was not ready in the acceptable time ({0}).' -f $RetyTimeout.ToString()
-} | Out-String | Write-ScriptLog -Context $env:ComputerName
 
-'Configuring the cluster quorum...' | Write-ScriptLog -Context $env:ComputerName
+    $logMessage = 'The cluster was not ready in the acceptable time ({0}).' -f $RetyTimeout.ToString()
+    $logMessage | Write-ScriptLog -Level Error
+    throw $logMessage
+} | Out-String | Write-ScriptLog
+'The HCI cluster is ready.' | Write-ScriptLog
+
+'Configure the cluster quorum.' | Write-ScriptLog
 $params = @{
     InputObject = [PSCustomObject] @{
         ClusterName             = $labConfig.hciCluster.name
@@ -271,9 +297,10 @@ Invoke-Command @params -Session $wacDomainAdminCredPSSession -ScriptBlock {
         ErrorAction  = [Management.Automation.ActionPreference]::Stop
     }
     Set-ClusterQuorum @params
-} | Out-String | Write-ScriptLog -Context $env:ComputerName
+} | Out-String | Write-ScriptLog
+'Configure the cluster quorum completed.' | Write-ScriptLog
 
-'Renaming the cluster network names...' | Write-ScriptLog -Context $env:ComputerName
+'Rename the cluster network names.' | Write-ScriptLog
 $params = @{
     InputObject = [PSCustomObject] @{
         ClusterName     = $labConfig.hciCluster.name
@@ -314,15 +341,16 @@ Invoke-Command @params -Session $wacDomainAdminCredPSSession -ScriptBlock {
     foreach ($clusterNetwork in $clusterNetworks) {
         foreach ($hciNodeNetwork in $HciNodeNetworks) {
             if (($clusterNetwork.Ipv4Addresses[0] -eq $hciNodeNetwork.IPAddress) -and ($clusterNetwork.Ipv4PrefixLengths[0] -eq $hciNodeNetwork.PrefixLength)) {
-                'Rename the cluster network "{0}" to "{1}".' -f $clusterNetwork.Name, $hciNodeNetwork.Name | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+                'Rename the cluster network to "{0}" from "{1}".' -f $hciNodeNetwork.Name, $clusterNetwork.Name | Write-ScriptLog
                 $clusterNetwork.Name = $hciNodeNetwork.Name
                 break
             }
         }
     }
-} | Out-String | Write-ScriptLog -Context $env:ComputerName
+} | Out-String | Write-ScriptLog
+'Rename the cluster network names completed.' | Write-ScriptLog
 
-'Changing the cluster network order for live migration...' | Write-ScriptLog -Context $env:ComputerName
+'Change the cluster network order for live migration.' | Write-ScriptLog
 $params = @{
     InputObject = [PSCustomObject] @{
         ClusterName           = $labConfig.hciCluster.name
@@ -346,12 +374,13 @@ Invoke-Command @params -Session $wacDomainAdminCredPSSession -ScriptBlock {
     for ($i = 0; $i -lt $MigrationNetworkOrder.Length; $i++) {
         $migrationNetworkOrderValue += (Get-ClusterNetwork -Cluster $ClusterName -Name $MigrationNetworkOrder[$i]).Id
     }
-    'Cluster network order for live migration: {0}' -f ($migrationNetworkOrderValue -join '; ') | Write-ScriptLog -Context $env:ComputerName -UseInScriptBlock
+    'Cluster network order for live migration: {0}' -f ($migrationNetworkOrderValue -join '; ') | Write-ScriptLog
     Get-ClusterResourceType -Cluster $ClusterName -Name 'Virtual Machine' |
         Set-ClusterParameter -Name 'MigrationNetworkOrder' -Value ($migrationNetworkOrderValue -join ';')
-} | Out-String | Write-ScriptLog -Context $env:ComputerName
+} | Out-String | Write-ScriptLog
+'Change the cluster network order for live migration completed.' | Write-ScriptLog
 
-'Enabling Storage Space Direct (S2D)...' | Write-ScriptLog -Context $env:ComputerName
+'Enable Storage Space Direct (S2D).' | Write-ScriptLog
 $params = @{
     InputObject = [PSCustomObject] @{
         HciNodeName     = $nodeNames[0]
@@ -376,10 +405,13 @@ Invoke-Command @params -Session $wacDomainAdminCredPSSession -ScriptBlock {
     }
     Enable-ClusterStorageSpacesDirect @params
 
+    'Clean up CIM sessions.' | Write-ScriptLog
     Get-CimSession | Remove-CimSession
-} | Out-String | Write-ScriptLog -Context $env:ComputerName
+    'Clean up CIM sessions completed.' | Write-ScriptLog
+} | Out-String | Write-ScriptLog
+'Enable Storage Space Direct (S2D) completed.' | Write-ScriptLog
 
-'Creating a volume on S2D...' | Write-ScriptLog -Context $env:ComputerName
+'Create a volume on S2D.' | Write-ScriptLog
 $params = @{
     InputObject = [PSCustomObject] @{
         HciNodeName     = $nodeNames[0]
@@ -412,10 +444,13 @@ Invoke-Command @params -Session $wacDomainAdminCredPSSession -ScriptBlock {
     }
     New-Volume @params
 
+    'Clean up CIM sessions.' | Write-ScriptLog
     Get-CimSession | Remove-CimSession
-} | Out-String | Write-ScriptLog -Context $env:ComputerName
+    'Clean up CIM sessions completed.' | Write-ScriptLog
+} | Out-String | Write-ScriptLog
+'Create a volume on S2D completed.' | Write-ScriptLog
 
-'Importing a WAC connection for the HCI cluster...' | Write-ScriptLog -Context $env:ComputerName
+'Import a WAC connection for the HCI cluster.' | Write-ScriptLog
 $params = @{
     InputObject = [PSCustomObject] @{
         ClusterFqdn = '{0}.{1}' -f $LabConfig.hciCluster.name, $LabConfig.addsDomain.fqdn
@@ -427,25 +462,33 @@ Invoke-Command @params -Session $wacDomainAdminCredPSSession -ScriptBlock {
         [string] $ClusterFqdn
     )
 
+    'Import the WAC connection tools PowerShell module.' | Write-ScriptLog
     $wacConnectionToolsPSModulePath = [IO.Path]::Combine($env:ProgramFiles, 'Windows Admin Center\PowerShell\Modules\ConnectionTools\ConnectionTools.psm1')
     Import-Module -Name $wacConnectionToolsPSModulePath -Force
+    'Import the WAC connection tools PowerShell module completed.' | Write-ScriptLog
 
-    # Create a connection list file to import to Windows Admin Center.
+    'Create a connection list file to import to Windows Admin Center.' | Write-ScriptLog
     $connectionEntries = @(
         (New-WacConnectionFileEntry -Name $ClusterFqdn -Type 'msft.sme.connection-type.cluster' -Tag $ClusterFqdn)
     )
     $wacConnectionFilePathInVM = [IO.Path]::Combine('C:\Windows\Temp', 'wac-connections.txt')
     New-WacConnectionFileContent -ConnectionEntry $connectionEntries | Set-Content -LiteralPath $wacConnectionFilePathInVM -Force
+    'Create a connection list file to import to Windows Admin Center completed.' | Write-ScriptLog
 
-    # Import connections to Windows Admin Center.
+    'Import the HCI cluster connection to Windows Admin Center.' | Write-ScriptLog
     [Uri] $gatewayEndpointUri = 'https://{0}' -f $env:ComputerName
     Import-Connection -GatewayEndpoint $gatewayEndpointUri -FileName $wacConnectionFilePathInVM
+    'Import the HCI cluster connection to Windows Admin Center completed.' | Write-ScriptLog
+
+    'Delete the connection list file.' | Write-ScriptLog
     Remove-Item -LiteralPath $wacConnectionFilePathInVM -Force
-} | Out-String | Write-ScriptLog -Context $env:ComputerName
+    'Delete the connection list file completed.' | Write-ScriptLog
+} | Out-String | Write-ScriptLog
+'Import a WAC connection for the HCI cluster completed.' | Write-ScriptLog
 
-'Cleaning up the PowerShell Direct session for the management machine...' | Write-ScriptLog -Context $env:ComputerName
+'Clean up the PowerShell Direct session for the management server.' | Write-ScriptLog
 Invoke-PSDirectSessionCleanup -Session $wacDomainAdminCredPSSession -CommonModuleFilePathInVM $commonModuleFilePathInVM
+'Clean up the PowerShell Direct session for the management server completed.' | Write-ScriptLog
 
-'The HCI cluster creation has been completed.' | Write-ScriptLog -Context $env:ComputerName
-
+'The HCI cluster creation has been completed.' | Write-ScriptLog
 Stop-ScriptLogging

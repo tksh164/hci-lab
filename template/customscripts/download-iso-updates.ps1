@@ -10,6 +10,7 @@ Import-Module -Name ([IO.Path]::Combine($PSScriptRoot, 'common.psm1')) -Force
 
 $labConfig = Get-LabDeploymentConfig
 Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log
+'Lab deployment config:' | Write-ScriptLog
 $labConfig | ConvertTo-Json -Depth 16 | Write-Host
 
 function Invoke-IsoFileDownload
@@ -69,15 +70,17 @@ function Invoke-UpdateFileDonwload
     }
 }
 
-'Reading the asset URL data file...' | Write-ScriptLog -Context $env:ComputerName
+'Import the material URL data file.' | Write-ScriptLog
 $assetUrls = Import-PowerShellDataFile -LiteralPath ([IO.Path]::Combine($PSScriptRoot, 'download-iso-updates-asset-urls.psd1'))
+'Import the material URL data file completed.' | Write-ScriptLog
 
 # ISO
 
-'Creating the download folder if it does not exist...' | Write-ScriptLog -Context $env:ComputerName
+'Create the download folder if it does not exist.' | Write-ScriptLog
 New-Item -ItemType Directory -Path $labConfig.labHost.folderPath.temp -Force
+'Create the download folder completed.' | Write-ScriptLog
 
-'Downloading the ISO file for HCI nodes...' | Write-ScriptLog -Context $env:ComputerName
+'Download the ISO file for HCI nodes.' | Write-ScriptLog
 $params = @{
     OperatingSystem    = $labConfig.hciNode.operatingSystem.sku
     Culture            = $labConfig.guestOS.culture
@@ -85,10 +88,11 @@ $params = @{
     AssetUrls          = $assetUrls
 }
 Invoke-IsoFileDownload @params
+'Download the ISO file for HCI nodes completed.' | Write-ScriptLog
 
 # The Windows Server 2022 ISO is always needed for the domain controller VM.
 if ($labConfig.hciNode.operatingSystem.sku -ne [HciLab.OSSku]::WindowsServer2022) {
-    'Downloading the Windows Server ISO file...' | Write-ScriptLog -Context $env:ComputerName
+    'Donwload the Windows Server ISO file.' | Write-ScriptLog
     $params = @{
         OperatingSystem    = [HciLab.OSSku]::WindowsServer2022
         Culture            = $labConfig.guestOS.culture
@@ -96,39 +100,40 @@ if ($labConfig.hciNode.operatingSystem.sku -ne [HciLab.OSSku]::WindowsServer2022
         AssetUrls          = $assetUrls
     }
     Invoke-IsoFileDownload @params
+    'Donwload the Windows Server ISO file completed.' | Write-ScriptLog
 }
-
-'The ISO files download has been completed.' | Write-ScriptLog -Context $env:ComputerName
 
 # Updates
 
 # Download the updates if the flag is set.
 if ($labConfig.guestOS.shouldInstallUpdates) {
-    'Creating the updates folder if it does not exist...' | Write-ScriptLog -Context $env:ComputerName
+    'Create the updates folder if it does not exist.' | Write-ScriptLog
     New-Item -ItemType Directory -Path $labConfig.labHost.folderPath.updates -Force
+    'Create the updates folder completed.' | Write-ScriptLog
     
-    'Downloading updates...' | Write-ScriptLog -Context $env:ComputerName
+    'Download updates for HCI nodes.' | Write-ScriptLog
     $params = @{
         OperatingSystem        = $labConfig.hciNode.operatingSystem.sku
         DownloadFolderBasePath = $labConfig.labHost.folderPath.updates
         AssetUrls              = $assetUrls
     }
     Invoke-UpdateFileDonwload @params
+    'Download updates. for HCI nodes completed.' | Write-ScriptLog
     
     if ($labConfig.hciNode.operatingSystem.sku -ne [HciLab.OSSku]::WindowsServer2022) {
-        'Downloading the Windows Server updates...' | Write-ScriptLog -Context $env:ComputerName
+        'Download the Windows Server updates.' | Write-ScriptLog
         $params = @{
             OperatingSystem        = [HciLab.OSSku]::WindowsServer2022
             DownloadFolderBasePath = $labConfig.labHost.folderPath.updates
             AssetUrls              = $assetUrls
         }
         Invoke-UpdateFileDonwload @params
+        'Download the Windows Server updates completed.' | Write-ScriptLog
     }
-
-    'The update files download has been completed.' | Write-ScriptLog -Context $env:ComputerName
 }
 else {
-    'Skipped download of updates due to shouldInstallUpdates not set.' | Write-ScriptLog -Context $env:ComputerName
+    'Skip the download of updates due to shouldInstallUpdates not set.' | Write-ScriptLog
 }
 
+'The material download has been completed.' | Write-ScriptLog
 Stop-ScriptLogging

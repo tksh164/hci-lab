@@ -29,6 +29,9 @@ Import-Module -Name $PSModuleNameToImport -Force
 
 $labConfig = Get-LabDeploymentConfig
 Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log -FileName $LogFileName
+Set-ScriptLogDefaultContext -LogContext ('{0}_{1}_{2}' -f $OperatingSystem, $ImageIndex, $Culture)
+
+'Lab deployment config:' | Write-ScriptLog
 $labConfig | ConvertTo-Json -Depth 16 | Write-Host
 
 $params = @{
@@ -49,12 +52,13 @@ if ($PSBoundParameters.Keys.Contains('IsoFileNameSuffix')) {
         Suffix          = $IsoFileNameSuffix
     }
     $copiedIsoFilePath = [IO.Path]::Combine($labConfig.labHost.folderPath.temp, (Format-IsoFileName @params))
-    'Copying an ISO file for concurrency from "{0}" to "{1}"...' -f $isoFilePath, $copiedIsoFilePath | Write-ScriptLog -Context $env:ComputerName
-    Copy-Item -LiteralPath $isoFilePath -Destination $copiedIsoFilePath -Force -PassThru | Format-List -Property '*' | Out-String | Write-ScriptLog -Context $env:ComputerName
+    'Copy an ISO file to "{0}" from "{1}" for concurrency.' -f $copiedIsoFilePath, $isoFilePath | Write-ScriptLog
+    Copy-Item -LiteralPath $isoFilePath -Destination $copiedIsoFilePath -Force -PassThru | Format-List -Property '*' | Out-String | Write-ScriptLog
     $isoFilePath = $copiedIsoFilePath
+    'Copy an ISO file for concurrency completed.' | Write-ScriptLog
 }
 
-'Converting the ISO file to a VHD file...' | Write-ScriptLog -Context $env:ComputerName
+'Convert the ISO file to a VHD file.' | Write-ScriptLog
 
 $params = @{
     OperatingSystem = $OperatingSystem
@@ -85,13 +89,19 @@ if ($updatePackage.Count -ne 0) {
 }
 Convert-WindowsImage @params
 
+'Convert the ISO file to a VHD file completed.' | Write-ScriptLog
+
 if (-not (Test-Path -PathType Leaf -LiteralPath $vhdFilePath)) {
-    throw 'The created VHD "{0}" does not exist.' -f $vhdFilePath
+    $logMessage = 'The converted VHD file "{0}" does not exist.' -f $vhdFilePath
+    $logMessage | Write-ScriptLog -Level Error
+    throw $logMessage
 }
 
 if ($PSBoundParameters.Keys.Contains('IsoFileNameSuffix')) {
-    # Remove the copied ISO file.
+    'Remove the copied ISO file "{0}".' -f $isoFilePath | Write-ScriptLog
     Remove-Item -LiteralPath $isoFilePath -Force
+    'Remove the copied ISO file completed.' | Write-ScriptLog
 }
 
+'The base VHD creation job has been completed.' | Write-ScriptLog
 Stop-ScriptLogging

@@ -11,31 +11,34 @@ try {
 
     $labConfig = Get-LabDeploymentConfig
     Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log
+    'Lab deployment config:' | Write-ScriptLog
     $labConfig | ConvertTo-Json -Depth 16 | Write-Host
 
     $jobs = @()
 
-    'Creating an AD DS VM...' | Write-ScriptLog -Context $env:ComputerName
+    'Start the AD DS VM creation job.' | Write-ScriptLog
     $jobScriptFilePath = [IO.Path]::Combine($PSScriptRoot, 'create-vm-job-addsdc.ps1')
     $params = @{
         PSModuleNameToImport = (Get-Module -Name 'common').Path
         LogFileName          = [IO.Path]::GetFileNameWithoutExtension($jobScriptFilePath)
     }
     $jobs += Start-Job -Name 'addsdc-vm' -LiteralPath $jobScriptFilePath -InputObject ([PSCustomObject] $params)
+    'Start the AD DS VM creation job completed.' | Write-ScriptLog
 
-    'Creating a WAC VM...' | Write-ScriptLog -Context $env:ComputerName
+    'Start the management server VM creation job.' | Write-ScriptLog
     $jobScriptFilePath = [IO.Path]::Combine($PSScriptRoot, 'create-vm-job-wac.ps1')
     $params = @{
         PSModuleNameToImport = (Get-Module -Name 'common').Path
         LogFileName          = [IO.Path]::GetFileNameWithoutExtension($jobScriptFilePath)
     }
     $jobs += Start-Job -Name 'wac-vm' -LiteralPath $jobScriptFilePath -InputObject ([PSCustomObject] $params)
+    'Start the management server VM creation job completed.' | Write-ScriptLog
 
-    'Creating HCI node VMs...' | Write-ScriptLog -Context $env:ComputerName
+    'Start the HCI node VM creation jobs.' | Write-ScriptLog
     $jobScriptFilePath = [IO.Path]::Combine($PSScriptRoot, 'create-vm-job-hcinode.ps1')
     for ($nodeIndex = 0; $nodeIndex -lt $labConfig.hciNode.nodeCount; $nodeIndex++) {
         $vmName = Format-HciNodeName -Format $labConfig.hciNode.vmName -Offset $labConfig.hciNode.vmNameOffset -Index $nodeIndex
-        'Start creating a HCI node VM...' -f $vmName | Write-ScriptLog -Context $vmName
+        'Start a VM creation job for the VM "{0}".' -f $vmName | Write-ScriptLog
         $params = @{
             NodeIndex            = $nodeIndex
             PSModuleNameToImport = (Get-Module -Name 'common').Path
@@ -43,12 +46,13 @@ try {
         }
         $jobs += Start-Job -Name $vmName -LiteralPath $jobScriptFilePath -InputObject ([PSCustomObject] $params)
     }
+    'Start the HCI node VM creation jobs completed.' | Write-ScriptLog
 
     $jobs | Format-Table -Property Id, Name, State, HasMoreData, PSBeginTime, PSEndTime
     $jobs | Receive-Job -Wait
     $jobs | Format-Table -Property Id, Name, State, HasMoreData, PSBeginTime, PSEndTime
 
-    'The HCI lab VMs creation has been completed.' | Write-ScriptLog -Context $env:ComputerName
+    'The HCI lab VMs creation has been completed.' | Write-ScriptLog
 }
 catch {
     $jobs | Format-Table -Property Id, Name, State, HasMoreData, PSBeginTime, PSEndTime

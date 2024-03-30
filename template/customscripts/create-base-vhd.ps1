@@ -70,6 +70,8 @@ try {
 
     $labConfig = Get-LabDeploymentConfig
     Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log
+
+    'Lab deployment config:' | Write-ScriptLog
     $labConfig | ConvertTo-Json -Depth 16 | Write-Host
 
     # Base VHD specs.
@@ -89,13 +91,15 @@ try {
         Culture         = $labConfig.guestOS.culture
     }
 
-    'Creating the temp folder if it does not exist...' | Write-ScriptLog -Context $env:ComputerName
+    'Create the temp folder if it does not exist.' | Write-ScriptLog
     New-Item -ItemType Directory -Path $labConfig.labHost.folderPath.temp -Force
+    'Create the temp folder completed.' | Write-ScriptLog
 
-    'Creating the VHD folder if it does not exist...' | Write-ScriptLog -Context $env:ComputerName
+    'Create the VHD folder if it does not exist.' | Write-ScriptLog
     New-Item -ItemType Directory -Path $labConfig.labHost.folderPath.vhd -Force
+    'Create the VHD folder completed.' | Write-ScriptLog
 
-    'Downloading the Convert-WindowsImage.ps1...' | Write-ScriptLog -Context $env:ComputerName
+    'Download the Convert-WindowsImage.ps1.' | Write-ScriptLog
     $params = @{
         SourceUri      = 'https://raw.githubusercontent.com/microsoft/MSLab/master/Tools/Convert-WindowsImage.ps1'
         DownloadFolder = $labConfig.labHost.folderPath.temp
@@ -103,14 +107,16 @@ try {
     }
     $convertWimScriptFile = Invoke-FileDownload @params
     $convertWimScriptFile
+    'Download the Convert-WindowsImage.ps1 completed.' | Write-ScriptLog
 
-    'Clarifying the base VHD''s specification...' | Write-ScriptLog -Context $env:ComputerName
+    'Clarify the base VHD''s specification.' | Write-ScriptLog
     $dedupedVhdSpecs = Get-DeduplicatedBaseVhdSpec -BaseVhdSpec $addsDcVhdSpec, $wacVhdSpec, $hciNodeVhdSpec
-    $dedupedVhdSpecs | Format-Table -Property 'OperatingSystem', 'ImageIndex', 'Culture' | Out-String | Write-ScriptLog -Context $env:ComputerName
+    $dedupedVhdSpecs | Format-Table -Property 'OperatingSystem', 'ImageIndex', 'Culture' | Out-String | Write-ScriptLog
     $vhdSpecs = Get-PracticalBaseVhdSpec -BaseVhdSpec $dedupedVhdSpecs
-    $vhdSpecs | Format-Table -Property 'OperatingSystem', 'ImageIndex', 'Culture', 'IsoFileNameSuffix' | Out-String | Write-ScriptLog -Context $env:ComputerName
+    $vhdSpecs | Format-Table -Property 'OperatingSystem', 'ImageIndex', 'Culture', 'IsoFileNameSuffix' | Out-String | Write-ScriptLog
+    'Clarify the base VHD''s specification completed.' | Write-ScriptLog
 
-    'Creating the base VHD creation jobs...' | Write-ScriptLog -Context $env:ComputerName
+    'Create the base VHD creation jobs.' | Write-ScriptLog
     $jobScriptFilePath = [IO.Path]::Combine($PSScriptRoot, 'create-base-vhd-job.ps1')
     $jobs = @()
     foreach ($spec in $vhdSpecs) {
@@ -125,15 +131,16 @@ try {
         if ($spec.IsoFileNameSuffix -ne $null) {
             $jobParams.IsoFileNameSuffix = $spec.IsoFileNameSuffix
         }
-        'Starting a base VHD creation job "{0}"...' -f $jobName | Write-ScriptLog -Context $env:ComputerName
+        'Start a base VHD creation job "{0}".' -f $jobName | Write-ScriptLog
         $jobs += Start-Job -Name $jobName -LiteralPath $jobScriptFilePath -InputObject ([PSCustomObject] $jobParams)
     }
 
     $jobs | Format-Table -Property Id, Name, State, HasMoreData, PSBeginTime, PSEndTime
     $jobs | Receive-Job -Wait
     $jobs | Format-Table -Property Id, Name, State, HasMoreData, PSBeginTime, PSEndTime
+    'Create the base VHD creation jobs completed.' | Write-ScriptLog
 
-    'The base VHDs creation has been completed.' | Write-ScriptLog -Context $env:ComputerName
+    'The base VHDs creation has been completed.' | Write-ScriptLog
 }
 catch {
     $jobs | Format-Table -Property Id, Name, State, HasMoreData, PSBeginTime, PSEndTime
