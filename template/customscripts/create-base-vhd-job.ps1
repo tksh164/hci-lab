@@ -29,6 +29,8 @@ Import-Module -Name $PSModuleNameToImport -Force
 
 $labConfig = Get-LabDeploymentConfig
 Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log -FileName $LogFileName
+Set-ScriptLogDefaultContext -LogContext ('{0}_{1}_{2}' -f $OperatingSystem, $ImageIndex, $Culture)
+
 'Lab deployment config:' | Write-ScriptLog
 $labConfig | ConvertTo-Json -Depth 16 | Write-Host
 
@@ -50,7 +52,7 @@ if ($PSBoundParameters.Keys.Contains('IsoFileNameSuffix')) {
         Suffix          = $IsoFileNameSuffix
     }
     $copiedIsoFilePath = [IO.Path]::Combine($labConfig.labHost.folderPath.temp, (Format-IsoFileName @params))
-    'Copy an ISO file for concurrency to "{0}" from "{1}".' -f $copiedIsoFilePath, $isoFilePath | Write-ScriptLog
+    'Copy an ISO file to "{0}" from "{1}" for concurrency.' -f $copiedIsoFilePath, $isoFilePath | Write-ScriptLog
     Copy-Item -LiteralPath $isoFilePath -Destination $copiedIsoFilePath -Force -PassThru | Format-List -Property '*' | Out-String | Write-ScriptLog
     $isoFilePath = $copiedIsoFilePath
     'Copy an ISO file for concurrency completed.' | Write-ScriptLog
@@ -96,7 +98,7 @@ if (-not (Test-Path -PathType Leaf -LiteralPath $vhdFilePath)) {
 }
 
 if ($PSBoundParameters.Keys.Contains('IsoFileNameSuffix')) {
-    'Remove the copied ISO file.' | Write-ScriptLog
+    'Remove the copied ISO file "{0}".' -f $isoFilePath | Write-ScriptLog
     Remove-Item -LiteralPath $isoFilePath -Force
     'Remove the copied ISO file completed.' | Write-ScriptLog
 }

@@ -38,15 +38,15 @@ try {
     $jobScriptFilePath = [IO.Path]::Combine($PSScriptRoot, 'create-vm-job-hcinode.ps1')
     for ($nodeIndex = 0; $nodeIndex -lt $labConfig.hciNode.nodeCount; $nodeIndex++) {
         $vmName = Format-HciNodeName -Format $labConfig.hciNode.vmName -Offset $labConfig.hciNode.vmNameOffset -Index $nodeIndex
-        'Start the {0} VM creation job.' -f $vmName | Write-ScriptLog -AdditionalContext $vmName
+        'Start a VM creation job for the VM "{0}".' -f $vmName | Write-ScriptLog
         $params = @{
             NodeIndex            = $nodeIndex
             PSModuleNameToImport = (Get-Module -Name 'common').Path
             LogFileName          = [IO.Path]::GetFileNameWithoutExtension($jobScriptFilePath) + '-' + $vmName
         }
         $jobs += Start-Job -Name $vmName -LiteralPath $jobScriptFilePath -InputObject ([PSCustomObject] $params)
-        'Start the {0} VM creation job completed.' -f $vmName | Write-ScriptLog -AdditionalContext $vmName
     }
+    'Start the HCI node VM creation jobs completed.' | Write-ScriptLog
 
     $jobs | Format-Table -Property Id, Name, State, HasMoreData, PSBeginTime, PSEndTime
     $jobs | Receive-Job -Wait
