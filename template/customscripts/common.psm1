@@ -914,7 +914,7 @@ function Copy-PSModuleIntoVM
         [string] $ModuleFilePathToCopy
     )
 
-    'Copy the PowerShell module from "{0}" on the lab host to "{1}" on the VM "{2}".' -f $ModuleFilePathToCopy, $commonModuleFilePathInVM, $Session.VMName | Write-ScriptLog
+    'Copy the PowerShell module from "{0}" on the lab host into the VM "{1}".' -f $ModuleFilePathToCopy, $Session.VMName | Write-ScriptLog
     $commonModuleFilePathInVM = [IO.Path]::Combine('C:\Windows\Temp', [IO.Path]::GetFileName($ModuleFilePathToCopy))
     Copy-Item -ToSession $Session -Path $ModuleFilePathToCopy -Destination $commonModuleFilePathInVM
     'Copy the PowerShell module from "{0}" on the lab host to "{1}" on the VM "{2}" completed.' -f $ModuleFilePathToCopy, $commonModuleFilePathInVM, $Session.VMName | Write-ScriptLog
