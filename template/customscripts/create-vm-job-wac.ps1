@@ -377,7 +377,7 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
         ('"{0}"' -f $WacInstallerFilePathInVM),
         '/qn',
         '/L*v',
-        '"C:\Windows\Temp\wac-install-log.txt"',
+        '"C:\Windows\Temp\wac-install-log.log"',
         'SME_PORT=443',
         ('SME_THUMBPRINT={0}' -f $wacCertMyStore.Thumbprint),
         'SSL_CERTIFICATE_OPTION=installed'

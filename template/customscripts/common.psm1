@@ -76,7 +76,7 @@ function New-LogFileName
         [string] $FileName
     )
 
-    return '{0:yyyyMMdd-HHmmss}_{1}_{2}.txt' -f [DateTime]::Now, $env:ComputerName, $FileName
+    return '{0:yyyyMMdd-HHmmss}_{1}_{2}.log' -f [DateTime]::Now, $env:ComputerName, $FileName
 }
 
 # The script log default context.
