@@ -214,7 +214,7 @@ Wait-PowerShellDirectReady -VMName $vmName -Credential $localAdminCredential
 
 'Create a PowerShell Direct session.' | Write-ScriptLog -AdditionalContext $vmName
 $localAdminCredPSSession = New-PSSession -VMName $vmName -Credential $localAdminCredential
-$localAdminCredPSSession | Format-Table -Property 'Id', 'Name', 'ComputerName', 'ComputerType', 'State', 'Availability' | Out-String | Write-ScriptLog
+$localAdminCredPSSession | Format-Table -Property 'Id', 'Name', 'ComputerName', 'ComputerType', 'State', 'Availability' | Out-String | Write-ScriptLog -AdditionalContext $vmName
 'Create a PowerShell Direct session completed.' | Write-ScriptLog -AdditionalContext $vmName
 
 'Copy the common module file into the VM.' | Write-ScriptLog -AdditionalContext $vmName
@@ -283,8 +283,30 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
     Get-NetAdapter -Name $VMConfig.netAdapters.management.name |
     Set-NetIPInterface @paramsForSetNetIPInterface |
     New-NetIPAddress @paramsForNewIPAddress |
-    Set-DnsClientServerAddress @paramsForSetDnsClientServerAddress
+    Set-DnsClientServerAddress @paramsForSetDnsClientServerAddress |
+    Out-Null
     'Configure the IP & DNS on the {0} network adapter completed.' -f $VMConfig.NetAdapters.Management.Name | Write-ScriptLog
+
+    'Network adapter IP configurations:' | Write-ScriptLog
+    Get-NetIPAddress | Format-Table -Property @(
+        'InterfaceIndex',
+        'InterfaceAlias',
+        'AddressFamily',
+        'IPAddress',
+        'PrefixLength',
+        'PrefixOrigin',
+        'SuffixOrigin',
+        'AddressState',
+        'Store'
+    ) | Out-String -Width 200 | Write-ScriptLog
+
+    'Network adapter DNS configurations:' | Write-ScriptLog
+    Get-DnsClientServerAddress | Format-Table -Property @(
+        'InterfaceIndex',
+        'InterfaceAlias',
+        @{ Label = 'AddressFamily'; Expression = { Switch ($_.AddressFamily) { 2 { 'IPv4' } 23 { 'IPv6' } default { $_.AddressFamily } } } }
+        @{ Label = 'DNSServers'; Expression = { $_.ServerAddresses } }
+    ) | Out-String -Width 200 | Write-ScriptLog
 } | Out-String | Write-ScriptLog -AdditionalContext $vmName
 'Configure network settings within the VM completed.' | Write-ScriptLog -AdditionalContext $vmName
 
@@ -336,11 +358,13 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
 
     # NOTE: Import the certificate to Root and My both stores required.
     'Import the Windows Admin Center certificate to the Root store.' | Write-ScriptLog
-    Import-PfxCertificate -CertStoreLocation 'Cert:\LocalMachine\Root' -FilePath $WacPfxFilePathInVM -Password $WacPfxPassword -Exportable
+    $wacCertRootStore = Import-PfxCertificate -CertStoreLocation 'Cert:\LocalMachine\Root' -FilePath $WacPfxFilePathInVM -Password $WacPfxPassword -Exportable
+    $wacCertRootStore | Format-Table -Property 'Thumbprint', 'Subject' | Out-String | Write-ScriptLog
     'Import the Windows Admin Center certificate to the Root store completed.' | Write-ScriptLog
 
     'Import the Windows Admin Center certificate to the My store.' | Write-ScriptLog
-    $wacCert = Import-PfxCertificate -CertStoreLocation 'Cert:\LocalMachine\My' -FilePath $WacPfxFilePathInVM -Password $WacPfxPassword -Exportable
+    $wacCertMyStore = Import-PfxCertificate -CertStoreLocation 'Cert:\LocalMachine\My' -FilePath $WacPfxFilePathInVM -Password $WacPfxPassword -Exportable
+    $wacCertMyStore | Format-Table -Property 'Thumbprint', 'Subject' | Out-String | Write-ScriptLog
     'Import the Windows Admin Center certificate to the My store completed.' | Write-ScriptLog
 
     'Delete the Windows Admin Center certificate.' | Write-ScriptLog
@@ -355,14 +379,28 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
         '/L*v',
         '"C:\Windows\Temp\wac-install-log.txt"',
         'SME_PORT=443',
-        ('SME_THUMBPRINT={0}' -f $wacCert.Thumbprint),
+        ('SME_THUMBPRINT={0}' -f $wacCertMyStore.Thumbprint),
         'SSL_CERTIFICATE_OPTION=installed'
         #'SSL_CERTIFICATE_OPTION=generate'
     )
     $result = Start-Process -FilePath 'msiexec.exe' -ArgumentList $msiArgs -Wait -PassThru
-    $result | Format-List -Property '*'
+    $result | Format-List -Property @(
+        @{ Label = 'FileName'; Expression = { $_.StartInfo.FileName } },
+        @{ Label = 'Arguments'; Expression = { $_.StartInfo.Arguments } },
+        @{ Label = 'WorkingDirectory'; Expression = { $_.StartInfo.WorkingDirectory } },
+        'Id',
+        'HasExited',
+        'ExitCode',
+        'StartTime',
+        'ExitTime',
+        'TotalProcessorTime',
+        'PrivilegedProcessorTime',
+        'UserProcessorTime'
+    ) | Out-String | Write-ScriptLog
     if ($result.ExitCode -ne 0) {
-        throw ('Windows Admin Center installation failed with exit code {0}.' -f $result.ExitCode)
+        $exceptionMessage = 'Windows Admin Center installation failed with exit code {0}.' -f $result.ExitCode
+        $exceptionMessage | Write-ScriptLog -Level Error
+        throw $exceptionMessage
     }
     'Install Windows Admin Center completed.' | Write-ScriptLog
 
@@ -409,9 +447,11 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
                     }
                 'Windows Admin Center extension update succeeded.' | Write-ScriptLog
 
+                'Windows Admin Center extension status:' | Write-ScriptLog
                 Get-Extension -GatewayEndpoint $gatewayEndpointUri |
                     Sort-Object -Property id |
-                    Format-table -Property id, status, version, isLatestVersion, title
+                    Format-table -Property id, status, version, isLatestVersion, title |
+                    Out-String | Write-ScriptLog
                 return
             }
             catch {
@@ -506,7 +546,7 @@ Wait-PowerShellDirectReady -VMName $vmName -Credential $domainAdminCredential
 
 'Create a PowerShell Direct session with the domain credential.' | Write-ScriptLog -AdditionalContext $vmName
 $domainAdminCredPSSession = New-PSSession -VMName $vmName -Credential $domainAdminCredential
-$domainAdminCredPSSession | Format-Table -Property 'Id', 'Name', 'ComputerName', 'ComputerType', 'State', 'Availability' | Out-String | Write-ScriptLog
+$domainAdminCredPSSession | Format-Table -Property 'Id', 'Name', 'ComputerName', 'ComputerType', 'State', 'Availability' | Out-String | Write-ScriptLog -AdditionalContext $vmName
 'Create a PowerShell Direct session with the domain credential completed.' | Write-ScriptLog -AdditionalContext $vmName
 
 'Setup the PowerShell Direct session.' | Write-ScriptLog -AdditionalContext $vmName

@@ -333,7 +333,7 @@ Wait-PowerShellDirectReady -VMName $nodeConfig.VMName -Credential $localAdminCre
 
 'Create a PowerShell Direct session.' | Write-ScriptLog -AdditionalContext $nodeConfig.VMName
 $localAdminCredPSSession = New-PSSession -VMName $nodeConfig.VMName -Credential $localAdminCredential
-$localAdminCredPSSession | Format-Table -Property 'Id', 'Name', 'ComputerName', 'ComputerType', 'State', 'Availability' | Out-String | Write-ScriptLog
+$localAdminCredPSSession | Format-Table -Property 'Id', 'Name', 'ComputerName', 'ComputerType', 'State', 'Availability' | Out-String | Write-ScriptLog -AdditionalContext $nodeConfig.VMName
 'Create a PowerShell Direct session completed.' | Write-ScriptLog -AdditionalContext $nodeConfig.VMName
 
 'Copy the common module file into the VM.' | Write-ScriptLog -AdditionalContext $nodeConfig.VMName
@@ -405,7 +405,8 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
     Get-NetAdapter -Name $VMConfig.NetAdapters.Management.Name |
     Set-NetIPInterface @paramsForSetNetIPInterface |
     New-NetIPAddress @paramsForNewIPAddress |
-    Set-DnsClientServerAddress @paramsForSetDnsClientServerAddress
+    Set-DnsClientServerAddress @paramsForSetDnsClientServerAddress |
+    Out-Null
     'Configure the IP & DNS on the {0} network adapter completed.' -f $VMConfig.NetAdapters.Management.Name | Write-ScriptLog
 
     # Compute
@@ -422,7 +423,8 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
     }
     Get-NetAdapter -Name $VMConfig.NetAdapters.Compute.Name |
     Set-NetIPInterface @paramsForSetNetIPInterface |
-    New-NetIPAddress @paramsForNewIPAddress
+    New-NetIPAddress @paramsForNewIPAddress |
+    Out-Null
     'Configure the IP & DNS on the {0} network adapter completed.' -f $VMConfig.NetAdapters.Compute.Name | Write-ScriptLog
 
     # Storage 1
@@ -445,7 +447,8 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
     Get-NetAdapter -Name $VMConfig.NetAdapters.Storage1.Name |
     Set-NetAdapter @paramsForSetNetAdapter |
     Set-NetIPInterface @paramsForSetNetIPInterface |
-    New-NetIPAddress @paramsForNewIPAddress
+    New-NetIPAddress @paramsForNewIPAddress |
+    Out-Null
     'Configure the IP & DNS on the {0} network adapter completed.' -f $VMConfig.NetAdapters.Storage1.Name | Write-ScriptLog
 
     # Storage 2
@@ -468,8 +471,30 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
     Get-NetAdapter -Name $VMConfig.NetAdapters.Storage2.Name |
     Set-NetAdapter @paramsForSetNetAdapter |
     Set-NetIPInterface @paramsForSetNetIPInterface |
-    New-NetIPAddress @paramsForNewIPAddress
+    New-NetIPAddress @paramsForNewIPAddress |
+    Out-Null
     'Configure the IP & DNS on the {0} network adapter completed.' -f $VMConfig.NetAdapters.Storage2.Name | Write-ScriptLog
+
+    'Network adapter IP configurations:' | Write-ScriptLog
+    Get-NetIPAddress | Format-Table -Property @(
+        'InterfaceIndex',
+        'InterfaceAlias',
+        'AddressFamily',
+        'IPAddress',
+        'PrefixLength',
+        'PrefixOrigin',
+        'SuffixOrigin',
+        'AddressState',
+        'Store'
+    ) | Out-String -Width 200 | Write-ScriptLog
+
+    'Network adapter DNS configurations:' | Write-ScriptLog
+    Get-DnsClientServerAddress | Format-Table -Property @(
+        'InterfaceIndex',
+        'InterfaceAlias',
+        @{ Label = 'AddressFamily'; Expression = { Switch ($_.AddressFamily) { 2 { 'IPv4' } 23 { 'IPv6' } default { $_.AddressFamily } } } }
+        @{ Label = 'DNSServers'; Expression = { $_.ServerAddresses } }
+    ) | Out-String -Width 200 | Write-ScriptLog
 } | Out-String | Write-ScriptLog -AdditionalContext $nodeConfig.VMName
 
 'Clean up the PowerShell Direct session.' | Write-ScriptLog -AdditionalContext $nodeConfig.VMName

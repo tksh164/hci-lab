@@ -103,7 +103,20 @@ function Invoke-VSCodeInstallation
         Wait         = $true
         PassThru     = $true
     }
-    Start-Process @params
+    $result = Start-Process @params
+    $result | Format-List -Property @(
+        @{ Label = 'FileName'; Expression = { $_.StartInfo.FileName } },
+        @{ Label = 'Arguments'; Expression = { $_.StartInfo.Arguments } },
+        @{ Label = 'WorkingDirectory'; Expression = { $_.StartInfo.WorkingDirectory } },
+        'Id',
+        'HasExited',
+        'ExitCode',
+        'StartTime',
+        'ExitTime',
+        'TotalProcessorTime',
+        'PrivilegedProcessorTime',
+        'UserProcessorTime'
+    ) | Out-String | Write-ScriptLog
     'Install Visual Studio Code completed.' | Write-ScriptLog
 }
 

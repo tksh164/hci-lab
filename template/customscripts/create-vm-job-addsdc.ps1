@@ -164,7 +164,7 @@ Wait-PowerShellDirectReady -VMName $vmName -Credential $localAdminCredential
 
 'Create a PowerShell Direct session.' | Write-ScriptLog -AdditionalContext $vmName
 $localAdminCredPSSession = New-PSSession -VMName $vmName -Credential $localAdminCredential
-$localAdminCredPSSession | Format-Table -Property 'Id', 'Name', 'ComputerName', 'ComputerType', 'State', 'Availability' | Out-String | Write-ScriptLog
+$localAdminCredPSSession | Format-Table -Property 'Id', 'Name', 'ComputerName', 'ComputerType', 'State', 'Availability' | Out-String | Write-ScriptLog -AdditionalContext $vmName
 'Create a PowerShell Direct session completed.' | Write-ScriptLog -AdditionalContext $vmName
 
 'Copy the common module file into the VM.' | Write-ScriptLog -AdditionalContext $vmName
@@ -228,9 +228,30 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
     Get-NetAdapter -Name $VMConfig.netAdapters.management.name |
     Set-NetIPInterface @paramsForSetNetIPInterface |
     New-NetIPAddress @paramsForNewIPAddress |
-    Set-DnsClientServerAddress @paramsForSetDnsClientServerAddress
+    Set-DnsClientServerAddress @paramsForSetDnsClientServerAddress |
+    Out-Null
     'Configure the IP & DNS on the {0} network adapter completed.' -f $VMConfig.netAdapters.management.name | Write-ScriptLog
 
+    'Network adapter IP configurations:' | Write-ScriptLog
+    Get-NetIPAddress | Format-Table -Property @(
+        'InterfaceIndex',
+        'InterfaceAlias',
+        'AddressFamily',
+        'IPAddress',
+        'PrefixLength',
+        'PrefixOrigin',
+        'SuffixOrigin',
+        'AddressState',
+        'Store'
+    ) | Out-String -Width 200 | Write-ScriptLog
+
+    'Network adapter DNS configurations:' | Write-ScriptLog
+    Get-DnsClientServerAddress | Format-Table -Property @(
+        'InterfaceIndex',
+        'InterfaceAlias',
+        @{ Label = 'AddressFamily'; Expression = { Switch ($_.AddressFamily) { 2 { 'IPv4' } 23 { 'IPv6' } default { $_.AddressFamily } } } }
+        @{ Label = 'DNSServers'; Expression = { $_.ServerAddresses } }
+    ) | Out-String -Width 200 | Write-ScriptLog
 } | Out-String | Write-ScriptLog -AdditionalContext $vmName
 'Configure network settings within the VM completed.' | Write-ScriptLog -AdditionalContext $vmName
 
