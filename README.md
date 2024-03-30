@@ -20,6 +20,8 @@ The HCI Lab provides a plain HCI lab environment on Azure in reasonable preparat
 
     The deployment will be complete in about 30 minutes if the deployment starts with default values.
 
+    > If the deployment failed, try deploying again that will resolving the issue in most cases. If not, please create an issue, it will help HCI Lab quality improvement.
+
 3. After completing the deployment, you need to allow Remote Desktop access to your lab host Azure VM from your local machine. It can be by [enabling JIT VM access](https://learn.microsoft.com/en-us/azure/defender-for-cloud/just-in-time-access-usage) or [adding an inbound security rule in the Network Security Group](https://learn.microsoft.com/en-us/azure/virtual-network/tutorial-filter-network-traffic#create-security-rules). The recommended way is using JIT VM access.
 
 4. Connect to your lab host Azure VM using your favorite Remote Desktop client. To connect, use the credentials that you specified at deployment.
