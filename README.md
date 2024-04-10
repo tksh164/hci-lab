@@ -4,7 +4,7 @@ The HCI Lab provides a plain HCI lab environment on Azure in reasonable preparat
 
 - An HCI lab environment with Azure Stack HCI or Windows Server 2022 on a single Azure virtual machine in about 30 minutes minimum.
 - Just a plain environment, so you can try many workloads and features to start from the clean environment by yourself. Also, you can customize it to your own needs easily.
-- You can choose an operating system from the following to use deploy an HCI lab environment.
+- You can choose an operating system from the following to use deploy your HCI lab environment.
 
     | Operating system | Description |
     | ---- | ---- |
