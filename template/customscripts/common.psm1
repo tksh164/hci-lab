@@ -156,14 +156,7 @@ function Get-Secret
     )
 
     # Get a token for Key Vault using VM's managed identity via Azure Instance Metadata Service.
-    $params = @{
-        Method  = 'Get'
-        Uri     = 'http://169.254.169.254/metadata/identity/oauth2/token?api-version=2021-12-13&resource=https%3A%2F%2Fvault.azure.net'
-        Headers = @{
-            Metadata = 'true'
-        }
-    }
-    $accessToken = (Invoke-RestMethod @params).access_token
+    $accessToken = Get-AccessTokenUsingManagedId -Resource 'https%3A%2F%2Fvault.azure.net'
 
     # Get a secret value from the Key Vault resource.
     $params = @{
@@ -181,6 +174,53 @@ function Get-Secret
     return ConvertTo-SecureString -String $secretValue -AsPlainText -Force
 }
 
+function Get-AccessTokenUsingManagedId
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $Resource
+    )
+
+    $retryLimit = 10
+    for ($retryCount = 0; $retryCount -lt $retryLimit; $retryCount++) {
+        try {
+            # Get a token for Key Vault using VM's managed identity via Azure Instance Metadata Service.
+            $params = @{
+                Method  = 'Get'
+                Uri     = ('http://169.254.169.254/metadata/identity/oauth2/token?api-version=2021-12-13&resource={0}' -f $Resource)
+                Headers = @{
+                    Metadata = 'true'
+                }
+            }
+            return (Invoke-RestMethod @params).access_token
+        }
+        catch {
+            # Common error codes when using IMDS to retrieve load balancer information
+            # https://learn.microsoft.com/en-us/azure/load-balancer/troubleshoot-load-balancer-imds
+            $httpStatusCode = [int]($_.Exception.Response.StatusCode)
+            if ($httpStatusCode -eq 429) {
+                ('/metadata/identity/oauth2/token: TooManyRequests: {0}' -f $_.ErrorDetails.Message) | Write-ScriptLog -Level Warning
+                Start-Sleep -Seconds 1
+            }
+            else {
+                $exceptionText = "`n{0}`nExceptionMessage: {1}`nException: {2}`nFullyQualifiedErrorId: {3}`nCategoryInfo: {4}`nErrorDetailsMessage: {5}`n{6}{7}" -f @(
+                    '*** EXCEPTION ***',
+                    $_.Exception.Message,
+                    $_.Exception.GetType().FullName,
+                    $_.FullyQualifiedErrorId,
+                    $_.CategoryInfo.ToString(),
+                    $_.ErrorDetails.Message,
+                    '*** STACK TRACE ***',
+                    (Get-PSCallStack | Out-String -Width 1000)
+                )
+                $exceptionText | Write-ScriptLog -Level Error
+                throw $exceptionText
+            }
+        }
+    }
+}
+
 function Get-InstanceMetadata
 {
     [CmdletBinding()]
@@ -194,15 +234,44 @@ function Get-InstanceMetadata
     )
 
     $queryFormat = if ($LeafNode) { 'text' } else { 'json' }
-    $params = @{
-        Method  = 'Get'
-        Uri     = 'http://169.254.169.254/metadata/instance' + $FilterPath + '?api-version=2021-02-01&format=' + $queryFormat
-        Headers = @{
-            Metadata = 'true'
+
+    $retryLimit = 10
+    for ($retryCount = 0; $retryCount -lt $retryLimit; $retryCount++) {
+        try {
+            $params = @{
+                Method  = 'Get'
+                Uri     = 'http://169.254.169.254/metadata/instance' + $FilterPath + '?api-version=2021-02-01&format=' + $queryFormat
+                Headers = @{
+                    Metadata = 'true'
+                }
+                UseBasicParsing = $true
+            }
+            return Invoke-RestMethod @params
         }
-        UseBasicParsing = $true
+        catch {
+            # Common error codes when using IMDS to retrieve load balancer information
+            # https://learn.microsoft.com/en-us/azure/load-balancer/troubleshoot-load-balancer-imds
+            $httpStatusCode = [int]($_.Exception.Response.StatusCode)
+            if ($httpStatusCode -eq 429) {
+                ('/metadata/instance: TooManyRequests: {0}' -f $_.ErrorDetails.Message) | Write-ScriptLog -Level Warning
+                Start-Sleep -Seconds 1
+            }
+            else {
+                $exceptionText = "`n{0}`nExceptionMessage: {1}`nException: {2}`nFullyQualifiedErrorId: {3}`nCategoryInfo: {4}`nErrorDetailsMessage: {5}`n{6}{7}" -f @(
+                    '*** EXCEPTION ***',
+                    $_.Exception.Message,
+                    $_.Exception.GetType().FullName,
+                    $_.FullyQualifiedErrorId,
+                    $_.CategoryInfo.ToString(),
+                    $_.ErrorDetails.Message,
+                    '*** STACK TRACE ***',
+                    (Get-PSCallStack | Out-String -Width 1000)
+                )
+                $exceptionText | Write-ScriptLog -Level Error
+                throw $exceptionText
+            }
+        }
     }
-    return Invoke-RestMethod @params
 }
 
 function Invoke-FileDownload
@@ -404,7 +473,7 @@ function WaitingForVhdDismount
         [int] $ProbeIntervalSeconds = 5
     )
 
-    while((Get-WindowsImage -Mounted | Where-Object -Property 'ImagePath' -EQ -Value $VhdPath) -ne $null) {
+    while ((Get-WindowsImage -Mounted | Where-Object -Property 'ImagePath' -EQ -Value $VhdPath) -ne $null) {
         'Wait for the VHD dismount completion...' | Write-ScriptLog -LogContext $VhdPath
         Start-Sleep -Seconds $ProbeIntervalSeconds
     }
