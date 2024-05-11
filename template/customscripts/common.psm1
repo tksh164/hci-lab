@@ -219,6 +219,15 @@ function Get-AccessTokenUsingManagedId
             }
         }
     }
+
+    $exceptionText = "`n{0}`n{1}`n{2}{3}" -f @(
+        '*** EXCEPTION ***',
+        'Could not get an access token from the Azure Instance Metadata Service endpoint.',
+        '*** STACK TRACE ***',
+        (Get-PSCallStack | Out-String -Width 1000)
+    )
+    $exceptionText | Write-ScriptLog -Level Error
+    throw $exceptionText
 }
 
 function Get-InstanceMetadata
@@ -272,6 +281,15 @@ function Get-InstanceMetadata
             }
         }
     }
+
+    $exceptionText = "`n{0}`n{1}`n{2}{3}" -f @(
+        '*** EXCEPTION ***',
+        'Could not get an instance medata from the Azure Instance Metadata Service endpoint.',
+        '*** STACK TRACE ***',
+        (Get-PSCallStack | Out-String -Width 1000)
+    )
+    $exceptionText | Write-ScriptLog -Level Error
+    throw $exceptionText
 }
 
 function Invoke-FileDownload
