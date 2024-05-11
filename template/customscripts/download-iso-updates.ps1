@@ -36,7 +36,7 @@ function Invoke-IsoFileDownload
         DownloadFolder = $DownloadFolderPath
         FileNameToSave = (Format-IsoFileName -OperatingSystem $OperatingSystem -Culture $Culture)
     }
-    Invoke-FileDownload @params
+    return Invoke-FileDownload @params
 }
 
 function Invoke-UpdateFileDonwload
@@ -66,7 +66,7 @@ function Invoke-UpdateFileDonwload
             DownloadFolder = $downloadFolderPath
             FileNameToSave = $fileNameToSave
         }
-        Invoke-FileDownload @params
+        return Invoke-FileDownload @params
     }
 }
 

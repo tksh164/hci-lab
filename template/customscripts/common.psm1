@@ -303,8 +303,7 @@ function Invoke-FileDownload
         try {
             'Donwload the file to "{0}" from "{1}".' -f $destinationFilePath, $SourceUri | Write-ScriptLog
             Start-BitsTransfer -Source $SourceUri -Destination $destinationFilePath
-            Get-Item -LiteralPath $destinationFilePath
-            return
+            return Get-Item -LiteralPath $destinationFilePath
         }
         catch {
             '{0} (ExceptionMessage: {1} | Exception: {2} | FullyQualifiedErrorId: {3} | CategoryInfo: {4} | ErrorDetailsMessage: {5})' -f @(
@@ -315,7 +314,10 @@ function Invoke-FileDownload
                 $_.CategoryInfo.ToString(),
                 $_.ErrorDetails.Message
             ) | Write-ScriptLog -Level Warning
-            Remove-Item -LiteralPath $destinationFilePath -Force -ErrorAction Continue
+
+            if (Test-Path -PathType Leaf -LiteralPath $destinationFilePath) {
+                Remove-Item -LiteralPath $destinationFilePath -Force -ErrorAction Continue
+            }
         }
         Start-Sleep -Seconds $RetryIntervalSeconds
     }
