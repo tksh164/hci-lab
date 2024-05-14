@@ -381,10 +381,11 @@ Invoke-Command @params -Session $wacDomainAdminCredPSSession -ScriptBlock {
 'Change the cluster network order for live migration completed.' | Write-ScriptLog
 
 'Enable Storage Space Direct (S2D).' | Write-ScriptLog
+$storagePoolName = 'hcilab-s2d-storage-pool'
 $params = @{
     InputObject = [PSCustomObject] @{
         HciNodeName     = $nodeNames[0]
-        StoragePoolName = 'hcilab-s2d-storage-pool'
+        StoragePoolName = $storagePoolName
     }
 }
 Invoke-Command @params -Session $wacDomainAdminCredPSSession -ScriptBlock {
@@ -412,11 +413,12 @@ Invoke-Command @params -Session $wacDomainAdminCredPSSession -ScriptBlock {
 'Enable Storage Space Direct (S2D) completed.' | Write-ScriptLog
 
 'Create a volume on S2D.' | Write-ScriptLog
+$volumeName = 'HciVol'
 $params = @{
     InputObject = [PSCustomObject] @{
         HciNodeName     = $nodeNames[0]
-        VolumeName      = 'HciVol'
-        StoragePoolName = 'hcilab-s2d-storage-pool'
+        VolumeName      = $volumeName
+        StoragePoolName = $storagePoolName
     }
 }
 Invoke-Command @params -Session $wacDomainAdminCredPSSession -ScriptBlock {
