@@ -172,9 +172,7 @@ Set-VMProcessor -VMName $nodeConfig.VMName -Count $vmProcessorCount -ExposeVirtu
 $params = @{
     VMName               = $nodeConfig.VMName
     StartupBytes         = $nodeConfig.RamBytes
-    DynamicMemoryEnabled = $true
-    MinimumBytes         = 512MB
-    MaximumBytes         = $nodeConfig.RamBytes
+    DynamicMemoryEnabled = $false
 }
 Set-VMMemory @params
 'Configure the VM''s memory completed.' | Write-ScriptLog
