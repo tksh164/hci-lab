@@ -510,6 +510,7 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
         @{ Label = 'DNSServers'; Expression = { $_.ServerAddresses } }
     ) | Out-String -Width 200 | Write-ScriptLog
 } | Out-String | Write-ScriptLog
+'Configure network settings within the VM completed.' | Write-ScriptLog
 
 'Clean up the PowerShell Direct session.' | Write-ScriptLog
 Invoke-PSDirectSessionCleanup -Session $localAdminCredPSSession -CommonModuleFilePathInVM $commonModuleFilePathInVM
