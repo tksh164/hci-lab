@@ -10,7 +10,7 @@ param (
     [string] $LogFileName
 )
 
-function Invoke-HciNodeRamSizeCalculation
+function Get-HciNodeRamSize
 {
     [CmdletBinding()]
     param (
@@ -36,6 +36,20 @@ function Invoke-HciNodeRamSizeCalculation
 
     # StartupBytes should be a multiple of 2 MB (2 * 1024 * 1024 bytes).
     return [Math]::Floor((($totalRamBytes - $labHostReservedRamBytes - $AddsDcVMRamBytes - $WacVMRamBytes) / $NodeCount) / 2MB) * 2MB
+}
+
+function Get-HciNodeProcessorCount
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [int] $NodeCount
+    )
+
+    # Heuristic calculation.
+    # This calculation keeps the ratio of Hyper-V host logical processors : Toltal Hyper-V VM processors = 1 : approx. 2.5.
+    # Approx. 2.5 = ((Floor((Hyer-V host logical processors / Node count) * 2) * Node count) + ADDDS VM processors + WAC VM processors) / Hyer-V host logical processors
+    return [Math]::Floor(((Get-VMHost).LogicalProcessorCount / $NodeCount) * 2)
 }
 
 function Get-WindowsFeatureToInstall
@@ -93,7 +107,7 @@ $params = @{
     AddsDcVMRamBytes = $labConfig.addsDC.maximumRamBytes
     WacVMRamBytes    = $labConfig.wac.maximumRamBytes
 }
-$ramBytes = Invoke-HciNodeRamSizeCalculation @params
+$ramBytes = Get-HciNodeRamSize @params
 
 'Create a VM configuraton for the HCI node VM.' | Write-ScriptLog
 $nodeConfig = [PSCustomObject] @{
@@ -164,7 +178,7 @@ Set-VM -Name $nodeConfig.VMName -AutomaticStopAction ShutDown
 'Change the VM''s automatic stop action completed.' | Write-ScriptLog
 
 'Configure the VM''s processor.' | Write-ScriptLog
-$vmProcessorCount = (Get-VMHost).LogicalProcessorCount
+$vmProcessorCount = Get-HciNodeProcessorCount -NodeCount $labConfig.hciNode.nodeCount
 Set-VMProcessor -VMName $nodeConfig.VMName -Count $vmProcessorCount -ExposeVirtualizationExtensions $true
 'Configure the VM''s processor completed.' | Write-ScriptLog
 
@@ -172,9 +186,7 @@ Set-VMProcessor -VMName $nodeConfig.VMName -Count $vmProcessorCount -ExposeVirtu
 $params = @{
     VMName               = $nodeConfig.VMName
     StartupBytes         = $nodeConfig.RamBytes
-    DynamicMemoryEnabled = $true
-    MinimumBytes         = 512MB
-    MaximumBytes         = $nodeConfig.RamBytes
+    DynamicMemoryEnabled = $false
 }
 Set-VMMemory @params
 'Configure the VM''s memory completed.' | Write-ScriptLog
@@ -498,6 +510,7 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
         @{ Label = 'DNSServers'; Expression = { $_.ServerAddresses } }
     ) | Out-String -Width 200 | Write-ScriptLog
 } | Out-String | Write-ScriptLog
+'Configure network settings within the VM completed.' | Write-ScriptLog
 
 'Clean up the PowerShell Direct session.' | Write-ScriptLog
 Invoke-PSDirectSessionCleanup -Session $localAdminCredPSSession -CommonModuleFilePathInVM $commonModuleFilePathInVM
