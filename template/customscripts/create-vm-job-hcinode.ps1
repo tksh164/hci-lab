@@ -38,6 +38,20 @@ function Get-HciNodeRamSize
     return [Math]::Floor((($totalRamBytes - $labHostReservedRamBytes - $AddsDcVMRamBytes - $WacVMRamBytes) / $NodeCount) / 2MB) * 2MB
 }
 
+function Get-HciNodeProcessorCount
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [int] $NodeCount
+    )
+
+    # Heuristic calculation.
+    # This calculation keeps the ratio of Hyper-V host logical processors : Toltal Hyper-V VM processors = 1 : approx. 2.5.
+    # Approx. 2.5 = ((Floor((Hyer-V host logical processors / Node count) * 2) * Node count) + ADDDS VM processors + WAC VM processors) / Hyer-V host logical processors
+    return [Math]::Floor(((Get-VMHost).LogicalProcessorCount / $NodeCount) * 2)
+}
+
 function Get-WindowsFeatureToInstall
 {
     [CmdletBinding()]
@@ -164,7 +178,7 @@ Set-VM -Name $nodeConfig.VMName -AutomaticStopAction ShutDown
 'Change the VM''s automatic stop action completed.' | Write-ScriptLog
 
 'Configure the VM''s processor.' | Write-ScriptLog
-$vmProcessorCount = (Get-VMHost).LogicalProcessorCount
+$vmProcessorCount = Get-HciNodeProcessorCount -NodeCount $labConfig.hciNode.nodeCount
 Set-VMProcessor -VMName $nodeConfig.VMName -Count $vmProcessorCount -ExposeVirtualizationExtensions $true
 'Configure the VM''s processor completed.' | Write-ScriptLog
 
