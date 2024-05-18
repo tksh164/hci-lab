@@ -57,7 +57,10 @@ function Invoke-UpdateFileDonwload
     $downloadFolderPath = [IO.Path]::Combine($DownloadFolderBasePath, $OperatingSystem)
     New-Item -ItemType Directory -Path $downloadFolderPath -Force
 
-    for ($i = 0; $i -lt $AssetUrls[$OperatingSystem]['updates'].Length; $i++) {
+    'Download {0} updates for {1}.' -f $AssetUrls[$OperatingSystem]['updates'].Length, $OperatingSystem | Write-ScriptLog
+    $AssetUrls[$OperatingSystem]['updates'] | Out-String -Width 1000 | Write-ScriptLog
+
+    $downloadedFileInfos = for ($i = 0; $i -lt $AssetUrls[$OperatingSystem]['updates'].Length; $i++) {
         # Prepend the index due to order for applying.
         $fileNameToSave = '{0}_{1}' -f $i, [IO.Path]::GetFileName($AssetUrls[$OperatingSystem]['updates'][$i])
 
@@ -66,8 +69,9 @@ function Invoke-UpdateFileDonwload
             DownloadFolder = $downloadFolderPath
             FileNameToSave = $fileNameToSave
         }
-        return Invoke-FileDownload @params
+        Invoke-FileDownload @params
     }
+    return $downloadedFileInfos
 }
 
 'Import the material URL data file.' | Write-ScriptLog
