@@ -55,7 +55,7 @@ function Invoke-UpdateFileDonwload
     )
 
     $downloadFolderPath = [IO.Path]::Combine($DownloadFolderBasePath, $OperatingSystem)
-    New-Item -ItemType Directory -Path $downloadFolderPath -Force
+    New-Item -ItemType Directory -Path $downloadFolderPath -Force | Out-String -Width 1000 | Write-ScriptLog
 
     'Download {0} updates for {1}.' -f $AssetUrls[$OperatingSystem]['updates'].Length, $OperatingSystem | Write-ScriptLog
     $AssetUrls[$OperatingSystem]['updates'] | Out-String -Width 1000 | Write-ScriptLog
@@ -81,7 +81,7 @@ $assetUrls = Import-PowerShellDataFile -LiteralPath ([IO.Path]::Combine($PSScrip
 # ISO
 
 'Create the download folder if it does not exist.' | Write-ScriptLog
-New-Item -ItemType Directory -Path $labConfig.labHost.folderPath.temp -Force
+New-Item -ItemType Directory -Path $labConfig.labHost.folderPath.temp -Force | Out-String -Width 1000 | Write-ScriptLog
 'Create the download folder completed.' | Write-ScriptLog
 
 'Download the ISO file for HCI nodes.' | Write-ScriptLog
@@ -91,7 +91,7 @@ $params = @{
     DownloadFolderPath = $labConfig.labHost.folderPath.temp
     AssetUrls          = $assetUrls
 }
-Invoke-IsoFileDownload @params
+Invoke-IsoFileDownload @params | Out-String -Width 1000 | Write-ScriptLog
 'Download the ISO file for HCI nodes completed.' | Write-ScriptLog
 
 # The Windows Server 2022 ISO is always needed for the domain controller VM.
@@ -103,7 +103,7 @@ if ($labConfig.hciNode.operatingSystem.sku -ne [HciLab.OSSku]::WindowsServer2022
         DownloadFolderPath = $labConfig.labHost.folderPath.temp
         AssetUrls          = $assetUrls
     }
-    Invoke-IsoFileDownload @params
+    Invoke-IsoFileDownload @params | Out-String -Width 1000 | Write-ScriptLog
     'Donwload the Windows Server ISO file completed.' | Write-ScriptLog
 }
 
@@ -112,7 +112,7 @@ if ($labConfig.hciNode.operatingSystem.sku -ne [HciLab.OSSku]::WindowsServer2022
 # Download the updates if the flag is set.
 if ($labConfig.guestOS.shouldInstallUpdates) {
     'Create the updates folder if it does not exist.' | Write-ScriptLog
-    New-Item -ItemType Directory -Path $labConfig.labHost.folderPath.updates -Force
+    New-Item -ItemType Directory -Path $labConfig.labHost.folderPath.updates -Force | Out-String -Width 1000 | Write-ScriptLog
     'Create the updates folder completed.' | Write-ScriptLog
     
     'Download updates for HCI nodes.' | Write-ScriptLog
@@ -121,8 +121,8 @@ if ($labConfig.guestOS.shouldInstallUpdates) {
         DownloadFolderBasePath = $labConfig.labHost.folderPath.updates
         AssetUrls              = $assetUrls
     }
-    Invoke-UpdateFileDonwload @params
-    'Download updates. for HCI nodes completed.' | Write-ScriptLog
+    Invoke-UpdateFileDonwload @params | Out-String -Width 1000 | Write-ScriptLog
+    'Download updates for HCI nodes completed.' | Write-ScriptLog
     
     if ($labConfig.hciNode.operatingSystem.sku -ne [HciLab.OSSku]::WindowsServer2022) {
         'Download the Windows Server updates.' | Write-ScriptLog
@@ -131,7 +131,7 @@ if ($labConfig.guestOS.shouldInstallUpdates) {
             DownloadFolderBasePath = $labConfig.labHost.folderPath.updates
             AssetUrls              = $assetUrls
         }
-        Invoke-UpdateFileDonwload @params
+        Invoke-UpdateFileDonwload @params | Out-String -Width 1000 | Write-ScriptLog
         'Download the Windows Server updates completed.' | Write-ScriptLog
     }
 }
