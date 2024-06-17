@@ -293,6 +293,7 @@
                 "ashci22h2",  // Azure Stack HCI 22H2
                 "ashci21h2",  // Azure Stack HCI 21H2
                 "ashci20h2",  // Azure Stack HCI 20H2
+                "ws2025",     // Windows Server 2025
                 "ws2022"      // Windows Server 2022
             ],
             "metadata": {
