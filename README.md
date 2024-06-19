@@ -33,7 +33,7 @@ The HCI Lab provides a plain HCI lab environment on Azure in reasonable preparat
 
 Learn more about the HCI lab in the [HCI Lab tour](./docs/hci-lab-tour.md).
 
-## Selectable HCI node's operating systems
+## 📚 Selectable HCI node's operating systems
 
 | Operating system | Description | HCI Lab |
 | ---- | ---- | ---- |
