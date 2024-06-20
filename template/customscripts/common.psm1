@@ -757,7 +757,7 @@ function Block-AddsDomainOperation
     [CmdletBinding()]
     param ()
 
-    'Block the AD DS domain operations until the AD DS DC VM deployment is completed.' | Write-ScriptLog
+    'Block the AD DS domain operations until the AD DS domain controller VM deployment is completed.' | Write-ScriptLog
     $params = @{
         TypeName     = 'System.Threading.EventWaitHandle'
         ArgumentList = @(
@@ -779,7 +779,7 @@ function Unblock-AddsDomainOperation
             throw 'The wait event handle for AD DS VM ready is not initialized.'
         }
         $script:addsDcDeploymentCompletionWaitHandle.Set()
-        'Unblocked the AD DS domain operations. The AD DS DC VM has been deployed.' | Write-ScriptLog
+        'Unblocked the AD DS domain operations. The AD DS domain controller VM has been deployed.' | Write-ScriptLog
     }
     finally {
         $script:addsDcDeploymentCompletionWaitHandle.Dispose()
@@ -794,16 +794,16 @@ function Wait-AddsDcDeploymentCompletion
     $waitHandle = $null
     if ([System.Threading.EventWaitHandle]::TryOpenExisting($script:addsDcDeploymentCompletionSyncEventName, [ref] $waitHandle)) {
         try {
-            'Wait for the AD DS DC deployment completion.' | Write-ScriptLog
+            'Wait for the AD DS domain controller deployment completion.' | Write-ScriptLog
             $waitHandle.WaitOne()
-            'The AD DS DC has been deployed.' | Write-ScriptLog
+            'The AD DS domain controller has been deployed.' | Write-ScriptLog
         }
         finally {
             $waitHandle.Dispose()
         }
     }
     else {
-        'The AD DS DC is already deployed. (The wait handle did not exist)' | Write-ScriptLog
+        'The AD DS domain controller is already deployed. (The wait handle did not exist)' | Write-ScriptLog
     }
 }
 
@@ -842,18 +842,18 @@ function Wait-DomainControllerServiceReady
                 ErrorAction  = [Management.Automation.ActionPreference]::Stop
             }
             if ((Invoke-Command @params) -eq $true) {
-                'The AD DS DC is ready.' | Write-ScriptLog
+                'The AD DS domain controller is ready.' | Write-ScriptLog
                 return
             }
         }
         catch {
             if ($_.FullyQualifiedErrorId -eq '2100,PSSessionStateBroken') {
-                # NOTE: When this exception continued to happen, PowerShell Direct capability was never recovered until reboot the AD DS DC VM.
+                # NOTE: When this exception continued to happen, PowerShell Direct capability was never recovered until reboot the AD DS domain controller VM.
                 # Exception: System.Management.Automation.Remoting.PSRemotingTransportException
                 # FullyQualifiedErrorId: 2100,PSSessionStateBroken
                 # The background process reported an error with the following message: "The Hyper-V socket target process has ended.".
                 '{0} (ExceptionMessage: {1} | Exception: {2} | FullyQualifiedErrorId: {3} | CategoryInfo: {4} | ErrorDetailsMessage: {5})' -f @(
-                    'Restart the AD DS DC VM due to PowerShell Remoting transport exception.',
+                    'Restart the AD DS domain controller VM due to PowerShell Remoting transport exception.',
                     $_.Exception.Message,
                     $_.Exception.GetType().FullName,
                     $_.FullyQualifiedErrorId,
@@ -862,34 +862,34 @@ function Wait-DomainControllerServiceReady
                 ) | Write-ScriptLog -Level Warning
 
                 $waitHandle = CreateWaitHandleForSerialization -SyncEventName 'Local\hcilab-adds-dc-vm-reboot'
-                'Wait for the turn to doing the AD DS DC VM reboot.' | Write-ScriptLog
+                'Wait for the turn to doing the AD DS domain controller VM reboot.' | Write-ScriptLog
                 $waitHandle.WaitOne()
-                'Acquired the turn to doing the AD DS DC VM reboot.' | Write-ScriptLog
+                'Acquired the turn to doing the AD DS domain controller VM reboot.' | Write-ScriptLog
     
                 try {
                     $uptimeThresholdMinutes = 15
                     $addsDcVM = Get-VM -Name $AddsDcVMName
                     # NOTE: Skip rebooting if the VM is young because it means the VM already rebooted recently by other jobs.
                     if ($addsDcVM.UpTime -gt (New-TimeSpan -Minutes $uptimeThresholdMinutes)) {
-                        'Stop the AD DS DC VM due to PowerShell Direct exception.' | Write-ScriptLog
+                        'Stop the AD DS domain controller VM due to PowerShell Direct exception.' | Write-ScriptLog
                         Stop-VM -Name $AddsDcVMName -ErrorAction Continue
             
-                        'Start the AD DS DC VM due to PowerShell Direct exception.' | Write-ScriptLog
+                        'Start the AD DS domain controller VM due to PowerShell Direct exception.' | Write-ScriptLog
                         Start-VM -Name $AddsDcVMName -ErrorAction Continue
                     }
                     else {
-                        'Skip the AD DS DC VM rebooting because the VM''s uptime is too short (less than {0} minutes).' -f $uptimeThresholdMinutes | Write-ScriptLog
+                        'Skip the AD DS domain controller VM rebooting because the VM''s uptime is too short (less than {0} minutes).' -f $uptimeThresholdMinutes | Write-ScriptLog
                     }
                 }
                 finally {
-                    'Release the turn to doing the AD DS DC VM reboot.' | Write-ScriptLog
+                    'Release the turn to doing the AD DS domain controller VM reboot.' | Write-ScriptLog
                     $waitHandle.Set()
                     $waitHandle.Dispose()
                 }
             }
             else {
                 '{0} (ExceptionMessage: {1} | Exception: {2} | FullyQualifiedErrorId: {3} | CategoryInfo: {4} | ErrorDetailsMessage: {5})' -f @(
-                    'Probing AD DS DC ready state...',
+                    'Probing AD DS domain controller ready state...',
                     $_.Exception.Message,
                     $_.Exception.GetType().FullName,
                     $_.FullyQualifiedErrorId,
@@ -901,7 +901,7 @@ function Wait-DomainControllerServiceReady
         Start-Sleep -Seconds $RetryIntervalSeconds
     }
 
-    $exceptionMessage = 'The AD DS DC "{0}" was not ready in the acceptable time ({1}).' -f $AddsDcVMName, $RetyTimeout.ToString()
+    $exceptionMessage = 'The AD DS domain controller "{0}" was not ready in the acceptable time ({1}).' -f $AddsDcVMName, $RetyTimeout.ToString()
     $exceptionMessage | Write-ScriptLog -Level Error
     throw $exceptionMessage
 }
@@ -959,7 +959,7 @@ function Add-VMToADDomain
     $startTime = Get-Date
     while ((Get-Date) -lt ($startTime + $RetyTimeout)) {
         try {
-            # NOTE: Domain joining will fail sometimes due to AD DS DC VM state.
+            # NOTE: Domain joining will fail sometimes due to AD DS domain controller VM state.
             $params = @{
                 VMName       = $VMName
                 Credential   = $LocalAdminCredential
