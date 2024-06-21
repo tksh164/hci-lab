@@ -512,32 +512,45 @@ Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
 } | Out-String | Write-ScriptLog
 'Configure network settings within the VM completed.' | Write-ScriptLog
 
+# We need to wait for the domain controller VM deployment completion before update the NuGet package provider and the PowerShellGet module.
+'Wait for the domain controller VM deployment completion.' | Write-ScriptLog
+Wait-AddsDcDeploymentCompletion
+'The domain controller VM deployment completed.' | Write-ScriptLog
+
+'Wait for the domain controller with DNS capability to be ready.' | Write-ScriptLog
+$params = @{
+    AddsDcVMName       = $labConfig.addsDC.vmName
+    AddsDcComputerName = $labConfig.addsDC.vmName  # The DC's computer name is the same as the VM name. It's specified in the unattend.xml.
+    Credential         = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $nodeConfig.AdminPassword  # Doamin Administrator credential
+}
+Wait-DomainControllerServiceReady @params
+'The domain controller with DNS capability is ready.' | Write-ScriptLog
+
+# NOTE: The package provider installation needs internet connection and name resolution.
+'Install the NuGet pacakge provider within the VM.' | Write-ScriptLog
+Invoke-Command -Session $localAdminCredPSSession -ScriptBlock {
+    Install-PackageProvider -Name 'NuGet' -Scope AllUsers -Force -Verbose | Out-String -Width 200 | Write-ScriptLog
+} | Out-String -Width 200 | Write-ScriptLog
+'Install the NuGet package provider within the VM completed.' | Write-ScriptLog
+
+# NOTE: The PowerShellGet module installation needs internet connection and name resolution.
+'Install the PowerShellGet module within the VM.' | Write-ScriptLog
+Invoke-Command -Session $localAdminCredPSSession -ScriptBlock {
+    Install-Module -Name 'PowerShellGet' -Scope AllUsers -Force -Verbose | Out-String -Width 200 | Write-ScriptLog
+} | Out-String -Width 200 | Write-ScriptLog
+'Install the PowerShellGet module within the VM completed.' | Write-ScriptLog
+
 'Clean up the PowerShell Direct session.' | Write-ScriptLog
 Invoke-PSDirectSessionCleanup -Session $localAdminCredPSSession -CommonModuleFilePathInVM $commonModuleFilePathInVM
 'Clean up the PowerShell Direct session completed.' | Write-ScriptLog
 
 if ($labConfig.hciNode.shouldJoinToAddsDomain) {
-    'Wait for the domain controller to complete deployment.' | Write-ScriptLog
-    Wait-AddsDcDeploymentCompletion
-    'The domain controller deployment completed.' | Write-ScriptLog
-
-    'Wait for the domain controller to be ready.' | Write-ScriptLog
-    $domainAdminCredential = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $nodeConfig.AdminPassword
-    # The DC's computer name is the same as the VM name. It's specified in the unattend.xml.
-    $params = @{
-        AddsDcVMName       = $labConfig.addsDC.vmName
-        AddsDcComputerName = $labConfig.addsDC.vmName
-        Credential         = $domainAdminCredential
-    }
-    Wait-DomainControllerServiceReady @params
-    'The domain controller is ready.' | Write-ScriptLog
-    
     'Join the VM to the AD domain.'  | Write-ScriptLog
     $params = @{
         VMName                = $nodeConfig.VMName
         LocalAdminCredential  = $localAdminCredential
         DomainFqdn            = $labConfig.addsDomain.fqdn
-        DomainAdminCredential = $domainAdminCredential
+        DomainAdminCredential = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $nodeConfig.AdminPassword  # Doamin Administrator credential
     }
     Add-VMToADDomain @params
     'Join the VM to the AD domain completed.'  | Write-ScriptLog
