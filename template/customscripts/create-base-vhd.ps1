@@ -6,7 +6,7 @@ $WarningPreference = [Management.Automation.ActionPreference]::Continue
 $VerbosePreference = [Management.Automation.ActionPreference]::Continue
 $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
-function Get-DeduplicatedBaseVhdSpec
+function Select-UniqueBaseVhdSpec
 {
     [CmdletBinding()]
     param (
@@ -14,55 +14,141 @@ function Get-DeduplicatedBaseVhdSpec
         [PSCustomObject[]] $BaseVhdSpec
     )
 
-    $result = @{}
+    $workingHash = @{}
     foreach ($spec in $BaseVhdSpec) {
         $key = '{0}_{1}_{2}' -f $spec.OperatingSystem, $spec.ImageIndex, $spec.Culture
-        if (-not $result.ContainsKey($key)) {
-            $result[$key] = $spec
+        if (-not $workingHash.ContainsKey($key)) {
+            $workingHash[$key] = $spec
         }
     }
-    return $result.Values
+    return $workingHash.Values
 }
 
-function Get-PracticalBaseVhdSpec
+function New-VhdSpecToWimInfoDictionaryKey
 {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
-        [PSCustomObject[]] $BaseVhdSpec
+        [string] $OperatingSystem,
+
+        [Parameter(Mandatory = $true)]
+        [string] $Culture
+    )
+    return '{0}_{1}' -f $OperatingSystem, $Culture
+}
+
+function New-VhdSpecToWimInfoDictionary
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject[]] $BaseVhdSpec,
+
+        [Parameter(Mandatory = $true)]
+        [string] $VhdFolderPath
     )
 
-    $countPerOSSku = @{}
-    $suffixGeneratedCountPerOSSku = @{}
-    $BaseVhdSpec |
-        Group-Object -Property 'OperatingSystem' -NoElement |
-        ForEach-Object -Process {
-            # Counting the base VHD spec instances per OS SKU.
-            $countPerOSSku[$_.Name] = $_.Count
-
-            # Initialize the suffix generated count per OS SKU.
-            $suffixGeneratedCountPerOSSku[$_.Name] = 0
-        }
-
-    # Create practical base VHD spec instances.
-    $result = @()
+    $dict = @{}
     foreach ($spec in $BaseVhdSpec) {
-        $practicalSpec = @{
-            OperatingSystem = $spec.OperatingSystem
-            ImageIndex      = $spec.ImageIndex
-            Culture         = $spec.Culture
+        $key = New-VhdSpecToWimInfoDictionaryKey -OperatingSystem $spec.OperatingSystem -Culture $spec.Culture
+        if (-not $dict.ContainsKey($key)) {
+            $params = @{
+                OperatingSystem = $spec.OperatingSystem
+                Culture         = $spec.Culture
+            }
+            $isoFilePath = [IO.Path]::Combine($VhdFolderPath, (Format-IsoFileName @params))
+            $dict[$key] = [PSCustomObject]@{
+                IsoFilePath = $isoFilePath
+                WimFilePath = ''
+            }
         }
-        
-        # Add IsoFileNameSuffix if there are multiple base VHD spec instances of the same OS SKU and it's not the first spec instance.
-        if (($countPerOSSku[$spec.OperatingSystem] -gt 1) -and ($suffixGeneratedCountPerOSSku[$spec.OperatingSystem] -gt 0)) {
-            $practicalSpec.IsoFileNameSuffix = 'copied-imgidx{0}' -f $spec.ImageIndex
-        }
-
-        $result += [PSCustomObject] $practicalSpec
-        $suffixGeneratedCountPerOSSku[$spec.OperatingSystem]++
     }
+    return $dict
+}
 
-    return $result
+function Mount-IsoFile
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $IsoFilePath
+    )
+
+    if (-not (Test-Path -PathType Leaf -LiteralPath $IsoFilePath)) {
+        throw 'Cannot find the specified ISO file "{0}".' -f $IsoFilePath
+    }
+    $isoVolume = Mount-DiskImage -StorageType ISO -Access ReadOnly -ImagePath $IsoFilePath -PassThru | Get-Volume
+    'Mounted "{0}". DriveLetter: {1}, FileSystemLabel: {2}, Size: {3}' -f $IsoFilePath, $isoVolume.DriveLetter, $isoVolume.FileSystemLabel, $isoVolume.Size | Write-ScriptLog
+    return $isoVolume.DriveLetter
+}
+
+function Dismount-IsoFile
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $IsoFilePath
+    )
+
+    if (-not (Test-Path -PathType Leaf -LiteralPath $IsoFilePath)) {
+        throw 'Cannot find the specified ISO file "{0}".' -f $IsoFilePath
+    }
+    Dismount-DiskImage -StorageType ISO -ImagePath $IsoFilePath | Out-Null
+}
+
+function Resolve-WindowsImageFilePath
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $DriveLetter
+    )
+
+    $wimFilePath = '{0}:\sources\install.wim' -f $DriveLetter
+    if (-not (Test-Path -PathType Leaf -LiteralPath $wimFilePath)) {
+        throw 'The specified ISO volume does not have "{0}".' -f $wimFilePath
+    }
+    return $wimFilePath
+}
+
+function Get-UpdatePackagePath
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $UpdatesFolderPath,
+
+        [Parameter(Mandatory = $true)]
+        [string] $OperatingSystem
+    )
+
+    $updatePackagePaths = @()
+    $osSpecificUpdatesFolderPath = [IO.Path]::Combine($UpdatesFolderPath, $OperatingSystem)
+    if (Test-Path -PathType Container -LiteralPath $osSpecificUpdatesFolderPath) {
+        $updatePackagePaths += Get-ChildItem -LiteralPath $osSpecificUpdatesFolderPath | Select-Object -ExpandProperty 'FullName' | Sort-Object
+    }
+    return $updatePackagePaths
+}
+
+function Resolve-BaseVhdFilePath
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $VhdFolderPath,
+
+        [Parameter(Mandatory = $true)]
+        [string] $OperatingSystem,
+
+        [Parameter(Mandatory = $true)]
+        [int] $ImageIndex,
+
+        [Parameter(Mandatory = $true)]
+        [string] $Culture
+    )
+
+    $vhdFileName = Format-BaseVhdFileName -OperatingSystem $OperatingSystem -ImageIndex $ImageIndex -Culture $Culture
+    return [IO.Path]::Combine($VhdFolderPath, $vhdFileName)
 }
 
 try {
@@ -74,23 +160,6 @@ try {
     'Lab deployment config:' | Write-ScriptLog
     $labConfig | ConvertTo-Json -Depth 16 | Write-Host
 
-    # Base VHD specs.
-    $addsDcVhdSpec = [PSCustomObject] @{
-        OperatingSystem = [HciLab.OSSku]::WindowsServer2022
-        ImageIndex      = [int]([HciLab.OSImageIndex]::WSDatacenterServerCore)
-        Culture         = $labConfig.guestOS.culture
-    }
-    $wacVhdSpec = [PSCustomObject] @{
-        OperatingSystem = [HciLab.OSSku]::WindowsServer2022
-        ImageIndex      = [int]([HciLab.OSImageIndex]::WSDatacenterDesktopExperience)
-        Culture         = $labConfig.guestOS.culture
-    }
-    $hciNodeVhdSpec = [PSCustomObject] @{
-        OperatingSystem = $labConfig.hciNode.operatingSystem.sku
-        ImageIndex      = $labConfig.hciNode.operatingSystem.imageIndex
-        Culture         = $labConfig.guestOS.culture
-    }
-
     'Create the temp folder if it does not exist.' | Write-ScriptLog
     New-Item -ItemType Directory -Path $labConfig.labHost.folderPath.temp -Force
     'Create the temp folder completed.' | Write-ScriptLog
@@ -99,53 +168,105 @@ try {
     New-Item -ItemType Directory -Path $labConfig.labHost.folderPath.vhd -Force
     'Create the VHD folder completed.' | Write-ScriptLog
 
-    'Download the Convert-WindowsImage.ps1.' | Write-ScriptLog
-    $params = @{
-        SourceUri      = 'https://raw.githubusercontent.com/microsoft/MSLab/master/Tools/Convert-WindowsImage.ps1'
-        DownloadFolder = $labConfig.labHost.folderPath.temp
-        FileNameToSave = 'Convert-WindowsImage.ps1'
-    }
-    $convertWimScriptFile = Invoke-FileDownload @params
-    $convertWimScriptFile
-    'Download the Convert-WindowsImage.ps1 completed.' | Write-ScriptLog
+    # Base VHD specs to need.
+    $baseVhdSpecsToNeed = @(
+        # For AD DS DC
+        [PSCustomObject] @{
+            OperatingSystem = [HciLab.OSSku]::WindowsServer2022
+            ImageIndex      = [int]([HciLab.OSImageIndex]::WSDatacenterServerCore)
+            Culture         = $labConfig.guestOS.culture
+        },
+        # For management server (WAC)
+        [PSCustomObject] @{
+            OperatingSystem = [HciLab.OSSku]::WindowsServer2022
+            ImageIndex      = [int]([HciLab.OSImageIndex]::WSDatacenterDesktopExperience)
+            Culture         = $labConfig.guestOS.culture
+        },
+        # For HCI node
+        [PSCustomObject] @{
+            OperatingSystem = $labConfig.hciNode.operatingSystem.sku
+            ImageIndex      = $labConfig.hciNode.operatingSystem.imageIndex
+            Culture         = $labConfig.guestOS.culture
+        }
+    )
 
-    'Clarify the base VHD''s specification.' | Write-ScriptLog
-    $dedupedVhdSpecs = Get-DeduplicatedBaseVhdSpec -BaseVhdSpec $addsDcVhdSpec, $wacVhdSpec, $hciNodeVhdSpec
-    $dedupedVhdSpecs | Format-Table -Property 'OperatingSystem', 'ImageIndex', 'Culture' | Out-String | Write-ScriptLog
-    $vhdSpecs = Get-PracticalBaseVhdSpec -BaseVhdSpec $dedupedVhdSpecs
-    $vhdSpecs | Format-Table -Property 'OperatingSystem', 'ImageIndex', 'Culture', 'IsoFileNameSuffix' | Out-String | Write-ScriptLog
-    'Clarify the base VHD''s specification completed.' | Write-ScriptLog
+    'Filter unique base VHD specifications.' | Write-ScriptLog
+    $baseVhdSpecs = Select-UniqueBaseVhdSpec -BaseVhdSpec $baseVhdSpecsToNeed
+    'Filter unique base VHD specifications completed.' | Write-ScriptLog
+
+    'The base VHD specifications:' | Write-ScriptLog
+    $baseVhdSpecs | Format-Table -Property 'OperatingSystem', 'ImageIndex', 'Culture' | Out-String | Write-ScriptLog
+
+    'Create the VHD spec to WIM info dictionary.' | Write-ScriptLog
+    $VhdSpecToWimInfoDict = New-VhdSpecToWimInfoDictionary -BaseVhdSpec $baseVhdSpecs -VhdFolderPath $labConfig.labHost.folderPath.temp
+
+    'Mount ISO files.' | Write-ScriptLog
+    foreach ($wimInfo in $VhdSpecToWimInfoDict.Values) {
+        $mountedDriveLetter = Mount-IsoFile -IsoFilePath $wimInfo.IsoFilePath
+        $wimInfo.WimFilePath = Resolve-WindowsImageFilePath -DriveLetter $mountedDriveLetter
+    }
+    'Mount ISO files completed.' | Write-ScriptLog
+
+    'The VHD spec to WIM info dictionary:' | Write-ScriptLog
+    $VhdSpecToWimInfoDict | Format-Table -Property 'Key', 'Value' | Out-String | Write-ScriptLog
 
     'Create the base VHD creation jobs.' | Write-ScriptLog
     $jobScriptFilePath = [IO.Path]::Combine($PSScriptRoot, 'create-base-vhd-job.ps1')
+    $modulePathsForJob = @(
+        (Get-Module -Name 'common').Path
+    )
     $jobs = @()
-    foreach ($spec in $vhdSpecs) {
+    foreach ($spec in $baseVhdSpecs) {
         $jobName = '{0}_{1}_{2}' -f $spec.OperatingSystem, $spec.ImageIndex, $spec.Culture
-        $jobParams = @{
-            PSModuleNameToImport = (Get-Module -Name 'common').Path, $convertWimScriptFile.FullName
-            OperatingSystem      = $spec.OperatingSystem
-            ImageIndex           = $spec.ImageIndex
-            Culture              = $spec.Culture
-            LogFileName          = [IO.Path]::GetFileNameWithoutExtension($jobScriptFilePath) + '_' + $jobName
+        $logFileName = [IO.Path]::GetFileNameWithoutExtension($jobScriptFilePath) + '_' + $jobName
+        $logContext = '{0}_{1}_{2}' -f $spec.OperatingSystem, $spec.ImageIndex, $spec.Culture
+        $VhdSpecToWimInfoDictKey = New-VhdSpecToWimInfoDictionaryKey -OperatingSystem $spec.OperatingSystem -Culture $spec.Culture
+        $updatePackagePaths = Get-UpdatePackagePath -UpdatesFolderPath $labConfig.labHost.folderPath.updates -OperatingSystem $spec.OperatingSystem
+        $params = @{
+            VhdFolderPath   = $labConfig.labHost.folderPath.vhd
+            OperatingSystem = $spec.OperatingSystem
+            ImageIndex      = $spec.ImageIndex
+            Culture         = $spec.Culture
         }
-        if ($spec.IsoFileNameSuffix -ne $null) {
-            $jobParams.IsoFileNameSuffix = $spec.IsoFileNameSuffix
-        }
+        $vhdFilePath = Resolve-BaseVhdFilePath @params
+
         'Start a base VHD creation job "{0}".' -f $jobName | Write-ScriptLog
+        $jobParams = @{
+            PSModulePathToImport = $modulePathsForJob
+            LogFileName          = $logFileName
+            LogContext           = $logContext
+            WimFilePath          = $VhdSpecToWimInfoDict[$VhdSpecToWimInfoDictKey].WimFilePath
+            ImageIndex           = $spec.ImageIndex
+            VhdFilePath          = $vhdFilePath
+        }
+        if ($updatePackagePaths.Length -gt 0) {
+            $jobParams.UpdatePackagePath = $updatePackagePaths
+        }
         $jobs += Start-Job -Name $jobName -LiteralPath $jobScriptFilePath -InputObject ([PSCustomObject] $jobParams)
+        'The job "{0}" started.' -f $jobName | Write-ScriptLog
     }
 
-    $jobs | Format-Table -Property Id, Name, State, HasMoreData, PSBeginTime, PSEndTime
-    $jobs | Receive-Job -Wait
-    $jobs | Format-Table -Property Id, Name, State, HasMoreData, PSBeginTime, PSEndTime
-    'Create the base VHD creation jobs completed.' | Write-ScriptLog
+    'The base VHD creation job status:' | Write-ScriptLog
+    $jobs | Format-Table -Property Id, Name, State, HasMoreData, PSBeginTime, PSEndTime | Out-String -Width 200 | Write-ScriptLog
 
-    'The base VHDs creation has been completed.' | Write-ScriptLog
+    'Start waiting for all base VHD creation jobs completion.' | Write-ScriptLog
+    $jobs | Receive-Job -Wait
+    'All base VHD creation jobs completed.' | Write-ScriptLog
 }
 catch {
-    $jobs | Format-Table -Property Id, Name, State, HasMoreData, PSBeginTime, PSEndTime
-    throw $_
+    $exceptionMessage = New-ExceptionMessage -ErrorRecord $_
+    $exceptionMessage | Write-ScriptLog -Level Error
+    throw $exceptionMessage
 }
 finally {
+    'The base VHD creation job final status:' | Write-ScriptLog
+    $jobs | Format-Table -Property Id, Name, State, HasMoreData, PSBeginTime, PSEndTime, @{ Label = 'ElapsedTime'; Expression = { $_.PSEndTime - $_.PSBeginTime } } | Out-String -Width 200 | Write-ScriptLog
+
+    foreach ($wimInfo in $VhdSpecToWimInfoDict.Values) {
+        'Dismount the ISO file "{0}".' -f $wimInfo.IsoFilePath | Write-ScriptLog
+        Dismount-IsoFile -IsoFilePath $wimInfo.IsoFilePath
+    }
+
+    'The base VHDs creation has been finished.' | Write-ScriptLog
     Stop-ScriptLogging
 }
