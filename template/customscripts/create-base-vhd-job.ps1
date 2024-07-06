@@ -190,7 +190,7 @@ try {
     'Create a Windows partition completed.' | Write-ScriptLog
 
     'Format the EFI system partition.' | Write-ScriptLog
-    $systemVolume = $systemPartition | Format-Volume -FileSystem 'FAT32' -AllocationUnitSize 2KB -Confirm:$false -Force
+    $systemVolume = $systemPartition | Format-Volume -FileSystem 'FAT32' -AllocationUnitSize 512 -Confirm:$false -Force
     'Format the EFI system partition completed.' | Write-ScriptLog
 
     'Format the Windows partition.' | Write-ScriptLog
