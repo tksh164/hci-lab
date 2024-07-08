@@ -156,9 +156,11 @@ $nodeConfig | ConvertTo-Json -Depth 16 | Out-String | Write-ScriptLog
 
 'Create the OS disk.' | Write-ScriptLog
 $params = @{
-    Path         = [IO.Path]::Combine($labConfig.labHost.folderPath.vm, $nodeConfig.VMName, 'osdisk.vhdx')
-    Differencing = $true
-    ParentPath   = $nodeConfig.ParentVhdPath
+    Path                    = [IO.Path]::Combine($labConfig.labHost.folderPath.vm, $nodeConfig.VMName, 'osdisk.vhdx')
+    Differencing            = $true
+    ParentPath              = $nodeConfig.ParentVhdPath
+    BlockSizeBytes          = 32MB
+    PhysicalSectorSizeBytes = 4KB
 }
 $vmOSDiskVhd = New-VHD @params
 'Create the OS disk completed.' | Write-ScriptLog
@@ -297,9 +299,12 @@ Set-VMNetworkAdapterVlan -Trunk -NativeVlanId 0 -AllowedVlanIdList '1-4094'
 $diskCount = 8
 for ($diskIndex = 1; $diskIndex -le $diskCount; $diskIndex++) {
     $params = @{
-        Path      = [IO.Path]::Combine($labConfig.labHost.folderPath.vm, $nodeConfig.VMName, ('datadisk{0}.vhdx' -f $diskIndex))
-        Dynamic   = $true
-        SizeBytes = $nodeConfig.DataDiskSizeBytes
+        Path                    = [IO.Path]::Combine($labConfig.labHost.folderPath.vm, $nodeConfig.VMName, ('datadisk{0}.vhdx' -f $diskIndex))
+        Dynamic                 = $true
+        SizeBytes               = $nodeConfig.DataDiskSizeBytes
+        BlockSizeBytes          = 32MB
+        PhysicalSectorSizeBytes = 4KB
+        LogicalSectorSizeBytes  = 4KB
     }
     $vmDataDiskVhd = New-VHD @params
     Add-VMHardDiskDrive -VMName $nodeConfig.VMName -Path $vmDataDiskVhd.Path -Passthru | Out-String | Write-ScriptLog

@@ -40,6 +40,23 @@ namespace HciLab
 }
 '@
 
+function New-ExceptionMessage
+{
+    param (
+        [Parameter(Mandatory = $true)]
+        [System.Management.Automation.ErrorRecord] $ErrorRecord
+    )
+
+    return "`n>>> EXCEPTION`n{0}`nException: {1}`nFullyQualifiedErrorId: {2}`nErrorDetailsMessage: {3}`nCategoryInfo: {4}`nStackTrace:`n{5}`n<<<" -f @(
+        $ErrorRecord.Exception.Message,
+        $ErrorRecord.Exception.GetType().FullName,
+        $ErrorRecord.FullyQualifiedErrorId,
+        $ErrorRecord.ErrorDetails.Message,
+        $ErrorRecord.CategoryInfo.ToString(),
+        $ErrorRecord.ScriptStackTrace
+    )
+}
+
 function Start-ScriptLogging
 {
     [CmdletBinding()]
@@ -1154,6 +1171,7 @@ function New-WacConnectionFileContent
 }
 
 $exportFunctions = @(
+    'New-ExceptionMessage',
     'Start-ScriptLogging',
     'Stop-ScriptLogging',
     'Set-ScriptLogDefaultContext',

@@ -44,11 +44,6 @@ Learn more about the HCI lab in the [HCI Lab tour](./docs/hci-lab-tour.md).
 | Windows Server 2025 Datacenter Preview Evaluation (Desktop Experience) | Windows Server 2025 Datacenter Preview with the standard graphical user interface. | Available |
 | Windows Server 2022 Datacenter Evaluation (Desktop Experience) | Windows Server 2022 Datacenter with the standard graphical user interface. | Available |
 
-
-## 📦 External artifacts
-
-- The custom script `create-base-vhd.ps1` in this template downloads `Convert-WindowsImage.ps1` from [microsoft/MSLab](https://github.com/microsoft/MSLab) and uses it during the deployment.
-
 ## ⚖️ License
 
 Copyright (c) 2022-present Takeshi Katano. All rights reserved. This software is released under the [MIT License](https://github.com/tksh164/hci-lab/blob/main/LICENSE).

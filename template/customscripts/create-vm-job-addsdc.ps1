@@ -34,9 +34,11 @@ $params = @{
 }
 $parentVhdFileName = Format-BaseVhdFileName @params
 $params = @{
-    Differencing = $true
-    ParentPath   = [IO.Path]::Combine($labConfig.labHost.folderPath.vhd, $parentVhdFileName)
-    Path         = [IO.Path]::Combine($labConfig.labHost.folderPath.vm, $labConfig.addsDC.vmName, 'osdisk.vhdx')
+    Path                    = [IO.Path]::Combine($labConfig.labHost.folderPath.vm, $labConfig.addsDC.vmName, 'osdisk.vhdx')
+    Differencing            = $true
+    ParentPath              = [IO.Path]::Combine($labConfig.labHost.folderPath.vhd, $parentVhdFileName)
+    BlockSizeBytes          = 32MB
+    PhysicalSectorSizeBytes = 4KB
 }
 $vmOSDiskVhd = New-VHD  @params
 'Create the OS disk for the VM completed.' | Write-ScriptLog
