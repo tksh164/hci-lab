@@ -91,6 +91,10 @@
             'ja-jp' = 'https://software-static.download.prss.microsoft.com/dbazure/888969d5-f34g-4e03-ac9d-1f9786c66749/26100.1.240331-1435.ge_release_SERVER_EVAL_x64FRE_ja-jp.iso?culture=ja-jp&country=JP'
         }
         'updates' = @(
+            # OS
+            'https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/1fa31054-619d-4e9f-9efd-f61e5ece0413/public/windows11.0-kb5040435-x64_eb3b8638c1576925800434522cbb112fd94aa379.msu',
+            # .NET Framework
+            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2024/06/windows11.0-kb5039894-x64-ndp481_505f9eea0fee9fde2dbe5c76e72d4b05d402a74c.msu'
         )
     }
     'ws2022' = @{
