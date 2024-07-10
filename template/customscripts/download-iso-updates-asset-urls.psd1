@@ -31,14 +31,15 @@
 @{
     'ashci23h2' = @{
         'iso' = @{
-            'en-us' = 'https://software-static.download.prss.microsoft.com/dbazure/888969d5-f34g-4e03-ac9d-1f9786c66749/25398.469.231004-1141.zn_release_svc_refresh_SERVERAZURESTACKHCICOR_OEMRET_x64FRE_en-us.iso'  # Preview version
-            'ja-jp' = 'https://software-static.download.prss.microsoft.com/dbazure/888969d5-f34g-4e03-ac9d-1f9786c66749/25398.469.231004-1141.zn_release_svc_refresh_SERVERAZURESTACKHCICOR_OEMRET_x64FRE_ja-jp.iso'  # Preview version
+            'en-us' = 'https://software-static.download.prss.microsoft.com/dbazure/888969d5-f34g-4e03-ac9d-1f9786c66749/25398.469.231004-1141.zn_release_svc_refresh_SERVERAZURESTACKHCICOR_OEMRET_x64FRE_en-us.iso'
+            'ja-jp' = 'https://software-static.download.prss.microsoft.com/dbazure/888969d5-f34g-4e03-ac9d-1f9786c66749/25398.469.231004-1141.zn_release_svc_refresh_SERVERAZURESTACKHCICOR_OEMRET_x64FRE_ja-jp.iso'
         }
         'updates' = @(
             # OS
-            'https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/10964a01-1dc5-4cc4-8d1a-33eef7002783/public/windows11.0-kb5039236-x64_10b24968068776d247baeb906550230c1a5741cf.msu',
+            'https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/10964a01-1dc5-4cc4-8d1a-33eef7002783/public/windows11.0-kb5039236-x64_10b24968068776d247baeb906550230c1a5741cf.msu',  # For SSU of 2024-07
+            'https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/2546b8fa-11f3-4a37-b9ea-7667e1478547/public/windows11.0-kb5040438-x64_58a8df174fda3cd4cedc651e904a579a896d4d59.msu',
             # .NET Framework
-            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/updt/2024/04/windows11.0-kb5038075-x64-ndp481_c434cf78eb8365cc8ce5b755fba10e22776e1a32.msu'
+            'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2024/06/windows11.0-kb5039892-x64-ndp481_d685a2352f862a067752d245c6a7295a786eac61.msu'
         )
     }
     'ashci22h2' = @{
