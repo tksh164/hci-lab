@@ -47,14 +47,41 @@ function New-ExceptionMessage
         [System.Management.Automation.ErrorRecord] $ErrorRecord
     )
 
-    return "`n>>> EXCEPTION`n{0}`nException: {1}`nFullyQualifiedErrorId: {2}`nErrorDetailsMessage: {3}`nCategoryInfo: {4}`nStackTrace:`n{5}`n<<<" -f @(
-        $ErrorRecord.Exception.Message,
-        $ErrorRecord.Exception.GetType().FullName,
-        $ErrorRecord.FullyQualifiedErrorId,
-        $ErrorRecord.ErrorDetails.Message,
-        $ErrorRecord.CategoryInfo.ToString(),
-        $ErrorRecord.ScriptStackTrace
-    )
+    $ex = $_.Exception
+    $builder = New-Object -TypeName 'System.Text.StringBuilder'
+    [void] $builder.AppendLine('')
+    [void] $builder.AppendLine('>>> EXCEPTION')
+    [void] $builder.AppendLine($ex.Message)
+    [void] $builder.AppendLine('Exception: ' + $ex.GetType().FullName)
+    [void] $builder.AppendLine('FullyQualifiedErrorId: ' + $_.FullyQualifiedErrorId)
+    [void] $builder.AppendLine('ErrorDetailsMessage: ' + $_.ErrorDetails.Message)
+    [void] $builder.AppendLine('CategoryInfo: ' + $_.CategoryInfo.ToString())
+    [void] $builder.AppendLine('StackTrace in PowerShell:')
+    [void] $builder.AppendLine($_.ScriptStackTrace)
+
+    [void] $builder.AppendLine('--- Exception ---')
+    [void] $builder.AppendLine('Exception: ' + $ex.GetType().FullName)
+    [void] $builder.AppendLine('Message: ' + $ex.Message)
+    [void] $builder.AppendLine('Source: ' + $ex.Source)
+    [void] $builder.AppendLine('HResult: ' + $ex.HResult)
+    [void] $builder.AppendLine('StackTrace:')
+    [void] $builder.AppendLine($ex.StackTrace)
+
+    $level = 1
+    while ($ex.InnerException) {
+        $ex = $ex.InnerException
+        [void] $builder.AppendLine('--- InnerException {0} ---' -f $level)
+        [void] $builder.AppendLine('Exception: ' + $ex.GetType().FullName)
+        [void] $builder.AppendLine('Message: ' + $ex.Message)
+        [void] $builder.AppendLine('Source: ' + $ex.Source)
+        [void] $builder.AppendLine('HResult: ' + $ex.HResult)
+        [void] $builder.AppendLine('StackTrace:')
+        [void] $builder.AppendLine($ex.StackTrace)
+        $level++
+    }
+
+    [void] $builder.AppendLine('<<<')
+    return $builder.ToString()
 }
 
 function Start-ScriptLogging
