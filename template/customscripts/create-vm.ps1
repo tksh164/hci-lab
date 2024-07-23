@@ -48,16 +48,24 @@ try {
     }
     'Start the HCI node VM creation jobs completed.' | Write-ScriptLog
 
-    $jobs | Format-Table -Property Id, Name, State, HasMoreData, PSBeginTime, PSEndTime
-    $jobs | Receive-Job -Wait
+    'The HCI lab VMs creation job status:' | Write-ScriptLog
     $jobs | Format-Table -Property Id, Name, State, HasMoreData, PSBeginTime, PSEndTime
 
-    'The HCI lab VMs creation has been completed.' | Write-ScriptLog
+    'Start waiting for all HCI lab VMs creation jobs completion.' | Write-ScriptLog
+    $jobs | Receive-Job -Wait
+    'All HCI lab VMs creation jobs completed.' | Write-ScriptLog
+
+    'The HCI lab VMs creation has been successfully completed.' | Write-ScriptLog
 }
 catch {
-    $jobs | Format-Table -Property Id, Name, State, HasMoreData, PSBeginTime, PSEndTime
-    throw $_
+    $exceptionMessage = New-ExceptionMessage -ErrorRecord $_
+    $exceptionMessage | Write-ScriptLog -Level Error
+    throw $exceptionMessage
 }
 finally {
+    'The HCI lab VMs creation job final status:' | Write-ScriptLog
+    $jobs | Format-Table -Property Id, Name, State, HasMoreData, PSBeginTime, PSEndTime
+
+    'The HCI lab VMs creation has been finished.' | Write-ScriptLog
     Stop-ScriptLogging
 }
