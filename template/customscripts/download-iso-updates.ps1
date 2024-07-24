@@ -6,13 +6,6 @@ $WarningPreference = [Management.Automation.ActionPreference]::Continue
 $VerbosePreference = [Management.Automation.ActionPreference]::Continue
 $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
-Import-Module -Name ([IO.Path]::Combine($PSScriptRoot, 'common.psm1')) -Force
-
-$labConfig = Get-LabDeploymentConfig
-Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log
-'Lab deployment config:' | Write-ScriptLog
-$labConfig | ConvertTo-Json -Depth 16 | Write-Host
-
 function Invoke-IsoFileDownload
 {
     [CmdletBinding()]
@@ -74,70 +67,87 @@ function Invoke-UpdateFileDonwload
     return $downloadedFileInfos
 }
 
-'Import the material URL data file.' | Write-ScriptLog
-$assetUrls = Import-PowerShellDataFile -LiteralPath ([IO.Path]::Combine($PSScriptRoot, 'download-iso-updates-asset-urls.psd1'))
-'Import the material URL data file completed.' | Write-ScriptLog
+try {
+    Import-Module -Name ([IO.Path]::Combine($PSScriptRoot, 'common.psm1')) -Force
 
-# ISO
+    $labConfig = Get-LabDeploymentConfig
+    Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log
+    'Lab deployment config:' | Write-ScriptLog
+    $labConfig | ConvertTo-Json -Depth 16 | Write-Host
 
-'Create the download folder if it does not exist.' | Write-ScriptLog
-New-Item -ItemType Directory -Path $labConfig.labHost.folderPath.temp -Force | Out-String -Width 1000 | Write-ScriptLog
-'Create the download folder completed.' | Write-ScriptLog
+    'Import the material URL data file.' | Write-ScriptLog
+    $assetUrls = Import-PowerShellDataFile -LiteralPath ([IO.Path]::Combine($PSScriptRoot, 'download-iso-updates-asset-urls.psd1'))
+    'Import the material URL data file completed.' | Write-ScriptLog
 
-'Download the ISO file for HCI nodes.' | Write-ScriptLog
-$params = @{
-    OperatingSystem    = $labConfig.hciNode.operatingSystem.sku
-    Culture            = $labConfig.guestOS.culture
-    DownloadFolderPath = $labConfig.labHost.folderPath.temp
-    AssetUrls          = $assetUrls
-}
-Invoke-IsoFileDownload @params | Out-String -Width 1000 | Write-ScriptLog
-'Download the ISO file for HCI nodes completed.' | Write-ScriptLog
+    # ISO
 
-# The Windows Server 2022 ISO is always needed for the domain controller VM.
-if ($labConfig.hciNode.operatingSystem.sku -ne [HciLab.OSSku]::WindowsServer2022) {
-    'Donwload the Windows Server ISO file.' | Write-ScriptLog
+    'Create the download folder if it does not exist.' | Write-ScriptLog
+    New-Item -ItemType Directory -Path $labConfig.labHost.folderPath.temp -Force | Out-String -Width 1000 | Write-ScriptLog
+    'Create the download folder completed.' | Write-ScriptLog
+
+    'Download the ISO file for HCI nodes.' | Write-ScriptLog
     $params = @{
-        OperatingSystem    = [HciLab.OSSku]::WindowsServer2022
+        OperatingSystem    = $labConfig.hciNode.operatingSystem.sku
         Culture            = $labConfig.guestOS.culture
         DownloadFolderPath = $labConfig.labHost.folderPath.temp
         AssetUrls          = $assetUrls
     }
     Invoke-IsoFileDownload @params | Out-String -Width 1000 | Write-ScriptLog
-    'Donwload the Windows Server ISO file completed.' | Write-ScriptLog
-}
+    'Download the ISO file for HCI nodes completed.' | Write-ScriptLog
 
-# Updates
-
-# Download the updates if the flag is set.
-if ($labConfig.guestOS.shouldInstallUpdates) {
-    'Create the updates folder if it does not exist.' | Write-ScriptLog
-    New-Item -ItemType Directory -Path $labConfig.labHost.folderPath.updates -Force | Out-String -Width 1000 | Write-ScriptLog
-    'Create the updates folder completed.' | Write-ScriptLog
-    
-    'Download updates for HCI nodes.' | Write-ScriptLog
-    $params = @{
-        OperatingSystem        = $labConfig.hciNode.operatingSystem.sku
-        DownloadFolderBasePath = $labConfig.labHost.folderPath.updates
-        AssetUrls              = $assetUrls
-    }
-    Invoke-UpdateFileDonwload @params | Out-String -Width 1000 | Write-ScriptLog
-    'Download updates for HCI nodes completed.' | Write-ScriptLog
-    
+    # The Windows Server 2022 ISO is always needed for the domain controller VM.
     if ($labConfig.hciNode.operatingSystem.sku -ne [HciLab.OSSku]::WindowsServer2022) {
-        'Download the Windows Server updates.' | Write-ScriptLog
+        'Donwload the Windows Server ISO file.' | Write-ScriptLog
         $params = @{
-            OperatingSystem        = [HciLab.OSSku]::WindowsServer2022
+            OperatingSystem    = [HciLab.OSSku]::WindowsServer2022
+            Culture            = $labConfig.guestOS.culture
+            DownloadFolderPath = $labConfig.labHost.folderPath.temp
+            AssetUrls          = $assetUrls
+        }
+        Invoke-IsoFileDownload @params | Out-String -Width 1000 | Write-ScriptLog
+        'Donwload the Windows Server ISO file completed.' | Write-ScriptLog
+    }
+
+    # Updates
+
+    # Download the updates if the flag is set.
+    if ($labConfig.guestOS.shouldInstallUpdates) {
+        'Create the updates folder if it does not exist.' | Write-ScriptLog
+        New-Item -ItemType Directory -Path $labConfig.labHost.folderPath.updates -Force | Out-String -Width 1000 | Write-ScriptLog
+        'Create the updates folder completed.' | Write-ScriptLog
+        
+        'Download updates for HCI nodes.' | Write-ScriptLog
+        $params = @{
+            OperatingSystem        = $labConfig.hciNode.operatingSystem.sku
             DownloadFolderBasePath = $labConfig.labHost.folderPath.updates
             AssetUrls              = $assetUrls
         }
         Invoke-UpdateFileDonwload @params | Out-String -Width 1000 | Write-ScriptLog
-        'Download the Windows Server updates completed.' | Write-ScriptLog
+        'Download updates for HCI nodes completed.' | Write-ScriptLog
+        
+        if ($labConfig.hciNode.operatingSystem.sku -ne [HciLab.OSSku]::WindowsServer2022) {
+            'Download the Windows Server updates.' | Write-ScriptLog
+            $params = @{
+                OperatingSystem        = [HciLab.OSSku]::WindowsServer2022
+                DownloadFolderBasePath = $labConfig.labHost.folderPath.updates
+                AssetUrls              = $assetUrls
+            }
+            Invoke-UpdateFileDonwload @params | Out-String -Width 1000 | Write-ScriptLog
+            'Download the Windows Server updates completed.' | Write-ScriptLog
+        }
     }
-}
-else {
-    'Skip the download of updates due to shouldInstallUpdates not set.' | Write-ScriptLog
-}
+    else {
+        'Skip the download of updates due to shouldInstallUpdates not set.' | Write-ScriptLog
+    }
 
-'The material download has been completed.' | Write-ScriptLog
-Stop-ScriptLogging
+    'The material download has been successfully completed.' | Write-ScriptLog
+}
+catch {
+    $exceptionMessage = New-ExceptionMessage -ErrorRecord $_
+    $exceptionMessage | Write-ScriptLog -Level Error
+    throw $exceptionMessage
+}
+finally {
+    'The material download has been finished.' | Write-ScriptLog
+    Stop-ScriptLogging
+}

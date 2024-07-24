@@ -252,6 +252,8 @@ try {
     'Start waiting for all base VHD creation jobs completion.' | Write-ScriptLog
     $jobs | Receive-Job -Wait
     'All base VHD creation jobs completed.' | Write-ScriptLog
+
+    'The base VHDs creation has been successfully completed.' | Write-ScriptLog
 }
 catch {
     $exceptionMessage = New-ExceptionMessage -ErrorRecord $_

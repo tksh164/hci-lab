@@ -252,6 +252,8 @@ try {
     else {
         'There are no update packages.' | Write-ScriptLog
     }
+
+    'The VHD creation job has been successfully completed.' | Write-ScriptLog
 }
 catch {
     $exceptionMessage = New-ExceptionMessage -ErrorRecord $_
