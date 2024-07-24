@@ -401,9 +401,7 @@ try {
             'UserProcessorTime'
         ) | Out-String | Write-ScriptLog
         if ($result.ExitCode -ne 0) {
-            $exceptionMessage = 'Windows Admin Center installation failed with exit code {0}.' -f $result.ExitCode
-            $exceptionMessage | Write-ScriptLog -Level Error
-            throw $exceptionMessage
+            throw 'Windows Admin Center installation failed with exit code {0}.' -f $result.ExitCode
         }
         'Install Windows Admin Center completed.' | Write-ScriptLog
 

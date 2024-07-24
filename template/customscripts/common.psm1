@@ -249,30 +249,12 @@ function Get-AccessTokenUsingManagedId
                 Start-Sleep -Seconds 1
             }
             else {
-                $exceptionText = "`n{0}`nExceptionMessage: {1}`nException: {2}`nFullyQualifiedErrorId: {3}`nCategoryInfo: {4}`nErrorDetailsMessage: {5}`n{6}{7}" -f @(
-                    '*** EXCEPTION ***',
-                    $_.Exception.Message,
-                    $_.Exception.GetType().FullName,
-                    $_.FullyQualifiedErrorId,
-                    $_.CategoryInfo.ToString(),
-                    $_.ErrorDetails.Message,
-                    '*** STACK TRACE ***',
-                    (Get-PSCallStack | Out-String -Width 1000)
-                )
-                $exceptionText | Write-ScriptLog -Level Error
-                throw $exceptionText
+                throw $_
             }
         }
     }
 
-    $exceptionText = "`n{0}`n{1}`n{2}{3}" -f @(
-        '*** EXCEPTION ***',
-        'Could not get an access token from the Azure Instance Metadata Service endpoint.',
-        '*** STACK TRACE ***',
-        (Get-PSCallStack | Out-String -Width 1000)
-    )
-    $exceptionText | Write-ScriptLog -Level Error
-    throw $exceptionText
+    throw 'Could not get an access token from the Azure Instance Metadata Service endpoint.'
 }
 
 function Get-InstanceMetadata
@@ -311,30 +293,12 @@ function Get-InstanceMetadata
                 Start-Sleep -Seconds 1
             }
             else {
-                $exceptionText = "`n{0}`nExceptionMessage: {1}`nException: {2}`nFullyQualifiedErrorId: {3}`nCategoryInfo: {4}`nErrorDetailsMessage: {5}`n{6}{7}" -f @(
-                    '*** EXCEPTION ***',
-                    $_.Exception.Message,
-                    $_.Exception.GetType().FullName,
-                    $_.FullyQualifiedErrorId,
-                    $_.CategoryInfo.ToString(),
-                    $_.ErrorDetails.Message,
-                    '*** STACK TRACE ***',
-                    (Get-PSCallStack | Out-String -Width 1000)
-                )
-                $exceptionText | Write-ScriptLog -Level Error
-                throw $exceptionText
+                throw $_
             }
         }
     }
 
-    $exceptionText = "`n{0}`n{1}`n{2}{3}" -f @(
-        '*** EXCEPTION ***',
-        'Could not get an instance medata from the Azure Instance Metadata Service endpoint.',
-        '*** STACK TRACE ***',
-        (Get-PSCallStack | Out-String -Width 1000)
-    )
-    $exceptionText | Write-ScriptLog -Level Error
-    throw $exceptionText
+    throw 'Could not get an instance medata from the Azure Instance Metadata Service endpoint.'
 }
 
 function Invoke-FileDownload
@@ -690,9 +654,7 @@ function Install-WindowsFeatureToVhd
         Start-Sleep -Seconds $RetryIntervalSeconds
     }
 
-    $exceptionMessage = 'The Install-WindowsFeature cmdlet execution for "{0}" was not succeeded in the acceptable time ({1}).' -f $VhdPath, $RetyTimeout.ToString()
-    $exceptionMessage | Write-ScriptLog -Level Error -LogContext $VhdPath
-    throw $exceptionMessage
+    throw 'The Install-WindowsFeature cmdlet execution for "{0}" was not succeeded in the acceptable time ({1}).' -f $VhdPath, $RetyTimeout.ToString()
 }
 
 function Start-VMWithRetry
@@ -737,9 +699,7 @@ function Start-VMWithRetry
         Start-Sleep -Seconds $RetryIntervalSeconds
     }
 
-    $exceptionMessage = 'The VM "{0}" was not start in the acceptable time ({1}).' -f $VMName, $RetyTimeout.ToString()
-    $exceptionMessage | Write-ScriptLog -Level Error
-    throw $exceptionMessage
+    throw 'The VM "{0}" was not start in the acceptable time ({1}).' -f $VMName, $RetyTimeout.ToString()
 }
 
 function Wait-PowerShellDirectReady
@@ -787,9 +747,7 @@ function Wait-PowerShellDirectReady
         Start-Sleep -Seconds $RetryIntervalSeconds
     }
 
-    $exceptionMessage = 'The VM "{0}" was not ready in the acceptable time ({1}).' -f $VMName, $RetyTimeout.ToString()
-    $exceptionMessage | Write-ScriptLog -Level Error
-    throw $exceptionMessage
+    throw 'The VM "{0}" was not ready in the acceptable time ({1}).' -f $VMName, $RetyTimeout.ToString()
 }
 
 # A sync event name for blocking the AD DS operations.
@@ -945,9 +903,7 @@ function Wait-DomainControllerServiceReady
         Start-Sleep -Seconds $RetryIntervalSeconds
     }
 
-    $exceptionMessage = 'The AD DS domain controller "{0}" was not ready in the acceptable time ({1}).' -f $AddsDcVMName, $RetyTimeout.ToString()
-    $exceptionMessage | Write-ScriptLog -Level Error
-    throw $exceptionMessage
+    throw 'The AD DS domain controller "{0}" was not ready in the acceptable time ({1}).' -f $AddsDcVMName, $RetyTimeout.ToString()
 }
 
 function New-LogonCredential
@@ -1032,9 +988,7 @@ function Add-VMToADDomain
         Start-Sleep -Seconds $RetryIntervalSeconds
     }
 
-    $exceptionMessage = 'Domain join the "{0}" VM to the AD domain "{1}" was not complete in the acceptable time ({2}).' -f $VMName, $DomainFqdn, $RetyTimeout.ToString()
-    $exceptionMessage | Write-ScriptLog -Level Error
-    throw $exceptionMessage
+    throw 'Domain join the "{0}" VM to the AD domain "{1}" was not complete in the acceptable time ({2}).' -f $VMName, $DomainFqdn, $RetyTimeout.ToString()
 }
 
 function Copy-PSModuleIntoVM

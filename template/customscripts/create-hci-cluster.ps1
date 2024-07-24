@@ -263,9 +263,7 @@ try {
             Start-Sleep -Seconds $RetryIntervalSeconds
         }
 
-        $logMessage = 'The cluster was not ready in the acceptable time ({0}).' -f $RetyTimeout.ToString()
-        $logMessage | Write-ScriptLog -Level Error
-        throw $logMessage
+        throw 'The cluster was not ready in the acceptable time ({0}).' -f $RetyTimeout.ToString()
     } | Out-String | Write-ScriptLog
     'The HCI cluster is ready.' | Write-ScriptLog
 
