@@ -28,11 +28,11 @@ function Get-DestinationWebContainer
 
     $storageAccountTypeSymbol = '{0}-{1}' -f $storageAccount.Kind, $storageAccount.Sku.Tier
     if (@('StorageV2-Standard', 'BlockBlobStorage-Premium') -notcontains $storageAccountTypeSymbol) {
-        throw ('The storage account "{0}" does not support static website hosting. You need a storage account that has [Kind:StorageV2, Tier:Standard] or [Kind:BlockBlobStorage, Tier:Premium].' -f $StorageAccountName)
+        throw 'The storage account "{0}" does not support static website hosting. You need a storage account that has [Kind:StorageV2, Tier:Standard] or [Kind:BlockBlobStorage, Tier:Premium].' -f $StorageAccountName
     }
 
     if (-not ($storageAccount.AllowSharedKeyAccess)) {
-        throw ('Storage account key based authentication is not permitted on the storage account "{0}". This script requires Storage account key based authentication.' -f $StorageAccountName)
+        throw 'Storage account key based authentication is not permitted on the storage account "{0}". This script requires Storage account key based authentication.' -f $StorageAccountName
     }
 
     Enable-AzStorageStaticWebsite -Context $storageAccount.Context
@@ -55,7 +55,7 @@ function Get-SourceFolderPath
     $folderStructureRootPath = [IO.Path]::GetDirectoryName($PSScriptRoot)
     $sourceFolderPath = [IO.Path]::Combine($folderStructureRootPath, $FolderName)
     if (-not (Test-Path -PathType Container -LiteralPath $sourceFolderPath)) {
-        throw ('The "{0}" folder does not exists. Your folder structure is different from the expected folder structure.' -f $sourceFolderPath)
+        throw 'The "{0}" folder does not exists. Your folder structure is different from the expected folder structure.' -f $sourceFolderPath
     }
     return $sourceFolderPath
 }
