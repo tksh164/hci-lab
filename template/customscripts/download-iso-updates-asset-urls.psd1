@@ -36,9 +36,9 @@
         }
         'updates' = @(
             # OS
-            'https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/33c7f34f-3dfd-4da4-a24f-57c91da10a0b/public/windows11.0-kb5043055-x64_717e61e23aa481e928233de194b28e1e479f1d87.msu',
+            'https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/00ff26bb-2f67-4f4d-bfc4-287f96873de9/public/windows11.0-kb5044288-x64_0a51cc8ea210a361b808079f2eba093e47b2f709.msu',
             # .NET Framework
-            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/updt/2024/07/windows11.0-kb5041969-x64-ndp481_63d33f9b4ad747a507e8c81dc1d04e0d7c2db5e7.msu'
+            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2024/09/windows11.0-kb5044028-x64-ndp481_e38507e196b22537333dca882f124b37e075c99c.msu'
         )
     }
     'ashci22h2' = @{
