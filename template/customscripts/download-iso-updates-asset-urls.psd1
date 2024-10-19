@@ -91,9 +91,10 @@
         }
         'updates' = @(
             # OS
+            'https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/72f34af9-6ab3-4bb0-9dfe-103e56a305fb/public/windows11.0-kb5044284-x64_d7eb7ceaa4798b92b988fd7dcc7c6bb39476ccf3.msu',
             'https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/d8b7f92b-bd35-4b4c-96e5-46ce984b31e0/public/windows11.0-kb5043080-x64_953449672073f8fb99badb4cc6d5d7849b9c83e8.msu',
             # .NET Framework
-            'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/updt/2024/07/windows11.0-kb5042098-x64-ndp481_75fb29d8a82fde2199171290b83253841d9e16f2.msu'
+            'https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/dd0ce468-3a60-411c-bcaf-f5090cb1581c/public/windows11.0-kb5044030-x64-ndp481_b691d9673c75939f6a183a126d6621ec482164f3.msu'
         )
     }
     'ws2022' = @{
