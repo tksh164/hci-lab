@@ -1,8 +1,17 @@
 # Deploy AKs on Windows Server 2022 with HCI Lab
 
+This document describes deployment steps to deploy AKS on Windows Server 2022 using HCI-Lab.
+
+## Deploy HCI Lab
+
+
 ## Create a new management cluster
 
-### Create a virtual network setting for the management cluster
+First of all, you need to deploy a new management cluster. It's AKS itself, some times it called an AKS host.
+
+### Create a virtual network setting for your management cluster
+
+Create a virtual network setting for your AKS deployment using [New-AksHciNetworkSetting](https://learn.microsoft.com/en-us/azure/aks/hybrid/reference/ps/new-akshcinetworksetting).
 
 ```powershell
 $VerbosePreference = 'Continue'
@@ -21,6 +30,8 @@ $vnet = New-AksHciNetworkSetting @params
 ```
 
 ### Set an AKS configuration
+
+Set AKS configuration for your AKS deployment using [Set-AksHciConfig](https://learn.microsoft.com/en-us/azure/aks/hybrid/reference/ps/set-akshciconfig). The configuration will be saved on your volume.
 
 ```powershell
 $clusterRoleName = 'akshci-mgmt-cluster-{0}' -f (Get-Date).ToString('yyMMdd-HHmm')
@@ -42,6 +53,8 @@ Set-AksHciConfig @params
 
 ### Register an Azure Arc-enabled Kubernetes resource for your management cluster
 
+You need to register your management cluster to Azure as an Azure Arc connected Kubernetes. In this step, set the registration information for the registration using [Set-AksHciRegistration](https://learn.microsoft.com/en-us/azure/aks/hybrid/reference/ps/set-akshciregistration).
+
 ```powershell
 $params = @{
     TenantId                = 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
@@ -55,11 +68,22 @@ Set-AksHciRegistration @params
 
 ### Deploy your management cluster
 
+Start a task to deploy your management cluster using [Install-AksHci](https://learn.microsoft.com/en-us/azure/aks/hybrid/reference/ps/install-akshci).
+
 ```powershell
 Install-AksHci -Verbose
 ```
 
+### Get your management cluster configuration
+
+```powershell
+Get-AksHciConfig
+```
+
+
 ## Create a new workload cluster
+
+Create a new workload cluster. You can create multiple workload clusters and use those to run your workloads.
 
 ```powershell
 $params = @{
@@ -74,6 +98,11 @@ $params = @{
     Verbose               = $true
 }
 New-AksHciCluster @params
+```
+
+## List workload clusters
+
+```powershell
 ```
 
 ## Deploy an application to your workload cluster
@@ -91,6 +120,7 @@ Remove-AksHciCluster -Name 'akswc1'
 ## Delete your management cluster
 
 ```powershell
+Uninstall-AksHci
 ```
 
 ## Troubleshooting
