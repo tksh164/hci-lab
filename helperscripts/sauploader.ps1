@@ -31,10 +31,6 @@ function Get-DestinationWebContainer
         throw 'The storage account "{0}" does not support static website hosting. You need a storage account that has [Kind:StorageV2, Tier:Standard] or [Kind:BlockBlobStorage, Tier:Premium].' -f $StorageAccountName
     }
 
-    if (-not ($storageAccount.AllowSharedKeyAccess)) {
-        throw 'Storage account key based authentication is not permitted on the storage account "{0}". This script requires Storage account key based authentication.' -f $StorageAccountName
-    }
-
     Enable-AzStorageStaticWebsite -Context $storageAccount.Context
 
     $webContainer = Get-AzStorageContainer -Context $storageAccount.Context -Name '$web' -MaxCount 1 -ErrorAction SilentlyContinue
@@ -77,15 +73,22 @@ function Invoke-HciLabArtifactsUpload
         $filePath = $_.FullName
         $blobName = $filePath.Replace(($folderStructureRootPath + '\'), '')
 
-        $params = @{
-            Context            = $DestinationContainer.Context
-            CloudBlobContainer = $DestinationContainer.CloudBlobContainer
-            File               = $filePath
-            Blob               = $blobName
-            BlobType           = 'Block'
-            Force              = $true
+        try
+        {
+            $params = @{
+                Context            = $DestinationContainer.Context
+                CloudBlobContainer = $DestinationContainer.CloudBlobContainer
+                File               = $filePath
+                Blob               = $blobName
+                BlobType           = 'Block'
+                Force              = $true
+            }
+            Set-AzStorageBlobContent @params
         }
-        Set-AzStorageBlobContent @params
+        catch
+        {
+            throw 'Failed to upload the artifact "{0}" to the storage account. You may lack the "Storage Blob Data Contributor" access to the storage account if you get a not authorized error (403). Error: {1}' -f $blobName, $_.Exception.Message
+        }
     }
 }
 
