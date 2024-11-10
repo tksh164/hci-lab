@@ -1942,7 +1942,7 @@
                                                 }
                                             },
                                             {
-                                                "label": "Windows Server 2025 Datacenter Preview Evaluation (Desktop Experience)",
+                                                "label": "Windows Server 2025 Datacenter Evaluation (Desktop Experience)",
                                                 "description": "標準グラフィカル ユーザー インターフェイスを備えた Windows Server 2025 Datacenter です。",
                                                 "value": {
                                                     "sku": "ws2025",
