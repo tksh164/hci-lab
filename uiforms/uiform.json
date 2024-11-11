@@ -1942,7 +1942,7 @@
                                                 }
                                             },
                                             {
-                                                "label": "Windows Server 2025 Datacenter Preview Evaluation (Desktop Experience)",
+                                                "label": "Windows Server 2025 Datacenter Evaluation (Desktop Experience)",
                                                 "description": "Windows Server 2025 Datacenter with the standard graphical user interface.",
                                                 "value": {
                                                     "sku": "ws2025",
