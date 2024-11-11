@@ -1,13 +1,75 @@
 # Deploy AKs on Windows Server 2022 with HCI Lab
 
-This document describes deployment steps to deploy AKS on Windows Server 2022 using HCI-Lab.
+This document describes deployment steps to deploy AKS on Windows Server 2022 using HCI Lab.
 
-## Deploy HCI Lab
+## 1. Deploy HCI Lab
 
+### Basics tab
 
-## Create a new management cluster
+- **Project details**
+    - Subscription:
+    - Resource group:
+
+- **Instance details**
+    - Region:
+    - Lab host VM name:
+    - Size:
+
+- **Administrator account**
+    - Username:
+    - Password:
+    - Confirm password:
+
+- **Azure Hybrid Benefit**
+    - You can apply Azure Hybrid Benefit if you have an eligible Windows Server license with Software Assurance or Windows Server subscription.
+
+### Lab host details tab
+
+- **Disks**
+    - OS disk type:
+    - Data disk type:
+
+- **Data volume**
+    - Data volume capacity:
+
+- **Apps**
+    - Windows Terminal:
+    - Visual Studio Code:
+
+- **Auto-shutdown**
+    - Auto-shutdown:
+
+### Lab environment tab
+
+- **Common configuration**
+    - Culture
+    - Time zone
+    - Operating system's updates
+
+- **HCI node**
+    - Operating system: Select **Windows Server 2022 Datacenter Evaluation (Desktop Experience)**.
+    - Node count: Select how many nodes you want for your HCI cluster.
+    - Join to the AD domain: Select **Join**.
+
+- **HCI cluster**
+
+- **Active Directory Domain Services**
+
+    - AD domain FQDN
+
+### Advanced tab
+
+You can skip this tab because there are no necessary settings for this case. Click the **Next** button.
+
+### Review + create tab
+
+Click the **Create** button to start your HCI Lab deployment.
+
+## 2. Create a new management cluster
 
 First of all, you need to deploy a new management cluster. It's AKS itself, some times it called an AKS host.
+
+### Connect to your HCI Lab host using RDP connection
 
 ### Create a virtual network setting for your management cluster
 
