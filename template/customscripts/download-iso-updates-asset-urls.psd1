@@ -18,6 +18,7 @@
 #
 # Azure Stack HCI 20H2 - OS build: 17784
 # End of service: 2022-12-13
+#
 # OS: https://support.microsoft.com/topic/64c79b7f-d536-015d-b8dd-575f01090efd
 # .NET: n/a
 
