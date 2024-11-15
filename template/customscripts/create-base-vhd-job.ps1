@@ -138,7 +138,19 @@ try {
     $labConfig = Get-LabDeploymentConfig
     Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log -FileName $LogFileName
     Set-ScriptLogDefaultContext -LogContext $LogContext
-    
+
+    # Log the job parameters.
+    'PSModulePathToImport:' | Write-ScriptLog
+    foreach ($modulePath in $PSModulePathToImport) { '  "{0}"' -f $modulePath | Write-ScriptLog }
+    'LogFileName: {0}' -f $LogFileName | Write-ScriptLog
+    'LogContext: {0}' -f $LogContext | Write-ScriptLog
+    'WimFilePath: "{0}"' -f $WimFilePath | Write-ScriptLog
+    'ImageIndex: {0}' -f $ImageIndex | Write-ScriptLog
+    'VhdFilePath: "{0}"' -f $VhdFilePath | Write-ScriptLog
+    'UpdatePackagePath:' | Write-ScriptLog
+    foreach ($packagePath in $UpdatePackagePath) { '  "{0}"' -f $packagePath | Write-ScriptLog }
+
+    # Log the lab deployment configuration.
     'Lab deployment config:' | Write-ScriptLog
     $labConfig | ConvertTo-Json -Depth 16 | Write-Host
     
