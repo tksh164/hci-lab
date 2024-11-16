@@ -84,6 +84,20 @@ function Get-WindowsFeatureToInstall
     return $featureNames
 }
 
+function Test-HciNodeAsWindowsServerWithDesktopExperience
+{
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $OperatingSystem,
+
+        [Parameter(Mandatory = $true)]
+        [int] $ImageIndex
+    )
+
+    return (($OperatingSystem -eq [HciLab.OSSku]::WindowsServer2022) -and ($ImageIndex -eq [HciLab.OSImageIndex]::WSDatacenterDesktopExperience)) -or
+           (($OperatingSystem -eq [HciLab.OSSku]::WindowsServer2025) -and ($ImageIndex -eq [HciLab.OSImageIndex]::WSDatacenterDesktopExperience))
+}
+
 try {
     Import-Module -Name $PSModuleNameToImport -Force
 
@@ -364,8 +378,8 @@ try {
     Invoke-PSDirectSessionSetup -Session $localAdminCredPSSession -CommonModuleFilePathInVM $commonModuleFilePathInVM
     'Setup the PowerShell Direct session completed.' | Write-ScriptLog
 
-    # If the HCI node OS is Windows Server 2022 with Desktop Experience.
-    if (($NodeConfig.OperatingSystem -eq [HciLab.OSSku]::WindowsServer2022) -and ($NodeConfig.ImageIndex -eq [HciLab.OSImageIndex]::WSDatacenterDesktopExperience)) {
+    # If the HCI node OS is Windows Server with Desktop Experience.
+    if ((Test-HciNodeAsWindowsServerWithDesktopExperience -OperatingSystem $NodeConfig.OperatingSystem -ImageIndex $NodeConfig.ImageIndex)) {
         'Configure registry values within the VM.' | Write-ScriptLog
         Invoke-Command -Session $localAdminCredPSSession -ScriptBlock {
             'Stop Server Manager launch at logon.' | Write-ScriptLog
