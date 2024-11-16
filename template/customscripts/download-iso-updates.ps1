@@ -95,11 +95,11 @@ try {
     Invoke-IsoFileDownload @params | Out-String -Width 1000 | Write-ScriptLog
     'Download the ISO file for HCI nodes completed.' | Write-ScriptLog
 
-    # The Windows Server 2022 ISO is always needed for the domain controller VM.
-    if ($labConfig.hciNode.operatingSystem.sku -ne [HciLab.OSSku]::WindowsServer2022) {
+    # The Windows Server ISO is always needed for the domain controller VM and the management server.
+    if ($labConfig.hciNode.operatingSystem.sku -ne [HciLab.OSSku]::WindowsServer2025) {
         'Donwload the Windows Server ISO file.' | Write-ScriptLog
         $params = @{
-            OperatingSystem    = [HciLab.OSSku]::WindowsServer2022
+            OperatingSystem    = [HciLab.OSSku]::WindowsServer2025
             Culture            = $labConfig.guestOS.culture
             DownloadFolderPath = $labConfig.labHost.folderPath.temp
             AssetUrls          = $assetUrls
@@ -125,10 +125,10 @@ try {
         Invoke-UpdateFileDonwload @params | Out-String -Width 1000 | Write-ScriptLog
         'Download updates for HCI nodes completed.' | Write-ScriptLog
         
-        if ($labConfig.hciNode.operatingSystem.sku -ne [HciLab.OSSku]::WindowsServer2022) {
+        if ($labConfig.hciNode.operatingSystem.sku -ne [HciLab.OSSku]::WindowsServer2025) {
             'Download the Windows Server updates.' | Write-ScriptLog
             $params = @{
-                OperatingSystem        = [HciLab.OSSku]::WindowsServer2022
+                OperatingSystem        = [HciLab.OSSku]::WindowsServer2025
                 DownloadFolderBasePath = $labConfig.labHost.folderPath.updates
                 AssetUrls              = $assetUrls
             }
