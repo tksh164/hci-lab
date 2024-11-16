@@ -7,9 +7,9 @@ The HCI lab environment consists of three roles of Hyper-V VMs on a single Azure
 | Computer/VM name | Role | VM kind<br/>(Host) | AD domain joined | Operating system | Notes |
 | ---- | ---- | ---- | ---- | ---- | --- |
 | hcilab-vm1 (default) | Lab host | Azure VM<br/>(Azure) | No | Windows Server 2022 Datacenter Azure Edition Hotpatch | |
-| hcinode## | HCI node | Hyper-V VM<br/>(Lab host) | Depends on your deploy option | Depends on your deploy option. You can choose Azure Stack HCI or Windows Server 2022 Datacenter Evaluation (Desktop Experience). | `##` in the name is changed depending on the number of HCI nodes such as `01`, `02`, `03`, ... |
-| addsdc | Domain controller of Active Directory Domain Services | Hyper-V VM<br/>(Lab host) | Yes | Windows Server 2022 Datacenter Evaluation (Server Core) | |
-| wac | Management tools server | Hyper-V VM<br/>(Lab host) | Yes | Windows Server 2022 Datacenter Evaluation (with Desktop Experience) | Windows Admin Center works on this server with gateway mode, and many server management tools are installed on this server. |
+| hcinode## | HCI node | Hyper-V VM<br/>(Lab host) | Depends on your deploy option | Depends on your deploy option. You can choose from Azure Stack HCI, Windows Server 2025 Datacenter Evaluation (Desktop Experience), Windows Server 2022 Datacenter Evaluation (Desktop Experience). | `##` in the name is changed depending on the number of HCI nodes such as `01`, `02`, `03`, ... |
+| addsdc | Domain controller of Active Directory Domain Services | Hyper-V VM<br/>(Lab host) | Yes | Windows Server 2025 Datacenter Evaluation (Server Core) | |
+| wac | Management tools server | Hyper-V VM<br/>(Lab host) | Yes | Windows Server 2025 Datacenter Evaluation (with Desktop Experience) | Windows Admin Center works on this server with gateway mode, and many server management tools are installed on this server. |
 
 ### Lab host (Azure VM)
 
@@ -63,7 +63,7 @@ The HCI lab environment consists of three roles of Hyper-V VMs on a single Azure
 
 - You can access each Hyper-V VM such as **wac**, **hcinode##**, **addsdc** in you lab environment via Remote Desktop connection (mstsc.exe) and Virtual Machine connection (vmconnect.exe) from the lab host VM (Azure VM).
 
-- Windows Server 2022 Datacenter Evaluation expires in **180 days**.
+- Windows Server 2022/2025 Datacenter Evaluation expires in **180 days**.
 
 - Management tools server (**wac** VM)
 
