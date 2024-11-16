@@ -71,7 +71,7 @@ try {
 
     'Create the OS disk for the VM.' | Write-ScriptLog
     $params = @{
-        OperatingSystem = [HciLab.OSSku]::WindowsServer2022
+        OperatingSystem = [HciLab.OSSku]::WindowsServer2025
         ImageIndex      = [HciLab.OSImageIndex]::WSDatacenterDesktopExperience  # Datacenter with Desktop Experience
         Culture         = $labConfig.guestOS.culture
     }
