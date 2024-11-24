@@ -65,11 +65,55 @@ You can skip this tab because there are no necessary settings for this case. Cli
 
 Click the **Create** button to start your HCI Lab deployment.
 
+## Register resource providers
+
+You have to register resource providers before your management cluster registration. You can do this on Azure Cloud Shell.
+
+```powershell
+$providerNamespaces = @(
+    'Microsoft.Kubernetes',
+    'Microsoft.KubernetesConfiguration',
+    'Microsoft.ExtendedLocation'
+)
+$providerNamespaces |% { Register-AzResourceProvider -ProviderNamespace $_ }
+Get-AzResourceProvider -ProviderNamespace $providerNamespaces | ft ProviderNamespace, RegistrationState
+```
+
+## RBAC
+
+TODO:
+
+## 2. Connect to your HCI Lab host using RDP connection
+
+## 3. Install prerequisites
+
+### Install the AksHci PowerShell module
+
+Install the AksHci PowerShell module to all HCI nodes. You can do this at once from the HCI Lab host using PowerShell Direct.
+
+```powershell
+$cred = Get-Credential -UserName 'HCI\Administrator' -Message 'Enter domain administrator password.'
+$vmName = 'hcinode01', 'hcinode02'
+Invoke-Command -VMName $vmName -Credential $cred -ScriptBlock {
+    Install-Module -Name 'AksHci' -Repository 'PSGallery' -AcceptLicense -Force -Verbose
+}
+```
+
+### Initialize HCI nodes
+
+Initialize HCI nodes. You can do this at once from the HCI Lab host using PowerShell Direct.
+
+```powershell
+$cred = Get-Credential -UserName 'HCI\Administrator' -Message 'Enter domain administrator password.'
+$vmName = 'hcinode01', 'hcinode02'
+Invoke-Command -VMName $vmName -Credential $cred -ScriptBlock {
+    Initialize-AksHciNode
+}
+```
+
 ## 2. Create a new management cluster
 
-First of all, you need to deploy a new management cluster. It's AKS itself, some times it called an AKS host.
-
-### Connect to your HCI Lab host using RDP connection
+First of all, you need to deploy a new management cluster. It's AKS itself, some times it called an AKS host. You should do this on one of the HCI nodes.
 
 ### Create a virtual network setting for your management cluster
 
@@ -121,7 +165,7 @@ You need to register your management cluster to Azure as an Azure Arc connected 
 $params = @{
     TenantId                = 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
     SubscriptionId          = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
-    ResourceGroupName       = 'aksws2022-rg'
+    ResourceGroupName       = 'aksws2022-rg'  # The resource group name that put an Arc-enabled Kubernetes resource of your management cluster.
     UseDeviceAuthentication = $true
     Verbose                 = $true
 }
