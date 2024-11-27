@@ -290,7 +290,7 @@ try {
         TargetPath       = 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
         Arguments        = 'https://{0}' -f $labConfig.wac.vmName  # The VM name is also the computer name.
         Description      = 'Open Windows Admin Center for your lab environment.'
-        IconLocation     = 'imageres.dll,1'
+        IconLocation     = 'imageres.dll,-1028'
     }
     New-ShortcutFile @params
     'Create a new shortcut on the desktop for accessing Windows Admin Center completed.' | Write-ScriptLog
