@@ -6,69 +6,6 @@ $WarningPreference = [Management.Automation.ActionPreference]::Continue
 $VerbosePreference = [Management.Automation.ActionPreference]::Continue
 $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
-function Invoke-WindowsTerminalInstallation
-{
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory = $true)]
-        [ValidateScript({ Test-Path -PathType Container -LiteralPath $_ })]
-        [string] $DownloadFolderPath
-    )
-
-    'Download the Windows 10 pre-install kit zip file.' | Write-ScriptLog
-    $params = @{
-        SourceUri      = 'https://github.com/microsoft/terminal/releases/download/v1.19.10821.0/Microsoft.WindowsTerminal_1.19.10821.0_8wekyb3d8bbwe.msixbundle_Windows10_PreinstallKit.zip'
-        DownloadFolder = $DownloadFolderPath
-        FileNameToSave = 'Microsoft.WindowsTerminal_Windows10_PreinstallKit.zip'
-    }
-    $zipFile = Invoke-FileDownload @params
-    'Download the Windows 10 pre-install kit zip file completed.' | Write-ScriptLog
-
-    'Expaned the Windows 10 pre-install kit zip file.' | Write-ScriptLog
-    $fileSourceFolder = [IO.Path]::Combine([IO.Path]::GetDirectoryName($zipFile.FullName), [IO.Path]::GetFileNameWithoutExtension($zipFile.FullName))
-    Expand-Archive -LiteralPath $zipFile.FullName -DestinationPath $fileSourceFolder -Force
-    'Expaned the Windows 10 pre-install kit zip file completed.' | Write-ScriptLog
-
-    # Retrieve the Windows Termainl intallation files.
-    $uiXamlAppxFile = Get-ChildItem -LiteralPath $fileSourceFolder -Filter 'Microsoft.UI.Xaml.*_x64__*.appx' | Select-Object -First 1
-    $msixBundleFile = Get-ChildItem -LiteralPath $fileSourceFolder -Filter '*.msixbundle' | Select-Object -First 1
-    $licenseXmlFile = Get-ChildItem -LiteralPath $fileSourceFolder -Filter '*_License1.xml' | Select-Object -First 1
-    'Windows Terminal installation files:' | Write-ScriptLog
-    'Microsoft.UI.Xaml: "{0}"' -f $uiXamlAppxFile.FullName | Write-ScriptLog
-    'Microsoft.WindowsTerminal: "{0}"' -f $msixBundleFile.FullName | Write-ScriptLog
-    'LicenseXml: "{0}"' -f $licenseXmlFile.FullName | Write-ScriptLog
-
-    'Install the dependency packages for Windows Terminal.' | Write-ScriptLog
-    Add-AppxProvisionedPackage -Online -SkipLicense -PackagePath $uiXamlAppxFile.FullName
-    'Install the dependency packages for Windows Terminal completed.' | Write-ScriptLog
-
-    'Create a script file for the scheduled task to install Windows Terminal.' | Write-ScriptLog
-    $scheduledTaskName = 'WindowsTermailInstallation'
-    $scheduledTaskScriptFileContent = @"
-(Get-Host).UI.RawUI.WindowTitle = 'Windows Terminal installation'
-Write-Host 'Finishing up the Windows Terminal installation...' -ForegroundColor Yellow
-Add-AppxProvisionedPackage -Online -PackagePath '{0}' -LicensePath '{1}'
-Disable-ScheduledTask -TaskName '{2}' -TaskPath '\'
-"@ -f $msixBundleFile.FullName, $licenseXmlFile.FullName, $scheduledTaskName
-    $scheduledTaskScriptFilePath = [IO.Path]::Combine($DownloadFolderPath, $scheduledTaskName + 'Task.ps1')
-    Set-Content -LiteralPath $scheduledTaskScriptFilePath -Value $scheduledTaskScriptFileContent -Force
-    'Create a script file for the scheduled task to install Windows Terminal completed.' | Write-ScriptLog
-
-    'Create a new scheduled task to install Windows Terminal.' | Write-ScriptLog
-    $adminUsername = Get-InstanceMetadata -FilterPath '/compute/osProfile/adminUsername' -LeafNode
-    $params = @{
-        TaskName = $scheduledTaskName
-        TaskPath = '\'
-        User     = $adminUsername
-        RunLevel = 'Highest'
-        Trigger  = New-ScheduledTaskTrigger -AtLogOn -User $adminUsername
-        Action   = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument ('-NoLogo -NonInteractive -WindowStyle Minimized -File "{0}"' -f $scheduledTaskScriptFilePath)
-        Force    = $true
-    }
-    Register-ScheduledTask @params
-    'Create a new scheduled task to install Windows Terminal completed.' | Write-ScriptLog
-}
-
 function Invoke-VSCodeInstallation
 {
     [CmdletBinding()]
@@ -270,12 +207,6 @@ try {
     # Install tools
 
     $toolsToInstall = $labConfig.labHost.toolsToInstall -split ';'
-    if ($toolsToInstall -contains 'windowsterminal') {
-        'Execute the Windows Terminal installation pre-tasks.' | Write-ScriptLog
-        Invoke-WindowsTerminalInstallation -DownloadFolderPath $labConfig.labHost.folderPath.temp
-        'Execute the Windows Terminal installation pre-tasks completed.' | Write-ScriptLog
-    }
-
     if ($toolsToInstall -contains 'vscode') {
         'Install Visual Studio Code.' | Write-ScriptLog
         Invoke-VSCodeInstallation -DownloadFolderPath $labConfig.labHost.folderPath.temp
@@ -290,7 +221,7 @@ try {
         TargetPath       = 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
         Arguments        = 'https://{0}' -f $labConfig.wac.vmName  # The VM name is also the computer name.
         Description      = 'Open Windows Admin Center for your lab environment.'
-        IconLocation     = 'imageres.dll,1'
+        IconLocation     = 'imageres.dll,-1028'
     }
     New-ShortcutFile @params
     'Create a new shortcut on the desktop for accessing Windows Admin Center completed.' | Write-ScriptLog
