@@ -14,7 +14,6 @@ The HCI lab environment consists of three roles of Hyper-V VMs on a single Azure
 ### Lab host (Azure VM)
 
 - Deploy options
-    - **Windows Terminal:** You can install Windows Terminal during the deployment if you choose the deployment option.
     - **Visual Studio Code:** You can install Visual Studio Code during the deployment if you choose the deployment option.
 
 - Credentials
