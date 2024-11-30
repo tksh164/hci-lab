@@ -1838,7 +1838,7 @@
                                         "required": true,
                                         "allowedValues": [
                                             {
-                                                "label": "インストールする (推奨)",
+                                                "label": "インストールする",
                                                 "value": true
                                             },
                                             {
@@ -1884,12 +1884,12 @@
                                     "placeholder": "HCI ノードのオペレーティング システムを選択...",
                                     "defaultDescription": "---",
                                     "filterPlaceholder": "HCI ノードのオペレーティング システムをフィルター...",
-                                    "defaultValue": "Azure Stack HCI, version 22H2",
+                                    "defaultValue": "Azure Local, version 23H2",
                                     "constraints": {
                                         "required": true,
                                         "allowedValues": [
                                             {
-                                                "label": "Azure Stack HCI, version 23H2",
+                                                "label": "Azure Local, version 23H2",
                                                 "description": "最新の一般提供バージョンです。",
                                                 "value": {
                                                     "sku": "ashci23h2",
@@ -1960,7 +1960,7 @@
                                     "label": "AD ドメインへの参加",
                                     "visible": true,
                                     "toolTip": "AD ドメインに HCI ノードを参加させるかどうかを選択します。",
-                                    "defaultValue": "参加させる",
+                                    "defaultValue": "参加させない",
                                     "constraints": {
                                         "required": true,
                                         "allowedValues": [

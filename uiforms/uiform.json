@@ -1838,7 +1838,7 @@
                                         "required": true,
                                         "allowedValues": [
                                             {
-                                                "label": "Install (recommended)",
+                                                "label": "Install",
                                                 "value": true
                                             },
                                             {
@@ -1884,12 +1884,12 @@
                                     "placeholder": "Select the HCI node's operating system...",
                                     "defaultDescription": "---",
                                     "filterPlaceholder": "Filter HCI node's operating systems...",
-                                    "defaultValue": "Azure Stack HCI, version 22H2",
+                                    "defaultValue": "Azure Local, version 23H2",
                                     "constraints": {
                                         "required": true,
                                         "allowedValues": [
                                             {
-                                                "label": "Azure Stack HCI, version 23H2",
+                                                "label": "Azure Local, version 23H2",
                                                 "description": "The latest generally available version.",
                                                 "value": {
                                                     "sku": "ashci23h2",
@@ -1960,7 +1960,7 @@
                                     "visible": true,
                                     "label": "Join to the AD domain",
                                     "toolTip": "Select whether or not the HCI nodes are to be joined to the AD domain.",
-                                    "defaultValue": "Join",
+                                    "defaultValue": "Not join",
                                     "constraints": {
                                         "required": true,
                                         "allowedValues": [
