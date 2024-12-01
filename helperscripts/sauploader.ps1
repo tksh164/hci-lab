@@ -107,23 +107,51 @@ function Get-WebEndpoint
     return $storageAccount.PrimaryEndpoints.Web
 }
 
-$sourceFolderNames = @('template', 'uiforms')
-$sourceFolderNames | ForEach-Object -Process {
+#
+# Upload artifacts to the storage account.
+#
+
+$sourceFolderName = @{
+    Template = 'template'
+    UIForms  = 'uiforms'
+}
+
+$sourceFolderName.Keys | ForEach-Object -Process {
     $params = @{
         SourceFolderPath     = Get-SourceFolderPath -FolderName $_
         DestinationContainer = Get-DestinationWebContainer -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName
     }
     Invoke-HciLabArtifactsUpload @params
-}
+} | Select-Object -Property Name, Length, LastModified | Format-Table -AutoSize
+
+#
+# Display URI information.
+#
 
 $webEndpoint = Get-WebEndpoint -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName
 
-Write-Host
-Write-Host 'Web Primary Endpoint: ' -NoNewline
-Write-Host ('{0}' -f $webEndpoint) -ForegroundColor Cyan
-$sourceFolderNames | ForEach-Object -Process {
-    Write-Host ('The {0} folder URI: ' -f $_) -NoNewline
-    Write-Host ('{0}{1}' -f $webEndpoint, $_) -ForegroundColor Cyan
+$templateFileName = 'template.json'
+$escapedTemplateUri = [uri]::EscapeDataString($webEndpoint + $sourceFolderName.Template + '/' + $templateFileName)
+
+$uiFormFileNames = @(
+    'uiform.json',
+    'uiform-jajp.json'
+)
+
+$uiFormFileNames | ForEach-Object -Process {
+    $uiFormFileName = $_
+    Write-Host
+    Write-Host ('[{0}]' -f $uiFormFileName) -ForegroundColor Cyan
+
+    Write-Host 'Web primary endpoint  : ' -NoNewline -ForegroundColor Green
+    Write-Host $webEndpoint
+
+    $artifactsBaseUri = $webEndpoint + $sourceFolderName.Template + '/'
+    Write-Host 'Base URI for artifacts: ' -NoNewline -ForegroundColor Green
+    Write-Host $artifactsBaseUri
+
+    $escapedUiFormUri = [uri]::EscapeDataString($webEndpoint + $sourceFolderName.UIForms + '/' + $uiFormFileName)
+    $customDeployUri = 'https://portal.azure.com/#view/Microsoft_Azure_CreateUIDef/CustomDeploymentBlade/uri/{0}/uiFormDefinitionUri/{1}' -f $escapedTemplateUri, $escapedUiFormUri
+    Write-Host ('Custom deploy URI     : ' -f $uiFormFileName) -NoNewline -ForegroundColor Green
+    Write-Host $customDeployUri
 }
-Write-Host 'Use the template folder URI as the base URI for artifacts.'
-Write-Host
