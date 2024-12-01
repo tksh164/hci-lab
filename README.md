@@ -2,7 +2,7 @@
 
 The HCI Lab provides a plain HCI lab environment on Azure in reasonable preparation time and cost.
 
-- An HCI lab environment with Azure Stack HCI or Windows Server 2022 on a single Azure virtual machine in about 30 minutes minimum.
+- An HCI lab environment with Azure Local (former Azure Stack HCI) or Windows Server 2025/2022 on a single Azure virtual machine in about 30 minutes minimum.
 - Just a plain environment, so you can try many workloads and features to start from the clean environment by yourself. Also, you can customize it to your own needs easily.
 - You can choose an operating system from the [selectable HCI node's operating systems](#-selectable-hci-nodes-operating-systems) to use deploy your HCI lab environment.
 
@@ -37,7 +37,7 @@ Learn more about the HCI lab in the [HCI Lab tour](./docs/hci-lab-tour.md).
 
 | Operating system | Description | HCI Lab |
 | ---- | ---- | ---- |
-| Azure Stack HCI, version 23H2 | The latest generally available version of Azure Stack HCI. | Available |
+| Azure Local, version 23H2 | The latest generally available version of Azure Local (former Azure Stack HCI). | Available |
 | Azure Stack HCI, version 22H2 | The previous generally available version of Azure Stack HCI. | Available |
 | Azure Stack HCI, version 21H2 | You can still use this OS to deploy your HCI lab environment by HCI Lab. However, **this version of Azure Stack HCI reached the end of service on November 14, 2023.** | Selectable. Not tested. |
 | Azure Stack HCI, version 20H2 | You can still use this OS to deploy your HCI lab environment by HCI Lab. However, **this version of Azure Stack HCI reached the end of service on December 13, 2022.** | Selectable. Not tested. |

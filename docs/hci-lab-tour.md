@@ -6,15 +6,14 @@ The HCI lab environment consists of three roles of Hyper-V VMs on a single Azure
 
 | Computer/VM name | Role | VM kind<br/>(Host) | AD domain joined | Operating system | Notes |
 | ---- | ---- | ---- | ---- | ---- | --- |
-| hcilab-vm1 (default) | Lab host | Azure VM<br/>(Azure) | No | Windows Server 2022 Datacenter Azure Edition Hotpatch | |
-| hcinode## | HCI node | Hyper-V VM<br/>(Lab host) | Depends on your deploy option | Depends on your deploy option. You can choose from Azure Stack HCI, Windows Server 2025 Datacenter Evaluation (Desktop Experience), Windows Server 2022 Datacenter Evaluation (Desktop Experience). | `##` in the name is changed depending on the number of HCI nodes such as `01`, `02`, `03`, ... |
+| hcilab-vm1 (default) | Lab host | Azure VM<br/>(Azure) | No | Windows Server 2025 Datacenter Azure Edition Hotpatch | |
+| hcinode## | HCI node | Hyper-V VM<br/>(Lab host) | Depends on your deploy option | Depends on your deploy option. You can choose Azure Local or Windows Server (Desktop Experience). | `##` in the name is changed depending on the number of HCI nodes such as `01`, `02`, `03`, ... |
 | addsdc | Domain controller of Active Directory Domain Services | Hyper-V VM<br/>(Lab host) | Yes | Windows Server 2025 Datacenter Evaluation (Server Core) | |
 | wac | Management tools server | Hyper-V VM<br/>(Lab host) | Yes | Windows Server 2025 Datacenter Evaluation (with Desktop Experience) | Windows Admin Center works on this server with gateway mode, and many server management tools are installed on this server. |
 
 ### Lab host (Azure VM)
 
 - Deploy options
-    - **Windows Terminal:** You can install Windows Terminal during the deployment if you choose the deployment option.
     - **Visual Studio Code:** You can install Visual Studio Code during the deployment if you choose the deployment option.
 
 - Credentials
