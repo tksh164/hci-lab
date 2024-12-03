@@ -131,7 +131,8 @@ $sourceFolderName.Keys | ForEach-Object -Process {
 $webEndpoint = Get-WebEndpoint -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName
 
 $templateFileName = 'template.json'
-$escapedTemplateUri = [uri]::EscapeDataString($webEndpoint + $sourceFolderName.Template + '/' + $templateFileName)
+$templateUri = $webEndpoint + $sourceFolderName.Template + '/' + $templateFileName
+$escapedTemplateUri = [uri]::EscapeDataString($templateUri)
 
 $uiFormFileNames = @(
     'uiform.json',
@@ -150,7 +151,15 @@ $uiFormFileNames | ForEach-Object -Process {
     Write-Host 'Base URI for artifacts: ' -NoNewline -ForegroundColor Green
     Write-Host $artifactsBaseUri
 
-    $escapedUiFormUri = [uri]::EscapeDataString($webEndpoint + $sourceFolderName.UIForms + '/' + $uiFormFileName)
+    Write-Host 'Template URI          : ' -NoNewline -ForegroundColor Green
+    Write-Host $templateUri
+
+    $uiFormUri = $webEndpoint + $sourceFolderName.UIForms + '/' + $uiFormFileName
+    $escapedUiFormUri = [uri]::EscapeDataString($uiFormUri)
+
+    Write-Host 'UIFrom URI            : ' -NoNewline -ForegroundColor Green
+    Write-Host $uiFormUri
+
     $customDeployUri = 'https://portal.azure.com/#view/Microsoft_Azure_CreateUIDef/CustomDeploymentBlade/uri/{0}/uiFormDefinitionUri/{1}' -f $escapedTemplateUri, $escapedUiFormUri
     Write-Host ('Custom deploy URI     : ' -f $uiFormFileName) -NoNewline -ForegroundColor Green
     Write-Host $customDeployUri
