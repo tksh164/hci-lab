@@ -218,17 +218,13 @@
                     "windowsConfiguration": {
                         "provisionVmAgent": true,
                         "enableAutomaticUpdates": true,
-                        // "patchSettings": {
-                        //     "patchMode": "AutomaticByPlatform",
-                        //     "automaticByPlatformSettings": {
-                        //         "rebootSetting": "Never"
-                        //     },
-                        //     "enableHotpatching": true,
-                        //     "assessmentMode": "ImageDefault"
-                        // }
                         "patchSettings": {
-                            "patchMode": "AutomaticByOS",
-                            "enableHotpatching": false
+                            "enableHotpatching": true,
+                            "patchMode": "AutomaticByPlatform",
+                            "automaticByPlatformSettings": {
+                                "rebootSetting": "Never"
+                            },
+                            "assessmentMode": "ImageDefault"
                         }
                     }
                 },
@@ -253,8 +249,7 @@
                     "imageReference": {
                         "publisher": "MicrosoftWindowsServer",
                         "offer": "WindowsServer",
-                        // "sku": "2022-datacenter-azure-edition-hotpatch-smalldisk",
-                        "sku": "2025-datacenter-smalldisk-g2",
+                        "sku": "2025-datacenter-azure-edition-smalldisk",
                         "version": "latest"
                     },
                     "copy": [
