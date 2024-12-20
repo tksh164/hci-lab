@@ -214,7 +214,7 @@ try {
     }
 
     # Shortcuts: Windows Admin Center
-
+    <#
     'Create a new shortcut on the desktop for accessing Windows Admin Center.' | Write-ScriptLog
     $params = @{
         ShortcutFilePath = 'C:\Users\Public\Desktop\Windows Admin Center.lnk'
@@ -225,7 +225,7 @@ try {
     }
     New-ShortcutFile @params
     'Create a new shortcut on the desktop for accessing Windows Admin Center completed.' | Write-ScriptLog
-
+    #>
     # Shortcuts: Remote Desktop connection
 
     'Create a new shortcut on the desktop for connecting to the management server using Remote Desktop connection.' | Write-ScriptLog
