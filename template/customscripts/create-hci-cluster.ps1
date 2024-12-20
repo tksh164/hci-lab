@@ -450,7 +450,7 @@ try {
         'Clean up CIM sessions completed.' | Write-ScriptLog
     } | Out-String | Write-ScriptLog
     'Create a volume on S2D completed.' | Write-ScriptLog
-
+    <#
     'Import a WAC connection for the HCI cluster.' | Write-ScriptLog
     $params = @{
         InputObject = [PSCustomObject] @{
@@ -486,7 +486,7 @@ try {
         'Delete the connection list file completed.' | Write-ScriptLog
     } | Out-String | Write-ScriptLog
     'Import a WAC connection for the HCI cluster completed.' | Write-ScriptLog
-
+    #>
     'Clean up the PowerShell Direct session for the management server.' | Write-ScriptLog
     Invoke-PSDirectSessionCleanup -Session $wacDomainAdminCredPSSession -CommonModuleFilePathInVM $commonModuleFilePathInVM
     'Clean up the PowerShell Direct session for the management server completed.' | Write-ScriptLog
