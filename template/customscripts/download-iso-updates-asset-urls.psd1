@@ -41,7 +41,7 @@
         }
         'updates' = @(
             # OS
-            'https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/bce774ce-b4c6-4b71-829d-ecdf97973810/public/windows11.0-kb5046618-x64_8fe8e9224413d44c56946c3a709d96f2cda8b640.msu',
+            'https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/957f7086-8733-4305-b443-de6f3ff4b823/public/windows11.0-kb5048653-x64_ca9a2a4461d7568eb005285f931c320025d02b31.msu',
             # .NET Framework
             'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/updt/2024/10/windows11.0-kb5046270-x64-ndp481_ea4447b6035b8f60e913c20404e6f62d229e9b37.msu'
         )
