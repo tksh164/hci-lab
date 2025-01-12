@@ -160,7 +160,7 @@ $params = @{
 $vnet = New-AksHciNetworkSetting @params
 ```
 
-`$vnet` has the following values after execute the above.
+The `$vnet` has the following values after execute the above.
 
 ```powershell
 PS C:\> $vnet
