@@ -314,6 +314,7 @@ try {
     'Configure network settings within the VM completed.' | Write-ScriptLog
 
     # Windows Admin Center
+    <#
 
     'Donwload the Windows Admin Center installer.' | Write-ScriptLog
     $wacInstallerFile = Invoke-WindowsAdminCenterInstallerDownload -DownloadFolderPath $labConfig.labHost.folderPath.temp
@@ -481,7 +482,7 @@ try {
         'Create the shortcut for Windows Admin Center on the desktop completed.' | Write-ScriptLog
     } | Out-String | Write-ScriptLog
     'Install Windows Admin Center within the VM completed.' | Write-ScriptLog
-
+    #>
     'Create a new shortcut on the desktop for connecting to the first HCI node using Remote Desktop connection.' | Write-ScriptLog
     $params = @{
         InputObject = [PSCustomObject] @{
@@ -568,7 +569,7 @@ try {
     'Setup the PowerShell Direct session.' | Write-ScriptLog
     Invoke-PSDirectSessionSetup -Session $domainAdminCredPSSession -CommonModuleFilePathInVM $commonModuleFilePathInVM
     'Setup the PowerShell Direct session completed.' | Write-ScriptLog
-
+    <#
     # NOTE: To preset WAC connections for the domain Administrator, the preset operation is required by
     # the domain Administrator because WAC connections are managed based on each user.
     'Configure Windows Admin Center for the domain Administrator.' | Write-ScriptLog
@@ -630,7 +631,7 @@ try {
         'Delete the Windows Admin Center connection list file completed.' | Write-ScriptLog
     } | Out-String | Write-ScriptLog
     'Configure Windows Admin Center for the domain Administrator completed.' | Write-ScriptLog
-
+    #>
     'Clean up the PowerShell Direct session.' | Write-ScriptLog
     Invoke-PSDirectSessionCleanup -Session $domainAdminCredPSSession -CommonModuleFilePathInVM $commonModuleFilePathInVM
     'Clean up the PowerShell Direct session completed.' | Write-ScriptLog
