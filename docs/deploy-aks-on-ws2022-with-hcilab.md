@@ -7,18 +7,18 @@ This document describes deployment steps to deploy AKS on Windows Server 2022 us
 ### 1.1. Basics tab
 
 - **Project details**
-    - Subscription:
-    - Resource group:
+    - **Subscription:** Select a subscription to use deploy your HCI Lab.
+    - **Resource group:** Select a resource group to use deploy your HCI Lab.
 
 - **Instance details**
-    - Region:
-    - Lab host VM name:
-    - Size:
+    - **Region:**
+    - **Lab host VM name:**
+    - **Size:**
 
 - **Administrator account**
-    - Username:
-    - Password:
-    - Confirm password:
+    - **Username:**
+    - **Password:**
+    - **Confirm password:**
 
 - **Azure Hybrid Benefit**
     - You can apply Azure Hybrid Benefit if you have an eligible Windows Server license with Software Assurance or Windows Server subscription.
@@ -26,36 +26,35 @@ This document describes deployment steps to deploy AKS on Windows Server 2022 us
 ### 1.2. Lab host details tab
 
 - **Disks**
-    - OS disk type:
-    - Data disk type:
+    - **OS disk type:**
+    - **Data disk type:**
 
 - **Data volume**
-    - Data volume capacity:
+    - **Data volume capacity:**
 
 - **Apps**
-    - Windows Terminal:
-    - Visual Studio Code:
+    - **Visual Studio Code:**
 
 - **Auto-shutdown**
-    - Auto-shutdown:
+    - **Auto-shutdown:**
 
 ### 1.3. Lab environment tab
 
 - **Common configuration**
-    - Culture
-    - Time zone
-    - Operating system's updates
+    - **Culture:**
+    - **Time zone:**
+    - **Operating system's updates:**
 
 - **HCI node**
-    - Operating system: Select **Windows Server 2022 Datacenter Evaluation (Desktop Experience)**.
-    - Node count: Select how many nodes you want for your HCI cluster.
-    - Join to the AD domain: Select **Join**.
+    - **Operating system:** Select **Windows Server 2022 Datacenter Evaluation (Desktop Experience)**.
+    - **Node count:** Select how many nodes you want for your HCI cluster.
+    - **Join to the AD domain:** Select **Join**.
 
 - **HCI cluster**
 
 - **Active Directory Domain Services**
 
-    - AD domain FQDN
+    - **AD domain FQDN:**
 
 ### 1.4. Advanced tab
 
@@ -81,9 +80,11 @@ Get-AzResourceProvider -ProviderNamespace $providerNamespaces | ft ProviderNames
 
 ## 3. RBAC
 
-TODO:
+You must have sufficient permissions in your Azure environment. See [the details about the permissions](https://learn.microsoft.com/en-us/azure/aks/aksarc/system-requirements?tabs=allow-table#azure-requirements) to deploy AKS on Windows Server 2022.
 
 ## 4. Connect to your HCI Lab host using RDP connection
+
+<!-- TODO -->
 
 ## 5. Install prerequisites
 
@@ -346,9 +347,11 @@ $params = @{
 New-AksHciCluster @params
 ```
 
-## 8. List workload clusters
+## Common operations
 
-TODO: Fill here out later.
+### List workload clusters
+
+<!-- TODO: Fill here out later. -->
 
 ```powershell
 PS C:\> Get-AksHciCluster
@@ -386,35 +389,33 @@ ImageName             : Linux_k8s_1.0.24.11029
 Name                  : akswc2
 ```
 
-## 9. Deploy an application to your workload cluster
+### Get a credential for connect to your workload cluster
 
-TODO: Fill here out later.
+<!-- TODO: Fill here out later. -->
 
 ```powershell
 Get-AksHciCredential -Name 'akswc1'
 ```
 
-## 10. Delete your workload cluster
+### Delete your workload cluster
 
-TODO: Fill here out later.
+<!-- TODO: Fill here out later. -->
 
 ```powershell
 Remove-AksHciCluster -Name 'akswc1'
 ```
 
-## 11. Delete your management cluster
+### Delete your management cluster
 
-TODO: Fill here out later.
+<!-- TODO: Fill here out later. -->
 
 ```powershell
 Uninstall-AksHci
 ```
 
-## 12. Troubleshooting
-
 ### Connect to AKS node in your AKS cluster
 
-TODO: Fill here out later.
+<!-- TODO: Fill here out later. -->
 
 ```powershell
 PS C:\> kubectl get node -o wide
@@ -428,3 +429,5 @@ moc-lml3wnueug3   Ready    <none>          5d20h   v1.28.5   10.0.0.14     <none
 $sshPrivateKeyPath = (Get-AksHciConfig).Moc.sshPrivateKey
 ssh.exe clouduser@10.0.0.13 -i $sshPrivateKeyPath
 ```
+
+<!-- ### Deploy an application to your workload cluster -->
