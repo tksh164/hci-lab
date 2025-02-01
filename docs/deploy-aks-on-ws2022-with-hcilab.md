@@ -11,14 +11,14 @@ This document describes deployment steps to deploy AKS on Windows Server 2022 us
     - **Resource group:** Select a resource group to use deploy your HCI Lab.
 
 - **Instance details**
-    - **Region:**
-    - **Lab host VM name:**
-    - **Size:**
+    - **Region:** Select a region to deploy your HCI Lab resources.
+    - **Lab host VM name:** Specify your HCI Lab host VM's name.
+    - **Size:** Select a your lab host VM size. Recommend the default VM size or larger VM sizes.
 
 - **Administrator account**
-    - **Username:**
-    - **Password:**
-    - **Confirm password:**
+    - **Username:** Specify the user name for your HCI Lab host VM. Also, this user name will be used for Hyper-V VMs in your HCI Lab environment.
+    - **Password:** Specify the password for your HCI Lab host VM. Also, this password will be used for Hyper-V VMs in your HCI Lab environment.
+    - **Confirm password:** Re-enter the password for confirmation.
 
 - **Azure Hybrid Benefit**
     - You can apply Azure Hybrid Benefit if you have an eligible Windows Server license with Software Assurance or Windows Server subscription.
@@ -26,35 +26,33 @@ This document describes deployment steps to deploy AKS on Windows Server 2022 us
 ### 1.2. Lab host details tab
 
 - **Disks**
-    - **OS disk type:**
-    - **Data disk type:**
+    - **OS disk type:** Select the lab host VM's OS disk type. Recommend to use the default value.
+    - **Data disk type:** Select the lab host VM's data disk type. Recommend to use the default value.
 
 - **Data volume**
-    - **Data volume capacity:**
+    - **Data volume capacity:** Select the data volume capacity. All assets in your lab stored on this volume. Recommend the default volume size or larger.
 
 - **Apps**
-    - **Visual Studio Code:**
+    - **Visual Studio Code:** Select this if you want to install Visual Studio Code on your HCI lab host VM.
 
 - **Auto-shutdown**
-    - **Auto-shutdown:**
+    - **Auto-shutdown:** Enable this if you want to use auto-shutdown feature.
 
 ### 1.3. Lab environment tab
 
 - **Common configuration**
-    - **Culture:**
-    - **Time zone:**
-    - **Operating system's updates:**
+    - **Culture:** Select a culture for Hyper-V VMs in your HCI Lab environment. The culture represents the UI language, locale and input method.
+    - **Time zone:** Select a time zone for Hyper-V VMs in your HCI Lab environment.
+    - **Operating system's updates:** Select this if you want to install updates to Hyper-VMs in your HCI Lab environment. The operating system's updates installation will increase the deployment time.
 
 - **HCI node**
     - **Operating system:** Select **Windows Server 2022 Datacenter Evaluation (Desktop Experience)**.
     - **Node count:** Select how many nodes you want for your HCI cluster.
     - **Join to the AD domain:** Select **Join**.
 
-- **HCI cluster**
-
 - **Active Directory Domain Services**
 
-    - **AD domain FQDN:**
+    - **AD domain FQDN:** The Active Directory domain FQDN in your HCI Lab environment. Leave default for this tutorial.
 
 ### 1.4. Advanced tab
 
@@ -80,11 +78,13 @@ Get-AzResourceProvider -ProviderNamespace $providerNamespaces | ft ProviderNames
 
 ## 3. RBAC
 
-You must have sufficient permissions in your Azure environment. See [the details about the permissions](https://learn.microsoft.com/en-us/azure/aks/aksarc/system-requirements?tabs=allow-table#azure-requirements) to deploy AKS on Windows Server 2022.
+You must have sufficient permissions in your Azure environment. See [the details about the permissions](https://learn.microsoft.com/azure/aks/aksarc/system-requirements?tabs=allow-table#azure-requirements) to deploy AKS on Windows Server 2022.
 
 ## 4. Connect to your HCI Lab host using RDP connection
 
-<!-- TODO -->
+After completing the deployment, you need to allow Remote Desktop access to your lab host Azure VM from your local machine. It can be by [enabling JIT VM access](https://learn.microsoft.com/azure/defender-for-cloud/just-in-time-access-usage) or [adding an inbound security rule in the Network Security Group](https://learn.microsoft.com/azure/virtual-network/tutorial-filter-network-traffic#create-security-rules). The recommended way is using JIT VM access.
+
+Next, connect to your lab host Azure VM using your favorite Remote Desktop client. To connect, use the credentials that you specified at deployment.
 
 ## 5. Install prerequisites
 
@@ -143,7 +143,7 @@ Sign-in to the one of your HCI nodes with `HCI\Administrator` and the password f
 
 ### 6.2. Create a virtual network setting for your management cluster
 
-Create a virtual network setting for your AKS deployment using [New-AksHciNetworkSetting](https://learn.microsoft.com/en-us/azure/aks/hybrid/reference/ps/new-akshcinetworksetting).
+Create a virtual network setting for your AKS deployment using [New-AksHciNetworkSetting](https://learn.microsoft.com/azure/aks/hybrid/reference/ps/new-akshcinetworksetting).
 
 ```powershell
 $VerbosePreference = 'Continue'
@@ -181,7 +181,7 @@ K8snodeIPPoolEnd   : 10.0.0.40
 
 ### 6.3. Set an AKS configuration
 
-Set AKS configuration for your AKS deployment using [Set-AksHciConfig](https://learn.microsoft.com/en-us/azure/aks/hybrid/reference/ps/set-akshciconfig). The configuration will be saved on your volume.
+Set AKS configuration for your AKS deployment using [Set-AksHciConfig](https://learn.microsoft.com/azure/aks/hybrid/reference/ps/set-akshciconfig). The configuration will be saved on your volume.
 
 ```powershell
 $clusterRoleName = 'akshci-mgmt-cluster-{0}' -f (Get-Date).ToString('yyMMdd-HHmm')
@@ -203,7 +203,7 @@ Set-AksHciConfig @params
 
 ### 6.4. Register an Azure Arc-enabled Kubernetes resource for your management cluster
 
-You need to register your management cluster to Azure as an Azure Arc connected Kubernetes. In this step, set the registration information for the registration using [Set-AksHciRegistration](https://learn.microsoft.com/en-us/azure/aks/hybrid/reference/ps/set-akshciregistration).
+You need to register your management cluster to Azure as an Azure Arc connected Kubernetes. In this step, set the registration information for the registration using [Set-AksHciRegistration](https://learn.microsoft.com/azure/aks/hybrid/reference/ps/set-akshciregistration).
 
 ```powershell
 $params = @{
@@ -218,7 +218,7 @@ Set-AksHciRegistration @params
 
 ### 6.5. Deploy your management cluster
 
-Start a task to deploy your management cluster using [Install-AksHci](https://learn.microsoft.com/en-us/azure/aks/hybrid/reference/ps/install-akshci).
+Start a task to deploy your management cluster using [Install-AksHci](https://learn.microsoft.com/azure/aks/hybrid/reference/ps/install-akshci).
 
 ```powershell
 Install-AksHci -Verbose
@@ -296,7 +296,7 @@ proxyServerNoProxy
 version                        1.0.24.11029
 proxyServerCertFile
 vnetvippoolstart               10.0.0.41
-# ...snip...
+# *** snip ***
 
 # MOC
 PS C:\> $config.Moc
@@ -325,7 +325,7 @@ cloudServiceCidr               172.16.0.51/24
 proxyServerCertFile
 proxyServerUsername
 gateway                        10.0.0.1
-# ...snip...
+# *** snip ***
 ```
 
 ## 7. Create a new workload cluster
