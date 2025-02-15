@@ -4,7 +4,7 @@ This document describes deployment steps to deploy AKS on Windows Server 2022 us
 
 ## 1. Deploy HCI Lab
 
-### 1.1. Basics tab
+**Basics tab**
 
 - **Project details**
     - **Subscription:** Select a subscription to use deploy your HCI Lab.
@@ -23,7 +23,7 @@ This document describes deployment steps to deploy AKS on Windows Server 2022 us
 - **Azure Hybrid Benefit**
     - You can apply Azure Hybrid Benefit if you have an eligible Windows Server license with Software Assurance or Windows Server subscription.
 
-### 1.2. Lab host details tab
+**Lab host details tab**
 
 - **Disks**
     - **OS disk type:** Select the lab host VM's OS disk type. Recommend to use the default value.
@@ -38,7 +38,7 @@ This document describes deployment steps to deploy AKS on Windows Server 2022 us
 - **Auto-shutdown**
     - **Auto-shutdown:** Enable this if you want to use auto-shutdown feature.
 
-### 1.3. Lab environment tab
+**Lab environment tab**
 
 - **Common configuration**
     - **Culture:** Select a culture for Hyper-V VMs in your HCI Lab environment. The culture represents the UI language, locale and input method.
@@ -54,11 +54,11 @@ This document describes deployment steps to deploy AKS on Windows Server 2022 us
 
     - **AD domain FQDN:** The Active Directory domain FQDN in your HCI Lab environment. Leave default for this tutorial.
 
-### 1.4. Advanced tab
+**Advanced tab**
 
 You can skip this tab because there are no necessary settings for this case. Click the **Next** button.
 
-### 1.5. Review + create tab
+**Review + create tab**
 
 Click the **Create** button to start your HCI Lab deployment.
 
