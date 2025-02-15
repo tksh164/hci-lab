@@ -347,6 +347,14 @@ $params = @{
 New-AksHciCluster @params
 ```
 
+## 8. (Optional) Connect your workload cluster to Arc-enabled Kubernetes
+
+You can connect your cluster to Arc-enabled Kubernetes optionally using [Enable-AksHciArcConnection](https://learn.microsoft.com/azure/aks/aksarc/reference/ps/enable-akshciarcconnection). The following example connects your Kubernetes cluster to Arc using the subscription and resource group details you passed in [Set-AksHciRegistration](https://learn.microsoft.com/azure/aks/hybrid/reference/ps/set-akshciregistration).
+
+```powershell
+Enable-AksHciArcConnection -Name 'akswc1'
+```
+
 ## Common operations
 
 ### List workload clusters
