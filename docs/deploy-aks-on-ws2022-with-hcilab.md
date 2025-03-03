@@ -139,7 +139,11 @@ First of all, you need to deploy a new management cluster. It's AKS itself, some
 
 ### 6.1. Signin to the one of your HCI nodes
 
-Sign-in to the one of your HCI nodes with `HCI\Administrator` and the password for that account.
+Connect to the one of your HCI nodes then Sign-in to it with `HCI\Administrator` and the password for that account.
+
+```powershell
+vmconnect localhost hcinode01
+```
 
 ### 6.2. Create a virtual network setting for your management cluster
 
