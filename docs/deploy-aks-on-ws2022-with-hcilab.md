@@ -200,10 +200,14 @@ $params = @{
     VNet                = $vnet
     KvaName             = $clusterRoleName
     ControlplaneVmSize  = 'Standard_A4_v2'
+    #Version            = '1.0.23.10605'    # Specify AKS hybrid version to deploy if you want to deploy not the latest version.
     Verbose             = $true
 }
 Set-AksHciConfig @params
 ```
+
+> [!TIP]
+> You can specify AKS hybrid version by the Version parameter if you want to deploy not latest version.
 
 ### 6.4. Register an Azure Arc-enabled Kubernetes resource for your management cluster
 
