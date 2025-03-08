@@ -343,6 +343,7 @@ Create a new workload cluster. You can create multiple workload clusters and use
 ```powershell
 $params = @{
     Name                  = 'akswc1'
+    #KubernetesVersion    = 'v1.26.12'    # Specify the Kubernetes version of the workload cluster to deploy if you want to deploy not the latest version.
     ControlplaneVmSize    = 'Standard_A4_v2'
     ControlPlaneNodeCount = 1
     LoadBalancerVmSize    = 'Standard_A2_v2'
@@ -354,6 +355,9 @@ $params = @{
 }
 New-AksHciCluster @params
 ```
+
+> [!TIP]
+> You can specify Kubernetes version of your workload cluster by the KubernetesVersion parameter if you want to deploy not latest version.
 
 ## 8. (Optional) Connect your workload cluster to Arc-enabled Kubernetes
 
