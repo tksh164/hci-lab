@@ -139,7 +139,11 @@ First of all, you need to deploy a new management cluster. It's AKS itself, some
 
 ### 6.1. Signin to the one of your HCI nodes
 
-Sign-in to the one of your HCI nodes with `HCI\Administrator` and the password for that account.
+Connect to the one of your HCI nodes then Sign-in to it with `HCI\Administrator` and the password for that account.
+
+```powershell
+vmconnect localhost hcinode01
+```
 
 ### 6.2. Create a virtual network setting for your management cluster
 
@@ -196,10 +200,14 @@ $params = @{
     VNet                = $vnet
     KvaName             = $clusterRoleName
     ControlplaneVmSize  = 'Standard_A4_v2'
+    #Version            = '1.0.23.10605'    # Specify AKS hybrid version to deploy if you want to deploy not the latest version.
     Verbose             = $true
 }
 Set-AksHciConfig @params
 ```
+
+> [!TIP]
+> You can specify AKS hybrid version by the Version parameter if you want to deploy not latest version.
 
 ### 6.4. Register an Azure Arc-enabled Kubernetes resource for your management cluster
 
@@ -335,6 +343,7 @@ Create a new workload cluster. You can create multiple workload clusters and use
 ```powershell
 $params = @{
     Name                  = 'akswc1'
+    #KubernetesVersion    = 'v1.26.12'    # Specify the Kubernetes version of the workload cluster to deploy if you want to deploy not the latest version.
     ControlplaneVmSize    = 'Standard_A4_v2'
     ControlPlaneNodeCount = 1
     LoadBalancerVmSize    = 'Standard_A2_v2'
@@ -346,6 +355,9 @@ $params = @{
 }
 New-AksHciCluster @params
 ```
+
+> [!TIP]
+> You can specify Kubernetes version of your workload cluster by the KubernetesVersion parameter if you want to deploy not latest version.
 
 ## 8. (Optional) Connect your workload cluster to Arc-enabled Kubernetes
 
