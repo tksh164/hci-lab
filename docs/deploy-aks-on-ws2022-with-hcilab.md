@@ -206,9 +206,6 @@ $params = @{
 Set-AksHciConfig @params
 ```
 
-> [!TIP]
-> You can specify AKS hybrid version by the Version parameter if you want to deploy not latest version.
-
 ### 6.4. Register an Azure Arc-enabled Kubernetes resource for your management cluster
 
 You need to register your management cluster to Azure as an Azure Arc connected Kubernetes. In this step, set the registration information for the registration using [Set-AksHciRegistration](https://learn.microsoft.com/azure/aks/hybrid/reference/ps/set-akshciregistration).
