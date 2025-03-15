@@ -340,6 +340,9 @@ gateway                        10.0.0.1
 
 Create a new workload cluster. You can create multiple workload clusters and use those to run your workloads.
 
+> [!TIP]
+> You can specify Kubernetes version of your workload cluster by the `KubernetesVersion` parameter if you want to deploy not latest version.
+
 ```powershell
 $params = @{
     Name                  = 'akswc1'
@@ -355,9 +358,6 @@ $params = @{
 }
 New-AksHciCluster @params
 ```
-
-> [!TIP]
-> You can specify Kubernetes version of your workload cluster by the KubernetesVersion parameter if you want to deploy not latest version.
 
 ## 8. (Optional) Connect your workload cluster to Arc-enabled Kubernetes
 
