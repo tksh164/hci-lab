@@ -187,6 +187,9 @@ K8snodeIPPoolEnd   : 10.0.0.40
 
 Set AKS configuration for your AKS deployment using [Set-AksHciConfig](https://learn.microsoft.com/azure/aks/hybrid/reference/ps/set-akshciconfig). The configuration will be saved on your volume.
 
+> [!TIP]
+> You can specify AKS hybrid version by the `Version` parameter if you want to deploy not latest version.
+
 ```powershell
 $clusterRoleName = 'akshci-mgmt-cluster-{0}' -f (Get-Date).ToString('yyMMdd-HHmm')
 $baseDir         = 'C:\ClusterStorage\HciVol\akshci'
