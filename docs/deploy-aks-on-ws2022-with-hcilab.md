@@ -187,6 +187,9 @@ K8snodeIPPoolEnd   : 10.0.0.40
 
 Set AKS configuration for your AKS deployment using [Set-AksHciConfig](https://learn.microsoft.com/azure/aks/hybrid/reference/ps/set-akshciconfig). The configuration will be saved on your volume.
 
+> [!TIP]
+> You can specify AKS hybrid version by the `Version` parameter if you want to deploy not latest version.
+
 ```powershell
 $clusterRoleName = 'akshci-mgmt-cluster-{0}' -f (Get-Date).ToString('yyMMdd-HHmm')
 $baseDir         = 'C:\ClusterStorage\HciVol\akshci'
@@ -205,9 +208,6 @@ $params = @{
 }
 Set-AksHciConfig @params
 ```
-
-> [!TIP]
-> You can specify AKS hybrid version by the Version parameter if you want to deploy not latest version.
 
 ### 6.4. Register an Azure Arc-enabled Kubernetes resource for your management cluster
 
@@ -340,6 +340,9 @@ gateway                        10.0.0.1
 
 Create a new workload cluster. You can create multiple workload clusters and use those to run your workloads.
 
+> [!TIP]
+> You can specify Kubernetes version of your workload cluster by the `KubernetesVersion` parameter if you want to deploy not latest version.
+
 ```powershell
 $params = @{
     Name                  = 'akswc1'
@@ -355,9 +358,6 @@ $params = @{
 }
 New-AksHciCluster @params
 ```
-
-> [!TIP]
-> You can specify Kubernetes version of your workload cluster by the KubernetesVersion parameter if you want to deploy not latest version.
 
 ## 8. (Optional) Connect your workload cluster to Arc-enabled Kubernetes
 
