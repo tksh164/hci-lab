@@ -49,8 +49,10 @@ function New-ExceptionMessage
 
     $ex = $_.Exception
     $builder = New-Object -TypeName 'System.Text.StringBuilder'
-    [void] $builder.AppendLine('')
-    [void] $builder.AppendLine('******** SCRIPT EXCEPTION ********')
+    [void] $builder.AppendLine(' ')
+    [void] $builder.AppendLine('##########################################')
+    [void] $builder.AppendLine('             SCRIPT EXCEPTION')
+    [void] $builder.AppendLine('##########################################')
     [void] $builder.AppendLine($ex.Message)
     [void] $builder.AppendLine('')
     [void] $builder.AppendLine('Exception: ' + $ex.GetType().FullName)
@@ -82,7 +84,7 @@ function New-ExceptionMessage
         $level++
     }
 
-    [void] $builder.AppendLine('**********************************')
+    [void] $builder.AppendLine('##########################################')
     return $builder.ToString()
 }
 
