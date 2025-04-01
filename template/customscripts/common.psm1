@@ -215,7 +215,7 @@ function Get-Secret
             # Get a secret value from the Key Vault resource.
             $params = @{
                 Method  = 'Get'
-                Uri     = ('https://{0}.vault.azure.net/secrets/{1}?api-version=7.3' -f $KeyVaultName, $SecretName)
+                Uri     = ('https://{0}.vault.azure.net/secrets/{1}?api-version=7.4' -f $KeyVaultName, $SecretName)
                 Headers = @{
                     Authorization = ('Bearer {0}' -f $accessToken)
                 }
