@@ -73,6 +73,7 @@ function New-ExceptionMessage
     $level = 1
     while ($ex.InnerException) {
         $ex = $ex.InnerException
+        [void] $builder.AppendLine('')
         [void] $builder.AppendLine('--- InnerException {0} ---' -f $level)
         [void] $builder.AppendLine('Exception: ' + $ex.GetType().FullName)
         [void] $builder.AppendLine('Message: ' + $ex.Message)
