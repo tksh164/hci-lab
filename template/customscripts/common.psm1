@@ -200,23 +200,42 @@ function Get-Secret
         [switch] $AsPlainText
     )
 
-    # Get a token for Key Vault using VM's managed identity via Azure Instance Metadata Service.
-    $accessToken = Get-AccessTokenUsingManagedId -Resource 'https%3A%2F%2Fvault.azure.net'
+    'Get a secret value of the {0} from the {1}.' -f $SecretName, $KeyVaultName | Write-ScriptLog
 
-    # Get a secret value from the Key Vault resource.
-    $params = @{
-        Method  = 'Get'
-        Uri     = ('https://{0}.vault.azure.net/secrets/{1}?api-version=7.3' -f $KeyVaultName, $SecretName)
-        Headers = @{
-            Authorization = ('Bearer {0}' -f $accessToken)
+    $attemptLimit = 10
+    for ($attempts = 0; $attempts -lt $attemptLimit; $attempts++) {
+        try {
+            # Get a token for Key Vault using VM's managed identity via Azure Instance Metadata Service.
+            $accessToken = Get-AccessTokenUsingManagedId -Resource 'https%3A%2F%2Fvault.azure.net'
+
+            # Get a secret value from the Key Vault resource.
+            $params = @{
+                Method  = 'Get'
+                Uri     = ('https://{0}.vault.azure.net/secrets/{1}?api-version=7.3' -f $KeyVaultName, $SecretName)
+                Headers = @{
+                    Authorization = ('Bearer {0}' -f $accessToken)
+                }
+            }
+            $secretValue = (Invoke-RestMethod @params).value
+
+            if ($AsPlainText) {
+                return $secretValue
+            }
+            return ConvertTo-SecureString -String $secretValue -AsPlainText -Force
+        }
+        catch [System.Net.WebException] {
+            # Handle the "AKV10046: Unable to resolve the key used for signature validation." exception.
+            if ($_.ErrorDetails.Message -like '*AKV10046*') {
+                ('Will retry get the secret due to unable to retrieve the value of {0} from {1}: {2}' -f $SecretName, $KeyVaultName, $_.ErrorDetails.Message) | Write-ScriptLog -Level Warning
+                Start-Sleep -Seconds 1
+            }
+            else {
+                throw $_
+            }
         }
     }
-    $secretValue = (Invoke-RestMethod @params).value
 
-    if ($AsPlainText) {
-        return $secretValue
-    }
-    return ConvertTo-SecureString -String $secretValue -AsPlainText -Force
+    throw 'Could not get a secret value from the Key Vault.'
 }
 
 function Get-AccessTokenUsingManagedId
