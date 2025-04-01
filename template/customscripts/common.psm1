@@ -49,7 +49,6 @@ function New-ExceptionMessage
 
     $ex = $_.Exception
     $builder = New-Object -TypeName 'System.Text.StringBuilder'
-    [void] $builder.AppendLine(' ')
     [void] $builder.AppendLine('##########################################')
     [void] $builder.AppendLine('             SCRIPT EXCEPTION')
     [void] $builder.AppendLine('##########################################')
