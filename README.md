@@ -2,7 +2,7 @@
 
 The HCI Lab provides a plain HCI lab environment on Azure in reasonable preparation time and cost.
 
-- An HCI lab environment with Azure Local (former Azure Stack HCI) or Windows Server 2025/2022 on a single Azure virtual machine in about 30 minutes minimum.
+- An HCI lab environment with Azure Local (formerly Azure Stack HCI) or Windows Server 2025/2022 on a single Azure virtual machine in about 30 minutes minimum.
 - Just a plain environment, so you can try many workloads and features to start from the clean environment by yourself. Also, you can customize it to your own needs easily.
 - You can choose an operating system from the [selectable HCI node's operating systems](#-selectable-hci-nodes-operating-systems) to use deploy your HCI lab environment.
 
@@ -23,7 +23,7 @@ The HCI Lab provides a plain HCI lab environment on Azure in reasonable preparat
 
     > If the deployment failed, try deploying again that will resolving the issue in most cases. If not, please create an issue, it will help HCI Lab quality improvement.
 
-3. After completing the deployment, you need to allow Remote Desktop access to your lab host Azure VM from your local machine. It can be by [enabling JIT VM access](https://learn.microsoft.com/en-us/azure/defender-for-cloud/just-in-time-access-usage) or [adding an inbound security rule in the Network Security Group](https://learn.microsoft.com/en-us/azure/virtual-network/tutorial-filter-network-traffic#create-security-rules). The recommended way is using JIT VM access.
+3. After completing the deployment, you need to allow Remote Desktop access to your lab host Azure VM from your local machine. It can be by [enabling JIT VM access](https://learn.microsoft.com/azure/defender-for-cloud/just-in-time-access-usage) or [adding an inbound security rule in the Network Security Group](https://learn.microsoft.com/azure/virtual-network/tutorial-filter-network-traffic#create-security-rules). The recommended way is using JIT VM access.
 
 4. Connect to your lab host Azure VM using your favorite Remote Desktop client. To connect, use the credentials that you specified at deployment.
 
@@ -37,7 +37,7 @@ Learn more about the HCI lab in the [HCI Lab tour](./docs/hci-lab-tour.md).
 
 | Operating system | Description | HCI Lab |
 | ---- | ---- | ---- |
-| Azure Local, version 23H2 | The latest generally available version of Azure Local (former Azure Stack HCI). | Available |
+| Azure Local, version 23H2 | The latest generally available version of Azure Local (formerly Azure Stack HCI). | Available |
 | Azure Stack HCI, version 22H2 | The previous generally available version of Azure Stack HCI. | Available |
 | Azure Stack HCI, version 21H2 | You can still use this OS to deploy your HCI lab environment by HCI Lab. However, **this version of Azure Stack HCI reached the end of service on November 14, 2023.** | Selectable. Not tested. |
 | Azure Stack HCI, version 20H2 | You can still use this OS to deploy your HCI lab environment by HCI Lab. However, **this version of Azure Stack HCI reached the end of service on December 13, 2022.** | Selectable. Not tested. |
