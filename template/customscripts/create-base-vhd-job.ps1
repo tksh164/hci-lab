@@ -36,14 +36,26 @@ function Test-WimFile
         [string] $WimFilePath,
 
         [Parameter(Mandatory = $true)][ValidateRange(1, 20)]
-        [int] $ImageIndex
+        [int] $ImageIndex,
+
+        [Parameter(Mandatory = $true)]
+        [string] $ScratchDirectory,
+
+        [Parameter(Mandatory = $true)]
+        [string] $LogFilePath
     )
 
     if (-not (Test-Path -PathType Leaf -LiteralPath $WimFilePath)) {
         throw 'Cannot find the specified file "{0}".' -f $WimFilePath
     }
-    
-    $windowsImage = Get-WindowsImage -ImagePath $WimFilePath -Index $ImageIndex
+
+    $params = @{
+        ImagePath        = $WimFilePath
+        Index            = $ImageIndex
+        ScratchDirectory = $ScratchDirectory
+        LogPath          = $LogFilePath
+    }
+    $windowsImage = Get-WindowsImage @params
     return $windowsImage -ne $null
 }
 
@@ -155,12 +167,14 @@ try {
     $labConfig | ConvertTo-Json -Depth 16 | Write-Host
     
     'Start to create a new base VHD from the "{0}" with the image index {1}.' -f $WimFilePath, $ImageIndex | Write-ScriptLog
-    if (-not (Test-WimFile -WimFilePath $WimFilePath -ImageIndex $ImageIndex)) {
-        throw 'The specified Windows image "{0}" has not the image index {1}.' -f $WimFilePath, $ImageIndex
+    $params = @{
+        WimFilePath      = $WimFilePath
+        ImageIndex       = $ImageIndex
+        ScratchDirectory = $labConfig.labHost.folderPath.temp
+        LogFilePath      = Resolve-LogFilePath -FolderPath $labConfig.labHost.folderPath.log -LogFileName ($LogFileName + '_test-image.log')
     }
-    
-    if (-not $PSBoundParameters.ContainsKey('UpdatePackagePath')) {
-        $UpdatePackagePath = @()
+    if (-not (Test-WimFile @params)) {
+        throw 'The specified Windows image "{0}" has not the image index {1}.' -f $WimFilePath, $ImageIndex
     }
     
     'Create a new VHD file.' | Write-ScriptLog
