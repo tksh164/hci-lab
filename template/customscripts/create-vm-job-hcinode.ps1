@@ -364,10 +364,19 @@ try {
     Invoke-PSDirectSessionSetup -Session $localAdminCredPSSession -CommonModuleFilePathInVM $commonModuleFilePathInVM
     'Setup the PowerShell Direct session completed.' | Write-ScriptLog
 
-    # If the HCI node OS is Windows Server 2022 with Desktop Experience.
-    if (($NodeConfig.OperatingSystem -eq [HciLab.OSSku]::WindowsServer2022) -and ($NodeConfig.ImageIndex -eq [HciLab.OSImageIndex]::WSDatacenterDesktopExperience)) {
+    # If the HCI node OS is Windows Server with Desktop Experience.
+    $wsOS = @(
+        [HciLab.OSSku]::WindowsServer2022,
+        [HciLab.OSSku]::WindowsServer2025
+    )
+    if (($NodeConfig.ImageIndex -eq [HciLab.OSImageIndex]::WSDatacenterDesktopExperience) -and ($NodeConfig.OperatingSystem -in $wsOS)) {
         'Configure registry values within the VM.' | Write-ScriptLog
         Invoke-Command -Session $localAdminCredPSSession -ScriptBlock {
+            'Disable diagnostics data send screen.' | Write-ScriptLog
+            New-RegistryKey -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows' -KeyName 'OOBE'
+            Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\OOBE' -Name 'DisablePrivacyExperience' -Value 1
+            'Disable diagnostics data send screen completed.' | Write-ScriptLog
+        
             'Stop Server Manager launch at logon.' | Write-ScriptLog
             Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotOpenServerManagerAtLogon' -Value 1
             'Stop Server Manager launch at logon completed.' | Write-ScriptLog
@@ -385,8 +394,8 @@ try {
             Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Edge' -Name 'HideFirstRunExperience' -Value 1
             'Hide the first run experience of Microsoft Edge completed.' | Write-ScriptLog
         } | Out-String | Write-ScriptLog
+        'Configure registry values within the VM completed.' | Write-ScriptLog
     }
-    'Configure registry values within the VM completed.' | Write-ScriptLog
 
     'Configure network settings within the VM.' | Write-ScriptLog
     $params = @{
