@@ -383,7 +383,7 @@ try {
     )
     if (($NodeConfig.ImageIndex -eq [HciLab.OSImageIndex]::WSDatacenterDesktopExperience) -and ($NodeConfig.OperatingSystem -in $wsOS)) {
         'Configure registry values within the VM.' | Write-ScriptLog
-        Invoke-Command -Session $localAdminCredPSSession -ScriptBlock {
+        Invoke-CommandWithinVM @invokeWithinVMParams -ScriptBlock {
             'Disable diagnostics data send screen.' | Write-ScriptLog
             New-RegistryKey -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows' -KeyName 'OOBE'
             Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\OOBE' -Name 'DisablePrivacyExperience' -Value 1
