@@ -20,7 +20,7 @@ param (
     [string] $VhdFilePath,
 
     [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
-    [string[]] $UpdatePackagePath
+    [string[]] $UpdatePackagePath = @()
 )
 
 $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
@@ -159,7 +159,7 @@ try {
     'WimFilePath: "{0}"' -f $WimFilePath | Write-ScriptLog
     'ImageIndex: {0}' -f $ImageIndex | Write-ScriptLog
     'VhdFilePath: "{0}"' -f $VhdFilePath | Write-ScriptLog
-    'UpdatePackagePath:' | Write-ScriptLog
+    'UpdatePackagePath ({0}):' -f $UpdatePackagePath.Length | Write-ScriptLog
     foreach ($packagePath in $UpdatePackagePath) { '  "{0}"' -f $packagePath | Write-ScriptLog }
 
     # Log the lab deployment configuration.
