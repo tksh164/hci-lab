@@ -312,7 +312,7 @@ try {
 
     'Create the data disks.' | Write-ScriptLog
     $diskCount = 8
-    for ($diskIndex = 1; $diskIndex -le $diskCount; $diskIndex++) {
+    $addDataDisksResult = for ($diskIndex = 1; $diskIndex -le $diskCount; $diskIndex++) {
         $params = @{
             Path                    = [IO.Path]::Combine($labConfig.labHost.folderPath.vm, $nodeConfig.VMName, ('datadisk{0}.vhdx' -f $diskIndex))
             Dynamic                 = $true
@@ -322,8 +322,16 @@ try {
             LogicalSectorSizeBytes  = 4KB
         }
         $vmDataDiskVhd = New-VHD @params
-        Add-VMHardDiskDrive -VMName $nodeConfig.VMName -Path $vmDataDiskVhd.Path -Passthru | Out-String | Write-ScriptLog
+        Add-VMHardDiskDrive -VMName $nodeConfig.VMName -Path $vmDataDiskVhd.Path -Passthru
     }
+    $addDataDisksResult | Format-Table -Property @(
+        'VMName',
+        'ControllerType',
+        'ControllerNumber',
+        'ControllerLocation',
+        'DiskNumber',
+        'Path'
+    ) | Out-String -Width 200 | Write-ScriptLog
     'Create the data disks completed.' | Write-ScriptLog
 
     'Generate the unattend answer XML.'| Write-ScriptLog
