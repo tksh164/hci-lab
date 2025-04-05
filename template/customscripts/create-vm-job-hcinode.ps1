@@ -365,23 +365,27 @@ try {
 
     # Guest OS
 
-    'Create a PowerShell Direct session.' | Write-ScriptLog
-    $localAdminCredPSSession = New-PSSession -VMName $nodeConfig.VMName -Credential $localAdminCredential
-    $localAdminCredPSSession | Format-Table -Property 'Id', 'Name', 'ComputerName', 'ComputerType', 'State', 'Availability' | Out-String | Write-ScriptLog
-    'Create a PowerShell Direct session completed.' | Write-ScriptLog
+    'Copy the module files into the VM.' | Write-ScriptLog
+    $params = @{
+        VMName              = $nodeConfig.VMName
+        Credential          = $localAdminCredential
+        SourceFilePath      = (Get-Module -Name 'common').Path
+        DestinationPathInVM = 'C:\Windows\Temp'
+    }
+    $moduleFilePathsWithinVM = Copy-FileIntoVM @params
+    'Copy the module files into the VM completed.' | Write-ScriptLog
 
-    'Copy the common module file into the VM.' | Write-ScriptLog
-    $commonModuleFilePathInVM = Copy-PSModuleIntoVM -Session $localAdminCredPSSession -ModuleFilePathToCopy (Get-Module -Name 'common').Path
-    'Copy the common module file into the VM completed.' | Write-ScriptLog
-
-    'Setup the PowerShell Direct session.' | Write-ScriptLog
-    Invoke-PSDirectSessionSetup -Session $localAdminCredPSSession -CommonModuleFilePathInVM $commonModuleFilePathInVM
-    'Setup the PowerShell Direct session completed.' | Write-ScriptLog
+    # The common parameters for Invoke-CommandWithinVM.
+    $invokeWithinVMParams = @{
+        VMName           = $nodeConfig.VMName
+        Credential       = $localAdminCredential
+        ImportModuleInVM = $moduleFilePathsWithinVM
+    }
 
     # If the HCI node OS is Windows Server with Desktop Experience.
     if ((Test-HciNodeAsWindowsServerWithDesktopExperience -OperatingSystem $NodeConfig.OperatingSystem -ImageIndex $NodeConfig.ImageIndex)) {
         'Configure registry values within the VM.' | Write-ScriptLog
-        Invoke-Command -Session $localAdminCredPSSession -ScriptBlock {
+        Invoke-CommandWithinVM @invokeWithinVMParams -ScriptBlock {
             'Stop Server Manager launch at logon.' | Write-ScriptLog
             Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotOpenServerManagerAtLogon' -Value 1
             'Stop Server Manager launch at logon completed.' | Write-ScriptLog
@@ -399,18 +403,13 @@ try {
             Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Edge' -Name 'HideFirstRunExperience' -Value 1
             'Hide the first run experience of Microsoft Edge completed.' | Write-ScriptLog
         } | Out-String | Write-ScriptLog
+        'Configure registry values within the VM completed.' | Write-ScriptLog
     }
-    'Configure registry values within the VM completed.' | Write-ScriptLog
 
     'Configure network settings within the VM.' | Write-ScriptLog
-    $params = @{
-        InputObject = [PSCustomObject] @{
-            VMConfig = $NodeConfig
-        }
-    }
-    Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
+    Invoke-CommandWithinVM @invokeWithinVMParams -ScriptBlockParamList $NodeConfig -ScriptBlock {
         param (
-            [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+            [Parameter(Mandatory = $true)]
             [PSCustomObject] $VMConfig
         )
 
@@ -547,22 +546,28 @@ try {
     'The domain controller with DNS capability is ready.' | Write-ScriptLog
 
     # NOTE: The package provider installation needs internet connection and name resolution.
-    'Install the NuGet pacakge provider within the VM.' | Write-ScriptLog
-    Invoke-Command -Session $localAdminCredPSSession -ScriptBlock {
-        Install-PackageProvider -Name 'NuGet' -Scope AllUsers -Force -Verbose | Out-String -Width 200 | Write-ScriptLog
+    'Install the NuGet package provider within the VM.' | Write-ScriptLog
+    Invoke-CommandWithinVM @invokeWithinVMParams -WithRetry -ScriptBlock {
+        Install-PackageProvider -Name 'NuGet' -Scope 'AllUsers' -Force -Verbose | Out-String -Width 200 | Write-ScriptLog
     } | Out-String -Width 200 | Write-ScriptLog
     'Install the NuGet package provider within the VM completed.' | Write-ScriptLog
 
     # NOTE: The PowerShellGet module installation needs internet connection and name resolution.
     'Install the PowerShellGet module within the VM.' | Write-ScriptLog
-    Invoke-Command -Session $localAdminCredPSSession -ScriptBlock {
-        Install-Module -Name 'PowerShellGet' -Scope AllUsers -Force -Verbose | Out-String -Width 200 | Write-ScriptLog
+    Invoke-CommandWithinVM @invokeWithinVMParams -WithRetry -ScriptBlock {
+        Install-Module -Name 'PowerShellGet' -Scope 'AllUsers' -Force -Verbose | Out-String -Width 200 | Write-ScriptLog
     } | Out-String -Width 200 | Write-ScriptLog
     'Install the PowerShellGet module within the VM completed.' | Write-ScriptLog
 
-    'Clean up the PowerShell Direct session.' | Write-ScriptLog
-    Invoke-PSDirectSessionCleanup -Session $localAdminCredPSSession -CommonModuleFilePathInVM $commonModuleFilePathInVM
-    'Clean up the PowerShell Direct session completed.' | Write-ScriptLog
+    'Delete the module files within the VM.' | Write-ScriptLog
+    $params = @{
+        VMName               = $invokeWithinVMParams.VMName
+        Credential           = $invokeWithinVMParams.Credential
+        FilePathToRemoveInVM = $invokeWithinVMParams.ImportModuleInVM
+        ImportModuleInVM     = $invokeWithinVMParams.ImportModuleInVM
+    }
+    Remove-FileWithinVM @params
+    'Delete the module files within the VM completed.' | Write-ScriptLog
 
     if ($labConfig.hciNode.shouldJoinToAddsDomain) {
         'Join the VM to the AD domain.'  | Write-ScriptLog
@@ -576,22 +581,20 @@ try {
         'Join the VM to the AD domain completed.'  | Write-ScriptLog
     }
 
-    'Stop the VM.' | Write-ScriptLog
-    Stop-VM -Name $nodeConfig.VMName
-    'Stop the VM completed.' | Write-ScriptLog
-
-    'Start the VM.' | Write-ScriptLog
-    Start-VM -Name $nodeConfig.VMName
-    'Start the VM completed.' | Write-ScriptLog
+    Stop-LabVM -VMName $nodeConfig.VMName
+    Start-LabVM -VMName $nodeConfig.VMName
 
     'Wait for the VM to be ready.' | Write-ScriptLog
-    $credentialForWaiting = if ($labConfig.hciNode.shouldJoinToAddsDomain) {
-        New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $nodeConfig.AdminPassword
+    $params = @{
+        VMName     = $nodeConfig.VMName
+        Credential = if ($labConfig.hciNode.shouldJoinToAddsDomain) {
+            New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $nodeConfig.AdminPassword
+        }
+        else {
+            $localAdminCredential
+        }
     }
-    else {
-        $localAdminCredential
-    }
-    Wait-PowerShellDirectReady -VMName $nodeConfig.VMName -Credential $credentialForWaiting
+    Wait-PowerShellDirectReady @params
     'The VM is ready.' | Write-ScriptLog
 
     'The HCI node VM creation has been successfully completed.' | Write-ScriptLog
