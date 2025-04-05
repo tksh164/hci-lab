@@ -738,6 +738,43 @@ function Start-VMWithRetry
     throw 'The VM "{0}" was not start in the acceptable time ({1}).' -f $VMName, $RetyTimeout.ToString()
 }
 
+function Start-LabVM
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $VMName
+    )
+
+    'Start the VM "{0}".' -f $VMName | Write-ScriptLog
+    Start-VM -Name $VMName
+    'Start the VM "{0}" succeeded.' -f $VMName | Write-ScriptLog
+}
+
+function Stop-LabVM
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $VMName
+    )
+
+    'Stop the VM "{0}".' -f $VMName | Write-ScriptLog
+    try {
+        Stop-VM -Name $VMName
+    }
+    catch [Microsoft.HyperV.PowerShell.VirtualizationException] {
+        # A system shutdown has already been scheduled.
+        if ($_.Exception.Message -like '*0x800704a6*') {
+            New-ExceptionMessage -ErrorRecord $_ -AsHandled | Write-ScriptLog -Level Warning
+        }
+        else {
+            throw $_
+        }
+    }
+    'Stop the VM "{0}" succeeded.' -f $VMName | Write-ScriptLog
+}
+
 function Wait-PowerShellDirectReady
 {
     [CmdletBinding()]
@@ -1204,7 +1241,9 @@ $exportFunctions = @(
     'New-UnattendAnswerFileContent',
     'Set-UnattendAnswerFileToVhd',
     'Install-WindowsFeatureToVhd',
-    'Start-VMWithRetry',
+    'Start-VMWithRetry',  # TODO: Need to refactor with Start-LabVM.
+    'Start-LabVM',
+    'Stop-LabVM',
     'Wait-PowerShellDirectReady',
     'Block-AddsDomainOperation',
     'Unblock-AddsDomainOperation',
