@@ -180,6 +180,11 @@ try {
 
     'Configure registry values within the VM.' | Write-ScriptLog
     Invoke-Command -Session $localAdminCredPSSession -ScriptBlock {
+        'Disable diagnostics data send screen.' | Write-ScriptLog
+        New-RegistryKey -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows' -KeyName 'OOBE'
+        Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\OOBE' -Name 'DisablePrivacyExperience' -Value 1
+        'Disable diagnostics data send screen completed.' | Write-ScriptLog
+    
         'Stop Server Manager launch at logon.' | Write-ScriptLog
         Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotOpenServerManagerAtLogon' -Value 1
         'Stop Server Manager launch at logon completed.' | Write-ScriptLog

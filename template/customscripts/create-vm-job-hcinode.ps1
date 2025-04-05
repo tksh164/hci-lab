@@ -84,20 +84,6 @@ function Get-WindowsFeatureToInstall
     return $featureNames
 }
 
-function Test-HciNodeAsWindowsServerWithDesktopExperience
-{
-    param (
-        [Parameter(Mandatory = $true)]
-        [string] $OperatingSystem,
-
-        [Parameter(Mandatory = $true)]
-        [int] $ImageIndex
-    )
-
-    return (($OperatingSystem -eq [HciLab.OSSku]::WindowsServer2022) -and ($ImageIndex -eq [HciLab.OSImageIndex]::WSDatacenterDesktopExperience)) -or
-           (($OperatingSystem -eq [HciLab.OSSku]::WindowsServer2025) -and ($ImageIndex -eq [HciLab.OSImageIndex]::WSDatacenterDesktopExperience))
-}
-
 try {
     Import-Module -Name $PSModuleNameToImport -Force
 
@@ -391,9 +377,18 @@ try {
     }
 
     # If the HCI node OS is Windows Server with Desktop Experience.
-    if ((Test-HciNodeAsWindowsServerWithDesktopExperience -OperatingSystem $NodeConfig.OperatingSystem -ImageIndex $NodeConfig.ImageIndex)) {
+    $wsOS = @(
+        [HciLab.OSSku]::WindowsServer2022,
+        [HciLab.OSSku]::WindowsServer2025
+    )
+    if (($NodeConfig.ImageIndex -eq [HciLab.OSImageIndex]::WSDatacenterDesktopExperience) -and ($NodeConfig.OperatingSystem -in $wsOS)) {
         'Configure registry values within the VM.' | Write-ScriptLog
-        Invoke-CommandWithinVM @invokeWithinVMParams -ScriptBlock {
+        Invoke-Command -Session $localAdminCredPSSession -ScriptBlock {
+            'Disable diagnostics data send screen.' | Write-ScriptLog
+            New-RegistryKey -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows' -KeyName 'OOBE'
+            Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\OOBE' -Name 'DisablePrivacyExperience' -Value 1
+            'Disable diagnostics data send screen completed.' | Write-ScriptLog
+        
             'Stop Server Manager launch at logon.' | Write-ScriptLog
             Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotOpenServerManagerAtLogon' -Value 1
             'Stop Server Manager launch at logon completed.' | Write-ScriptLog
