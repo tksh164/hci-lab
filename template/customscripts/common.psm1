@@ -44,47 +44,60 @@ function New-ExceptionMessage
 {
     param (
         [Parameter(Mandatory = $true)]
-        [System.Management.Automation.ErrorRecord] $ErrorRecord
+        [System.Management.Automation.ErrorRecord] $ErrorRecord,
+
+        [Parameter(Mandatory = $false)]
+        [switch] $AsHandled
     )
+
+    $headerText = 'UNHANDLED EXCEPTION'
+    $fenceChar = '#'
+    $horizontalLineLength = 42
+
+    if ($AsHandled) {
+        $headerText = 'Handled Exception'
+        $fenceChar = '='
+    }
 
     $ex = $_.Exception
     $builder = New-Object -TypeName 'System.Text.StringBuilder'
-    [void] $builder.AppendLine('##########################################')
-    [void] $builder.AppendLine('             SCRIPT EXCEPTION')
-    [void] $builder.AppendLine('##########################################')
+    [void] $builder.AppendLine('')
+    [void] $builder.AppendLine($fenceChar * $horizontalLineLength)
+    [void] $builder.AppendLine($headerText)
+    [void] $builder.AppendLine('-' * $horizontalLineLength)
     [void] $builder.AppendLine($ex.Message)
     [void] $builder.AppendLine('')
-    [void] $builder.AppendLine('Exception: ' + $ex.GetType().FullName)
-    [void] $builder.AppendLine('FullyQualifiedErrorId: ' + $_.FullyQualifiedErrorId)
-    [void] $builder.AppendLine('ErrorDetailsMessage: ' + $_.ErrorDetails.Message)
-    [void] $builder.AppendLine('CategoryInfo: ' + $_.CategoryInfo.ToString())
-    [void] $builder.AppendLine('StackTrace in PowerShell:')
+    [void] $builder.AppendLine('Exception             : ' + $ex.GetType().FullName)
+    [void] $builder.AppendLine('FullyQualifiedErrorId : ' + $_.FullyQualifiedErrorId)
+    [void] $builder.AppendLine('ErrorDetailsMessage   : ' + $_.ErrorDetails.Message)
+    [void] $builder.AppendLine('CategoryInfo          : ' + $_.CategoryInfo.ToString())
+    [void] $builder.AppendLine('StackTrace            :')
     [void] $builder.AppendLine($_.ScriptStackTrace)
 
     [void] $builder.AppendLine('')
-    [void] $builder.AppendLine('--- Exception ---')
-    [void] $builder.AppendLine('Exception: ' + $ex.GetType().FullName)
-    [void] $builder.AppendLine('Message: ' + $ex.Message)
-    [void] $builder.AppendLine('Source: ' + $ex.Source)
-    [void] $builder.AppendLine('HResult: ' + $ex.HResult)
-    [void] $builder.AppendLine('StackTrace:')
+    [void] $builder.AppendLine('-------- Exception --------')
+    [void] $builder.AppendLine('Exception  : ' + $ex.GetType().FullName)
+    [void] $builder.AppendLine('Message    : ' + $ex.Message)
+    [void] $builder.AppendLine('Source     : ' + $ex.Source)
+    [void] $builder.AppendLine('HResult    : ' + $ex.HResult)
+    [void] $builder.AppendLine('StackTrace :')
     [void] $builder.AppendLine($ex.StackTrace)
 
     $level = 1
     while ($ex.InnerException) {
         $ex = $ex.InnerException
         [void] $builder.AppendLine('')
-        [void] $builder.AppendLine('--- InnerException {0} ---' -f $level)
-        [void] $builder.AppendLine('Exception: ' + $ex.GetType().FullName)
-        [void] $builder.AppendLine('Message: ' + $ex.Message)
-        [void] $builder.AppendLine('Source: ' + $ex.Source)
-        [void] $builder.AppendLine('HResult: ' + $ex.HResult)
-        [void] $builder.AppendLine('StackTrace:')
+        [void] $builder.AppendLine('-------- InnerException {0} --------' -f $level)
+        [void] $builder.AppendLine('Exception  : ' + $ex.GetType().FullName)
+        [void] $builder.AppendLine('Message    : ' + $ex.Message)
+        [void] $builder.AppendLine('Source     : ' + $ex.Source)
+        [void] $builder.AppendLine('HResult    : ' + $ex.HResult)
+        [void] $builder.AppendLine('StackTrace :')
         [void] $builder.AppendLine($ex.StackTrace)
         $level++
     }
 
-    [void] $builder.AppendLine('##########################################')
+    [void] $builder.AppendLine($fenceChar * $horizontalLineLength)
     return $builder.ToString()
 }
 
