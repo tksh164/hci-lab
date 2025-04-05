@@ -1144,6 +1144,245 @@ function Invoke-PSDirectSessionCleanup
     'Delete PowerShell Direct sessions completed.' | Write-ScriptLog
 }
 
+function New-PSSessionToVM
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $VMName,
+
+        [Parameter(Mandatory = $true)]
+        [PSCredential] $Credential
+    )
+
+    $attemptLimit = 5
+    for ($attempts = 0; $attempts -lt $attemptLimit; $attempts++) {
+        try {
+            'Create a new PowerShell Direct session to "{0}" with "{1}".' -f $VMName, $Credential.UserName | Write-ScriptLog
+            $pss = New-PSSession -VMName $VMName -Credential $Credential -Name ('{0}:{1}' -f $VMName, $Credential.UserName)
+            'Create a new PowerShell Direct session to "{0}" with "{1}" succeeded.' -f $VMName, $Credential.UserName | Write-ScriptLog
+            return $pss
+        }
+        catch {
+            'Create a new PowerShell Direct session to "{0}" with "{1}" failed.' -f $VMName, $Credential.UserName | Write-ScriptLog -Level Warning
+            New-ExceptionMessage -ErrorRecord $_ -AsHandled | Write-ScriptLog -Level Warning
+            Start-Sleep -Seconds 5
+        }
+    }
+
+    $exceptionMessage = 'Create a new PowerShell Direct session to "{0}" with "{1}" failed {2} times.' -f $VMName, $Credential.UserName, $attemptLimit
+    $exceptionMessage | Write-ScriptLog -Level Error
+    throw $exceptionMessage
+}
+
+function Invoke-PSSessionToVMSetup
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [System.Management.Automation.Runspaces.PSSession] $Session,
+
+        [Parameter(Mandatory = $false)]
+        [string[]] $ImportModuleInVM = @()
+    )
+
+    $params = @{
+        Session      = $Session
+        ArgumentList = $ImportModuleInVM
+    }
+    Invoke-Command @params -ScriptBlock {
+        param (
+            [Parameter(Mandatory = $true)]
+            [string[]] $ImportModuleInVM
+        )
+    
+        $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
+        $WarningPreference = [Management.Automation.ActionPreference]::Continue
+        $VerbosePreference = [Management.Automation.ActionPreference]::Continue
+        $DebugPreference = [Management.Automation.ActionPreference]::SilentlyContinue
+        $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
+
+        # Import the modules.
+        if ($ImportModuleInVM.Length -ne 0) {
+            Import-Module -Name $ImportModuleInVM -Force
+        }
+    }
+}
+
+function Remove-PSSessionToVM
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [System.Management.Automation.Runspaces.PSSession] $Session
+    )
+
+    'Delete a PowerShell Direct session "{0}".' -f $Session.Name | Write-ScriptLog
+    Remove-PSSession -Session $Session
+    'Delete a PowerShell Direct session "{0}" succeeded.' -f $Session.Name | Write-ScriptLog
+}
+
+function Copy-FileIntoVM
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $VMName,
+
+        [Parameter(Mandatory = $true)]
+        [PSCredential] $Credential,
+
+        [Parameter(Mandatory = $true)]
+        [string[]] $SourceFilePath,
+
+        [Parameter(Mandatory = $true)]
+        [string] $DestinationPathInVM
+    )
+
+    try {
+        $pss = New-PSSessionToVM -VMName $VMName -Credential $Credential
+
+        # Copy files into the VM one by one to traceability when raise exception.
+        $filePathsInVM = @()
+        $filePathsInVM += foreach ($filePath in $SourceFilePath) {
+            $filePathInVM = [IO.Path]::Combine($DestinationPathInVM, [IO.Path]::GetFileName($filePath))
+            'Copy from the "{0}" on the lab host to the "{1}" in the VM "{2}".' -f $filePath, $filePathInVM, $pss.VMName | Write-ScriptLog
+            # The destination file will be overwritten if it already exists.
+            Copy-Item -ToSession $pss -LiteralPath $filePath -Destination $filePathInVM
+            'Copy from the "{0}" on the lab host to the "{1}" in the VM "{2}" succeeded.' -f $filePath, $filePathInVM, $pss.VMName | Write-ScriptLog
+            $filePathInVM  # Return the file path in the VM.
+        }
+
+        return $filePathsInVM
+    }
+    finally {
+        if ($pss) {
+            Remove-PSSessionToVM -Session $pss
+        }
+    }
+}
+
+function Remove-FileWithinVM
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $VMName,
+
+        [Parameter(Mandatory = $true)]
+        [PSCredential] $Credential,
+
+        [Parameter(Mandatory = $true)]
+        [string[]] $FilePathToRemoveInVM,
+
+        [Parameter(Mandatory = $false)]
+        [string[]] $ImportModuleInVM = @()
+    )
+
+    $attemptLimit = 5
+    for ($attempts = 0; $attempts -lt $attemptLimit; $attempts++) {
+        try {
+            $pss = New-PSSessionToVM -VMName $VMName -Credential $Credential
+            Invoke-PSSessionToVMSetup -Session $pss -ImportModuleInVM $ImportModuleInVM
+
+            # Remove the files within the VM.
+            $params = @{
+                Session      = $pss
+                ArgumentList = $FilePathToRemoveInVM
+            }
+            Invoke-Command @params -ScriptBlock {
+                param (
+                    [Parameter(Mandatory = $true)]
+                    [string[]] $FilePathToRemove
+                )
+
+                # Delete files one by one for traceability when raise exception.
+                foreach ($filePath in $FilePathToRemove) {
+                    if (Test-Path -LiteralPath $filePath) {
+                        'Delete the "{0}" within the VM "{1}".' -f $filePath, $env:ComputerName | Write-ScriptLog
+                        Remove-Item -LiteralPath $filePath -Force
+                        'Delete the "{0}" within the VM "{1}" succeeded.' -f $filePath, $env:ComputerName | Write-ScriptLog
+                    }
+                    else {
+                        'The "{0}" within the VM "{1}" does not exist.' -f $filePath, $env:ComputerName | Write-ScriptLog
+                    }
+                }
+            } | Out-String | Write-ScriptLog
+            return
+        }
+        catch {
+            'Delete files within the VM failed.' | Write-ScriptLog -Level Warning
+            New-ExceptionMessage -ErrorRecord $_ -AsHandled | Write-ScriptLog -Level Warning
+            Start-Sleep -Seconds 5
+        }
+        finally {
+            if ($pss) {
+                Remove-PSSessionToVM -Session $pss
+            }
+        }
+    }
+
+    $exceptionMessage = 'The file delete operation within the VM "{0}" with "{1}" failed {2} times.' -f $VMName, $Credential.UserName, $attemptLimit
+    $exceptionMessage | Write-ScriptLog -Level Error
+    throw $exceptionMessage
+}
+
+function Invoke-CommandWithinVM
+{
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $VMName,
+
+        [Parameter(Mandatory = $true)]
+        [PSCredential] $Credential,
+
+        [Parameter(Mandatory = $true)]
+        [ScriptBlock] $ScriptBlock,
+
+        [Parameter(Mandatory = $false)]
+        [Object[]] $ScriptBlockParamList,
+
+        [Parameter(Mandatory = $false)]
+        [switch] $WithRetry,
+
+        [Parameter(Mandatory = $false)]
+        [string[]] $ImportModuleInVM = @()
+    )
+
+    $attemptLimit = if ($WithRetry) { 5 } else { 1 }
+    for ($attempts = 0; $attempts -lt $attemptLimit; $attempts++) {
+        try {
+            $pss = New-PSSessionToVM -VMName $VMName -Credential $Credential
+            Invoke-PSSessionToVMSetup -Session $pss -ImportModuleInVM $ImportModuleInVM
+
+            # Invoke the script block within the VM.
+            $params = @{
+                Session     = $pss
+                ScriptBlock = $ScriptBlock
+            }
+            if ($PSBoundParameters.ContainsKey('ScriptBlockParamList')) {
+                $params.ArgumentList = $ScriptBlockParamList
+            }
+            Invoke-Command @params
+            return
+        }
+        catch {
+            'The script block invocation within the VM "{0}" with "{1}" failed.' -f $VMName, $Credential.UserName | Write-ScriptLog -Level Warning
+            New-ExceptionMessage -ErrorRecord $_ -AsHandled | Write-ScriptLog -Level Warning
+            Start-Sleep -Seconds 5
+        }
+        finally {
+            if ($pss) {
+                Remove-PSSessionToVM -Session $pss
+            }
+        }
+    }
+
+    $exceptionMessage = 'The script block invocation within the VM "{0}" with "{1}" failed {2} times.' -f $VMName, $Credential.UserName, $attemptLimit
+    $exceptionMessage | Write-ScriptLog -Level Error
+    throw $exceptionMessage
+}
+
 function New-ShortcutFile
 {
     [CmdletBinding()]
@@ -1254,6 +1493,9 @@ $exportFunctions = @(
     'Copy-PSModuleIntoVM',
     'Invoke-PSDirectSessionSetup',
     'Invoke-PSDirectSessionCleanup',
+    'Copy-FileIntoVM',
+    'Remove-FileWithinVM',
+    'Invoke-CommandWithinVM'
     'New-ShortcutFile',
     'New-WacConnectionFileEntry',
     'New-WacConnectionFileContent'
