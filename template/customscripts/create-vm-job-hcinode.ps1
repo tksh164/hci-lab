@@ -529,11 +529,12 @@ try {
             'Store'
         ) | Out-String -Width 200 | Write-ScriptLog
 
+        # Log DNS configurations.
         'Network adapter DNS configurations:' | Write-ScriptLog
         Get-DnsClientServerAddress | Format-Table -Property @(
             'InterfaceIndex',
             'InterfaceAlias',
-            @{ Label = 'AddressFamily'; Expression = { Switch ($_.AddressFamily) { 2 { 'IPv4' } 23 { 'IPv6' } default { $_.AddressFamily } } } }
+            @{ Label = 'AddressFamily'; Expression = { switch ($_.AddressFamily) { 2 { 'IPv4' } 23 { 'IPv6' } default { $_.AddressFamily } } } }
             @{ Label = 'DNSServers'; Expression = { $_.ServerAddresses } }
         ) | Out-String -Width 200 | Write-ScriptLog
     } | Out-String | Write-ScriptLog
@@ -548,7 +549,7 @@ try {
     $params = @{
         AddsDcVMName       = $labConfig.addsDC.vmName
         AddsDcComputerName = $labConfig.addsDC.vmName  # The DC's computer name is the same as the VM name. It's specified in the unattend.xml.
-        Credential         = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $nodeConfig.AdminPassword  # Doamin Administrator credential
+        Credential         = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $nodeConfig.AdminPassword  # Domain Administrator credential
     }
     Wait-DomainControllerServiceReady @params
     'The domain controller with DNS capability is ready.' | Write-ScriptLog
@@ -583,7 +584,7 @@ try {
             VMName                = $nodeConfig.VMName
             LocalAdminCredential  = $localAdminCredential
             DomainFqdn            = $labConfig.addsDomain.fqdn
-            DomainAdminCredential = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $nodeConfig.AdminPassword  # Doamin Administrator credential
+            DomainAdminCredential = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $nodeConfig.AdminPassword  # Domain Administrator credential
         }
         Add-VMToADDomain @params
         'Join the VM to the AD domain completed.'  | Write-ScriptLog
@@ -608,8 +609,7 @@ try {
     'The HCI node VM creation has been successfully completed.' | Write-ScriptLog
 }
 catch {
-    $exceptionMessage = New-ExceptionMessage -ErrorRecord $_
-    $exceptionMessage | Write-ScriptLog -Level Error
+    New-ExceptionMessage -ErrorRecord $_ | Write-ScriptLog -Level Error
     throw $exceptionMessage
 }
 finally {
