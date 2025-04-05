@@ -298,7 +298,7 @@ try {
 
     'Create the data disks.' | Write-ScriptLog
     $diskCount = 8
-    for ($diskIndex = 1; $diskIndex -le $diskCount; $diskIndex++) {
+    $addDataDisksResult = for ($diskIndex = 1; $diskIndex -le $diskCount; $diskIndex++) {
         $params = @{
             Path                    = [IO.Path]::Combine($labConfig.labHost.folderPath.vm, $nodeConfig.VMName, ('datadisk{0}.vhdx' -f $diskIndex))
             Dynamic                 = $true
@@ -308,8 +308,16 @@ try {
             LogicalSectorSizeBytes  = 4KB
         }
         $vmDataDiskVhd = New-VHD @params
-        Add-VMHardDiskDrive -VMName $nodeConfig.VMName -Path $vmDataDiskVhd.Path -Passthru | Out-String | Write-ScriptLog
+        Add-VMHardDiskDrive -VMName $nodeConfig.VMName -Path $vmDataDiskVhd.Path -Passthru
     }
+    $addDataDisksResult | Format-Table -Property @(
+        'VMName',
+        'ControllerType',
+        'ControllerNumber',
+        'ControllerLocation',
+        'DiskNumber',
+        'Path'
+    ) | Out-String -Width 200 | Write-ScriptLog
     'Create the data disks completed.' | Write-ScriptLog
 
     'Generate the unattend answer XML.'| Write-ScriptLog
@@ -351,18 +359,22 @@ try {
 
     # Guest OS
 
-    'Create a PowerShell Direct session.' | Write-ScriptLog
-    $localAdminCredPSSession = New-PSSession -VMName $nodeConfig.VMName -Credential $localAdminCredential
-    $localAdminCredPSSession | Format-Table -Property 'Id', 'Name', 'ComputerName', 'ComputerType', 'State', 'Availability' | Out-String | Write-ScriptLog
-    'Create a PowerShell Direct session completed.' | Write-ScriptLog
+    'Copy the module files into the VM.' | Write-ScriptLog
+    $params = @{
+        VMName              = $nodeConfig.VMName
+        Credential          = $localAdminCredential
+        SourceFilePath      = (Get-Module -Name 'common').Path
+        DestinationPathInVM = 'C:\Windows\Temp'
+    }
+    $moduleFilePathsWithinVM = Copy-FileIntoVM @params
+    'Copy the module files into the VM completed.' | Write-ScriptLog
 
-    'Copy the common module file into the VM.' | Write-ScriptLog
-    $commonModuleFilePathInVM = Copy-PSModuleIntoVM -Session $localAdminCredPSSession -ModuleFilePathToCopy (Get-Module -Name 'common').Path
-    'Copy the common module file into the VM completed.' | Write-ScriptLog
-
-    'Setup the PowerShell Direct session.' | Write-ScriptLog
-    Invoke-PSDirectSessionSetup -Session $localAdminCredPSSession -CommonModuleFilePathInVM $commonModuleFilePathInVM
-    'Setup the PowerShell Direct session completed.' | Write-ScriptLog
+    # The common parameters for Invoke-CommandWithinVM.
+    $invokeWithinVMParams = @{
+        VMName           = $nodeConfig.VMName
+        Credential       = $localAdminCredential
+        ImportModuleInVM = $moduleFilePathsWithinVM
+    }
 
     # If the HCI node OS is Windows Server with Desktop Experience.
     $wsOS = @(
@@ -371,7 +383,7 @@ try {
     )
     if (($NodeConfig.ImageIndex -eq [HciLab.OSImageIndex]::WSDatacenterDesktopExperience) -and ($NodeConfig.OperatingSystem -in $wsOS)) {
         'Configure registry values within the VM.' | Write-ScriptLog
-        Invoke-Command -Session $localAdminCredPSSession -ScriptBlock {
+        Invoke-CommandWithinVM @invokeWithinVMParams -ScriptBlock {
             'Disable diagnostics data send screen.' | Write-ScriptLog
             New-RegistryKey -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows' -KeyName 'OOBE'
             Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\OOBE' -Name 'DisablePrivacyExperience' -Value 1
@@ -398,14 +410,9 @@ try {
     }
 
     'Configure network settings within the VM.' | Write-ScriptLog
-    $params = @{
-        InputObject = [PSCustomObject] @{
-            VMConfig = $NodeConfig
-        }
-    }
-    Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
+    Invoke-CommandWithinVM @invokeWithinVMParams -ScriptBlockParamList $NodeConfig -ScriptBlock {
         param (
-            [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+            [Parameter(Mandatory = $true)]
             [PSCustomObject] $VMConfig
         )
 
@@ -517,11 +524,12 @@ try {
             'Store'
         ) | Out-String -Width 200 | Write-ScriptLog
 
+        # Log DNS configurations.
         'Network adapter DNS configurations:' | Write-ScriptLog
         Get-DnsClientServerAddress | Format-Table -Property @(
             'InterfaceIndex',
             'InterfaceAlias',
-            @{ Label = 'AddressFamily'; Expression = { Switch ($_.AddressFamily) { 2 { 'IPv4' } 23 { 'IPv6' } default { $_.AddressFamily } } } }
+            @{ Label = 'AddressFamily'; Expression = { switch ($_.AddressFamily) { 2 { 'IPv4' } 23 { 'IPv6' } default { $_.AddressFamily } } } }
             @{ Label = 'DNSServers'; Expression = { $_.ServerAddresses } }
         ) | Out-String -Width 200 | Write-ScriptLog
     } | Out-String | Write-ScriptLog
@@ -536,28 +544,34 @@ try {
     $params = @{
         AddsDcVMName       = $labConfig.addsDC.vmName
         AddsDcComputerName = $labConfig.addsDC.vmName  # The DC's computer name is the same as the VM name. It's specified in the unattend.xml.
-        Credential         = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $nodeConfig.AdminPassword  # Doamin Administrator credential
+        Credential         = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $nodeConfig.AdminPassword  # Domain Administrator credential
     }
     Wait-DomainControllerServiceReady @params
     'The domain controller with DNS capability is ready.' | Write-ScriptLog
 
     # NOTE: The package provider installation needs internet connection and name resolution.
-    'Install the NuGet pacakge provider within the VM.' | Write-ScriptLog
-    Invoke-Command -Session $localAdminCredPSSession -ScriptBlock {
-        Install-PackageProvider -Name 'NuGet' -Scope AllUsers -Force -Verbose | Out-String -Width 200 | Write-ScriptLog
+    'Install the NuGet package provider within the VM.' | Write-ScriptLog
+    Invoke-CommandWithinVM @invokeWithinVMParams -WithRetry -ScriptBlock {
+        Install-PackageProvider -Name 'NuGet' -Scope 'AllUsers' -Force -Verbose | Out-String -Width 200 | Write-ScriptLog
     } | Out-String -Width 200 | Write-ScriptLog
     'Install the NuGet package provider within the VM completed.' | Write-ScriptLog
 
     # NOTE: The PowerShellGet module installation needs internet connection and name resolution.
     'Install the PowerShellGet module within the VM.' | Write-ScriptLog
-    Invoke-Command -Session $localAdminCredPSSession -ScriptBlock {
-        Install-Module -Name 'PowerShellGet' -Scope AllUsers -Force -Verbose | Out-String -Width 200 | Write-ScriptLog
+    Invoke-CommandWithinVM @invokeWithinVMParams -WithRetry -ScriptBlock {
+        Install-Module -Name 'PowerShellGet' -Scope 'AllUsers' -Force -Verbose | Out-String -Width 200 | Write-ScriptLog
     } | Out-String -Width 200 | Write-ScriptLog
     'Install the PowerShellGet module within the VM completed.' | Write-ScriptLog
 
-    'Clean up the PowerShell Direct session.' | Write-ScriptLog
-    Invoke-PSDirectSessionCleanup -Session $localAdminCredPSSession -CommonModuleFilePathInVM $commonModuleFilePathInVM
-    'Clean up the PowerShell Direct session completed.' | Write-ScriptLog
+    'Delete the module files within the VM.' | Write-ScriptLog
+    $params = @{
+        VMName               = $invokeWithinVMParams.VMName
+        Credential           = $invokeWithinVMParams.Credential
+        FilePathToRemoveInVM = $invokeWithinVMParams.ImportModuleInVM
+        ImportModuleInVM     = $invokeWithinVMParams.ImportModuleInVM
+    }
+    Remove-FileWithinVM @params
+    'Delete the module files within the VM completed.' | Write-ScriptLog
 
     if ($labConfig.hciNode.shouldJoinToAddsDomain) {
         'Join the VM to the AD domain.'  | Write-ScriptLog
@@ -565,35 +579,32 @@ try {
             VMName                = $nodeConfig.VMName
             LocalAdminCredential  = $localAdminCredential
             DomainFqdn            = $labConfig.addsDomain.fqdn
-            DomainAdminCredential = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $nodeConfig.AdminPassword  # Doamin Administrator credential
+            DomainAdminCredential = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $nodeConfig.AdminPassword  # Domain Administrator credential
         }
         Add-VMToADDomain @params
         'Join the VM to the AD domain completed.'  | Write-ScriptLog
     }
 
-    'Stop the VM.' | Write-ScriptLog
-    Stop-VM -Name $nodeConfig.VMName
-    'Stop the VM completed.' | Write-ScriptLog
-
-    'Start the VM.' | Write-ScriptLog
-    Start-VM -Name $nodeConfig.VMName
-    'Start the VM completed.' | Write-ScriptLog
+    Stop-LabVM -VMName $nodeConfig.VMName
+    Start-LabVM -VMName $nodeConfig.VMName
 
     'Wait for the VM to be ready.' | Write-ScriptLog
-    $credentialForWaiting = if ($labConfig.hciNode.shouldJoinToAddsDomain) {
-        New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $nodeConfig.AdminPassword
+    $params = @{
+        VMName     = $nodeConfig.VMName
+        Credential = if ($labConfig.hciNode.shouldJoinToAddsDomain) {
+            New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $nodeConfig.AdminPassword
+        }
+        else {
+            $localAdminCredential
+        }
     }
-    else {
-        $localAdminCredential
-    }
-    Wait-PowerShellDirectReady -VMName $nodeConfig.VMName -Credential $credentialForWaiting
+    Wait-PowerShellDirectReady @params
     'The VM is ready.' | Write-ScriptLog
 
     'The HCI node VM creation has been successfully completed.' | Write-ScriptLog
 }
 catch {
-    $exceptionMessage = New-ExceptionMessage -ErrorRecord $_
-    $exceptionMessage | Write-ScriptLog -Level Error
+    New-ExceptionMessage -ErrorRecord $_ | Write-ScriptLog -Level Error
     throw $exceptionMessage
 }
 finally {

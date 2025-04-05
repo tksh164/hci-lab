@@ -44,43 +44,60 @@ function New-ExceptionMessage
 {
     param (
         [Parameter(Mandatory = $true)]
-        [System.Management.Automation.ErrorRecord] $ErrorRecord
+        [System.Management.Automation.ErrorRecord] $ErrorRecord,
+
+        [Parameter(Mandatory = $false)]
+        [switch] $AsHandled
     )
+
+    $headerText = 'UNHANDLED EXCEPTION'
+    $fenceChar = '#'
+    $horizontalLineLength = 42
+
+    if ($AsHandled) {
+        $headerText = 'Handled Exception'
+        $fenceChar = '='
+    }
 
     $ex = $_.Exception
     $builder = New-Object -TypeName 'System.Text.StringBuilder'
     [void] $builder.AppendLine('')
-    [void] $builder.AppendLine('@@@@@@@@ EXCEPTION @@@@@@@@')
+    [void] $builder.AppendLine($fenceChar * $horizontalLineLength)
+    [void] $builder.AppendLine($headerText)
+    [void] $builder.AppendLine('-' * $horizontalLineLength)
     [void] $builder.AppendLine($ex.Message)
-    [void] $builder.AppendLine('Exception: ' + $ex.GetType().FullName)
-    [void] $builder.AppendLine('FullyQualifiedErrorId: ' + $_.FullyQualifiedErrorId)
-    [void] $builder.AppendLine('ErrorDetailsMessage: ' + $_.ErrorDetails.Message)
-    [void] $builder.AppendLine('CategoryInfo: ' + $_.CategoryInfo.ToString())
-    [void] $builder.AppendLine('StackTrace in PowerShell:')
+    [void] $builder.AppendLine('')
+    [void] $builder.AppendLine('Exception             : ' + $ex.GetType().FullName)
+    [void] $builder.AppendLine('FullyQualifiedErrorId : ' + $_.FullyQualifiedErrorId)
+    [void] $builder.AppendLine('ErrorDetailsMessage   : ' + $_.ErrorDetails.Message)
+    [void] $builder.AppendLine('CategoryInfo          : ' + $_.CategoryInfo.ToString())
+    [void] $builder.AppendLine('StackTrace            :')
     [void] $builder.AppendLine($_.ScriptStackTrace)
 
-    [void] $builder.AppendLine('--- Exception ---')
-    [void] $builder.AppendLine('Exception: ' + $ex.GetType().FullName)
-    [void] $builder.AppendLine('Message: ' + $ex.Message)
-    [void] $builder.AppendLine('Source: ' + $ex.Source)
-    [void] $builder.AppendLine('HResult: ' + $ex.HResult)
-    [void] $builder.AppendLine('StackTrace:')
+    [void] $builder.AppendLine('')
+    [void] $builder.AppendLine('-------- Exception --------')
+    [void] $builder.AppendLine('Exception  : ' + $ex.GetType().FullName)
+    [void] $builder.AppendLine('Message    : ' + $ex.Message)
+    [void] $builder.AppendLine('Source     : ' + $ex.Source)
+    [void] $builder.AppendLine('HResult    : ' + $ex.HResult)
+    [void] $builder.AppendLine('StackTrace :')
     [void] $builder.AppendLine($ex.StackTrace)
 
     $level = 1
     while ($ex.InnerException) {
         $ex = $ex.InnerException
-        [void] $builder.AppendLine('--- InnerException {0} ---' -f $level)
-        [void] $builder.AppendLine('Exception: ' + $ex.GetType().FullName)
-        [void] $builder.AppendLine('Message: ' + $ex.Message)
-        [void] $builder.AppendLine('Source: ' + $ex.Source)
-        [void] $builder.AppendLine('HResult: ' + $ex.HResult)
-        [void] $builder.AppendLine('StackTrace:')
+        [void] $builder.AppendLine('')
+        [void] $builder.AppendLine('-------- InnerException {0} --------' -f $level)
+        [void] $builder.AppendLine('Exception  : ' + $ex.GetType().FullName)
+        [void] $builder.AppendLine('Message    : ' + $ex.Message)
+        [void] $builder.AppendLine('Source     : ' + $ex.Source)
+        [void] $builder.AppendLine('HResult    : ' + $ex.HResult)
+        [void] $builder.AppendLine('StackTrace :')
         [void] $builder.AppendLine($ex.StackTrace)
         $level++
     }
 
-    [void] $builder.AppendLine('@@@@@@@@@@@@@@@@@@@@@@@@@@@')
+    [void] $builder.AppendLine($fenceChar * $horizontalLineLength)
     return $builder.ToString()
 }
 
@@ -200,23 +217,42 @@ function Get-Secret
         [switch] $AsPlainText
     )
 
-    # Get a token for Key Vault using VM's managed identity via Azure Instance Metadata Service.
-    $accessToken = Get-AccessTokenUsingManagedId -Resource 'https%3A%2F%2Fvault.azure.net'
+    'Get a secret value of the {0} from the {1}.' -f $SecretName, $KeyVaultName | Write-ScriptLog
 
-    # Get a secret value from the Key Vault resource.
-    $params = @{
-        Method  = 'Get'
-        Uri     = ('https://{0}.vault.azure.net/secrets/{1}?api-version=7.3' -f $KeyVaultName, $SecretName)
-        Headers = @{
-            Authorization = ('Bearer {0}' -f $accessToken)
+    $attemptLimit = 10
+    for ($attempts = 0; $attempts -lt $attemptLimit; $attempts++) {
+        try {
+            # Get a token for Key Vault using VM's managed identity via Azure Instance Metadata Service.
+            $accessToken = Get-AccessTokenUsingManagedId -Resource 'https%3A%2F%2Fvault.azure.net'
+
+            # Get a secret value from the Key Vault resource.
+            $params = @{
+                Method  = 'Get'
+                Uri     = ('https://{0}.vault.azure.net/secrets/{1}?api-version=7.4' -f $KeyVaultName, $SecretName)
+                Headers = @{
+                    Authorization = ('Bearer {0}' -f $accessToken)
+                }
+            }
+            $secretValue = (Invoke-RestMethod @params).value
+
+            if ($AsPlainText) {
+                return $secretValue
+            }
+            return ConvertTo-SecureString -String $secretValue -AsPlainText -Force
+        }
+        catch [System.Net.WebException] {
+            # Handle the "AKV10046: Unable to resolve the key used for signature validation." exception.
+            if ($_.ErrorDetails.Message -like '*AKV10046*') {
+                ('Will retry get the secret due to unable to retrieve the value of {0} from {1}: {2}' -f $SecretName, $KeyVaultName, $_.ErrorDetails.Message) | Write-ScriptLog -Level Warning
+                Start-Sleep -Seconds 1
+            }
+            else {
+                throw $_
+            }
         }
     }
-    $secretValue = (Invoke-RestMethod @params).value
 
-    if ($AsPlainText) {
-        return $secretValue
-    }
-    return ConvertTo-SecureString -String $secretValue -AsPlainText -Force
+    throw 'Could not get a secret value from the Key Vault.'
 }
 
 function Get-AccessTokenUsingManagedId
@@ -702,6 +738,43 @@ function Start-VMWithRetry
     throw 'The VM "{0}" was not start in the acceptable time ({1}).' -f $VMName, $RetyTimeout.ToString()
 }
 
+function Start-LabVM
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $VMName
+    )
+
+    'Start the VM "{0}".' -f $VMName | Write-ScriptLog
+    Start-VM -Name $VMName
+    'Start the VM "{0}" succeeded.' -f $VMName | Write-ScriptLog
+}
+
+function Stop-LabVM
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $VMName
+    )
+
+    'Stop the VM "{0}".' -f $VMName | Write-ScriptLog
+    try {
+        Stop-VM -Name $VMName
+    }
+    catch [Microsoft.HyperV.PowerShell.VirtualizationException] {
+        # A system shutdown has already been scheduled.
+        if ($_.Exception.Message -like '*0x800704a6*') {
+            New-ExceptionMessage -ErrorRecord $_ -AsHandled | Write-ScriptLog -Level Warning
+        }
+        else {
+            throw $_
+        }
+    }
+    'Stop the VM "{0}" succeeded.' -f $VMName | Write-ScriptLog
+}
+
 function Wait-PowerShellDirectReady
 {
     [CmdletBinding()]
@@ -1071,6 +1144,245 @@ function Invoke-PSDirectSessionCleanup
     'Delete PowerShell Direct sessions completed.' | Write-ScriptLog
 }
 
+function New-PSSessionToVM
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $VMName,
+
+        [Parameter(Mandatory = $true)]
+        [PSCredential] $Credential
+    )
+
+    $attemptLimit = 5
+    for ($attempts = 0; $attempts -lt $attemptLimit; $attempts++) {
+        try {
+            'Create a new PowerShell Direct session to "{0}" with "{1}".' -f $VMName, $Credential.UserName | Write-ScriptLog
+            $pss = New-PSSession -VMName $VMName -Credential $Credential -Name ('{0}:{1}' -f $VMName, $Credential.UserName)
+            'Create a new PowerShell Direct session to "{0}" with "{1}" succeeded.' -f $VMName, $Credential.UserName | Write-ScriptLog
+            return $pss
+        }
+        catch {
+            'Create a new PowerShell Direct session to "{0}" with "{1}" failed.' -f $VMName, $Credential.UserName | Write-ScriptLog -Level Warning
+            New-ExceptionMessage -ErrorRecord $_ -AsHandled | Write-ScriptLog -Level Warning
+            Start-Sleep -Seconds 5
+        }
+    }
+
+    $exceptionMessage = 'Create a new PowerShell Direct session to "{0}" with "{1}" failed {2} times.' -f $VMName, $Credential.UserName, $attemptLimit
+    $exceptionMessage | Write-ScriptLog -Level Error
+    throw $exceptionMessage
+}
+
+function Invoke-PSSessionToVMSetup
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [System.Management.Automation.Runspaces.PSSession] $Session,
+
+        [Parameter(Mandatory = $false)]
+        [string[]] $ImportModuleInVM = @()
+    )
+
+    $params = @{
+        Session      = $Session
+        ArgumentList = $ImportModuleInVM
+    }
+    Invoke-Command @params -ScriptBlock {
+        param (
+            [Parameter(Mandatory = $true)]
+            [string[]] $ImportModuleInVM
+        )
+    
+        $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
+        $WarningPreference = [Management.Automation.ActionPreference]::Continue
+        $VerbosePreference = [Management.Automation.ActionPreference]::Continue
+        $DebugPreference = [Management.Automation.ActionPreference]::SilentlyContinue
+        $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
+
+        # Import the modules.
+        if ($ImportModuleInVM.Length -ne 0) {
+            Import-Module -Name $ImportModuleInVM -Force
+        }
+    }
+}
+
+function Remove-PSSessionToVM
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [System.Management.Automation.Runspaces.PSSession] $Session
+    )
+
+    'Delete a PowerShell Direct session "{0}".' -f $Session.Name | Write-ScriptLog
+    Remove-PSSession -Session $Session
+    'Delete a PowerShell Direct session "{0}" succeeded.' -f $Session.Name | Write-ScriptLog
+}
+
+function Copy-FileIntoVM
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $VMName,
+
+        [Parameter(Mandatory = $true)]
+        [PSCredential] $Credential,
+
+        [Parameter(Mandatory = $true)]
+        [string[]] $SourceFilePath,
+
+        [Parameter(Mandatory = $true)]
+        [string] $DestinationPathInVM
+    )
+
+    try {
+        $pss = New-PSSessionToVM -VMName $VMName -Credential $Credential
+
+        # Copy files into the VM one by one to traceability when raise exception.
+        $filePathsInVM = @()
+        $filePathsInVM += foreach ($filePath in $SourceFilePath) {
+            $filePathInVM = [IO.Path]::Combine($DestinationPathInVM, [IO.Path]::GetFileName($filePath))
+            'Copy from the "{0}" on the lab host to the "{1}" in the VM "{2}".' -f $filePath, $filePathInVM, $pss.VMName | Write-ScriptLog
+            # The destination file will be overwritten if it already exists.
+            Copy-Item -ToSession $pss -LiteralPath $filePath -Destination $filePathInVM
+            'Copy from the "{0}" on the lab host to the "{1}" in the VM "{2}" succeeded.' -f $filePath, $filePathInVM, $pss.VMName | Write-ScriptLog
+            $filePathInVM  # Return the file path in the VM.
+        }
+
+        return $filePathsInVM
+    }
+    finally {
+        if ($pss) {
+            Remove-PSSessionToVM -Session $pss
+        }
+    }
+}
+
+function Remove-FileWithinVM
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $VMName,
+
+        [Parameter(Mandatory = $true)]
+        [PSCredential] $Credential,
+
+        [Parameter(Mandatory = $true)]
+        [string[]] $FilePathToRemoveInVM,
+
+        [Parameter(Mandatory = $false)]
+        [string[]] $ImportModuleInVM = @()
+    )
+
+    $attemptLimit = 5
+    for ($attempts = 0; $attempts -lt $attemptLimit; $attempts++) {
+        try {
+            $pss = New-PSSessionToVM -VMName $VMName -Credential $Credential
+            Invoke-PSSessionToVMSetup -Session $pss -ImportModuleInVM $ImportModuleInVM
+
+            # Remove the files within the VM.
+            $params = @{
+                Session      = $pss
+                ArgumentList = $FilePathToRemoveInVM
+            }
+            Invoke-Command @params -ScriptBlock {
+                param (
+                    [Parameter(Mandatory = $true)]
+                    [string[]] $FilePathToRemove
+                )
+
+                # Delete files one by one for traceability when raise exception.
+                foreach ($filePath in $FilePathToRemove) {
+                    if (Test-Path -LiteralPath $filePath) {
+                        'Delete the "{0}" within the VM "{1}".' -f $filePath, $env:ComputerName | Write-ScriptLog
+                        Remove-Item -LiteralPath $filePath -Force
+                        'Delete the "{0}" within the VM "{1}" succeeded.' -f $filePath, $env:ComputerName | Write-ScriptLog
+                    }
+                    else {
+                        'The "{0}" within the VM "{1}" does not exist.' -f $filePath, $env:ComputerName | Write-ScriptLog
+                    }
+                }
+            } | Out-String | Write-ScriptLog
+            return
+        }
+        catch {
+            'Delete files within the VM failed.' | Write-ScriptLog -Level Warning
+            New-ExceptionMessage -ErrorRecord $_ -AsHandled | Write-ScriptLog -Level Warning
+            Start-Sleep -Seconds 5
+        }
+        finally {
+            if ($pss) {
+                Remove-PSSessionToVM -Session $pss
+            }
+        }
+    }
+
+    $exceptionMessage = 'The file delete operation within the VM "{0}" with "{1}" failed {2} times.' -f $VMName, $Credential.UserName, $attemptLimit
+    $exceptionMessage | Write-ScriptLog -Level Error
+    throw $exceptionMessage
+}
+
+function Invoke-CommandWithinVM
+{
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $VMName,
+
+        [Parameter(Mandatory = $true)]
+        [PSCredential] $Credential,
+
+        [Parameter(Mandatory = $true)]
+        [ScriptBlock] $ScriptBlock,
+
+        [Parameter(Mandatory = $false)]
+        [Object[]] $ScriptBlockParamList,
+
+        [Parameter(Mandatory = $false)]
+        [switch] $WithRetry,
+
+        [Parameter(Mandatory = $false)]
+        [string[]] $ImportModuleInVM = @()
+    )
+
+    $attemptLimit = if ($WithRetry) { 5 } else { 1 }
+    for ($attempts = 0; $attempts -lt $attemptLimit; $attempts++) {
+        try {
+            $pss = New-PSSessionToVM -VMName $VMName -Credential $Credential
+            Invoke-PSSessionToVMSetup -Session $pss -ImportModuleInVM $ImportModuleInVM
+
+            # Invoke the script block within the VM.
+            $params = @{
+                Session     = $pss
+                ScriptBlock = $ScriptBlock
+            }
+            if ($PSBoundParameters.ContainsKey('ScriptBlockParamList')) {
+                $params.ArgumentList = $ScriptBlockParamList
+            }
+            Invoke-Command @params
+            return
+        }
+        catch {
+            'The script block invocation within the VM "{0}" with "{1}" failed.' -f $VMName, $Credential.UserName | Write-ScriptLog -Level Warning
+            New-ExceptionMessage -ErrorRecord $_ -AsHandled | Write-ScriptLog -Level Warning
+            Start-Sleep -Seconds 5
+        }
+        finally {
+            if ($pss) {
+                Remove-PSSessionToVM -Session $pss
+            }
+        }
+    }
+
+    $exceptionMessage = 'The script block invocation within the VM "{0}" with "{1}" failed {2} times.' -f $VMName, $Credential.UserName, $attemptLimit
+    $exceptionMessage | Write-ScriptLog -Level Error
+    throw $exceptionMessage
+}
+
 function New-ShortcutFile
 {
     [CmdletBinding()]
@@ -1168,7 +1480,9 @@ $exportFunctions = @(
     'New-UnattendAnswerFileContent',
     'Set-UnattendAnswerFileToVhd',
     'Install-WindowsFeatureToVhd',
-    'Start-VMWithRetry',
+    'Start-VMWithRetry',  # TODO: Need to refactor with Start-LabVM.
+    'Start-LabVM',
+    'Stop-LabVM',
     'Wait-PowerShellDirectReady',
     'Block-AddsDomainOperation',
     'Unblock-AddsDomainOperation',
@@ -1179,6 +1493,9 @@ $exportFunctions = @(
     'Copy-PSModuleIntoVM',
     'Invoke-PSDirectSessionSetup',
     'Invoke-PSDirectSessionCleanup',
+    'Copy-FileIntoVM',
+    'Remove-FileWithinVM',
+    'Invoke-CommandWithinVM'
     'New-ShortcutFile',
     'New-WacConnectionFileEntry',
     'New-WacConnectionFileContent'

@@ -172,13 +172,13 @@ try {
     $baseVhdSpecsToNeed = @(
         # For AD DS DC
         [PSCustomObject] @{
-            OperatingSystem = [HciLab.OSSku]::WindowsServer2022
+            OperatingSystem = [HciLab.OSSku]::WindowsServer2025
             ImageIndex      = [int]([HciLab.OSImageIndex]::WSDatacenterServerCore)
             Culture         = $labConfig.guestOS.culture
         },
         # For management server (WAC)
         [PSCustomObject] @{
-            OperatingSystem = [HciLab.OSSku]::WindowsServer2022
+            OperatingSystem = [HciLab.OSSku]::WindowsServer2025
             ImageIndex      = [int]([HciLab.OSImageIndex]::WSDatacenterDesktopExperience)
             Culture         = $labConfig.guestOS.culture
         },

@@ -71,7 +71,7 @@ try {
 
     'Create the OS disk for the VM.' | Write-ScriptLog
     $params = @{
-        OperatingSystem = [HciLab.OSSku]::WindowsServer2022
+        OperatingSystem = [HciLab.OSSku]::WindowsServer2025
         ImageIndex      = [HciLab.OSImageIndex]::WSDatacenterDesktopExperience  # Datacenter with Desktop Experience
         Culture         = $labConfig.guestOS.culture
     }
@@ -481,7 +481,7 @@ try {
             TargetPath       = 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
             Arguments        = 'https://{0}' -f $env:ComputerName
             Description      = 'Windows Admin Center for the lab environment.'
-            IconLocation     = 'imageres.dll,1'
+            IconLocation     = 'imageres.dll,-1028'
         }
         New-ShortcutFile @params
         'Create the shortcut for Windows Admin Center on the desktop completed.' | Write-ScriptLog
