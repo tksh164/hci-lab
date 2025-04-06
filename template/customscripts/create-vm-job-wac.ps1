@@ -58,6 +58,8 @@ function New-CertificateForWindowsAdminCenter
 }
 
 try {
+    $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+
     Import-Module -Name $PSModuleNameToImport -Force
     
     $labConfig = Get-LabDeploymentConfig
@@ -67,7 +69,9 @@ try {
     'Lab deployment config:' | Write-ScriptLog
     $labConfig | ConvertTo-Json -Depth 16 | Out-String | Write-ScriptLog
     
-    # Hyper-V VM
+    #
+    # Hyper-V VM creation
+    #
 
     'Create the OS disk for the VM.' | Write-ScriptLog
     $params = @{
@@ -213,23 +217,29 @@ try {
     Wait-PowerShellDirectReady -VMName $labConfig.wac.vmName -Credential $localAdminCredential
     'The VM is ready.' | Write-ScriptLog
 
-    # Guest OS
+    #
+    # Guest OS configuration
+    #
 
-    'Create a PowerShell Direct session.' | Write-ScriptLog
-    $localAdminCredPSSession = New-PSSession -VMName $labConfig.wac.vmName -Credential $localAdminCredential
-    $localAdminCredPSSession | Format-Table -Property 'Id', 'Name', 'ComputerName', 'ComputerType', 'State', 'Availability' | Out-String | Write-ScriptLog
-    'Create a PowerShell Direct session completed.' | Write-ScriptLog
+    'Copy the module files into the VM.' | Write-ScriptLog
+    $params = @{
+        VMName              = $labConfig.wac.vmName
+        Credential          = $localAdminCredential
+        SourceFilePath      = (Get-Module -Name 'common').Path
+        DestinationPathInVM = 'C:\Windows\Temp'
+    }
+    $moduleFilePathsWithinVM = Copy-FileIntoVM @params
+    'Copy the module files into the VM completed.' | Write-ScriptLog
 
-    'Copy the common module file into the VM.' | Write-ScriptLog
-    $commonModuleFilePathInVM = Copy-PSModuleIntoVM -Session $localAdminCredPSSession -ModuleFilePathToCopy (Get-Module -Name 'common').Path
-    'Copy the common module file into the VM completed.' | Write-ScriptLog
-
-    'Setup the PowerShell Direct session.' | Write-ScriptLog
-    Invoke-PSDirectSessionSetup -Session $localAdminCredPSSession -CommonModuleFilePathInVM $commonModuleFilePathInVM
-    'Setup the PowerShell Direct session completed.' | Write-ScriptLog
-
+    # The common parameters for Invoke-CommandWithinVM.
+    $invokeWithinVMParams = @{
+        VMName           = $labConfig.wac.vmName
+        Credential       = $localAdminCredential
+        ImportModuleInVM = $moduleFilePathsWithinVM
+    }
+    
     'Configure registry values within the VM.' | Write-ScriptLog
-    Invoke-Command -Session $localAdminCredPSSession -ScriptBlock {
+    Invoke-CommandWithinVM @invokeWithinVMParams -ScriptBlock {
         'Disable diagnostics data send screen.' | Write-ScriptLog
         New-RegistryKey -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows' -KeyName 'OOBE'
         Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\OOBE' -Name 'DisablePrivacyExperience' -Value 1
@@ -255,14 +265,9 @@ try {
     'Configure registry values within the VM completed.' | Write-ScriptLog
 
     'Configure network settings within the VM.' | Write-ScriptLog
-    $params = @{
-        InputObject = [PSCustomObject] @{
-            VMConfig = $LabConfig.wac
-        }
-    }
-    Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
+    Invoke-CommandWithinVM @invokeWithinVMParams -ScriptBlockParamList $labConfig.wac -ScriptBlock {
         param (
-            [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+            [Parameter(Mandatory = $true)]
             [PSCustomObject] $VMConfig
         )
 
@@ -318,9 +323,8 @@ try {
     } | Out-String | Write-ScriptLog
     'Configure network settings within the VM completed.' | Write-ScriptLog
 
-    # Windows Admin Center
+    # Temporary comment out the WAC related code because of the WAC installation issue.
     <#
-
     'Donwload the Windows Admin Center installer.' | Write-ScriptLog
     $wacInstallerFile = Invoke-WindowsAdminCenterInstallerDownload -DownloadFolderPath $labConfig.labHost.folderPath.temp
     $wacInstallerFile | Out-String | Write-ScriptLog
@@ -488,23 +492,20 @@ try {
     } | Out-String | Write-ScriptLog
     'Install Windows Admin Center within the VM completed.' | Write-ScriptLog
     #>
+
     'Create a new shortcut on the desktop for connecting to the first HCI node using Remote Desktop connection.' | Write-ScriptLog
-    $params = @{
-        InputObject = [PSCustomObject] @{
-            FirstHciNodeName = Format-HciNodeName -Format $labConfig.hciNode.vmName -Offset $labConfig.hciNode.vmNameOffset -Index 0
-        }
-    }
-    Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
+    Invoke-CommandWithinVM @invokeWithinVMParams -ScriptBlockParamList $labConfig.hciNode -ScriptBlock {
         param (
-            [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-            [string] $FirstHciNodeName
+            [Parameter(Mandatory = $true)]
+            [PSCustomObject] $HciNodeConfig
         )
 
+        $firstHciNodeName = Format-HciNodeName -Format $HciNodeConfig.vmName -Offset $HciNodeConfig.vmNameOffset -Index 0
         $params = @{
-            ShortcutFilePath = 'C:\Users\Public\Desktop\{0}.lnk' -f $FirstHciNodeName
+            ShortcutFilePath = 'C:\Users\Public\Desktop\{0}.lnk' -f $firstHciNodeName
             TargetPath       = '%windir%\System32\mstsc.exe'
-            Arguments        = '/v:{0}' -f $FirstHciNodeName  # The VM name is also the computer name.
-            Description      = 'Make a remote desktop connection to the member node "{0}" VM of the HCI cluster in your lab environment.' -f $FirstHciNodeName
+            Arguments        = '/v:{0}' -f $firstHciNodeName  # The VM name is also the computer name.
+            Description      = 'Make a remote desktop connection to the member node "{0}" VM of the HCI cluster in your lab environment.' -f $firstHciNodeName
         }
         New-ShortcutFile @params
     } | Out-String | Write-ScriptLog
@@ -520,29 +521,24 @@ try {
     $params = @{
         AddsDcVMName       = $labConfig.addsDC.vmName
         AddsDcComputerName = $labConfig.addsDC.vmName  # The DC's computer name is the same as the VM name. It's specified in the unattend.xml.
-        Credential         = $domainAdminCredential    # Doamin Administrator credential
+        Credential         = $domainAdminCredential    # Domain Administrator credential
     }
     Wait-DomainControllerServiceReady @params
     'The domain controller with DNS capability is ready.' | Write-ScriptLog
 
     # NOTE: The package provider installation needs internet connection and name resolution.
-    'Install the NuGet pacakge provider within the VM.' | Write-ScriptLog
-    Invoke-Command -Session $localAdminCredPSSession -ScriptBlock {
-        Install-PackageProvider -Name 'NuGet' -Scope AllUsers -Force -Verbose | Out-String -Width 200 | Write-ScriptLog
-    } | Out-String  -Width 200 | Write-ScriptLog
+    'Install the NuGet package provider within the VM.' | Write-ScriptLog
+    Invoke-CommandWithinVM @invokeWithinVMParams -WithRetry -ScriptBlock {
+        Install-PackageProvider -Name 'NuGet' -Scope 'AllUsers' -Force -Verbose | Out-String -Width 200 | Write-ScriptLog
+    } | Out-String -Width 200 | Write-ScriptLog
     'Install the NuGet package provider within the VM completed.' | Write-ScriptLog
 
     # NOTE: The PowerShellGet module installation needs internet connection and name resolution.
     'Install the PowerShellGet module within the VM.' | Write-ScriptLog
-    Invoke-Command -Session $localAdminCredPSSession -ScriptBlock {
-        Install-Module -Name 'PowerShellGet' -Scope AllUsers -Force -Verbose | Out-String -Width 200 | Write-ScriptLog
+    Invoke-CommandWithinVM @invokeWithinVMParams -WithRetry -ScriptBlock {
+        Install-Module -Name 'PowerShellGet' -Scope 'AllUsers' -Force -Verbose | Out-String -Width 200 | Write-ScriptLog
     } | Out-String -Width 200 | Write-ScriptLog
     'Install the PowerShellGet module within the VM completed.' | Write-ScriptLog
-
-    'Clean up the PowerShell Direct session.' | Write-ScriptLog
-    # NOTE: The common module not be deleted within the VM at this time because it will be used afterwards.
-    $localAdminCredPSSession | Remove-PSSession
-    'Clean up the PowerShell Direct session completed.' | Write-ScriptLog
 
     'Join the VM to the AD domain.' | Write-ScriptLog
     $params = @{
@@ -554,26 +550,15 @@ try {
     Add-VMToADDomain @params
     'Join the VM to the AD domain completed.' | Write-ScriptLog
 
-    'Stop the VM.' | Write-ScriptLog
-    Stop-VM -Name $labConfig.wac.vmName
-    'Stop the VM completed.' | Write-ScriptLog
-
-    'Start the VM.' | Write-ScriptLog
-    Start-VM -Name $labConfig.wac.vmName
-    'Start the VM completed.' | Write-ScriptLog
+    # Reboot the VM.
+    Stop-LabVM -VMName $labConfig.wac.vmName
+    Start-LabVM -VMName $labConfig.wac.vmName
 
     'Wait for the VM to be ready.' | Write-ScriptLog
     Wait-PowerShellDirectReady -VMName $labConfig.wac.vmName -Credential $domainAdminCredential
     'The VM is ready.' | Write-ScriptLog
 
-    'Create a PowerShell Direct session with the domain credential.' | Write-ScriptLog
-    $domainAdminCredPSSession = New-PSSession -VMName $labConfig.wac.vmName -Credential $domainAdminCredential
-    $domainAdminCredPSSession | Format-Table -Property 'Id', 'Name', 'ComputerName', 'ComputerType', 'State', 'Availability' | Out-String | Write-ScriptLog
-    'Create a PowerShell Direct session with the domain credential completed.' | Write-ScriptLog
-
-    'Setup the PowerShell Direct session.' | Write-ScriptLog
-    Invoke-PSDirectSessionSetup -Session $domainAdminCredPSSession -CommonModuleFilePathInVM $commonModuleFilePathInVM
-    'Setup the PowerShell Direct session completed.' | Write-ScriptLog
+    # Temporary comment out the WAC related code because of the WAC installation issue.
     <#
     # NOTE: To preset WAC connections for the domain Administrator, the preset operation is required by
     # the domain Administrator because WAC connections are managed based on each user.
@@ -637,9 +622,16 @@ try {
     } | Out-String | Write-ScriptLog
     'Configure Windows Admin Center for the domain Administrator completed.' | Write-ScriptLog
     #>
-    'Clean up the PowerShell Direct session.' | Write-ScriptLog
-    Invoke-PSDirectSessionCleanup -Session $domainAdminCredPSSession -CommonModuleFilePathInVM $commonModuleFilePathInVM
-    'Clean up the PowerShell Direct session completed.' | Write-ScriptLog
+
+    'Delete the module files within the VM.' | Write-ScriptLog
+    $params = @{
+        VMName               = $invokeWithinVMParams.VMName
+        Credential           = $invokeWithinVMParams.Credential
+        FilePathToRemoveInVM = $invokeWithinVMParams.ImportModuleInVM
+        ImportModuleInVM     = $invokeWithinVMParams.ImportModuleInVM
+    }
+    Remove-FileWithinVM @params
+    'Delete the module files within the VM completed.' | Write-ScriptLog
 
     'The WAC VM creation has been successfully completed.' | Write-ScriptLog
 }
@@ -650,5 +642,7 @@ catch {
 }
 finally {
     'The WAC VM creation has been finished.' | Write-ScriptLog
+    $stopWatch.Stop()
+    'Duration of this script ran: {0}' -f $stopWatch.Elapsed.toString('hh\:mm\:ss') | Write-ScriptLog
     Stop-ScriptLogging
 }

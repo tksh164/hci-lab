@@ -7,6 +7,8 @@ $VerbosePreference = [Management.Automation.ActionPreference]::Continue
 $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
 try {
+    $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+
     Import-Module -Name ([IO.Path]::Combine($PSScriptRoot, 'common.psm1')) -Force
 
     $labConfig = Get-LabDeploymentConfig
@@ -22,142 +24,166 @@ try {
     $adminPassword = Get-Secret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName.adminPassword
     $domainCredential = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $adminPassword
 
-    'Create PowerShell Direct session for the HCI nodes.' | Write-ScriptLog
-    $hciNodeDomainAdminCredPSSessions = @()
-    foreach ($nodeName in $nodeNames) {
-        $hciNodeDomainAdminCredPSSessions += New-PSSession -VMName $nodeName -Credential $domainCredential
+    #
+    # Doing on the HCI nodes
+    #
+
+    $invokeWithinVMParamsArray = @()
+    $invokeWithinVMParamsArray += foreach ($nodeName in $nodeNames) {
+        'Copy the module files into the HCI node "{0}".' -f $nodeName | Write-ScriptLog
+        $params = @{
+            VMName              = $nodeName
+            Credential          = $domainCredential
+            SourceFilePath      = (Get-Module -Name 'common').Path
+            DestinationPathInVM = 'C:\Windows\Temp'
+        }
+        $moduleFilePathsWithinVM = Copy-FileIntoVM @params
+        'Copy the module files into the HCI node "{0}" completed.' -f $nodeName | Write-ScriptLog
+
+        # The common parameters for Invoke-CommandWithinVM.
+        @{
+            VMName           = $nodeName
+            Credential       = $domainCredential
+            ImportModuleInVM = $moduleFilePathsWithinVM
+        }
     }
-    $hciNodeDomainAdminCredPSSessions | Format-Table -Property 'Id', 'Name', 'ComputerName', 'ComputerType', 'State', 'Availability' | Out-String | Write-ScriptLog
-    'Create PowerShell Direct session for the HCI nodes completed.' | Write-ScriptLog
 
-    'Copy the common module file into the HCI nodes.' | Write-ScriptLog
-    foreach ($domainAdminCredPSSession in $hciNodeDomainAdminCredPSSessions) {
-        $commonModuleFilePathInVM = Copy-PSModuleIntoVM -Session $domainAdminCredPSSession -ModuleFilePathToCopy (Get-Module -Name 'common').Path
+    # Create virtual switches on each HCI node.
+    foreach ($invokeWithinVMParams in  $invokeWithinVMParamsArray) {
+        'Create virtual switches on the HCI node "{0}".' -f $invokeWithinVMParams.VMName | Write-ScriptLog
+        $netAdapterName = [PSCustomObject] @{
+            Management = $labConfig.hciNode.netAdapters.management.name
+            Compute    = $labConfig.hciNode.netAdapters.compute.name
+        }
+        Invoke-CommandWithinVM @invokeWithinVMParams -ScriptBlockParamList $netAdapterName -ScriptBlock {
+            param (
+                [Parameter(Mandatory = $true)]
+                [PSCustomObject] $NetAdapterName
+            )
+    
+            # External vSwitch for the management network.
+            $params = @{
+                Name                  = '{0}Switch' -f $NetAdapterName.Management
+                NetAdapterName        = $NetAdapterName.Management
+                AllowManagementOS     = $true
+                EnableEmbeddedTeaming = $true
+                MinimumBandwidthMode  = 'Weight'
+            }
+            New-VMSwitch @params
+    
+            # External vSwitch for the compute network.
+            $params = @{
+                Name                  = '{0}Switch' -f $NetAdapterName.Compute
+                NetAdapterName        = $NetAdapterName.Compute
+                AllowManagementOS     = $false
+                EnableEmbeddedTeaming = $true
+                MinimumBandwidthMode  = 'Weight'
+            }
+            New-VMSwitch @params
+        } |
+            Sort-Object -Property 'PSComputerName' |
+            Format-Table -Property 'PSComputerName', 'Name', 'SwitchType', 'AllowManagementOS', 'EmbeddedTeamingEnabled' |
+            Out-String |
+            Write-ScriptLog
+
+        'Create virtual switches on the HCI node "{0}" completed.' -f $invokeWithinVMParams.VMName | Write-ScriptLog
     }
-    'Copy the common module file into the HCI nodes completed.' | Write-ScriptLog
 
-    'Setup the PowerShell Direct session for the HCI nodes.' | Write-ScriptLog
-    Invoke-PSDirectSessionSetup -Session $hciNodeDomainAdminCredPSSessions -CommonModuleFilePathInVM $commonModuleFilePathInVM
-    'Setup the PowerShell Direct session for the HCI nodes completed.' | Write-ScriptLog
+    # Prepare drives on HCI nodes.
+    foreach ($invokeWithinVMParams in  $invokeWithinVMParamsArray) {
+        'Prepare drives on the HCI node "{0}".' -f $invokeWithinVMParams.VMName | Write-ScriptLog
+        Invoke-CommandWithinVM @invokeWithinVMParams -ScriptBlock {
+            # Updates the cache of the service for a particular provider and associated child objects.
+            'Update the storage provider cache.' | Write-ScriptLog
+            Update-StorageProviderCache
+            'Update the storage provider cache completed.' | Write-ScriptLog
+    
+            # Disable read-only state of storage pools except the Primordial pool.
+            'Disable read-only state of the storage pool.' | Write-ScriptLog
+            Get-StoragePool | Where-Object -Property 'IsPrimordial' -EQ -Value $false | Set-StoragePool -IsReadOnly:$false
+            'Disable read-only state of the storage pool completed.' | Write-ScriptLog
+    
+            # Delete virtual disks in storage pools except the Primordial pool.
+            'Delete virtual disks in the storage pool.' | Write-ScriptLog
+            Get-StoragePool | Where-Object -Property 'IsPrimordial' -EQ -Value $false | Get-VirtualDisk | Remove-VirtualDisk -Confirm:$false -ErrorAction Continue
+            'Delete virtual disks in the storage pool completed.' | Write-ScriptLog
+    
+            # Delete storage pools except the Primordial pool.
+            'Delete the storage pool.' | Write-ScriptLog
+            Get-StoragePool | Where-Object -Property 'IsPrimordial' -EQ -Value $false | Remove-StoragePool -Confirm:$false
+            'Delete the storage pool completed.' | Write-ScriptLog
+    
+            # Reset the status of physical disks. (Delete the storage pool's metadata from physical disks)
+            'Delete the storage pool''s metadata from physical disks.' | Write-ScriptLog
+            Get-PhysicalDisk | Reset-PhysicalDisk
+            'Delete the storage pool''s metadata from physical disks completed.' | Write-ScriptLog
+    
+            # Cleans disks by removing all partition information and un-initializing it, erasing all data on the disks.
+            'Erase all data on the disks.' | Write-ScriptLog
+            Get-Disk |
+                Where-Object -Property 'Number' -NE $null |
+                Where-Object -Property 'IsBoot' -NE $true |
+                Where-Object -Property 'IsSystem' -NE $true |
+                Where-Object -Property 'PartitionStyle' -NE 'RAW' |
+                ForEach-Object -Process {
+                    $_ | Set-Disk -IsOffline:$false
+                    $_ | Set-Disk -IsReadOnly:$false
+                    $_ | Clear-Disk -RemoveData -RemoveOEM -Confirm:$false
+                    $_ | Set-Disk -IsReadOnly:$true
+                    $_ | Set-Disk -IsOffline:$true
+                }
+            'Erase all data on the disks completed.' | Write-ScriptLog
+    
+            Get-Disk |
+                Where-Object -Property 'Number' -NE $null |
+                Where-Object -Property 'IsBoot' -NE $true |
+                Where-Object -Property 'IsSystem' -NE $true |
+                Where-Object -Property 'PartitionStyle' -EQ 'RAW' |
+                Group-Object -NoElement -Property 'FriendlyName' |
+                Sort-Object -Property 'PSComputerName'
+        } |
+            Sort-Object -Property 'PSComputerName' |
+            Format-Table -Property 'PSComputerName', 'Count', 'Name' |
+            Out-String |
+            Write-ScriptLog
+        'Prepare drives on the HCI node "{0}" completed.' -f $invokeWithinVMParams.VMName | Write-ScriptLog
+    }
 
-    'Create virtual switches on each HCI node.' | Write-ScriptLog
+    foreach ($invokeWithinVMParams in  $invokeWithinVMParamsArray) {
+        'Delete the module files within the VM "{0}".' -f $invokeWithinVMParams.VMName | Write-ScriptLog
+        $params = @{
+            VMName               = $invokeWithinVMParams.VMName
+            Credential           = $invokeWithinVMParams.Credential
+            FilePathToRemoveInVM = $invokeWithinVMParams.ImportModuleInVM
+            ImportModuleInVM     = $invokeWithinVMParams.ImportModuleInVM
+        }
+        Remove-FileWithinVM @params
+        'Delete the module files within the VM "{0}" completed.' -f $invokeWithinVMParams.VMName | Write-ScriptLog
+    }
+
+    #
+    # Doing on the management server
+    #
+
+    'Copy the module files into the VM.' | Write-ScriptLog
     $params = @{
-        InputObject = [PSCustomObject] @{
-            NetAdapterName = [PSCustomObject] @{
-                Management = $labConfig.hciNode.netAdapters.management.name
-                Compute    = $labConfig.hciNode.netAdapters.compute.name
-            }
-        }
+        VMName              = $labConfig.wac.vmName
+        Credential          = $domainCredential
+        SourceFilePath      = (Get-Module -Name 'common').Path
+        DestinationPathInVM = 'C:\Windows\Temp'
     }
-    Invoke-Command @params -Session $hciNodeDomainAdminCredPSSessions -ScriptBlock {
-        param (
-            [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-            [PSCustomObject] $NetAdapterName
-        )
+    $moduleFilePathsWithinVM = Copy-FileIntoVM @params
+    'Copy the module files into the VM completed.' | Write-ScriptLog
 
-        # External vSwitch for the management network.
-        $params = @{
-            Name                  = '{0}Switch' -f $NetAdapterName.Management
-            NetAdapterName        = $NetAdapterName.Management
-            AllowManagementOS     = $true
-            EnableEmbeddedTeaming = $true
-            MinimumBandwidthMode  = 'Weight'
-        }
-        New-VMSwitch @params
-
-        # External vSwitch for the compute network.
-        $params = @{
-            Name                  = '{0}Switch' -f $NetAdapterName.Compute
-            NetAdapterName        = $NetAdapterName.Compute
-            AllowManagementOS     = $false
-            EnableEmbeddedTeaming = $true
-            MinimumBandwidthMode  = 'Weight'
-        }
-        New-VMSwitch @params
-    } |
-        Sort-Object -Property 'PSComputerName' |
-        Format-Table -Property 'PSComputerName', 'Name', 'SwitchType', 'AllowManagementOS', 'EmbeddedTeamingEnabled' |
-        Out-String |
-        Write-ScriptLog
-    'Create virtual switches on each HCI node completed.' | Write-ScriptLog
-
-    'Prepare HCI node''s drives.' | Write-ScriptLog
-    Invoke-Command -Session $hciNodeDomainAdminCredPSSessions -ScriptBlock {
-        # Updates the cache of the service for a particular provider and associated child objects.
-        'Update the storage provider cache.' | Write-ScriptLog
-        Update-StorageProviderCache
-        'Update the storage provider cache completed.' | Write-ScriptLog
-
-        # Disable read-only state of storage pools except the Primordial pool.
-        'Disable read-only state of the storage pool.' | Write-ScriptLog
-        Get-StoragePool | Where-Object -Property 'IsPrimordial' -EQ -Value $false | Set-StoragePool -IsReadOnly:$false
-        'Disable read-only state of the storage pool completed.' | Write-ScriptLog
-
-        # Delete virtual disks in storage pools except the Primordial pool.
-        'Delete virtual disks in the storage pool.' | Write-ScriptLog
-        Get-StoragePool | Where-Object -Property 'IsPrimordial' -EQ -Value $false | Get-VirtualDisk | Remove-VirtualDisk -Confirm:$false -ErrorAction Continue
-        'Delete virtual disks in the storage pool completed.' | Write-ScriptLog
-
-        # Delete storage pools except the Primordial pool.
-        'Delete the storage pool.' | Write-ScriptLog
-        Get-StoragePool | Where-Object -Property 'IsPrimordial' -EQ -Value $false | Remove-StoragePool -Confirm:$false
-        'Delete the storage pool completed.' | Write-ScriptLog
-
-        # Reset the status of physical disks. (Delete the storage pool's metadata from physical disks)
-        'Delete the storage pool''s metadata from physical disks.' | Write-ScriptLog
-        Get-PhysicalDisk | Reset-PhysicalDisk
-        'Delete the storage pool''s metadata from physical disks completed.' | Write-ScriptLog
-
-        # Cleans disks by removing all partition information and un-initializing it, erasing all data on the disks.
-        'Erase all data on the disks.' | Write-ScriptLog
-        Get-Disk |
-            Where-Object -Property 'Number' -NE $null |
-            Where-Object -Property 'IsBoot' -NE $true |
-            Where-Object -Property 'IsSystem' -NE $true |
-            Where-Object -Property 'PartitionStyle' -NE 'RAW' |
-            ForEach-Object -Process {
-                $_ | Set-Disk -IsOffline:$false
-                $_ | Set-Disk -IsReadOnly:$false
-                $_ | Clear-Disk -RemoveData -RemoveOEM -Confirm:$false
-                $_ | Set-Disk -IsReadOnly:$true
-                $_ | Set-Disk -IsOffline:$true
-            }
-        'Erase all data on the disks completed.' | Write-ScriptLog
-
-        Get-Disk |
-            Where-Object -Property 'Number' -NE $null |
-            Where-Object -Property 'IsBoot' -NE $true |
-            Where-Object -Property 'IsSystem' -NE $true |
-            Where-Object -Property 'PartitionStyle' -EQ 'RAW' |
-            Group-Object -NoElement -Property 'FriendlyName' |
-            Sort-Object -Property 'PSComputerName'
-    } |
-        Sort-Object -Property 'PSComputerName' |
-        Format-Table -Property 'PSComputerName', 'Count', 'Name' |
-        Out-String |
-        Write-ScriptLog
-    'Prepare HCI node''s drives completed.' | Write-ScriptLog
-
-    'Clean up the PowerShell Direct session for the HCI nodes.' | Write-ScriptLog
-    Invoke-PSDirectSessionCleanup -Session $hciNodeDomainAdminCredPSSessions -CommonModuleFilePathInVM $commonModuleFilePathInVM
-    'Clean up the PowerShell Direct session for the HCI nodes completed.' | Write-ScriptLog
-
-    'Create PowerShell Direct sessions for the management server.' | Write-ScriptLog
-    $wacDomainAdminCredPSSession = New-PSSession -VMName $labConfig.wac.vmName -Credential $domainCredential
-    $wacDomainAdminCredPSSession |
-        Format-Table -Property 'Id', 'Name', 'ComputerName', 'ComputerType', 'State', 'Availability' | Out-String | Write-ScriptLog
-    'Create PowerShell Direct sessions for the management server completed.' | Write-ScriptLog
-
-    'Copy the common module file into the management server.' | Write-ScriptLog
-    $commonModuleFilePathInVM = Copy-PSModuleIntoVM -Session $wacDomainAdminCredPSSession -ModuleFilePathToCopy (Get-Module -Name 'common').Path
-    'Copy the common module file into the management server completed.' | Write-ScriptLog
-
-    'Setup the PowerShell Direct session for the management server.' | Write-ScriptLog
-    Invoke-PSDirectSessionSetup -Session $wacDomainAdminCredPSSession -CommonModuleFilePathInVM $commonModuleFilePathInVM
-    'Setup the PowerShell Direct session for the management server completed.' | Write-ScriptLog
+    # The common parameters for Invoke-CommandWithinVM.
+    $invokeParamsMgmt = @{
+        VMName           = $labConfig.wac.vmName
+        Credential       = $domainCredential
+        ImportModuleInVM = $moduleFilePathsWithinVM
+    }
 
     'Get the node''s UI culture.' | Write-ScriptLog
-    $langTag = Invoke-Command -Session $wacDomainAdminCredPSSession -ScriptBlock {
+    $langTag = Invoke-CommandWithinVM @invokeParamsMgmt -ScriptBlock {
         (Get-UICulture).IetfLanguageTag
     }
     'The node''s UI culture is "{0}".' -f $langTag | Write-ScriptLog
@@ -168,18 +194,16 @@ try {
     'Import the localized data completed.' | Write-ScriptLog
 
     'Test the HCI cluster nodes.' | Write-ScriptLog
-    $params = @{
-        InputObject = [PSCustomObject] @{
-            Node         = $nodeNames
-            TestCategory = ([array] $clusterTestCategories.Values)
-        }
-    }
-    Invoke-Command @params -Session $wacDomainAdminCredPSSession -ScriptBlock {
+    $scriptBlockParamList = @(
+        $nodeNames,
+        ([array] $clusterTestCategories.Values)
+    )
+    Invoke-CommandWithinVM @invokeParamsMgmt -ScriptBlockParamList $scriptBlockParamList -ScriptBlock {
         param (
-            [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+            [Parameter(Mandatory = $true)]
             [string[]] $Node,
 
-            [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+            [Parameter(Mandatory = $true)]
             [string[]] $TestCategory
         )
 
@@ -194,22 +218,20 @@ try {
     'Test the HCI cluster nodes completed.' | Write-ScriptLog
 
     'Create an HCI cluster.' | Write-ScriptLog
-    $params = @{
-        InputObject = [PSCustomObject] @{
-            ClusterName      = $labConfig.hciCluster.name
-            ClusterIpAddress = $labConfig.hciCluster.ipAddress
-            Node             = $nodeNames
-        }
-    }
-    Invoke-Command @params -Session $wacDomainAdminCredPSSession -ScriptBlock {
+    $scriptBlockParamList = @(
+        $labConfig.hciCluster.name,
+        $labConfig.hciCluster.ipAddress,
+        $nodeNames
+    )
+    Invoke-CommandWithinVM @invokeParamsMgmt -ScriptBlockParamList $scriptBlockParamList -ScriptBlock {
         param (
-            [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+            [Parameter(Mandatory = $true)]
             [string] $ClusterName,
 
-            [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+            [Parameter(Mandatory = $true)]
             [string] $ClusterIpAddress,
 
-            [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+            [Parameter(Mandatory = $true)]
             [string[]] $Node
         )
 
@@ -226,14 +248,9 @@ try {
     'Create an HCI cluster completed.' | Write-ScriptLog
 
     'Wait for the HCI cluster to be ready.' | Write-ScriptLog
-    $params = @{
-        InputObject = [PSCustomObject] @{
-            ClusterName = $labConfig.hciCluster.name
-        }
-    }
-    Invoke-Command @params -Session $wacDomainAdminCredPSSession -ScriptBlock {
+    Invoke-CommandWithinVM @invokeParamsMgmt -ScriptBlockParamList $labConfig.hciCluster.name -ScriptBlock {
         param (
-            [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+            [Parameter(Mandatory = $true)]
             [string] $ClusterName,
 
             [Parameter(Mandatory = $false)]
@@ -241,11 +258,11 @@ try {
             [int] $RetryIntervalSeconds = 15,
 
             [Parameter(Mandatory = $false)]
-            [TimeSpan] $RetyTimeout = (New-TimeSpan -Minutes 10)
+            [TimeSpan] $RetryTimeout = (New-TimeSpan -Minutes 10)
         )
 
         $startTime = Get-Date
-        while ((Get-Date) -lt ($startTime + $RetyTimeout)) {
+        while ((Get-Date) -lt ($startTime + $RetryTimeout)) {
             try {
                 Get-Cluster -Name $ClusterName -ErrorAction Stop
                 return
@@ -263,27 +280,25 @@ try {
             Start-Sleep -Seconds $RetryIntervalSeconds
         }
 
-        throw 'The cluster was not ready in the acceptable time ({0}).' -f $RetyTimeout.ToString()
+        throw 'The cluster was not ready in the acceptable time ({0}).' -f $RetryTimeout.ToString()
     } | Out-String | Write-ScriptLog
     'The HCI cluster is ready.' | Write-ScriptLog
 
     'Configure the cluster quorum.' | Write-ScriptLog
-    $params = @{
-        InputObject = [PSCustomObject] @{
-            ClusterName             = $labConfig.hciCluster.name
-            StorageAccountName      = Get-Secret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName.cloudWitnessStorageAccountName -AsPlainText
-            StorageAccountAccessKey = Get-Secret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName.cloudWitnessStorageAccountKey -AsPlainText
-        }
-    }
-    Invoke-Command @params -Session $wacDomainAdminCredPSSession -ScriptBlock {
+    $scriptBlockParamList = @(
+        $labConfig.hciCluster.name,
+        (Get-Secret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName.cloudWitnessStorageAccountName -AsPlainText),
+        (Get-Secret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName.cloudWitnessStorageAccountKey -AsPlainText)
+    )
+    Invoke-CommandWithinVM @invokeParamsMgmt -ScriptBlockParamList $scriptBlockParamList -ScriptBlock {
         param (
-            [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+            [Parameter(Mandatory = $true)]
             [string] $ClusterName,
 
-            [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+            [Parameter(Mandatory = $true)]
             [string] $StorageAccountName,
 
-            [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+            [Parameter(Mandatory = $true)]
             [string] $StorageAccountAccessKey
         )
 
@@ -300,39 +315,37 @@ try {
     'Configure the cluster quorum completed.' | Write-ScriptLog
 
     'Rename the cluster network names.' | Write-ScriptLog
-    $params = @{
-        InputObject = [PSCustomObject] @{
-            ClusterName     = $labConfig.hciCluster.name
-            HciNodeNetworks = @(
-                [PSCustomObject] @{
-                    Name         = $labConfig.hciNode.netAdapters.management.name
-                    IPAddress    = $labConfig.hciNode.netAdapters.management.ipAddress -f '0'
-                    PrefixLength = $labConfig.hciNode.netAdapters.management.prefixLength
-                },
-                [PSCustomObject] @{
-                    Name         = $labConfig.hciNode.netAdapters.compute.name
-                    IPAddress    = $labConfig.hciNode.netAdapters.compute.ipAddress -f '0'
-                    PrefixLength = $labConfig.hciNode.netAdapters.compute.prefixLength
-                },
-                [PSCustomObject] @{
-                    Name         = $labConfig.hciNode.netAdapters.storage1.name
-                    IPAddress    = $labConfig.hciNode.netAdapters.storage1.ipAddress -f '0'
-                    PrefixLength = $labConfig.hciNode.netAdapters.storage1.prefixLength
-                },
-                [PSCustomObject] @{
-                    Name         = $labConfig.hciNode.netAdapters.storage2.name
-                    IPAddress    = $labConfig.hciNode.netAdapters.storage2.ipAddress -f '0'
-                    PrefixLength = $labConfig.hciNode.netAdapters.storage2.prefixLength
-                }
-            )
-        }
-    }
-    Invoke-Command @params -Session $wacDomainAdminCredPSSession -ScriptBlock {
+    $scriptBlockParamList = @(
+        $labConfig.hciCluster.name,
+        @(
+            [PSCustomObject] @{
+                Name         = $labConfig.hciNode.netAdapters.management.name
+                IPAddress    = $labConfig.hciNode.netAdapters.management.ipAddress -f '0'
+                PrefixLength = $labConfig.hciNode.netAdapters.management.prefixLength
+            },
+            [PSCustomObject] @{
+                Name         = $labConfig.hciNode.netAdapters.compute.name
+                IPAddress    = $labConfig.hciNode.netAdapters.compute.ipAddress -f '0'
+                PrefixLength = $labConfig.hciNode.netAdapters.compute.prefixLength
+            },
+            [PSCustomObject] @{
+                Name         = $labConfig.hciNode.netAdapters.storage1.name
+                IPAddress    = $labConfig.hciNode.netAdapters.storage1.ipAddress -f '0'
+                PrefixLength = $labConfig.hciNode.netAdapters.storage1.prefixLength
+            },
+            [PSCustomObject] @{
+                Name         = $labConfig.hciNode.netAdapters.storage2.name
+                IPAddress    = $labConfig.hciNode.netAdapters.storage2.ipAddress -f '0'
+                PrefixLength = $labConfig.hciNode.netAdapters.storage2.prefixLength
+            }
+        )
+    )
+    Invoke-CommandWithinVM @invokeParamsMgmt -ScriptBlockParamList $scriptBlockParamList -ScriptBlock {
         param (
-            [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+            [Parameter(Mandatory = $true)]
             [string] $ClusterName,
             
-            [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+            [Parameter(Mandatory = $true)]
             [PSCustomObject[]] $HciNodeNetworks
         )
 
@@ -350,22 +363,20 @@ try {
     'Rename the cluster network names completed.' | Write-ScriptLog
 
     'Change the cluster network order for live migration.' | Write-ScriptLog
-    $params = @{
-        InputObject = [PSCustomObject] @{
-            ClusterName           = $labConfig.hciCluster.name
-            MigrationNetworkOrder = @(
-                $labConfig.hciNode.netAdapters.storage1.name,
-                $labConfig.hciNode.netAdapters.storage2.name,
-                $labConfig.hciNode.netAdapters.management.name
-            )
-        }
-    }
-    Invoke-Command @params -Session $wacDomainAdminCredPSSession -ScriptBlock {
+    $scriptBlockParamList = @(
+        $labConfig.hciCluster.name,
+        @(
+            $labConfig.hciNode.netAdapters.storage1.name,
+            $labConfig.hciNode.netAdapters.storage2.name,
+            $labConfig.hciNode.netAdapters.management.name
+        )
+    )
+    Invoke-CommandWithinVM @invokeParamsMgmt -ScriptBlockParamList $scriptBlockParamList -ScriptBlock {
         param (
-            [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+            [Parameter(Mandatory = $true)]
             [string] $ClusterName,
             
-            [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+            [Parameter(Mandatory = $true)]
             [string[]] $MigrationNetworkOrder
         )
 
@@ -381,18 +392,16 @@ try {
 
     'Enable Storage Space Direct (S2D).' | Write-ScriptLog
     $storagePoolName = 'hcilab-s2d-storage-pool'
-    $params = @{
-        InputObject = [PSCustomObject] @{
-            HciNodeName     = $nodeNames[0]
-            StoragePoolName = $storagePoolName
-        }
-    }
-    Invoke-Command @params -Session $wacDomainAdminCredPSSession -ScriptBlock {
+    $scriptBlockParamList = @(
+        $nodeNames[0],
+        $storagePoolName
+    )
+    Invoke-CommandWithinVM @invokeParamsMgmt -ScriptBlockParamList $scriptBlockParamList -ScriptBlock {
         param (
-            [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+            [Parameter(Mandatory = $true)]
             [string] $HciNodeName,
 
-            [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+            [Parameter(Mandatory = $true)]
             [string] $StoragePoolName
         )
 
@@ -413,22 +422,20 @@ try {
 
     'Create a volume on S2D.' | Write-ScriptLog
     $volumeName = 'HciVol'
-    $params = @{
-        InputObject = [PSCustomObject] @{
-            HciNodeName     = $nodeNames[0]
-            VolumeName      = $volumeName
-            StoragePoolName = $storagePoolName
-        }
-    }
-    Invoke-Command @params -Session $wacDomainAdminCredPSSession -ScriptBlock {
+    $scriptBlockParamList = @(
+        $nodeNames[0],
+        $volumeName,
+        $storagePoolName
+    )
+    Invoke-CommandWithinVM @invokeParamsMgmt -ScriptBlockParamList $scriptBlockParamList -ScriptBlock {
         param (
-            [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+            [Parameter(Mandatory = $true)]
             [string] $HciNodeName,
 
-            [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+            [Parameter(Mandatory = $true)]
             [string] $VolumeName,
 
-            [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+            [Parameter(Mandatory = $true)]
             [string] $StoragePoolName
         )
 
@@ -450,6 +457,8 @@ try {
         'Clean up CIM sessions completed.' | Write-ScriptLog
     } | Out-String | Write-ScriptLog
     'Create a volume on S2D completed.' | Write-ScriptLog
+
+    # Temporary comment out the WAC related code because of the WAC installation issue.
     <#
     'Import a WAC connection for the HCI cluster.' | Write-ScriptLog
     $params = @{
@@ -487,9 +496,16 @@ try {
     } | Out-String | Write-ScriptLog
     'Import a WAC connection for the HCI cluster completed.' | Write-ScriptLog
     #>
-    'Clean up the PowerShell Direct session for the management server.' | Write-ScriptLog
-    Invoke-PSDirectSessionCleanup -Session $wacDomainAdminCredPSSession -CommonModuleFilePathInVM $commonModuleFilePathInVM
-    'Clean up the PowerShell Direct session for the management server completed.' | Write-ScriptLog
+
+    'Delete the module files within the VM.' | Write-ScriptLog
+    $params = @{
+        VMName               = $invokeParamsMgmt.VMName
+        Credential           = $invokeParamsMgmt.Credential
+        FilePathToRemoveInVM = $invokeParamsMgmt.ImportModuleInVM
+        ImportModuleInVM     = $invokeParamsMgmt.ImportModuleInVM
+    }
+    Remove-FileWithinVM @params
+    'Delete the module files within the VM completed.' | Write-ScriptLog
 
     'The HCI cluster creation has been successfully completed.' | Write-ScriptLog
 }
@@ -500,5 +516,7 @@ catch {
 }
 finally {
     'The HCI cluster creation has been finished.' | Write-ScriptLog
+    $stopWatch.Stop()
+    'Duration of this script ran: {0}' -f $stopWatch.Elapsed.toString('hh\:mm\:ss') | Write-ScriptLog
     Stop-ScriptLogging
 }

@@ -13,6 +13,8 @@ $VerbosePreference = [Management.Automation.ActionPreference]::Continue
 $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
 try {
+    $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+
     Import-Module -Name $PSModuleNameToImport -Force
 
     $labConfig = Get-LabDeploymentConfig
@@ -25,7 +27,9 @@ try {
     'Start blocking the AD DS domain operations on other VMs.' | Write-ScriptLog
     Block-AddsDomainOperation
 
-    # Hyper-V VM
+    #
+    # Hyper-V VM creation
+    #
 
     'Create the OS disk for the VM.' | Write-ScriptLog
     $params = @{
@@ -163,23 +167,29 @@ try {
     Wait-PowerShellDirectReady -VMName $labConfig.addsDC.vmName -Credential $localAdminCredential
     'The VM is ready.' | Write-ScriptLog
 
-    # Guest OS
+    #
+    # Guest OS configuration
+    #
 
-    'Create a PowerShell Direct session.' | Write-ScriptLog
-    $localAdminCredPSSession = New-PSSession -VMName $labConfig.addsDC.vmName -Credential $localAdminCredential
-    $localAdminCredPSSession | Format-Table -Property 'Id', 'Name', 'ComputerName', 'ComputerType', 'State', 'Availability' | Out-String | Write-ScriptLog
-    'Create a PowerShell Direct session completed.' | Write-ScriptLog
+    'Copy the module files into the VM.' | Write-ScriptLog
+    $params = @{
+        VMName              = $labConfig.addsDC.vmName
+        Credential          = $localAdminCredential
+        SourceFilePath      = (Get-Module -Name 'common').Path
+        DestinationPathInVM = 'C:\Windows\Temp'
+    }
+    $moduleFilePathsWithinVM = Copy-FileIntoVM @params
+    'Copy the module files into the VM completed.' | Write-ScriptLog
 
-    'Copy the common module file into the VM.' | Write-ScriptLog
-    $commonModuleFilePathInVM = Copy-PSModuleIntoVM -Session $localAdminCredPSSession -ModuleFilePathToCopy (Get-Module -Name 'common').Path
-    'Copy the common module file into the VM completed.' | Write-ScriptLog
-
-    'Setup the PowerShell Direct session.' | Write-ScriptLog
-    Invoke-PSDirectSessionSetup -Session $localAdminCredPSSession -CommonModuleFilePathInVM $commonModuleFilePathInVM
-    'Setup the PowerShell Direct session completed.' | Write-ScriptLog
+    # The common parameters for Invoke-CommandWithinVM.
+    $invokeWithinVMParams = @{
+        VMName           = $labConfig.addsDC.vmName
+        Credential       = $localAdminCredential
+        ImportModuleInVM = $moduleFilePathsWithinVM
+    }
 
     'Configure registry values within the VM.' | Write-ScriptLog
-    Invoke-Command -Session $localAdminCredPSSession -ScriptBlock {
+    Invoke-CommandWithinVM @invokeWithinVMParams -ScriptBlock {
         'Disable diagnostics data send screen.' | Write-ScriptLog
         New-RegistryKey -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows' -KeyName 'OOBE'
         Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\OOBE' -Name 'DisablePrivacyExperience' -Value 1
@@ -200,14 +210,9 @@ try {
     'Configure registry values within the VM completed.' | Write-ScriptLog
 
     'Configure network settings within the VM.' | Write-ScriptLog
-    $params = @{
-        InputObject = [PSCustomObject] @{
-            VMConfig = $LabConfig.addsDC
-        }
-    }
-    Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
+    Invoke-CommandWithinVM @invokeWithinVMParams -ScriptBlockParamList $LabConfig.addsDC -ScriptBlock {
         param (
-            [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+            [Parameter(Mandatory = $true)]
             [PSCustomObject] $VMConfig
         )
 
@@ -264,18 +269,16 @@ try {
     'Configure network settings within the VM completed.' | Write-ScriptLog
 
     'Install AD DS (Creating a new forest) within the VM.' | Write-ScriptLog
-    $params = @{
-        InputObject = [PSCustomObject] @{
-            DomainName    = $labConfig.addsDomain.fqdn
-            AdminPassword = $adminPassword
-        }
-    }
-    Invoke-Command @params -Session $localAdminCredPSSession -ScriptBlock {
+    $scriptBlockParamList = @(
+        $labConfig.addsDomain.fqdn,
+        $adminPassword
+    )
+    Invoke-CommandWithinVM @invokeWithinVMParams -ScriptBlockParamList $scriptBlockParamList -ScriptBlock {
         param (
-            [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+            [Parameter(Mandatory = $true)]
             [string] $DomainName,
 
-            [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+            [Parameter(Mandatory = $true)]
             [SecureString] $AdminPassword
         )
 
@@ -290,17 +293,19 @@ try {
     } | Out-String | Write-ScriptLog
     'Install AD DS (Creating a new forest) within the VM completed.' | Write-ScriptLog
 
-    'Clean up the PowerShell Direct session.' | Write-ScriptLog
-    Invoke-PSDirectSessionCleanup -Session $localAdminCredPSSession -CommonModuleFilePathInVM $commonModuleFilePathInVM
-    'Clean up the PowerShell Direct session completed.' | Write-ScriptLog
+    'Delete the module files within the VM.' | Write-ScriptLog
+    $params = @{
+        VMName               = $invokeWithinVMParams.VMName
+        Credential           = $invokeWithinVMParams.Credential
+        FilePathToRemoveInVM = $invokeWithinVMParams.ImportModuleInVM
+        ImportModuleInVM     = $invokeWithinVMParams.ImportModuleInVM
+    }
+    Remove-FileWithinVM @params
+    'Delete the module files within the VM completed.' | Write-ScriptLog
 
-    'Stop the VM.' | Write-ScriptLog
-    Stop-VM -Name $labConfig.addsDC.vmName
-    'Stop the VM completed.' | Write-ScriptLog
-
-    'Start the VM.' | Write-ScriptLog
-    Start-VM -Name $labConfig.addsDC.vmName
-    'Start the VM completed.' | Write-ScriptLog
+    # Reboot the VM.
+    Stop-LabVM -VMName $labConfig.addsDC.vmName
+    Start-LabVM -VMName $labConfig.addsDC.vmName
 
     'Wait for ready to the domain controller.' | Write-ScriptLog
     $domainAdminCredential = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $adminPassword
@@ -320,5 +325,7 @@ catch {
 }
 finally {
     'The AD DS Domain Controller VM creation has been finished.' | Write-ScriptLog
+    $stopWatch.Stop()
+    'Duration of this script ran: {0}' -f $stopWatch.Elapsed.toString('hh\:mm\:ss') | Write-ScriptLog
     Stop-ScriptLogging
 }
