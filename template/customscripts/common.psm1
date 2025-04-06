@@ -1064,86 +1064,6 @@ function Add-VMToADDomain
     throw 'Domain join the "{0}" VM to the AD domain "{1}" was not complete in the acceptable time ({2}).' -f $VMName, $DomainFqdn, $RetyTimeout.ToString()
 }
 
-function Copy-PSModuleIntoVM
-{
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory = $true)]
-        [System.Management.Automation.Runspaces.PSSession] $Session,
-
-        [Parameter(Mandatory = $true)]
-        [string] $ModuleFilePathToCopy
-    )
-
-    'Copy the PowerShell module from "{0}" on the lab host into the VM "{1}".' -f $ModuleFilePathToCopy, $Session.VMName | Write-ScriptLog
-    $commonModuleFilePathInVM = [IO.Path]::Combine('C:\Windows\Temp', [IO.Path]::GetFileName($ModuleFilePathToCopy))
-    Copy-Item -ToSession $Session -Path $ModuleFilePathToCopy -Destination $commonModuleFilePathInVM
-    'Copy the PowerShell module from "{0}" on the lab host to "{1}" on the VM "{2}" completed.' -f $ModuleFilePathToCopy, $commonModuleFilePathInVM, $Session.VMName | Write-ScriptLog
-    return $commonModuleFilePathInVM
-}
-
-function Invoke-PSDirectSessionSetup
-{
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory = $true)]
-        [System.Management.Automation.Runspaces.PSSession[]] $Session,
-
-        [Parameter(Mandatory = $true)]
-        [string] $CommonModuleFilePathInVM
-    )
-
-    $params = @{
-        InputObject = [PSCustomObject] @{
-            CommonModuleFilePath = $CommonModuleFilePathInVM
-        }
-    }
-    Invoke-Command @params -Session $Session -ScriptBlock {
-        param (
-            [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-            [string] $CommonModuleFilePath
-        )
-    
-        $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
-        $WarningPreference = [Management.Automation.ActionPreference]::Continue
-        $VerbosePreference = [Management.Automation.ActionPreference]::Continue
-        $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
-        Import-Module -Name $CommonModuleFilePath -Force
-    }
-}
-
-function Invoke-PSDirectSessionCleanup
-{
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory = $true)]
-        [System.Management.Automation.Runspaces.PSSession[]] $Session,
-
-        [Parameter(Mandatory = $true)]
-        [string] $CommonModuleFilePathInVM
-    )
-
-    $params = @{
-        InputObject = [PSCustomObject] @{
-            CommonModuleFilePath = $CommonModuleFilePathInVM
-        }
-    }
-    Invoke-Command @params -Session $Session -ScriptBlock {
-        param (
-            [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-            [string] $CommonModuleFilePath
-        )
-    
-        'Delete the common module file "{0}" on the VM "{1}".' -f $CommonModuleFilePath, $env:ComputerName | Write-ScriptLog
-        Remove-Item -LiteralPath $CommonModuleFilePath -Force
-        'Delete the common module file "{0}" on the VM "{1}" completed.' -f $CommonModuleFilePath, $env:ComputerName | Write-ScriptLog
-    } | Out-String | Write-ScriptLog
-        
-    'Delete PowerShell Direct sessions.' | Write-ScriptLog
-    $Session | Remove-PSSession
-    'Delete PowerShell Direct sessions completed.' | Write-ScriptLog
-}
-
 function New-PSSessionToVM
 {
     [CmdletBinding()]
@@ -1490,9 +1410,6 @@ $exportFunctions = @(
     'Wait-DomainControllerServiceReady',
     'New-LogonCredential',
     'Add-VMToADDomain',
-    'Copy-PSModuleIntoVM',
-    'Invoke-PSDirectSessionSetup',
-    'Invoke-PSDirectSessionCleanup',
     'Copy-FileIntoVM',
     'Remove-FileWithinVM',
     'Invoke-CommandWithinVM'

@@ -85,6 +85,8 @@ function Get-WindowsFeatureToInstall
 }
 
 try {
+    $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+
     Import-Module -Name $PSModuleNameToImport -Force
 
     $labConfig = Get-LabDeploymentConfig
@@ -110,7 +112,7 @@ try {
     }
     $ramBytes = Get-HciNodeRamSize @params
 
-    'Create a VM configuraton for the HCI node VM.' | Write-ScriptLog
+    'Create a VM configuration for the HCI node VM.' | Write-ScriptLog
     $nodeConfig = [PSCustomObject] @{
         VMName            = $nodeVMName
         ParentVhdPath     = $parentVhdPath
@@ -151,9 +153,11 @@ try {
         }
     }
     $nodeConfig | ConvertTo-Json -Depth 16 | Out-String | Write-ScriptLog
-    'Create a VM configuraton for the HCI node VM completed.' | Write-ScriptLog
+    'Create a VM configuration for the HCI node VM completed.' | Write-ScriptLog
 
-    # Hyper-V VM
+    #
+    # Hyper-V VM creation
+    #
 
     'Create the OS disk.' | Write-ScriptLog
     $params = @{
@@ -357,7 +361,9 @@ try {
     Wait-PowerShellDirectReady -VMName $nodeConfig.VMName -Credential $localAdminCredential
     'The VM is ready.' | Write-ScriptLog
 
-    # Guest OS
+    #
+    # Guest OS configuration
+    #
 
     'Copy the module files into the VM.' | Write-ScriptLog
     $params = @{
@@ -585,6 +591,7 @@ try {
         'Join the VM to the AD domain completed.'  | Write-ScriptLog
     }
 
+    # Reboot the VM.
     Stop-LabVM -VMName $nodeConfig.VMName
     Start-LabVM -VMName $nodeConfig.VMName
 
@@ -609,5 +616,7 @@ catch {
 }
 finally {
     'The HCI node VM creation has been finished.' | Write-ScriptLog
+    $stopWatch.Stop()
+    'Duration of this script ran: {0}' -f $stopWatch.Elapsed.toString('hh\:mm\:ss') | Write-ScriptLog
     Stop-ScriptLogging
 }
