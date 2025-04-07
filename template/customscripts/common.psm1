@@ -1064,7 +1064,7 @@ function Add-VMToADDomain
     throw 'Domain join the "{0}" VM to the AD domain "{1}" was not complete in the acceptable time ({2}).' -f $VMName, $DomainFqdn, $RetyTimeout.ToString()
 }
 
-function New-PSSessionToVM
+function New-PSDirectSession
 {
     [CmdletBinding()]
     param (
@@ -1095,7 +1095,20 @@ function New-PSSessionToVM
     throw $exceptionMessage
 }
 
-function Invoke-PSSessionToVMSetup
+function Remove-PSDirectSession
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [System.Management.Automation.Runspaces.PSSession] $Session
+    )
+
+    'Delete a PowerShell Direct session "{0}".' -f $Session.Name | Write-ScriptLog
+    Remove-PSSession -Session $Session
+    'Delete a PowerShell Direct session "{0}" succeeded.' -f $Session.Name | Write-ScriptLog
+}
+
+function Invoke-PSDirectSessionGroundwork
 {
     [CmdletBinding()]
     param (
@@ -1129,19 +1142,6 @@ function Invoke-PSSessionToVMSetup
     }
 }
 
-function Remove-PSSessionToVM
-{
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory = $true)]
-        [System.Management.Automation.Runspaces.PSSession] $Session
-    )
-
-    'Delete a PowerShell Direct session "{0}".' -f $Session.Name | Write-ScriptLog
-    Remove-PSSession -Session $Session
-    'Delete a PowerShell Direct session "{0}" succeeded.' -f $Session.Name | Write-ScriptLog
-}
-
 function Copy-FileIntoVM
 {
     [CmdletBinding()]
@@ -1160,7 +1160,7 @@ function Copy-FileIntoVM
     )
 
     try {
-        $pss = New-PSSessionToVM -VMName $VMName -Credential $Credential
+        $pss = New-PSDirectSession -VMName $VMName -Credential $Credential
 
         # Copy files into the VM one by one to traceability when raise exception.
         $filePathsInVM = @()
@@ -1177,7 +1177,7 @@ function Copy-FileIntoVM
     }
     finally {
         if ($pss) {
-            Remove-PSSessionToVM -Session $pss
+            Remove-PSDirectSession -Session $pss
         }
     }
 }
@@ -1202,8 +1202,8 @@ function Remove-FileWithinVM
     $attemptLimit = 5
     for ($attempts = 0; $attempts -lt $attemptLimit; $attempts++) {
         try {
-            $pss = New-PSSessionToVM -VMName $VMName -Credential $Credential
-            Invoke-PSSessionToVMSetup -Session $pss -ImportModuleInVM $ImportModuleInVM
+            $pss = New-PSDirectSession -VMName $VMName -Credential $Credential
+            Invoke-PSDirectSessionGroundwork -Session $pss -ImportModuleInVM $ImportModuleInVM
 
             # Remove the files within the VM.
             $params = @{
@@ -1237,7 +1237,7 @@ function Remove-FileWithinVM
         }
         finally {
             if ($pss) {
-                Remove-PSSessionToVM -Session $pss
+                Remove-PSDirectSession -Session $pss
             }
         }
     }
@@ -1272,8 +1272,8 @@ function Invoke-CommandWithinVM
     $attemptLimit = if ($WithRetry) { 5 } else { 1 }
     for ($attempts = 0; $attempts -lt $attemptLimit; $attempts++) {
         try {
-            $pss = New-PSSessionToVM -VMName $VMName -Credential $Credential
-            Invoke-PSSessionToVMSetup -Session $pss -ImportModuleInVM $ImportModuleInVM
+            $pss = New-PSDirectSession -VMName $VMName -Credential $Credential
+            Invoke-PSDirectSessionGroundwork -Session $pss -ImportModuleInVM $ImportModuleInVM
 
             # Invoke the script block within the VM.
             $params = @{
@@ -1293,7 +1293,7 @@ function Invoke-CommandWithinVM
         }
         finally {
             if ($pss) {
-                Remove-PSSessionToVM -Session $pss
+                Remove-PSDirectSession -Session $pss
             }
         }
     }
