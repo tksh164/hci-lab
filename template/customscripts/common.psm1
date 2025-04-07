@@ -693,7 +693,7 @@ function Install-WindowsFeatureToVhd
     throw 'The Install-WindowsFeature cmdlet execution for "{0}" was not succeeded in the acceptable time ({1}).' -f $VhdPath, $RetyTimeout.ToString()
 }
 
-function Start-VMWithRetry
+function Start-VMSurely
 {
     [CmdletBinding()]
     param (
@@ -701,62 +701,69 @@ function Start-VMWithRetry
         [string] $VMName,
 
         [Parameter(Mandatory = $false)]
-        [ValidateRange(0, 3600)]
-        [int] $RetryIntervalSeconds = 15,
+        [TimeSpan] $AttemptDuration = (New-TimeSpan -Minutes 5),
 
         [Parameter(Mandatory = $false)]
-        [TimeSpan] $RetyTimeout = (New-TimeSpan -Minutes 30)
+        [ValidateRange(0, 3600)]
+        [int] $AttemptIntervalSeconds = 5
     )
 
-    $startTime = Get-Date
-    while ((Get-Date) -lt ($startTime + $RetyTimeout)) {
+    # Start the VM.
+    $isVMStarted = $false
+    $vmStartTime = Get-Date
+    while ((Get-Date) -lt ($vmStartTime + $AttemptDuration)) {
         try {
-            $params = @{
-                Name        = $VMName
-                Passthru    = $true
-                ErrorAction = [Management.Automation.ActionPreference]::Stop
-            }
-            if ((Start-VM @params) -ne $null) {
-                'The VM was started.' | Write-ScriptLog
-                return
+            'Start the VM "{0}".' -f $VMName | Write-ScriptLog
+            $vm = Start-VM -Name $VMName -Passthru -ErrorAction Stop
+            if ($vm -ne $null) {
+                'The VM "{0}" is started.' -f $VMName | Write-ScriptLog
+                $isVMStarted = $true
+                break
             }
         }
         catch {
             # NOTE: In sometimes, we need retry to waiting for unmount the VHD.
-            '{0} (ExceptionMessage: {1} | Exception: {2} | FullyQualifiedErrorId: {3} | CategoryInfo: {4} | ErrorDetailsMessage: {5})' -f @(
-                'Will retry start the VM...',
-                $_.Exception.Message,
-                $_.Exception.GetType().FullName,
-                $_.FullyQualifiedErrorId,
-                $_.CategoryInfo.ToString(),
-                $_.ErrorDetails.Message
-            ) | Write-ScriptLog -Level Warning
+            New-ExceptionMessage -ErrorRecord $_ -AsHandled | Write-ScriptLog -Level Warning
+            Start-Sleep -Seconds $AttemptIntervalSeconds
         }
-        Start-Sleep -Seconds $RetryIntervalSeconds
     }
 
-    throw 'The VM "{0}" was not start in the acceptable time ({1}).' -f $VMName, $RetyTimeout.ToString()
+    if (-not $isVMStarted) {
+        $exceptionMessage = 'The VM "{0}" was not start in the acceptable time ({1}).' -f $VMName, $AttemptDuration.ToString('hh\:mm\:ss')
+        $exceptionMessage | Write-ScriptLog -Level Error
+        throw $exceptionMessage
+    }
+
+    # Wait for the VM heartbeat service ready.
+    $heartbeatProbingStartTime = Get-Date
+    while ((Get-Date) -lt ($heartbeatProbingStartTime + $AttemptDuration)) {
+        $heartbeatVmis = Get-VMIntegrationService -VMName $VMName -Name 'Heartbeat'
+        if ($heartbeatVmis.PrimaryOperationalStatus -eq 'Ok') {
+            'The heartbeat service on the VM "{0}" is ready.' -f $VMName | Write-ScriptLog
+            return
+        }
+        'The heartbeat service on the VM "{0}" is not ready yet.' -f $VMName | Write-ScriptLog
+        Start-Sleep -Seconds $AttemptIntervalSeconds
+    }
+
+    $exceptionMessage = 'The heartbeat service on the VM "{0}" was not ready in the acceptable time ({1}).' -f $VMName, $AttemptDuration.ToString('hh\:mm\:ss')
+    $exceptionMessage | Write-ScriptLog -Level Error
+    throw $exceptionMessage
 }
 
-function Start-LabVM
+function Stop-VMSurely
 {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
-        [string] $VMName
-    )
+        [string] $VMName,
 
-    'Start the VM "{0}".' -f $VMName | Write-ScriptLog
-    Start-VM -Name $VMName
-    'Start the VM "{0}" succeeded.' -f $VMName | Write-ScriptLog
-}
+        [Parameter(Mandatory = $false)]
+        [TimeSpan] $AttemptDuration = (New-TimeSpan -Minutes 5),
 
-function Stop-LabVM
-{
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory = $true)]
-        [string] $VMName
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, 3600)]
+        [int] $AttemptIntervalSeconds = 5
     )
 
     'Stop the VM "{0}".' -f $VMName | Write-ScriptLog
@@ -772,7 +779,24 @@ function Stop-LabVM
             throw $_
         }
     }
+
     'Stop the VM "{0}" succeeded.' -f $VMName | Write-ScriptLog
+
+    # Wait for the VM to turn off.
+    $turnOffProbingStartTime = Get-Date
+    while ((Get-Date) -lt ($turnOffProbingStartTime + $AttemptDuration)) {
+        $vm = Get-VM -VMName $VMName
+        if ($vm.State -eq 'Off') {
+            'The VM "{0}" is stopped.' -f $VMName | Write-ScriptLog
+            return
+        }
+        'Wait for the VM "{0}" to stop.' -f $VMName | Write-ScriptLog
+        Start-Sleep -Seconds $AttemptIntervalSeconds
+    }
+
+    $exceptionMessage = 'The the VM "{0}" was not stopped in the acceptable time ({1}).' -f $VMName, $AttemptDuration.ToString('hh\:mm\:ss')
+    $exceptionMessage | Write-ScriptLog -Level Error
+    throw $exceptionMessage
 }
 
 function Wait-PowerShellDirectReady
@@ -1400,9 +1424,8 @@ $exportFunctions = @(
     'New-UnattendAnswerFileContent',
     'Set-UnattendAnswerFileToVhd',
     'Install-WindowsFeatureToVhd',
-    'Start-VMWithRetry',  # TODO: Need to refactor with Start-LabVM.
-    'Start-LabVM',
-    'Stop-LabVM',
+    'Start-VMSurely',
+    'Stop-VMSurely',
     'Wait-PowerShellDirectReady',
     'Block-AddsDomainOperation',
     'Unblock-AddsDomainOperation',
