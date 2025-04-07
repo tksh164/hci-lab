@@ -208,9 +208,7 @@ try {
     Install-WindowsFeatureToVhd @params
     'Install the roles and features to the "{0}" completed.' -f $vmOSDiskVhd.Path | Write-ScriptLog
 
-    'Start the VM.' | Write-ScriptLog
-    Start-VMWithRetry -VMName $labConfig.wac.vmName
-    'Start the VM completed.' | Write-ScriptLog
+    Start-VMSurely -VMName $labConfig.wac.vmName
 
     'Wait for the VM to be ready.' | Write-ScriptLog
     $localAdminCredential = New-LogonCredential -DomainFqdn '.' -Password $adminPassword
@@ -551,8 +549,8 @@ try {
     'Join the VM to the AD domain completed.' | Write-ScriptLog
 
     # Reboot the VM.
-    Stop-LabVM -VMName $labConfig.wac.vmName
-    Start-LabVM -VMName $labConfig.wac.vmName
+    Stop-VMSurely -VMName $labConfig.wac.vmName
+    Start-VMSurely -VMName $labConfig.wac.vmName
 
     'Wait for the VM to be ready.' | Write-ScriptLog
     Wait-PowerShellDirectReady -VMName $labConfig.wac.vmName -Credential $domainAdminCredential

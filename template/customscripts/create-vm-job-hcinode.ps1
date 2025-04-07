@@ -352,9 +352,7 @@ try {
     Install-WindowsFeatureToVhd @params
     'Install the roles and features to the VHD completed' | Write-ScriptLog
 
-    'Start the VM.' | Write-ScriptLog
-    Start-VMWithRetry -VMName $nodeConfig.VMName
-    'Start the VM completed.' | Write-ScriptLog
+    Start-VMSurely -VMName $nodeConfig.VMName
 
     'Wait for the VM to be ready.' | Write-ScriptLog
     $localAdminCredential = New-LogonCredential -DomainFqdn '.' -Password $nodeConfig.AdminPassword
@@ -592,8 +590,8 @@ try {
     }
 
     # Reboot the VM.
-    Stop-LabVM -VMName $nodeConfig.VMName
-    Start-LabVM -VMName $nodeConfig.VMName
+    Stop-VMSurely -VMName $nodeConfig.VMName
+    Start-VMSurely -VMName $nodeConfig.VMName
 
     'Wait for the VM to be ready.' | Write-ScriptLog
     $params = @{

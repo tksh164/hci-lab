@@ -158,9 +158,7 @@ try {
     Install-WindowsFeatureToVhd @params
     'Install the roles and features to the "{0}" completed.' -f $vmOSDiskVhd.Path | Write-ScriptLog
 
-    'Start the VM.' | Write-ScriptLog
-    Start-VMWithRetry -VMName $labConfig.addsDC.vmName
-    'Start the VM completed.' | Write-ScriptLog
+    Start-VMSurely -VMName $labConfig.addsDC.vmName
 
     'Wait for the VM to be ready.' | Write-ScriptLog
     $localAdminCredential = New-LogonCredential -DomainFqdn '.' -Password $adminPassword
@@ -304,8 +302,8 @@ try {
     'Delete the module files within the VM completed.' | Write-ScriptLog
 
     # Reboot the VM.
-    Stop-LabVM -VMName $labConfig.addsDC.vmName
-    Start-LabVM -VMName $labConfig.addsDC.vmName
+    Stop-VMSurely -VMName $labConfig.addsDC.vmName
+    Start-VMSurely -VMName $labConfig.addsDC.vmName
 
     'Wait for ready to the domain controller.' | Write-ScriptLog
     $domainAdminCredential = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $adminPassword
