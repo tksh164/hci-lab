@@ -525,7 +525,7 @@ function New-UnattendAnswerFileContent
 '@ -f $encodedAdminPassword, $ComputerName, $TimeZone, $Culture
 }
 
-function WaitingForVhdDismount
+function Wait-VhdDismountCompletion
 {
     [CmdletBinding()]
     param (
@@ -533,12 +533,17 @@ function WaitingForVhdDismount
         [ValidateScript({ Test-Path -PathType Leaf -LiteralPath $_ })]
         [string] $VhdPath,
 
+        [Parameter(Mandatory = $true)]
+        [ValidateScript({ Test-Path -PathType Container -LiteralPath $_ })]
+        [string] $LogFolder,
+
         [Parameter(Mandatory = $false)]
         [ValidateRange(0, 3600)]
         [int] $ProbeIntervalSeconds = 5
     )
 
-    while ((Get-WindowsImage -Mounted | Where-Object -Property 'ImagePath' -EQ -Value $VhdPath) -ne $null) {
+    $logFilePath = [IO.Path]::Combine($LogFolder, (New-LogFileName -FileName ('waitvhddismount-' + [IO.Path]::GetFileNameWithoutExtension([IO.Path]::GetDirectoryName($VhdPath)))))
+    while ((Get-WindowsImage -Mounted -LogPath $logFilePath | Where-Object -Property 'ImagePath' -EQ -Value $VhdPath) -ne $null) {
         'Wait for the VHD dismount completion...' | Write-ScriptLog -LogContext $VhdPath
         Start-Sleep -Seconds $ProbeIntervalSeconds
     }
@@ -572,9 +577,9 @@ function Set-UnattendAnswerFileToVhd
     'scratchDirectory: "{0}"' -f $scratchDirectory | Write-ScriptLog -LogContext $VhdPath
     New-Item -ItemType Directory -Path $scratchDirectory -Force | Out-String | Write-ScriptLog -LogContext $VhdPath
 
-    $logPath = [IO.Path]::Combine($LogFolder, (New-LogFileName -FileName ('injectunattend-' + [IO.Path]::GetFileNameWithoutExtension([IO.Path]::GetDirectoryName($VhdPath)))))
-    'logPath: "{0}"' -f $logPath | Write-ScriptLog -LogContext $VhdPath
-    Mount-WindowsImage -Path $vhdMountPath -Index 1 -ImagePath $VhdPath -ScratchDirectory $scratchDirectory -LogPath $logPath | Out-String | Write-ScriptLog -LogContext $VhdPath
+    $logFilePath = [IO.Path]::Combine($LogFolder, (New-LogFileName -FileName ('injectunattend-' + [IO.Path]::GetFileNameWithoutExtension([IO.Path]::GetDirectoryName($VhdPath)))))
+    'LogFilePath: "{0}"' -f $logFilePath | Write-ScriptLog -LogContext $VhdPath
+    Mount-WindowsImage -Path $vhdMountPath -Index 1 -ImagePath $VhdPath -ScratchDirectory $scratchDirectory -LogPath $logFilePath | Out-String | Write-ScriptLog -LogContext $VhdPath
 
     'Create the unattend answer file in the VHD.' | Write-ScriptLog -LogContext $VhdPath
     $pantherPath = [IO.Path]::Combine($vhdMountPath, 'Windows', 'Panther')
@@ -583,10 +588,10 @@ function Set-UnattendAnswerFileToVhd
     'Create the unattend answer file in the VHD completed.' | Write-ScriptLog -LogContext $VhdPath
 
     'Dismount the VHD.' | Write-ScriptLog -LogContext $VhdPath
-    Dismount-WindowsImage -Path $vhdMountPath -Save -ScratchDirectory $scratchDirectory -LogPath $logPath | Out-String | Write-ScriptLog -LogContext $VhdPath
+    Dismount-WindowsImage -Path $vhdMountPath -Save -ScratchDirectory $scratchDirectory -LogPath $logFilePath | Out-String | Write-ScriptLog -LogContext $VhdPath
 
     'Wait for the VHD dismount (MountPath: "{0}").' -f $vhdMountPath | Write-ScriptLog -LogContext $VhdPath
-    WaitingForVhdDismount -VhdPath $VhdPath
+    Wait-VhdDismountCompletion -VhdPath $VhdPath -LogFolder $LogFolder
     'The VHD dismount completed.' | Write-ScriptLog -LogContext $VhdPath
 
     'Remove the VHD mount path.' | Write-ScriptLog -LogContext $VhdPath
@@ -641,8 +646,8 @@ function Install-WindowsFeatureToVhd
         [TimeSpan] $RetyTimeout = (New-TimeSpan -Minutes 30)
     )
 
-    $logPath = [IO.Path]::Combine($LogFolder, (New-LogFileName -FileName ('installwinfeature-' + [IO.Path]::GetFileNameWithoutExtension([IO.Path]::GetDirectoryName($VhdPath)))))
-    'logPath: "{0}"' -f $logPath | Write-ScriptLog -LogContext $VhdPath
+    $logFilePath = [IO.Path]::Combine($LogFolder, (New-LogFileName -FileName ('installwinfeature-' + [IO.Path]::GetFileNameWithoutExtension([IO.Path]::GetDirectoryName($VhdPath)))))
+    'LogFilePath: "{0}"' -f $logFilePath | Write-ScriptLog -LogContext $VhdPath
 
     $startTime = Get-Date
     while ((Get-Date) -lt ($startTime + $RetyTimeout)) {
@@ -659,14 +664,14 @@ function Install-WindowsFeatureToVhd
                 Vhd                    = $VhdPath
                 Name                   = $FeatureName
                 IncludeManagementTools = $IncludeManagementTools
-                LogPath                = $logPath
+                LogPath                = $logFilePath
                 ErrorAction            = [Management.Automation.ActionPreference]::Stop
             }
             Install-WindowsFeature @params | Out-String | Write-ScriptLog -LogContext $VhdPath
 
             # NOTE: The DISM mount point is still remain after the Install-WindowsFeature cmdlet completed.
             'Wait for VHD dismount completion by the Install-WindowsFeature cmdlet execution.' | Write-ScriptLog -LogContext $VhdPath
-            WaitingForVhdDismount -VhdPath $VhdPath
+            Wait-VhdDismountCompletion -VhdPath $VhdPath -LogFolder $LogFolder
             'The VHD dismount completed.' | Write-ScriptLog -LogContext $VhdPath
 
             'Windows features installation to VHD completed.' | Write-ScriptLog -LogContext $VhdPath
