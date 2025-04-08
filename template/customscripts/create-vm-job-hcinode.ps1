@@ -409,25 +409,38 @@ try {
             New-RegistryKey -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft' -KeyName 'Edge'
             Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Edge' -Name 'HideFirstRunExperience' -Value 1
             'Hide the first run experience of Microsoft Edge completed.' | Write-ScriptLog
-        } | Out-String | Write-ScriptLog
+        }
         'Configure registry values within the VM completed.' | Write-ScriptLog
     }
 
-    'Configure network settings within the VM.' | Write-ScriptLog
-    Invoke-CommandWithinVM @invokeWithinVMParams -ScriptBlockParamList $NodeConfig -ScriptBlock {
-        param (
-            [Parameter(Mandatory = $true)]
-            [PSCustomObject] $VMConfig
-        )
-
-        'Rename the network adapters.' | Write-ScriptLog
+    'Rename the network adapters.' | Write-ScriptLog
+    Invoke-CommandWithinVM @invokeWithinVMParams -WithRetry -ScriptBlock {
         Get-NetAdapterAdvancedProperty -RegistryKeyword 'HyperVNetworkAdapterName' | ForEach-Object -Process {
             Rename-NetAdapter -Name $_.Name -NewName $_.DisplayValue
         }
-        'Rename the network adapters completed.' | Write-ScriptLog
+    }
+    'Rename the network adapters completed.' | Write-ScriptLog
 
-        # Management
-        'Configure the IP & DNS on the "{0}" network adapter.' -f $VMConfig.NetAdapters.Management.Name | Write-ScriptLog
+    # Management
+    $netAdapterConfig = $nodeConfig.NetAdapters.Management
+    'Configure the IP & DNS on the "{0}" network adapter.' -f $netAdapterConfig.Name | Write-ScriptLog
+    Invoke-CommandWithinVM @invokeWithinVMParams -WithRetry -ScriptBlockParamList $netAdapterConfig -ScriptBlock {
+        param (
+            [Parameter(Mandatory = $true)]
+            [PSCustomObject] $NetAdapterConfig
+        )
+
+        # Remove default route.
+        Get-NetAdapter -Name $NetAdapterConfig.Name |
+        Get-NetIPInterface -AddressFamily 'IPv4' |
+        Remove-NetRoute -DestinationPrefix '0.0.0.0/0' -Confirm:$false -ErrorAction SilentlyContinue
+
+        # Remove existing NetIPAddresses.
+        Get-NetAdapter -Name $NetAdapterConfig.Name |
+        Get-NetIPInterface -AddressFamily 'IPv4' |
+        Remove-NetIPAddress -Confirm:$false -ErrorAction SilentlyContinue
+
+        # Configure the IP & DNS on the network adapter.
         $paramsForSetNetIPInterface = @{
             AddressFamily = 'IPv4'
             Dhcp          = 'Disabled'
@@ -435,22 +448,36 @@ try {
         }
         $paramsForNewIPAddress = @{
             AddressFamily  = 'IPv4'
-            IPAddress      = $VMConfig.NetAdapters.Management.IPAddress
-            PrefixLength   = $VMConfig.NetAdapters.Management.PrefixLength
-            DefaultGateway = $VMConfig.NetAdapters.Management.DefaultGateway
+            IPAddress      = $NetAdapterConfig.IPAddress
+            PrefixLength   = $NetAdapterConfig.PrefixLength
+            DefaultGateway = $NetAdapterConfig.DefaultGateway
         }
         $paramsForSetDnsClientServerAddress = @{
-            ServerAddresses = $VMConfig.netAdapters.management.dnsServerAddresses
+            ServerAddresses = $NetAdapterConfig.DnsServerAddresses
         }
-        Get-NetAdapter -Name $VMConfig.NetAdapters.Management.Name |
+        Get-NetAdapter -Name $NetAdapterConfig.Name |
         Set-NetIPInterface @paramsForSetNetIPInterface |
         New-NetIPAddress @paramsForNewIPAddress |
         Set-DnsClientServerAddress @paramsForSetDnsClientServerAddress |
         Out-Null
-        'Configure the IP & DNS on the "{0}" network adapter completed.' -f $VMConfig.NetAdapters.Management.Name | Write-ScriptLog
+    }
+    'Configure the IP & DNS on the "{0}" network adapter completed.' -f $netAdapterConfig.Name | Write-ScriptLog
 
-        # Compute
-        'Configure the IP & DNS on the "{0}" network adapter.' -f $VMConfig.NetAdapters.Compute.Name | Write-ScriptLog
+    # Compute
+    $netAdapterConfig = $nodeConfig.NetAdapters.Compute
+    'Configure the IP & DNS on the "{0}" network adapter.' -f $netAdapterConfig.Name | Write-ScriptLog
+    Invoke-CommandWithinVM @invokeWithinVMParams -WithRetry -ScriptBlockParamList $netAdapterConfig -ScriptBlock {
+        param (
+            [Parameter(Mandatory = $true)]
+            [PSCustomObject] $NetAdapterConfig
+        )
+
+        # Remove existing NetIPAddresses.
+        Get-NetAdapter -Name $NetAdapterConfig.Name |
+        Get-NetIPInterface -AddressFamily 'IPv4' |
+        Remove-NetIPAddress -Confirm:$false -ErrorAction SilentlyContinue
+
+        # Configure the IP & DNS on the network adapter.
         $paramsForSetNetIPInterface = @{
             AddressFamily = 'IPv4'
             Dhcp          = 'Disabled'
@@ -458,19 +485,33 @@ try {
         }
         $paramsForNewIPAddress = @{
             AddressFamily  = 'IPv4'
-            IPAddress      = $VMConfig.NetAdapters.Compute.IPAddress
-            PrefixLength   = $VMConfig.NetAdapters.Compute.PrefixLength
+            IPAddress      = $NetAdapterConfig.IPAddress
+            PrefixLength   = $NetAdapterConfig.PrefixLength
         }
-        Get-NetAdapter -Name $VMConfig.NetAdapters.Compute.Name |
+        Get-NetAdapter -Name $NetAdapterConfig.Name |
         Set-NetIPInterface @paramsForSetNetIPInterface |
         New-NetIPAddress @paramsForNewIPAddress |
         Out-Null
-        'Configure the IP & DNS on the "{0}" network adapter completed.' -f $VMConfig.NetAdapters.Compute.Name | Write-ScriptLog
+    }
+    'Configure the IP & DNS on the "{0}" network adapter completed.' -f $netAdapterConfig.Name | Write-ScriptLog
 
-        # Storage 1
-        'Configure the IP & DNS on the "{0}" network adapter.' -f $VMConfig.NetAdapters.Storage1.Name | Write-ScriptLog
+    # Storage 1
+    $netAdapterConfig = $nodeConfig.NetAdapters.Storage1
+    'Configure the IP & DNS on the "{0}" network adapter.' -f $netAdapterConfig.Name | Write-ScriptLog
+    Invoke-CommandWithinVM @invokeWithinVMParams -WithRetry -ScriptBlockParamList $netAdapterConfig -ScriptBlock {
+        param (
+            [Parameter(Mandatory = $true)]
+            [PSCustomObject] $NetAdapterConfig
+        )
+
+        # Remove existing NetIPAddresses.
+        Get-NetAdapter -Name $NetAdapterConfig.Name |
+        Get-NetIPInterface -AddressFamily 'IPv4' |
+        Remove-NetIPAddress -Confirm:$false -ErrorAction SilentlyContinue
+        
+        # Configure the IP, DNS and VLAN on the network adapter.
         $paramsForSetNetAdapter = @{
-            VlanID   = $VMConfig.NetAdapters.Storage1.VlanId
+            VlanID   = $NetAdapterConfig.VlanId
             Confirm  = $false
             PassThru = $true
         }
@@ -481,20 +522,34 @@ try {
         }
         $paramsForNewIPAddress = @{
             AddressFamily = 'IPv4'
-            IPAddress     = $VMConfig.NetAdapters.Storage1.IPAddress
-            PrefixLength  = $VMConfig.NetAdapters.Storage1.PrefixLength
+            IPAddress     = $NetAdapterConfig.IPAddress
+            PrefixLength  = $NetAdapterConfig.PrefixLength
         }
-        Get-NetAdapter -Name $VMConfig.NetAdapters.Storage1.Name |
+        Get-NetAdapter -Name $NetAdapterConfig.Name |
         Set-NetAdapter @paramsForSetNetAdapter |
         Set-NetIPInterface @paramsForSetNetIPInterface |
         New-NetIPAddress @paramsForNewIPAddress |
         Out-Null
-        'Configure the IP & DNS on the "{0}" network adapter completed.' -f $VMConfig.NetAdapters.Storage1.Name | Write-ScriptLog
+    }
+    'Configure the IP & DNS on the "{0}" network adapter completed.' -f $netAdapterConfig.Name | Write-ScriptLog
 
-        # Storage 2
-        'Configure the IP & DNS on the "{0}" network adapter.' -f $VMConfig.NetAdapters.Storage2.Name | Write-ScriptLog
+    # Storage 2
+    $netAdapterConfig = $nodeConfig.NetAdapters.Storage2
+    'Configure the IP & DNS on the "{0}" network adapter.' -f $netAdapterConfig.Name | Write-ScriptLog
+    Invoke-CommandWithinVM @invokeWithinVMParams -WithRetry -ScriptBlockParamList $netAdapterConfig -ScriptBlock {
+        param (
+            [Parameter(Mandatory = $true)]
+            [PSCustomObject] $NetAdapterConfig
+        )
+
+        # Remove existing NetIPAddresses.
+        Get-NetAdapter -Name $NetAdapterConfig.Name |
+        Get-NetIPInterface -AddressFamily 'IPv4' |
+        Remove-NetIPAddress -Confirm:$false -ErrorAction SilentlyContinue
+        
+        # Configure the IP, DNS and VLAN on the network adapter.
         $paramsForSetNetAdapter = @{
-            VlanID   = $VMConfig.NetAdapters.Storage2.VlanId
+            VlanID   = $NetAdapterConfig.VlanId
             Confirm  = $false
             PassThru = $true
         }
@@ -505,20 +560,37 @@ try {
         }
         $paramsForNewIPAddress = @{
             AddressFamily = 'IPv4'
-            IPAddress     = $VMConfig.NetAdapters.Storage2.IPAddress
-            PrefixLength  = $VMConfig.NetAdapters.Storage2.PrefixLength
+            IPAddress     = $NetAdapterConfig.IPAddress
+            PrefixLength  = $NetAdapterConfig.PrefixLength
         }
-        Get-NetAdapter -Name $VMConfig.NetAdapters.Storage2.Name |
+        Get-NetAdapter -Name $NetAdapterConfig.Name |
         Set-NetAdapter @paramsForSetNetAdapter |
         Set-NetIPInterface @paramsForSetNetIPInterface |
         New-NetIPAddress @paramsForNewIPAddress |
         Out-Null
-        'Configure the IP & DNS on the "{0}" network adapter completed.' -f $VMConfig.NetAdapters.Storage2.Name | Write-ScriptLog
+    }
+    'Configure the IP & DNS on the "{0}" network adapter completed.' -f $netAdapterConfig.Name | Write-ScriptLog
 
-        'Network adapter IP configurations:' | Write-ScriptLog
-        Get-NetIPAddress | Format-Table -Property @(
+    'Log the network settings within the VM.' | Write-ScriptLog
+    Invoke-CommandWithinVM @invokeWithinVMParams -WithRetry -ScriptBlock {
+        'Network adapter configurations:' | Write-ScriptLog
+        Get-NetAdapter | Sort-Object -Property 'Name' | Format-Table -Property @(
+            'Name',
             'InterfaceIndex',
             'InterfaceAlias',
+            'VlanID',
+            'Status',
+            'MediaConnectionState',
+            'MtuSize',
+            'LinkSpeed',
+            'MacAddress',
+            'InterfaceDescription'
+        ) | Out-String -Width 200 | Write-ScriptLog
+
+        'Network adapter IP configurations:' | Write-ScriptLog
+        Get-NetIPAddress | Sort-Object -Property 'InterfaceAlias' | Format-Table -Property @(
+            'InterfaceAlias',
+            'InterfaceIndex',
             'AddressFamily',
             'IPAddress',
             'PrefixLength',
@@ -528,16 +600,15 @@ try {
             'Store'
         ) | Out-String -Width 200 | Write-ScriptLog
 
-        # Log DNS configurations.
         'Network adapter DNS configurations:' | Write-ScriptLog
-        Get-DnsClientServerAddress | Format-Table -Property @(
-            'InterfaceIndex',
+        Get-DnsClientServerAddress | Sort-Object -Property 'InterfaceAlias' | Format-Table -Property @(
             'InterfaceAlias',
-            @{ Label = 'AddressFamily'; Expression = { switch ($_.AddressFamily) { 2 { 'IPv4' } 23 { 'IPv6' } default { $_.AddressFamily } } } }
+            'InterfaceIndex',
+            @{ Label = 'AddressFamily'; Expression = { Switch ($_.AddressFamily) { 2 { 'IPv4' } 23 { 'IPv6' } default { $_.AddressFamily } } } }
             @{ Label = 'DNSServers'; Expression = { $_.ServerAddresses } }
         ) | Out-String -Width 200 | Write-ScriptLog
-    } | Out-String | Write-ScriptLog
-    'Configure network settings within the VM completed.' | Write-ScriptLog
+    }
+    'Log the network settings within the VM completed.' | Write-ScriptLog
 
     # We need to wait for the domain controller VM deployment completion before update the NuGet package provider and the PowerShellGet module.
     'Wait for the domain controller VM deployment completion.' | Write-ScriptLog
@@ -557,14 +628,16 @@ try {
     'Install the NuGet package provider within the VM.' | Write-ScriptLog
     Invoke-CommandWithinVM @invokeWithinVMParams -WithRetry -ScriptBlock {
         Install-PackageProvider -Name 'NuGet' -Scope 'AllUsers' -Force -Verbose | Out-String -Width 200 | Write-ScriptLog
-    } | Out-String -Width 200 | Write-ScriptLog
+        Get-PackageProvider -Name 'NuGet' -ListAvailable -Force | Out-String -Width 200 | Write-ScriptLog
+    }
     'Install the NuGet package provider within the VM completed.' | Write-ScriptLog
 
     # NOTE: The PowerShellGet module installation needs internet connection and name resolution.
     'Install the PowerShellGet module within the VM.' | Write-ScriptLog
     Invoke-CommandWithinVM @invokeWithinVMParams -WithRetry -ScriptBlock {
-        Install-Module -Name 'PowerShellGet' -Scope 'AllUsers' -Force -Verbose | Out-String -Width 200 | Write-ScriptLog
-    } | Out-String -Width 200 | Write-ScriptLog
+        Install-Module -Name 'PowerShellGet' -Scope 'AllUsers' -Force -Verbose
+        Get-Module -Name 'PowerShellGet' -ListAvailable | Out-String -Width 200 | Write-ScriptLog
+    }
     'Install the PowerShellGet module within the VM completed.' | Write-ScriptLog
 
     'Delete the module files within the VM.' | Write-ScriptLog
