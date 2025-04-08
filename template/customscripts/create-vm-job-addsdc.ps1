@@ -204,24 +204,37 @@ try {
         'Hide the Network Location wizard. All networks will be Public.' | Write-ScriptLog
         New-RegistryKey -ParentPath 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -KeyName 'NewNetworkWindowOff'
         'Hide the Network Location wizard completed.' | Write-ScriptLog
-    } | Out-String | Write-ScriptLog
+    }
     'Configure registry values within the VM completed.' | Write-ScriptLog
 
-    'Configure network settings within the VM.' | Write-ScriptLog
-    Invoke-CommandWithinVM @invokeWithinVMParams -ScriptBlockParamList $LabConfig.addsDC -ScriptBlock {
-        param (
-            [Parameter(Mandatory = $true)]
-            [PSCustomObject] $VMConfig
-        )
-
-        'Rename the network adapters.' | Write-ScriptLog
+    'Rename the network adapters.' | Write-ScriptLog
+    Invoke-CommandWithinVM @invokeWithinVMParams -WithRetry -ScriptBlock {
         Get-NetAdapterAdvancedProperty -RegistryKeyword 'HyperVNetworkAdapterName' | ForEach-Object -Process {
             Rename-NetAdapter -Name $_.Name -NewName $_.DisplayValue
         }
-        'Rename the network adapters completed.' | Write-ScriptLog
+    }
+    'Rename the network adapters completed.' | Write-ScriptLog
 
-        # Management
-        'Configure the IP & DNS on the "{0}" network adapter.' -f $VMConfig.netAdapters.management.name | Write-ScriptLog
+    # Management
+    $netAdapterConfig = $labConfig.addsDC.netAdapters.management
+    'Configure the IP & DNS on the "{0}" network adapter.' -f $netAdapterConfig.name | Write-ScriptLog
+    Invoke-CommandWithinVM @invokeWithinVMParams -WithRetry -ScriptBlockParamList $netAdapterConfig -ScriptBlock {
+        param (
+            [Parameter(Mandatory = $true)]
+            [PSCustomObject] $NetAdapterConfig
+        )
+
+        # Remove default route.
+        Get-NetAdapter -Name $NetAdapterConfig.name |
+        Get-NetIPInterface -AddressFamily 'IPv4' |
+        Remove-NetRoute -DestinationPrefix '0.0.0.0/0' -Confirm:$false -ErrorAction SilentlyContinue
+
+        # Remove existing NetIPAddresses.
+        Get-NetAdapter -Name $NetAdapterConfig.name |
+        Get-NetIPInterface -AddressFamily 'IPv4' |
+        Remove-NetIPAddress -Confirm:$false -ErrorAction SilentlyContinue
+
+        # Configure the IP & DNS on the network adapter.
         $paramsForSetNetIPInterface = @{
             AddressFamily = 'IPv4'
             Dhcp          = 'Disabled'
@@ -229,24 +242,41 @@ try {
         }
         $paramsForNewIPAddress = @{
             AddressFamily  = 'IPv4'
-            IPAddress      = $VMConfig.netAdapters.management.ipAddress
-            PrefixLength   = $VMConfig.netAdapters.management.prefixLength
-            DefaultGateway = $VMConfig.netAdapters.management.defaultGateway
+            IPAddress      = $NetAdapterConfig.ipAddress
+            PrefixLength   = $NetAdapterConfig.prefixLength
+            DefaultGateway = $NetAdapterConfig.defaultGateway
         }
         $paramsForSetDnsClientServerAddress = @{
-            ServerAddresses = $VMConfig.netAdapters.management.dnsServerAddresses
+            ServerAddresses = $NetAdapterConfig.dnsServerAddresses
         }
-        Get-NetAdapter -Name $VMConfig.netAdapters.management.name |
+        Get-NetAdapter -Name $NetAdapterConfig.name |
         Set-NetIPInterface @paramsForSetNetIPInterface |
         New-NetIPAddress @paramsForNewIPAddress |
         Set-DnsClientServerAddress @paramsForSetDnsClientServerAddress |
         Out-Null
-        'Configure the IP & DNS on the "{0}" network adapter completed.' -f $VMConfig.netAdapters.management.name | Write-ScriptLog
+    }
+    'Configure the IP & DNS on the "{0}" network adapter completed.' -f $netAdapterConfig.name | Write-ScriptLog
 
-        'Network adapter IP configurations:' | Write-ScriptLog
-        Get-NetIPAddress | Format-Table -Property @(
+    'Log the network settings within the VM.' | Write-ScriptLog
+    Invoke-CommandWithinVM @invokeWithinVMParams -WithRetry -ScriptBlock {
+        'Network adapter configurations:' | Write-ScriptLog
+        Get-NetAdapter | Sort-Object -Property 'Name' | Format-Table -Property @(
+            'Name',
             'InterfaceIndex',
             'InterfaceAlias',
+            'VlanID',
+            'Status',
+            'MediaConnectionState',
+            'MtuSize',
+            'LinkSpeed',
+            'MacAddress',
+            'InterfaceDescription'
+        ) | Out-String -Width 200 | Write-ScriptLog
+
+        'Network adapter IP configurations:' | Write-ScriptLog
+        Get-NetIPAddress | Sort-Object -Property 'InterfaceAlias' | Format-Table -Property @(
+            'InterfaceAlias',
+            'InterfaceIndex',
             'AddressFamily',
             'IPAddress',
             'PrefixLength',
@@ -257,14 +287,14 @@ try {
         ) | Out-String -Width 200 | Write-ScriptLog
 
         'Network adapter DNS configurations:' | Write-ScriptLog
-        Get-DnsClientServerAddress | Format-Table -Property @(
-            'InterfaceIndex',
+        Get-DnsClientServerAddress | Sort-Object -Property 'InterfaceAlias' | Format-Table -Property @(
             'InterfaceAlias',
+            'InterfaceIndex',
             @{ Label = 'AddressFamily'; Expression = { Switch ($_.AddressFamily) { 2 { 'IPv4' } 23 { 'IPv6' } default { $_.AddressFamily } } } }
             @{ Label = 'DNSServers'; Expression = { $_.ServerAddresses } }
         ) | Out-String -Width 200 | Write-ScriptLog
-    } | Out-String | Write-ScriptLog
-    'Configure network settings within the VM completed.' | Write-ScriptLog
+    }
+    'Log the network settings within the VM completed.' | Write-ScriptLog
 
     'Install AD DS (Creating a new forest) within the VM.' | Write-ScriptLog
     $scriptBlockParamList = @(
