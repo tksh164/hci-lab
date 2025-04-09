@@ -198,7 +198,7 @@ try {
         $nodeNames,
         ([array] $clusterTestCategories.Values)
     )
-    Invoke-CommandWithinVM @invokeParamsMgmt -ScriptBlockParamList $scriptBlockParamList -ScriptBlock {
+    Invoke-CommandWithinVM @invokeParamsMgmt -WithRetry -ScriptBlockParamList $scriptBlockParamList -ScriptBlock {
         param (
             [Parameter(Mandatory = $true)]
             [string[]] $Node,
