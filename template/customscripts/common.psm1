@@ -217,7 +217,7 @@ function Get-Secret
         [switch] $AsPlainText
     )
 
-    'Get a secret value of the {0} from the {1}.' -f $SecretName, $KeyVaultName | Write-ScriptLog
+    'Get a secret value of the "{0}" from the "{1}".' -f $SecretName, $KeyVaultName | Write-ScriptLog
 
     $attemptLimit = 10
     for ($attempts = 0; $attempts -lt $attemptLimit; $attempts++) {
@@ -232,6 +232,7 @@ function Get-Secret
                 Headers = @{
                     Authorization = ('Bearer {0}' -f $accessToken)
                 }
+                #Verbose = $false
             }
             $secretValue = (Invoke-RestMethod @params).value
 
@@ -273,6 +274,7 @@ function Get-AccessTokenUsingManagedId
                 Headers = @{
                     Metadata = 'true'
                 }
+                #Verbose = $false
             }
             return (Invoke-RestMethod @params).access_token
         }
@@ -400,7 +402,9 @@ function New-RegistryKey
 
     $path = [IO.Path]::Combine($ParentPath, $KeyName)
     if ((Get-Item -LiteralPath $path -ErrorAction SilentlyContinue) -eq $null) {
-        New-Item -ItemType Directory -Path $ParentPath -Name $KeyName
+        'Create a new registry key "{0}" under "{1}"' -f $KeyName, $ParentPath | Write-ScriptLog
+        New-Item -ItemType Directory -Path $ParentPath -Name $KeyName | Out-String -Width 200 | Write-ScriptLog
+        'Create a new registry key "{0}" under "{1}" completed.' -f $KeyName, $ParentPath | Write-ScriptLog
     }
 }
 
@@ -666,8 +670,14 @@ function Install-WindowsFeatureToVhd
                 IncludeManagementTools = $IncludeManagementTools
                 LogPath                = $logFilePath
                 ErrorAction            = [Management.Automation.ActionPreference]::Stop
+                #Verbose                = $false
             }
-            Install-WindowsFeature @params | Out-String | Write-ScriptLog -LogContext $VhdPath
+            Install-WindowsFeature @params | Format-List -Property @(
+                'Success',
+                'RestartNeeded',
+                'ExitCode',
+                'FeatureResult'
+            ) | Out-String -Width 500 | Write-ScriptLog -LogContext $VhdPath
 
             # NOTE: The DISM mount point is still remain after the Install-WindowsFeature cmdlet completed.
             'Wait for VHD dismount completion by the Install-WindowsFeature cmdlet execution.' | Write-ScriptLog -LogContext $VhdPath
@@ -1256,7 +1266,7 @@ function Remove-FileWithinVM
                         'The "{0}" within the VM "{1}" does not exist.' -f $filePath, $env:ComputerName | Write-ScriptLog
                     }
                 }
-            } | Out-String | Write-ScriptLog
+            }
             return
         }
         catch {
@@ -1352,13 +1362,15 @@ function New-ShortcutFile
         [string] $IconLocation
     )
 
-    $wshShell = New-Object -ComObject 'WScript.Shell' -Property $properties
+    'Create a shortcut file "{0}".' -f $ShortcutFilePath | Write-ScriptLog
+    $wshShell = New-Object -ComObject 'WScript.Shell'
     $shortcut = $wshShell.CreateShortcut($ShortcutFilePath)
     $shortcut.TargetPath = $TargetPath
     if ($PSBoundParameters.ContainsKey('Arguments')) { $shortcut.Arguments = $Arguments }
     if ($PSBoundParameters.ContainsKey('Description')) { $shortcut.Description = $Description }
     if ($PSBoundParameters.ContainsKey('IconLocation')) { $shortcut.IconLocation = $IconLocation }
     $shortcut.Save()
+    'Create a shortcut file "{0}" completed.' -f $ShortcutFilePath | Write-ScriptLog
 }
 
 function New-WacConnectionFileEntry

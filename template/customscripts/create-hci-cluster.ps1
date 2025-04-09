@@ -359,7 +359,7 @@ try {
                 }
             }
         }
-    } | Out-String | Write-ScriptLog
+    }
     'Rename the cluster network names completed.' | Write-ScriptLog
 
     'Change the cluster network order for live migration.' | Write-ScriptLog
@@ -387,7 +387,7 @@ try {
         'Cluster network order for live migration: {0}' -f ($migrationNetworkOrderValue -join '; ') | Write-ScriptLog
         Get-ClusterResourceType -Cluster $ClusterName -Name 'Virtual Machine' |
             Set-ClusterParameter -Name 'MigrationNetworkOrder' -Value ($migrationNetworkOrderValue -join ';')
-    } | Out-String | Write-ScriptLog
+    }
     'Change the cluster network order for live migration completed.' | Write-ScriptLog
 
     'Enable Storage Space Direct (S2D).' | Write-ScriptLog
