@@ -350,7 +350,7 @@ try {
         LogFolder   = $labConfig.labHost.folderPath.log
     }
     Install-WindowsFeatureToVhd @params
-    'Install the roles and features to the VHD completed' | Write-ScriptLog
+    'Install the roles and features to the VHD completed.' | Write-ScriptLog
 
     Start-VMSurely -VMName $nodeConfig.VMName
 
