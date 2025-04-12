@@ -805,11 +805,11 @@ function Stop-VMSurely
             'The VM "{0}" is stopped.' -f $VMName | Write-ScriptLog
             return
         }
-        'Wait for the VM "{0}" to stop.' -f $VMName | Write-ScriptLog
+        'The VM "{0}" is "{1}". Wait for the VM "{0}" to stop.' -f $VMName, $vm.State | Write-ScriptLog
         Start-Sleep -Seconds $AttemptIntervalSeconds
     }
 
-    $exceptionMessage = 'The the VM "{0}" was not stopped in the acceptable time ({1}).' -f $VMName, $AttemptDuration.ToString('hh\:mm\:ss')
+    $exceptionMessage = 'The VM "{0}" was not stopped in the acceptable time ({1}).' -f $VMName, $AttemptDuration.ToString('hh\:mm\:ss')
     $exceptionMessage | Write-ScriptLog -Level Error
     throw $exceptionMessage
 }
@@ -1118,7 +1118,7 @@ function New-PSDirectSession
     for ($attempts = 0; $attempts -lt $attemptLimit; $attempts++) {
         try {
             'Create a new PowerShell Direct session to "{0}" with "{1}".' -f $VMName, $Credential.UserName | Write-ScriptLog
-            $pss = New-PSSession -VMName $VMName -Credential $Credential -Name ('{0}:{1}' -f $VMName, $Credential.UserName)
+            $pss = New-PSSession -VMName $VMName -Credential $Credential -Name ('"{0}" with "{1}"' -f $VMName, $Credential.UserName)
             'Create a new PowerShell Direct session to "{0}" with "{1}" succeeded.' -f $VMName, $Credential.UserName | Write-ScriptLog
             return $pss
         }
@@ -1142,9 +1142,9 @@ function Remove-PSDirectSession
         [System.Management.Automation.Runspaces.PSSession] $Session
     )
 
-    'Delete a PowerShell Direct session "{0}".' -f $Session.Name | Write-ScriptLog
+    'Delete a PowerShell Direct session to {0}.' -f $Session.Name | Write-ScriptLog
     Remove-PSSession -Session $Session
-    'Delete a PowerShell Direct session "{0}" succeeded.' -f $Session.Name | Write-ScriptLog
+    'Delete a PowerShell Direct session to {0} succeeded.' -f $Session.Name | Write-ScriptLog
 }
 
 function Invoke-PSDirectSessionGroundwork
