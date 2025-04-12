@@ -65,10 +65,10 @@ try {
     $labConfig = Get-LabDeploymentConfig
     Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log -FileName $LogFileName
     Set-ScriptLogDefaultContext -LogContext $labConfig.wac.vmName
-    
+
     'Lab deployment config:' | Write-ScriptLog
     $labConfig | ConvertTo-Json -Depth 16 | Out-String | Write-ScriptLog
-    
+
     #
     # Hyper-V VM creation
     #
