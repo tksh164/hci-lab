@@ -1040,6 +1040,7 @@ function New-LogonCredential
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
+        [AllowEmptyString()]
         [string] $DomainFqdn,
 
         [Parameter(Mandatory = $true)]
@@ -1052,7 +1053,7 @@ function New-LogonCredential
     $params = @{
         TypeName     = 'System.Management.Automation.PSCredential'
         ArgumentList = @(
-            ('{0}\{1}' -f $DomainFqdn, $UserName),
+            if ($DomainFqdn -eq '') { $UserName } else { '{0}\{1}' -f $DomainFqdn, $UserName },
             $Password
         )
     }
