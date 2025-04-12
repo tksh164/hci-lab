@@ -12,6 +12,10 @@ $WarningPreference = [Management.Automation.ActionPreference]::Continue
 $VerbosePreference = [Management.Automation.ActionPreference]::Continue
 $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
+#
+# Windows Admin Center
+#
+
 function Invoke-WindowsAdminCenterInstallerDownload
 {
     [CmdletBinding()]
@@ -56,6 +60,149 @@ function New-CertificateForWindowsAdminCenter
     $wacCret = New-SelfSignedCertificate @params | Move-Item -Destination 'Cert:\LocalMachine\Root' -PassThru
     return $wacCret
 }
+
+#
+# Active Directory preparation for Azure Local
+#
+
+function New-ADObjectsForAzureLocal
+{
+    [OutputType([void])]
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject] $LabConfig,
+
+        [Parameter(Mandatory = $true)]
+        [hashtable] $InvokeWithinVMParams,
+
+        [Parameter(Mandatory = $true)]
+        [string] $OrgUnitForAzureLocal,
+
+        [Parameter(Mandatory = $true)]
+        [string] $LcmUserName
+    )
+
+    'Install the "AsHciADArtifactsPreCreationTool" module within the VM.' | Write-ScriptLog
+    Invoke-CommandWithinVM @InvokeWithinVMParams -ScriptBlock {
+        Install-Module -Name 'AsHciADArtifactsPreCreationTool' -Repository 'PSGallery' -Scope 'AllUsers' -Force -Verbose
+    }
+    'Install the "AsHciADArtifactsPreCreationTool" module within the VM completed.' | Write-ScriptLog
+
+    'Invoke the Active Directory preparation tool within the VM.' | Write-ScriptLog
+    $lcmUserCredential = New-LogonCredential -DomainFqdn '' -UserName $LcmUserName -Password $adminPassword
+    $scriptBlockParamList = @(
+        $lcmUserCredential,
+        $OrgUnitForAzureLocal
+    )
+    Invoke-CommandWithinVM @InvokeWithinVMParams -ScriptBlockParamList $scriptBlockParamList -ScriptBlock {
+        param (
+            [Parameter(Mandatory = $true)]
+            [PSCredential] $LcmUserCredential,
+
+            [Parameter(Mandatory = $true)]
+            [string] $OrgUnitDistinguishedName
+        )
+
+        New-HciAdObjectsPreCreation -AzureStackLCMUserCredential $LcmUserCredential -AsHciOUName $OrgUnitDistinguishedName -Verbose
+    }
+    'Invoke the Active Directory preparation tool within the VM completed.' | Write-ScriptLog
+}
+
+#
+# Configurator App for Azure Local
+#
+
+function Invoke-ConfigAppForAzureLocalSetupFileDownload
+{
+    [OutputType([string])]
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateScript({ Test-Path -PathType Container -LiteralPath $_ })]
+        [string] $DownloadFolderPath
+    )
+
+    $params = @{
+        SourceUri      = 'https://aka.ms/ConfiguratorAppForHCI'
+        DownloadFolder = $DownloadFolderPath
+        FileNameToSave = 'Configurator-App-for-Azure-Local-Setup.exe'
+    }
+    $configAppSetupFile = Invoke-FileDownload @params
+    return $configAppSetupFile
+}
+
+function Install-ConfiguratorAppForAzureLocal
+{
+    [OutputType([void])]
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject] $LabConfig,
+
+        [Parameter(Mandatory = $true)]
+        [hashtable] $InvokeWithinVMParams
+    )
+
+    'Download the Configurator App for Azure Local setup file.' | Write-ScriptLog
+    $configAppSetupFile = Invoke-ConfigAppForAzureLocalSetupFileDownload -DownloadFolderPath $LabConfig.labHost.folderPath.temp
+    $configAppSetupFile | Out-String | Write-ScriptLog
+    'Download the Configurator App for Azure Local setup file completed.' | Write-ScriptLog
+
+    'Create a work folder within the VM.' | Write-ScriptLog
+    $workFolderPathInVM = 'C:\HciLabWork'
+    Invoke-CommandWithinVM @InvokeWithinVMParams -ScriptBlockParamList $workFolderPathInVM -ScriptBlock {
+        param (
+            [Parameter(Mandatory = $true)]
+            [string] $FolderPath
+        )
+
+        New-Item -ItemType Directory -Path $FolderPath -Force | Out-String | Write-ScriptLog
+    }
+    'Create a work folder within the VM completed.' | Write-ScriptLog
+
+    'Copy the Configurator App setup file into the VM.' | Write-ScriptLog
+    $params = @{
+        VMName              = $LabConfig.wac.vmName
+        Credential          = $domainAdminCredential
+        SourceFilePath      = $configAppSetupFile.FullName
+        DestinationPathInVM = $workFolderPathInVM
+    }
+    $configAppSetupFilePathInVM = Copy-FileIntoVM @params
+    'Copy the Configurator App setup file into the VM completed.' | Write-ScriptLog
+
+    'Execute the Configurator App setup within the VM.' | Write-ScriptLog
+    Invoke-CommandWithinVM @InvokeWithinVMParams -WithRetry -ScriptBlockParamList $configAppSetupFilePathInVM -ScriptBlock {
+        param (
+            [Parameter(Mandatory = $true)]
+            [string] $ConfigAppSetupFilePath
+        )
+
+        $exeArgs = @( '/S' )
+        $result = Start-Process -FilePath $ConfigAppSetupFilePath -ArgumentList $exeArgs -Wait -PassThru
+        $result | Format-List -Property @(
+            @{ Label = 'FileName'; Expression = { $_.StartInfo.FileName } },
+            @{ Label = 'Arguments'; Expression = { $_.StartInfo.Arguments } },
+            @{ Label = 'WorkingDirectory'; Expression = { $_.StartInfo.WorkingDirectory } },
+            'Id',
+            'HasExited',
+            'ExitCode',
+            'StartTime',
+            'ExitTime',
+            'TotalProcessorTime',
+            'PrivilegedProcessorTime',
+            'UserProcessorTime'
+        ) | Out-String | Write-ScriptLog
+        if ($result.ExitCode -ne 0) {
+            throw 'The Configurator App installation failed with exit code {0}.' -f $result.ExitCode
+        }
+    }
+    'Execute the Configurator App setup within the VM completed.' | Write-ScriptLog
+}
+
+#
+# Main process
+#
 
 try {
     $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
@@ -211,14 +358,14 @@ try {
 
     Start-VMSurely -VMName $labConfig.wac.vmName
 
+    #
+    # Guest OS configuration
+    #
+
     'Wait for the VM to be ready.' | Write-ScriptLog
     $localAdminCredential = New-LogonCredential -DomainFqdn '.' -Password $adminPassword
     Wait-PowerShellDirectReady -VMName $labConfig.wac.vmName -Credential $localAdminCredential
     'The VM is ready.' | Write-ScriptLog
-
-    #
-    # Guest OS configuration
-    #
 
     'Copy the module files into the VM.' | Write-ScriptLog
     $params = @{
@@ -230,15 +377,15 @@ try {
     $moduleFilePathsWithinVM = Copy-FileIntoVM @params
     'Copy the module files into the VM completed.' | Write-ScriptLog
 
-    # The common parameters for Invoke-CommandWithinVM.
-    $invokeWithinVMParams = @{
+    # The common parameters for Invoke-CommandWithinVM with the local Administrator credentials.
+    $invokeAsLocalAdminParams = @{
         VMName           = $labConfig.wac.vmName
         Credential       = $localAdminCredential
         ImportModuleInVM = $moduleFilePathsWithinVM
     }
     
     'Configure registry values within the VM.' | Write-ScriptLog
-    Invoke-CommandWithinVM @invokeWithinVMParams -ScriptBlock {
+    Invoke-CommandWithinVM @invokeAsLocalAdminParams -ScriptBlock {
         'Disable diagnostics data send screen.' | Write-ScriptLog
         New-RegistryKey -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows' -KeyName 'OOBE'
         Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\OOBE' -Name 'DisablePrivacyExperience' -Value 1
@@ -264,7 +411,7 @@ try {
     'Configure registry values within the VM completed.' | Write-ScriptLog
 
     'Rename the network adapters.' | Write-ScriptLog
-    Invoke-CommandWithinVM @invokeWithinVMParams -WithRetry -ScriptBlock {
+    Invoke-CommandWithinVM @invokeAsLocalAdminParams -WithRetry -ScriptBlock {
         Get-NetAdapterAdvancedProperty -RegistryKeyword 'HyperVNetworkAdapterName' | ForEach-Object -Process {
             Rename-NetAdapter -Name $_.Name -NewName $_.DisplayValue
         }
@@ -274,7 +421,7 @@ try {
     # Management
     $netAdapterConfig = $labConfig.wac.netAdapters.management
     'Configure the IP & DNS on the "{0}" network adapter.' -f $netAdapterConfig.name | Write-ScriptLog
-    Invoke-CommandWithinVM @invokeWithinVMParams -WithRetry -ScriptBlockParamList $netAdapterConfig -ScriptBlock {
+    Invoke-CommandWithinVM @invokeAsLocalAdminParams -WithRetry -ScriptBlockParamList $netAdapterConfig -ScriptBlock {
         param (
             [Parameter(Mandatory = $true)]
             [PSCustomObject] $NetAdapterConfig
@@ -314,7 +461,7 @@ try {
     'Configure the IP & DNS on the "{0}" network adapter completed.' -f $netAdapterConfig.name | Write-ScriptLog
 
     'Log the network settings within the VM.' | Write-ScriptLog
-    Invoke-CommandWithinVM @invokeWithinVMParams -WithRetry -ScriptBlock {
+    Invoke-CommandWithinVM @invokeAsLocalAdminParams -WithRetry -ScriptBlock {
         'Network adapter configurations:' | Write-ScriptLog
         Get-NetAdapter | Sort-Object -Property 'Name' | Format-Table -Property @(
             'Name',
@@ -351,6 +498,104 @@ try {
         ) | Out-String -Width 200 | Write-ScriptLog
     }
     'Log the network settings within the VM completed.' | Write-ScriptLog
+
+    'Create a new shortcut on the desktop for connecting to the first HCI node using Remote Desktop connection.' | Write-ScriptLog
+    Invoke-CommandWithinVM @invokeAsLocalAdminParams -ScriptBlockParamList $labConfig.hciNode -ScriptBlock {
+        param (
+            [Parameter(Mandatory = $true)]
+            [PSCustomObject] $HciNodeConfig
+        )
+
+        $firstHciNodeName = Format-HciNodeName -Format $HciNodeConfig.vmName -Offset $HciNodeConfig.vmNameOffset -Index 0
+        $params = @{
+            ShortcutFilePath = 'C:\Users\Public\Desktop\{0}.lnk' -f $firstHciNodeName
+            TargetPath       = '%windir%\System32\mstsc.exe'
+            Arguments        = '/v:{0}' -f $firstHciNodeName  # The VM name is also the computer name.
+            Description      = 'Make a remote desktop connection to the member node "{0}" VM of the HCI cluster in your lab environment.' -f $firstHciNodeName
+        }
+        New-ShortcutFile @params
+    }
+    'Create a new shortcut on the desktop for connecting to the first HCI node using Remote Desktop connection completed.' | Write-ScriptLog
+
+    # We need to wait for the domain controller VM deployment completion before update the NuGet package provider and the PowerShellGet module.
+    'Wait for the domain controller VM deployment completion.' | Write-ScriptLog
+    Wait-AddsDcDeploymentCompletion
+    'The domain controller VM deployment completed.' | Write-ScriptLog
+
+    'Wait for the domain controller with DNS capability to be ready.' | Write-ScriptLog
+    $domainAdminCredential = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $adminPassword
+    $params = @{
+        AddsDcVMName       = $labConfig.addsDC.vmName
+        AddsDcComputerName = $labConfig.addsDC.vmName  # The DC's computer name is the same as the VM name. It's specified in the unattend.xml.
+        Credential         = $domainAdminCredential    # Domain Administrator credential
+    }
+    Wait-DomainControllerServiceReady @params
+    'The domain controller with DNS capability is ready.' | Write-ScriptLog
+
+    # NOTE: The package provider installation needs internet connection and name resolution.
+    'Install the NuGet package provider within the VM.' | Write-ScriptLog
+    Invoke-CommandWithinVM @invokeAsLocalAdminParams -WithRetry -ScriptBlock {
+        Install-PackageProvider -Name 'NuGet' -Scope 'AllUsers' -Force -Verbose | Out-String -Width 200 | Write-ScriptLog
+        Get-PackageProvider -Name 'NuGet' -ListAvailable -Force | Out-String -Width 200 | Write-ScriptLog
+    }
+    'Install the NuGet package provider within the VM completed.' | Write-ScriptLog
+
+    # NOTE: The PowerShellGet module installation needs internet connection and name resolution.
+    'Install the PowerShellGet module within the VM.' | Write-ScriptLog
+    Invoke-CommandWithinVM @invokeAsLocalAdminParams -WithRetry -ScriptBlock {
+        Install-Module -Name 'PowerShellGet' -Repository 'PSGallery' -Scope 'AllUsers' -Force -Verbose
+        Get-Module -Name 'PowerShellGet' -ListAvailable | Out-String -Width 200 | Write-ScriptLog
+    }
+    'Install the PowerShellGet module within the VM completed.' | Write-ScriptLog
+    
+    'Join the VM to the AD domain.' | Write-ScriptLog
+    $params = @{
+        VMName                = $labConfig.wac.vmName
+        LocalAdminCredential  = $localAdminCredential
+        DomainFqdn            = $labConfig.addsDomain.fqdn
+        DomainAdminCredential = $domainAdminCredential
+    }
+    Add-VMToADDomain @params
+    'Join the VM to the AD domain completed.' | Write-ScriptLog
+
+    # Reboot the VM.
+    Stop-VMSurely -VMName $labConfig.wac.vmName
+    Start-VMSurely -VMName $labConfig.wac.vmName
+
+    'Wait for the VM to be ready.' | Write-ScriptLog
+    Wait-PowerShellDirectReady -VMName $labConfig.wac.vmName -Credential $domainAdminCredential
+    'The VM is ready.' | Write-ScriptLog
+
+    # The common parameters for Invoke-CommandWithinVM with the domain Administrator credentials.
+    $invokeAsDomainAdminParams = @{
+        VMName           = $labConfig.wac.vmName
+        Credential       = $domainAdminCredential
+        ImportModuleInVM = $moduleFilePathsWithinVM
+    }
+
+    if ($labConfig.addsDC.shouldPrepareAddsForAzureLocal) {
+        'Create Active Directory objects for Azure Local.' | Write-ScriptLog
+        $params = @{
+            LabConfig            = $labConfig
+            InvokeWithinVMParams = $invokeAsDomainAdminParams
+            OrgUnitForAzureLocal = $labConfig.addsDC.orgUnitForAzureLocal
+            LcmUserName          = $labConfig.addsDC.lcmUserName
+        }
+        New-ADObjectsForAzureLocal @params
+        'Create Active Directory objects for Azure Local completed.' | Write-ScriptLog
+    }
+    else {
+        'Skip the Active Directory preparation for Azure Local.' | Write-ScriptLog
+    }
+
+    if ($labConfig.wac.shouldInstallConfigAppForAzureLocal) {
+        'Install the Configurator App for Azure Local within the VM.' | Write-ScriptLog
+        Install-ConfiguratorAppForAzureLocal -LabConfig $labConfig -InvokeWithinVMParams $invokeAsDomainAdminParams
+        'Install the Configurator App for Azure Local within the VM completed.' | Write-ScriptLog
+    }
+    else {
+        'Skip the Configurator App for Azure Local installation.' | Write-ScriptLog
+    }
 
     # Temporary comment out the WAC related code because of the WAC installation issue.
     <#
@@ -522,73 +767,6 @@ try {
     'Install Windows Admin Center within the VM completed.' | Write-ScriptLog
     #>
 
-    'Create a new shortcut on the desktop for connecting to the first HCI node using Remote Desktop connection.' | Write-ScriptLog
-    Invoke-CommandWithinVM @invokeWithinVMParams -ScriptBlockParamList $labConfig.hciNode -ScriptBlock {
-        param (
-            [Parameter(Mandatory = $true)]
-            [PSCustomObject] $HciNodeConfig
-        )
-
-        $firstHciNodeName = Format-HciNodeName -Format $HciNodeConfig.vmName -Offset $HciNodeConfig.vmNameOffset -Index 0
-        $params = @{
-            ShortcutFilePath = 'C:\Users\Public\Desktop\{0}.lnk' -f $firstHciNodeName
-            TargetPath       = '%windir%\System32\mstsc.exe'
-            Arguments        = '/v:{0}' -f $firstHciNodeName  # The VM name is also the computer name.
-            Description      = 'Make a remote desktop connection to the member node "{0}" VM of the HCI cluster in your lab environment.' -f $firstHciNodeName
-        }
-        New-ShortcutFile @params
-    }
-    'Create a new shortcut on the desktop for connecting to the first HCI node using Remote Desktop connection completed.' | Write-ScriptLog
-
-    # We need to wait for the domain controller VM deployment completion before update the NuGet package provider and the PowerShellGet module.
-    'Wait for the domain controller VM deployment completion.' | Write-ScriptLog
-    Wait-AddsDcDeploymentCompletion
-    'The domain controller VM deployment completed.' | Write-ScriptLog
-
-    'Wait for the domain controller with DNS capability to be ready.' | Write-ScriptLog
-    $domainAdminCredential = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $adminPassword
-    $params = @{
-        AddsDcVMName       = $labConfig.addsDC.vmName
-        AddsDcComputerName = $labConfig.addsDC.vmName  # The DC's computer name is the same as the VM name. It's specified in the unattend.xml.
-        Credential         = $domainAdminCredential    # Domain Administrator credential
-    }
-    Wait-DomainControllerServiceReady @params
-    'The domain controller with DNS capability is ready.' | Write-ScriptLog
-
-    # NOTE: The package provider installation needs internet connection and name resolution.
-    'Install the NuGet package provider within the VM.' | Write-ScriptLog
-    Invoke-CommandWithinVM @invokeWithinVMParams -WithRetry -ScriptBlock {
-        Install-PackageProvider -Name 'NuGet' -Scope 'AllUsers' -Force -Verbose | Out-String -Width 200 | Write-ScriptLog
-        Get-PackageProvider -Name 'NuGet' -ListAvailable -Force | Out-String -Width 200 | Write-ScriptLog
-    }
-    'Install the NuGet package provider within the VM completed.' | Write-ScriptLog
-
-    # NOTE: The PowerShellGet module installation needs internet connection and name resolution.
-    'Install the PowerShellGet module within the VM.' | Write-ScriptLog
-    Invoke-CommandWithinVM @invokeWithinVMParams -WithRetry -ScriptBlock {
-        Install-Module -Name 'PowerShellGet' -Repository 'PSGallery' -Scope 'AllUsers' -Force -Verbose
-        Get-Module -Name 'PowerShellGet' -ListAvailable | Out-String -Width 200 | Write-ScriptLog
-    }
-    'Install the PowerShellGet module within the VM completed.' | Write-ScriptLog
-
-    'Join the VM to the AD domain.' | Write-ScriptLog
-    $params = @{
-        VMName                = $labConfig.wac.vmName
-        LocalAdminCredential  = $localAdminCredential
-        DomainFqdn            = $labConfig.addsDomain.fqdn
-        DomainAdminCredential = $domainAdminCredential
-    }
-    Add-VMToADDomain @params
-    'Join the VM to the AD domain completed.' | Write-ScriptLog
-
-    # Reboot the VM.
-    Stop-VMSurely -VMName $labConfig.wac.vmName
-    Start-VMSurely -VMName $labConfig.wac.vmName
-
-    'Wait for the VM to be ready.' | Write-ScriptLog
-    Wait-PowerShellDirectReady -VMName $labConfig.wac.vmName -Credential $domainAdminCredential
-    'The VM is ready.' | Write-ScriptLog
-
     # Temporary comment out the WAC related code because of the WAC installation issue.
     <#
     # NOTE: To preset WAC connections for the domain Administrator, the preset operation is required by
@@ -656,10 +834,10 @@ try {
 
     'Delete the module files within the VM.' | Write-ScriptLog
     $params = @{
-        VMName               = $invokeWithinVMParams.VMName
-        Credential           = $invokeWithinVMParams.Credential
-        FilePathToRemoveInVM = $invokeWithinVMParams.ImportModuleInVM
-        ImportModuleInVM     = $invokeWithinVMParams.ImportModuleInVM
+        VMName               = $invokeAsLocalAdminParams.VMName
+        Credential           = $invokeAsLocalAdminParams.Credential
+        FilePathToRemoveInVM = $invokeAsLocalAdminParams.ImportModuleInVM
+        ImportModuleInVM     = $invokeAsLocalAdminParams.ImportModuleInVM
     }
     Remove-FileWithinVM @params
     'Delete the module files within the VM completed.' | Write-ScriptLog
