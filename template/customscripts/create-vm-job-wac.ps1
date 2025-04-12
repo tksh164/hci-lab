@@ -565,7 +565,7 @@ try {
     # NOTE: The PowerShellGet module installation needs internet connection and name resolution.
     'Install the PowerShellGet module within the VM.' | Write-ScriptLog
     Invoke-CommandWithinVM @invokeWithinVMParams -WithRetry -ScriptBlock {
-        Install-Module -Name 'PowerShellGet' -Scope 'AllUsers' -Force -Verbose
+        Install-Module -Name 'PowerShellGet' -Repository 'PSGallery' -Scope 'AllUsers' -Force -Verbose
         Get-Module -Name 'PowerShellGet' -ListAvailable | Out-String -Width 200 | Write-ScriptLog
     }
     'Install the PowerShellGet module within the VM completed.' | Write-ScriptLog
