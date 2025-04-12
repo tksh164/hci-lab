@@ -7,10 +7,14 @@ $VerbosePreference = [Management.Automation.ActionPreference]::Continue
 $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
 try {
+    $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+
     Import-Module -Name ([IO.Path]::Combine($PSScriptRoot, 'common.psm1')) -Force
 
     $labConfig = Get-LabDeploymentConfig
     Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log
+
+    'Script file: {0}' -f $PSScriptRoot | Write-ScriptLog
     'Lab deployment config:' | Write-ScriptLog
     $labConfig | ConvertTo-Json -Depth 16 | Write-Host
 
@@ -67,5 +71,7 @@ finally {
     $jobs | Format-Table -Property Id, Name, State, HasMoreData, PSBeginTime, PSEndTime
 
     'The HCI lab VMs creation has been finished.' | Write-ScriptLog
+    $stopWatch.Stop()
+    'Duration of this script ran: {0}' -f $stopWatch.Elapsed.toString('hh\:mm\:ss') | Write-ScriptLog
     Stop-ScriptLogging
 }

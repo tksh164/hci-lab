@@ -95,6 +95,7 @@ try {
     $nodeVMName = Format-HciNodeName -Format $labConfig.hciNode.vmName -Offset $labConfig.hciNode.vmNameOffset -Index $NodeIndex
     Set-ScriptLogDefaultContext -LogContext $nodeVMName
 
+    'Script file: {0}' -f $PSScriptRoot | Write-ScriptLog
     'Lab deployment config:' | Write-ScriptLog
     $labConfig | ConvertTo-Json -Depth 16 | Out-String | Write-ScriptLog
 

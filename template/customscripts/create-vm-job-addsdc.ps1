@@ -21,6 +21,7 @@ try {
     Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log -FileName $LogFileName
     Set-ScriptLogDefaultContext -LogContext $labConfig.addsDC.vmName
 
+    'Script file: {0}' -f $PSScriptRoot | Write-ScriptLog
     'Lab deployment config:' | Write-ScriptLog
     $labConfig | ConvertTo-Json -Depth 16 | Out-String | Write-ScriptLog
 
