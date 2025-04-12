@@ -782,20 +782,37 @@ function Stop-VMSurely
     )
 
     'Stop the VM "{0}".' -f $VMName | Write-ScriptLog
-    try {
-        Stop-VM -Name $VMName
-    }
-    catch [Microsoft.HyperV.PowerShell.VirtualizationException] {
-        # A system shutdown has already been scheduled.
-        if ($_.Exception.Message -like '*0x800704a6*') {
+    $isStopVMInitiated = $false
+    $attemptStopVMStartTime = Get-Date
+    while ((Get-Date) -lt ($attemptStopVMStartTime + $AttemptDuration)) {
+        try {
+            Stop-VM -Name $VMName
+            'Stop the VM "{0}" was initiated.' -f $VMName | Write-ScriptLog
+            $isStopVMInitiated = $true
+            break
+        }
+        catch {
             New-ExceptionMessage -ErrorRecord $_ -AsHandled | Write-ScriptLog -Level Warning
         }
-        else {
-            throw $_
-        }
+        Start-Sleep -Seconds $AttemptIntervalSeconds
+
+        # catch [Microsoft.HyperV.PowerShell.VirtualizationException] {
+        #     # A system shutdown has already been scheduled.
+        #     if ($_.Exception.Message -like '*0x800704a6*') {
+        #         New-ExceptionMessage -ErrorRecord $_ -AsHandled | Write-ScriptLog -Level Warning
+        #         Start-Sleep -Seconds $AttemptIntervalSeconds
+        #     }
+        #     else {
+        #         throw $_
+        #     }
+        # }
     }
 
-    'Stop the VM "{0}" succeeded.' -f $VMName | Write-ScriptLog
+    if (-not $isStopVMInitiated) {
+        $exceptionMessage = 'Stop the VM "{0}" could not initiated in the acceptable time ({1}).' -f $VMName, $AttemptDuration.ToString('hh\:mm\:ss')
+        $exceptionMessage | Write-ScriptLog -Level Error
+        throw $exceptionMessage
+    }
 
     # Wait for the VM to turn off.
     $turnOffProbingStartTime = Get-Date
