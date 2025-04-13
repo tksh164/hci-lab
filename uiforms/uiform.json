@@ -3,21 +3,21 @@
     "view": {
         "kind": "Form",
         "properties": {
-            "title": "HCI Lab",
+            "title": "🧪 Azure Local & HCI Lab",
             "steps": [
                 {
                     "name": "basics",
                     "label": "Basics",
-                    "description": "This template will deploy an HCI lab environment on a single Azure virtual machine.",
+                    "description": "This template will deploy an Azure Local lab environment or an HCI lab environment on a single Azure virtual machine.",
                     "elements": [
                         {
                             "name": "resourceScope",
                             "type": "Microsoft.Common.ResourceScope",
                             "location": {
                                 "label": "Region",
-                                "toolTip": "Specify the region to deploy the lab environment.",
+                                "toolTip": "Specify the region to deploy your lab environment.",
                                 "resourceTypes": [
-                                    "microsoft.resources/resourcegroups"
+                                    "Microsoft.Resources/resourceGroups"
                                 ]
                             }
                         },
@@ -27,15 +27,15 @@
                             "visible": true,
                             "multiLine": false,
                             "label": "Lab host VM name",
-                            "toolTip": "Specify the lab host virtual machine resource name. The name used as the Azure resource identifier, not used for the computer name in the guest.",
-                            "placeholder": "e.g. hcilab-vm1",
-                            "defaultValue": "hcilab-vm1",
+                            "toolTip": "Specify your lab host virtual machine resource name. The name used as an Azure resource identifier for it, not used for the computer name of the guest operating system.",
+                            "placeholder": "e.g. azloclab-vm1",
+                            "defaultValue": "azloclab-vm1",
                             "constraints": {
                                 "required": true,
                                 "validations": [
                                     {
                                         "regex": "^(?!\\-.+$)(?!.+\\-$)[a-zA-Z0-9\\-]+$",
-                                        "message": "Virtual machine names can contain all alphanumeric characters and '-', also, not begin with '-' and not end with '-'."
+                                        "message": "Virtual machine name can contain all alphanumeric characters and '-', also, not begin with '-' and not end with '-'."
                                     },
                                     {
                                         "regex": "^.{1,64}$",
@@ -49,7 +49,7 @@
                             "type": "Microsoft.Compute.SizeSelector",
                             "visible": true,
                             "label": "Size",
-                            "toolTip": "Specify the size for the lab host virtual machine.",
+                            "toolTip": "Specify the size for your lab host virtual machine.",
                             "scope": {
                                 "subscriptionId": "[steps('basics').resourceScope.subscription.subscriptionId]",
                                 "location": "[steps('basics').resourceScope.location.name]"
@@ -58,7 +58,7 @@
                             "imageReference": {
                                 "publisher": "MicrosoftWindowsServer",
                                 "offer": "WindowsServer",
-                                "sku": "2022-datacenter-azure-edition-smalldisk"
+                                "sku": "2025-datacenter-azure-edition-smalldisk"
                             },
                             "count": 1,
                             "options": {
@@ -174,7 +174,7 @@
                             "visible": true,
                             "options": {
                                 "style": "Info",
-                                "text": "128 GiB memory is the real minimum when you deploy any workloads on your HCI cluster. You may need more memory if you deploy hybrid services on your HCI cluster because this lab environment has multiple Hyper-V VMs such as HCI nodes, a domain controller of Active Directory Domain Services and a management tool server on a single Azure Virtual machine.<ul><li><a href='https://learn.microsoft.com/azure/virtual-machines/sizes'>Azure Virtual Machine sizes</a></li><li><a href='https://azure.microsoft.com/pricing/details/virtual-machines/windows'>Windows Virtual Machines pricing</a></li></ul>"
+                                "text": "128 GiB memory is the real minimum when you deploy any workloads on your Azure Local instance/HCI cluster. You may need more memory if you deploy hybrid services on your Azure Local instance/HCI cluster because this lab environment has multiple Hyper-V VMs such as HCI servers, an AD domain controller and a management server on a single Azure Virtual machine.<ul><li><a href='https://learn.microsoft.com/azure/virtual-machines/sizes'>Azure Virtual Machine sizes</a></li><li><a href='https://azure.microsoft.com/pricing/details/virtual-machines/windows'>Windows Virtual Machines pricing</a></li></ul>"
                             }
                         },
                         {
@@ -200,7 +200,7 @@
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "Specify the administrator account credentials. The credentials are used for the local administrator account and the domain administrator account in the lab environment."
+                                        "text": "Specify the administrator account credentials. The credentials are used for the local administrator account and the domain administrator account in your lab environment."
                                     }
                                 },
                                 {
@@ -249,7 +249,7 @@
                                         "text": "Save up to 49% with a license you already own using Azure Hybrid Benefit.",
                                         "link": {
                                             "label": "Learn more",
-                                            "uri": "https://docs.microsoft.com/azure/virtual-machines/windows/hybrid-use-benefit-licensing"
+                                            "uri": "https://go.microsoft.com/fwlink/?linkid=2257944"
                                         }
                                     }
                                 },
@@ -300,8 +300,8 @@
                     ]
                 },
                 {
-                    "name": "labHostVmDetails",
-                    "label": "Lab host details",
+                    "name": "labHostStep",
+                    "label": "Lab host",
                     "description": "Configure details for your lab host. The lab host is an Azure virtual machine.",
                     "elements": [
                         {
@@ -319,7 +319,7 @@
                                     "filter": false,
                                     "multiLine": true,
                                     "label": "OS disk type",
-                                    "toolTip": "You can select between Azure managed disks types to support your workload or scenario.",
+                                    "toolTip": "You can select Azure managed disks type based on your workload or scenario.",
                                     "placeholder": "Select the OS disk type...",
                                     "defaultDescription": "---",
                                     "filterPlaceholder": "Filter OS disk types...",
@@ -354,7 +354,7 @@
                                     "filter": false,
                                     "multiLine": true,
                                     "label": "Data disk type",
-                                    "toolTip": "You can select between Azure managed disks types to support your workload or scenario.",
+                                    "toolTip": "You can select Azure managed disks type based on your workload or scenario.",
                                     "placeholder": "Select the data disk type...",
                                     "defaultDescription": "---",
                                     "filterPlaceholder": "Filter data disk types...",
@@ -388,7 +388,7 @@
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "All lab assets and artifacts such as VMs, VHDs, ISOs are stored in a single data volume on the lab host. The data volume capacity cannot change after complete deployment."
+                                        "text": "All lab assets and artifacts such as VMs, VHDs, ISOs are stored in a single data volume on the lab host. The data volume capacity cannot change after finish deployment."
                                     }
                                 },
                                 {
@@ -400,7 +400,7 @@
                                     "filter": false,
                                     "multiLine": true,
                                     "label": "Data volume capacity",
-                                    "toolTip": "Data volume capacity on the lab host virtual machine.",
+                                    "toolTip": "Data volume capacity on your lab host virtual machine.",
                                     "placeholder": "Select the data volume capacity...",
                                     "defaultDescription": "---",
                                     "filterPlaceholder": "Filter data volume capacities...",
@@ -463,7 +463,7 @@
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "Select apps are to be installed on the lab host."
+                                        "text": "Select apps to be installed on the lab host."
                                     }
                                 },
                                 {
@@ -471,7 +471,7 @@
                                     "type": "Microsoft.Common.OptionsGroup",
                                     "visible": true,
                                     "label": "Visual Studio Code",
-                                    "toolTip": "Visual Studio Code is a lightweight but powerful source code editor which runs on your desktop. <a href='https://code.visualstudio.com/docs'>more</a>",
+                                    "toolTip": "Visual Studio Code is a lightweight but powerful source code editor which runs on your desktop. <a href='https://code.visualstudio.com'>more</a>",
                                     "defaultValue": "Not install",
                                     "constraints": {
                                         "required": true,
@@ -500,7 +500,7 @@
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "Select auto-shutdown whether enable or not on the lab host.",
+                                        "text": "Select auto-shutdown whether enable or not for your lab host.",
                                         "link": {
                                             "label": "Learn more",
                                             "uri": "https://learn.microsoft.com/en-us/azure/virtual-machines/auto-shutdown-vm"
@@ -531,7 +531,7 @@
                                 {
                                     "name": "shutdownTime",
                                     "type": "Microsoft.Common.DropDown",
-                                    "visible": "[steps('labHostVmDetails').autoshutdownSection.shouldEnabledAutoshutdown]",
+                                    "visible": "[steps('labHostStep').autoshutdownSection.shouldEnabledAutoshutdown]",
                                     "multiselect": false,
                                     "selectAll": false,
                                     "filter": true,
@@ -743,7 +743,7 @@
                                 {
                                     "name": "shutdownTimeZone",
                                     "type": "Microsoft.Common.DropDown",
-                                    "visible": "[steps('labHostVmDetails').autoshutdownSection.shouldEnabledAutoshutdown]",
+                                    "visible": "[steps('labHostStep').autoshutdownSection.shouldEnabledAutoshutdown]",
                                     "multiselect": false,
                                     "selectAll": false,
                                     "filter": true,
@@ -1189,9 +1189,425 @@
                     ]
                 },
                 {
-                    "name": "labConfiguration",
-                    "label": "Lab environment",
-                    "description": "Configure your lab environment details. The lab environment is built as a set of Hyper-V virtual machines within an Azure virtual machine using nested virtualization technology.",
+                    "name": "hciNodeStep",
+                    "label": "Member server",
+                    "description": "Configure member server details. The lab environment is built as a set of Hyper-V virtual machines within an Azure virtual machine using nested virtualization technology.",
+                    "elements": [
+                        {
+                            "name": "hciClusterNodesSection",
+                            "type": "Microsoft.Common.Section",
+                            "visible": true,
+                            "label": "Member server",
+                            "elements": [
+                                {
+                                    "name": "hciClusterNodesSectionText",
+                                    "type": "Microsoft.Common.TextBlock",
+                                    "visible": true,
+                                    "options": {
+                                        "text": "Select the member servers configuration."
+                                    }
+                                },
+                                {
+                                    "name": "hciNodeOperatingSystem",
+                                    "type": "Microsoft.Common.DropDown",
+                                    "visible": true,
+                                    "multiselect": false,
+                                    "selectAll": false,
+                                    "filter": true,
+                                    "multiLine": true,
+                                    "label": "Operating system",
+                                    "toolTip": "Select the operating system for the member servers.",
+                                    "placeholder": "Select the member server's operating system...",
+                                    "defaultDescription": "---",
+                                    "filterPlaceholder": "Filter member server's operating systems...",
+                                    "defaultValue": "Azure Local, version 23H2",
+                                    "constraints": {
+                                        "required": true,
+                                        "allowedValues": [
+                                            {
+                                                "label": "Azure Local, version 23H2",
+                                                "description": "The latest generally available version.",
+                                                "value": {
+                                                    "sku": "ashci23h2",
+                                                    "imageIndex": 1
+                                                }
+                                            },
+                                            {
+                                                "label": "Azure Stack HCI, version 22H2",
+                                                "description": "This version is supported.",
+                                                "value": {
+                                                    "sku": "ashci22h2",
+                                                    "imageIndex": 1
+                                                }
+                                            },
+                                            {
+                                                "label": "Azure Stack HCI, version 21H2 [End of Service]",
+                                                "description": "<strong>Notice:</strong> This version reached the end of service on November 14, 2023.",
+                                                "value": {
+                                                    "sku": "ashci21h2",
+                                                    "imageIndex": 1
+                                                }
+                                            },
+                                            {
+                                                "label": "Azure Stack HCI, version 20H2 [End of Service]",
+                                                "description": "<strong>Notice:</strong> This version reached the end of service on December 13, 2022.",
+                                                "value": {
+                                                    "sku": "ashci20h2",
+                                                    "imageIndex": 1
+                                                }
+                                            },
+                                            {
+                                                "label": "Windows Server 2025 Datacenter Evaluation (Desktop Experience)",
+                                                "description": "Windows Server 2025 Datacenter with the standard graphical user interface.",
+                                                "value": {
+                                                    "sku": "ws2025",
+                                                    "imageIndex": 4
+                                                }
+                                            },
+                                            {
+                                                "label": "Windows Server 2022 Datacenter Evaluation (Desktop Experience)",
+                                                "description": "Windows Server 2022 Datacenter with the standard graphical user interface.",
+                                                "value": {
+                                                    "sku": "ws2022",
+                                                    "imageIndex": 4
+                                                }
+                                            }
+                                        ]
+                                    }
+                                },
+                                {
+                                    "name": "hciNodeCount",
+                                    "type": "Microsoft.Common.Slider",
+                                    "visible": true,
+                                    "label": "Number of servers",
+                                    "subLabel": "servers",
+                                    "toolTip": "Pick the member server count to deploy.",
+                                    "showStepMarkers": true,
+                                    "constraints": {
+                                        "required": true
+                                    },
+                                    "min": 2,
+                                    "max": 8,
+                                    "defaultValue": 2
+                                }
+                            ]
+                        },
+                        {
+                            "name": "addsSection",
+                            "type": "Microsoft.Common.Section",
+                            "visible": true,
+                            "label": "Active Directory domain",
+                            "elements": [
+                                {
+                                    "name": "addsSectionText",
+                                    "type": "Microsoft.Common.TextBlock",
+                                    "visible": true,
+                                    "options": {
+                                        "text": "Select whether or not to join the member servers to Active Directory domain during your lab environment deployment."
+                                    }
+                                },
+                                {
+                                    "name": "addsDomainJoinInfo",
+                                    "type": "Microsoft.Common.InfoBox",
+                                    "visible": "[contains('ashci23h2', steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.sku)]",
+                                    "options": {
+                                        "style": "Info",
+                                        "text": "Azure Local machines must not be joined to Active Directory before deployment."
+                                    }
+                                },
+                                {
+                                    "name": "shouldJoinToAddsDomain",
+                                    "type": "Microsoft.Common.OptionsGroup",
+                                    "visible": "[not(contains('ashci23h2', steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.sku))]",
+                                    "label": "Join to the AD domain",
+                                    "toolTip": "Select whether or not the HCI servers are to be joined to the AD domain.",
+                                    "defaultValue": "Not join",
+                                    "constraints": {
+                                        "required": true,
+                                        "allowedValues": [
+                                            {
+                                                "label": "Join",
+                                                "value": true
+                                            },
+                                            {
+                                                "label": "Not join",
+                                                "value": false
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "hciClusterStep",
+                    "label": "HCI cluster",
+                    "description": "Configure your HCI cluster details.",
+                    "elements": [
+                        {
+                            "name": "azureLocalInfo",
+                            "type": "Microsoft.Common.InfoBox",
+                            "visible": "[contains('ashci23h2', steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.sku)]",
+                            "options": {
+                                "style": "Info",
+                                "text": "Please skip this page because not applicable to Azure Local deployment."
+                            }
+                        },
+                        {
+                            "name": "notDomainJoinInfo",
+                            "type": "Microsoft.Common.InfoBox",
+                            "visible": "[and(not(contains('ashci23h2', steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.sku)), not(steps('hciNodeStep').addsSection.shouldJoinToAddsDomain))]",
+                            "options": {
+                                "style": "Info",
+                                "text": "Please skip this page because member servers are not joined to the Active directory domain. If you want to create an HCI cluster during the HCI Lab deployment, select the domain join option on the previous page."
+                            }
+                        },
+                        {
+                            "name": "hciClusterSection",
+                            "type": "Microsoft.Common.Section",
+                            "visible": "[and(not(contains('ashci23h2', steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.sku)), steps('hciNodeStep').addsSection.shouldJoinToAddsDomain)]",
+                            "label": "HCI cluster",
+                            "elements": [
+                                {
+                                    "name": "hciClusterSectionText",
+                                    "type": "Microsoft.Common.TextBlock",
+                                    "visible": true,
+                                    "options": {
+                                        "text": "Select your HCI cluster configuration."
+                                    }
+                                },
+                                {
+                                    "name": "shouldCreateHciCluster",
+                                    "type": "Microsoft.Common.OptionsGroup",
+                                    "visible": true,
+                                    "label": "Create HCI cluster",
+                                    "toolTip": "Select whether or not the HCI cluster is created.",
+                                    "defaultValue": "Create",
+                                    "constraints": {
+                                        "required": true,
+                                        "allowedValues": [
+                                            {
+                                                "label": "Create",
+                                                "value": true
+                                            },
+                                            {
+                                                "label": "Not create",
+                                                "value": false
+                                            }
+                                        ]
+                                    }
+                                },
+                                {
+                                    "name": "hciClusterName",
+                                    "type": "Microsoft.Common.TextBox",
+                                    "visible": "[steps('hciClusterStep').hciClusterSection.shouldCreateHciCluster]",
+                                    "multiLine": false,
+                                    "label": "Cluster name",
+                                    "subLabel": "[concat('.', steps('addsStep').addsSection.domainName)]",
+                                    "toolTip": "Specify the cluster name (cluster name object/CNO name) for your HCI cluster.",
+                                    "placeholder": "e.g. hciclus",
+                                    "defaultValue": "hciclus",
+                                    "constraints": {
+                                        "required": true,
+                                        "validations": [
+                                            {
+                                                "regex": "^[A-Za-z0-9-]+$",
+                                                "message": "Invalid cluster name."
+                                            }
+                                        ]
+                                    },
+                                    "infoMessages": [
+                                        {
+                                            "visible": true,
+                                            "style": "Info",
+                                            "text": "You can change the Active Directory domain name on the next page."
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "addsStep",
+                    "label": "Active Directory",
+                    "description": "Configure Active Directory domain services details for your lab environment.",
+                    "elements": [
+                        {
+                            "name": "addsSection",
+                            "type": "Microsoft.Common.Section",
+                            "visible": true,
+                            "label": "Active Directory domain",
+                            "elements": [
+                                {
+                                    "name": "addsSectionText",
+                                    "type": "Microsoft.Common.TextBlock",
+                                    "visible": true,
+                                    "options": {
+                                        "text": "Select the Active Directory Domain Services domain configuration that will be created as a part of your lab environment."
+                                    }
+                                },
+                                {
+                                    "name": "domainName",
+                                    "type": "Microsoft.Common.TextBox",
+                                    "visible": true,
+                                    "multiLine": false,
+                                    "label": "AD domain FQDN",
+                                    "toolTip": "Specify the AD domain FQDN for the lab environment.",
+                                    "placeholder": "e.g. hci.internal",
+                                    "defaultValue": "hci.internal",
+                                    "constraints": {
+                                        "required": true,
+                                        "validations": [
+                                            {
+                                                "regex": "^(?!-)[A-Za-z0-9-]+([\\-\\.]{1}[a-z0-9]+)*\\.[A-Za-z]+$",
+                                                "message": "Invalid AD domain FQDN."
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "azureLocalPrepSection",
+                            "type": "Microsoft.Common.Section",
+                            "visible": "[contains('ashci23h2', steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.sku)]",
+                            "label": "Preparation for Azure Local deployment",
+                            "elements": [
+                                {
+                                    "name": "addsSectionText",
+                                    "type": "Microsoft.Common.TextBlock",
+                                    "visible": true,
+                                    "options": {
+                                        "text": "Azure Local deployments require preparation on Active Directory before you deploy it."
+                                    }
+                                },
+                                {
+                                    "name": "shouldPrepareAddsForAzureLocal",
+                                    "type": "Microsoft.Common.CheckBox",
+                                    "label": "Prepare Active Directory for Azure Local deployment",
+                                    "visible": true,
+                                    "toolTip": "Check this if you want to prepare Active Directory for Azure Local deployment.",
+                                    "defaultValue": true,
+                                    "constraints": {
+                                        "required": false
+                                    }
+                                },
+                                {
+                                    "name": "orgUnit",
+                                    "type": "Microsoft.Common.TextBox",
+                                    "visible": "[steps('addsStep').azureLocalPrepSection.shouldPrepareAddsForAzureLocal]",
+                                    "multiLine": false,
+                                    "label": "AD organization unit (OU) for Azure Local",
+                                    "toolTip": "The organization unit to place the Azure Local related objects.",
+                                    "placeholder": "e.g. OU=AzureLocal,DC=hci,DC=internal",
+                                    "defaultValue": "OU=AzureLocal,DC=hci,DC=internal",
+                                    "constraints": {
+                                        "required": true
+                                    }
+                                },
+                                {
+                                    "name": "lcmUserName",
+                                    "type": "Microsoft.Common.TextBox",
+                                    "visible": "[steps('addsStep').azureLocalPrepSection.shouldPrepareAddsForAzureLocal]",
+                                    "multiLine": false,
+                                    "label": "LCM user account name",
+                                    "toolTip": "The Lifecycle Manager (LCM) deployment user account nme.",
+                                    "placeholder": "e.g. lcmuser",
+                                    "defaultValue": "lcmuser",
+                                    "constraints": {
+                                        "required": true
+                                    },
+                                    "infoMessages": [
+                                        {
+                                            "visible": true,
+                                            "style": "Info",
+                                            "text": "This user account will be used as the deployment account during Azure Local instance deployment."
+                                        },
+                                        {
+                                            "visible": true,
+                                            "style": "Info",
+                                            "text": "The password for the LCM user account is set to the same password as the administrator account."
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "mgmtServerStep",
+                    "label": "Management server",
+                    "description": "Server management tools to manage Azure Local instances, HCI clusters, Active Directory and more are installed on this server.",
+                    "elements": [
+                        {
+                            "name": "wacSection",
+                            "type": "Microsoft.Common.Section",
+                            "visible": true,
+                            "label": "Windows Admin Center",
+                            "elements": [
+                                {
+                                    "name": "wacSectionText",
+                                    "type": "Microsoft.Common.TextBlock",
+                                    "visible": true,
+                                    "options": {
+                                        "text": "Windows Admin Center is a remote management tool for Windows Server. <a href=\"https://learn.microsoft.com/windows-server/manage/windows-admin-center/overview\">Learn more</a>"
+                                    }
+                                },
+                                {
+                                    "name": "wacDisableInfo",
+                                    "type": "Microsoft.Common.InfoBox",
+                                    "visible": true,
+                                    "options": {
+                                        "style": "Info",
+                                        "text": "HCI Lab supports Windows Admin Center installation. But it is temporary disabled. You can install Windows Admin Center manually after HCI Lab deployment finished."
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "azureLocalSection",
+                            "type": "Microsoft.Common.Section",
+                            "visible": "[contains('ashci23h2', steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.sku)]",
+                            "label": "Configurator App for Azure Local",
+                            "elements": [
+                                {
+                                    "name": "azureLocalSectionText",
+                                    "type": "Microsoft.Common.TextBlock",
+                                    "visible": true,
+                                    "options": {
+                                        "text": "Configurator App for Azure Local is bootstrap and register the machines you plan to include in your Azure Local instance. <a href=\"https://learn.microsoft.com/azure/azure-local/deploy/deployment-arc-register-configurator-app\">Learn more</a>"
+                                    }
+                                },
+                                {
+                                    "name": "shouldInstallConfigAppForAzureLocal",
+                                    "type": "Microsoft.Common.OptionsGroup",
+                                    "visible": true,
+                                    "label": "Configurator App for Azure Local",
+                                    "toolTip": "Configurator App for Azure Local is bootstrap and register the machines you plan to include in your Azure Local instance.",
+                                    "defaultValue": "Install",
+                                    "constraints": {
+                                        "required": true,
+                                        "allowedValues": [
+                                            {
+                                                "label": "Install",
+                                                "value": true
+                                            },
+                                            {
+                                                "label": "Not install",
+                                                "value": false
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "advancedStep",
+                    "label": "Advanced",
                     "elements": [
                         {
                             "name": "generalSection",
@@ -1204,7 +1620,7 @@
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "Select the common configuration for all virtual machines in the lab environment such as HCI nodes, a domain controller of Active Directory Domain Services and a management tools server."
+                                        "text": "Select common configurations for all virtual machines in your lab environment such as HCI servers, an AD domain controller and a management server."
                                     }
                                 },
                                 {
@@ -1275,7 +1691,6 @@
                                                 "label": "(UTC-10:00) Hawaii",
                                                 "value": "Hawaiian Standard Time"
                                             },
-
                                             {
                                                 "label": "(UTC-09:30) Marquesas Islands",
                                                 "value": "Marquesas Standard Time"
@@ -1856,252 +2271,29 @@
                                     ]
                                 }
                             ]
-                        },                        
-                        {
-                            "name": "hciClusterNodesSection",
-                            "type": "Microsoft.Common.Section",
-                            "visible": true,
-                            "label": "HCI node",
-                            "elements": [
-                                {
-                                    "name": "hciClusterNodesSectionText",
-                                    "type": "Microsoft.Common.TextBlock",
-                                    "visible": true,
-                                    "options": {
-                                        "text": "Select the HCI node configuration."
-                                    }
-                                },
-                                {
-                                    "name": "hciNodeOperatingSystem",
-                                    "type": "Microsoft.Common.DropDown",
-                                    "visible": true,
-                                    "multiselect": false,
-                                    "selectAll": false,
-                                    "filter": true,
-                                    "multiLine": true,
-                                    "label": "Operating system",
-                                    "toolTip": "Select the operating system for the HCI nodes.",
-                                    "placeholder": "Select the HCI node's operating system...",
-                                    "defaultDescription": "---",
-                                    "filterPlaceholder": "Filter HCI node's operating systems...",
-                                    "defaultValue": "Azure Local, version 23H2",
-                                    "constraints": {
-                                        "required": true,
-                                        "allowedValues": [
-                                            {
-                                                "label": "Azure Local, version 23H2",
-                                                "description": "The latest generally available version.",
-                                                "value": {
-                                                    "sku": "ashci23h2",
-                                                    "imageIndex": 1
-                                                }
-                                            },
-                                            {
-                                                "label": "Azure Stack HCI, version 22H2",
-                                                "description": "This version is supported.",
-                                                "value": {
-                                                    "sku": "ashci22h2",
-                                                    "imageIndex": 1
-                                                }
-                                            },
-                                            {
-                                                "label": "Azure Stack HCI, version 21H2 [End of Service]",
-                                                "description": "<strong>Notice:</strong> This version reached the end of service on November 14, 2023.",
-                                                "value": {
-                                                    "sku": "ashci21h2",
-                                                    "imageIndex": 1
-                                                }
-                                            },
-                                            {
-                                                "label": "Azure Stack HCI, version 20H2 [End of Service]",
-                                                "description": "<strong>Notice:</strong> This version reached the end of service on December 13, 2022.",
-                                                "value": {
-                                                    "sku": "ashci20h2",
-                                                    "imageIndex": 1
-                                                }
-                                            },
-                                            {
-                                                "label": "Windows Server 2025 Datacenter Evaluation (Desktop Experience)",
-                                                "description": "Windows Server 2025 Datacenter with the standard graphical user interface.",
-                                                "value": {
-                                                    "sku": "ws2025",
-                                                    "imageIndex": 4
-                                                }
-                                            },
-                                            {
-                                                "label": "Windows Server 2022 Datacenter Evaluation (Desktop Experience)",
-                                                "description": "Windows Server 2022 Datacenter with the standard graphical user interface.",
-                                                "value": {
-                                                    "sku": "ws2022",
-                                                    "imageIndex": 4
-                                                }
-                                            }
-                                        ]
-                                    }
-                                },
-                                {
-                                    "name": "hciNodeCount",
-                                    "type": "Microsoft.Common.Slider",
-                                    "visible": true,
-                                    "label": "Node count",
-                                    "subLabel": "nodes",
-                                    "toolTip": "Pick the HCI node count to deploy.",
-                                    "showStepMarkers": true,
-                                    "constraints": {
-                                        "required": true
-                                    },
-                                    "min": 2,
-                                    "max": 8,
-                                    "defaultValue": 2
-                                },
-                                {
-                                    "name": "shouldJoinToAddsDomain",
-                                    "type": "Microsoft.Common.OptionsGroup",
-                                    "visible": true,
-                                    "label": "Join to the AD domain",
-                                    "toolTip": "Select whether or not the HCI nodes are to be joined to the AD domain.",
-                                    "defaultValue": "Not join",
-                                    "constraints": {
-                                        "required": true,
-                                        "allowedValues": [
-                                            {
-                                                "label": "Join",
-                                                "value": true
-                                            },
-                                            {
-                                                "label": "Not join",
-                                                "value": false
-                                            }
-                                        ]
-                                    },
-                                    "infoMessages": [
-                                        {
-                                            "visible": true,
-                                            "style": "Info",
-                                            "text": "You should select <strong>Not join</strong> if you plan to provisioning your HCI cluster from Azure portal.",
-                                            "uri": {
-                                                "value": "https://learn.microsoft.com/en-us/azure-stack/hci/deploy/deploy-via-portal",
-                                                "text": "Learn more"
-                                            }                                            
-                                        }
-                                    ]
-                                }
-                            ]
-                        },
-                        {
-                            "name": "hciClusterSection",
-                            "type": "Microsoft.Common.Section",
-                            "visible": "[steps('labConfiguration').hciClusterNodesSection.shouldJoinToAddsDomain]",
-                            "label": "HCI cluster",
-                            "elements": [
-                                {
-                                    "name": "hciClusterSectionText",
-                                    "type": "Microsoft.Common.TextBlock",
-                                    "visible": true,
-                                    "options": {
-                                        "text": "Select the HCI cluster configuration."
-                                    }
-                                },
-                                {
-                                    "name": "shouldCreateHciCluster",
-                                    "type": "Microsoft.Common.OptionsGroup",
-                                    "visible": true,
-                                    "label": "Create HCI cluster",
-                                    "toolTip": "Select whether or not the HCI cluster is created.",
-                                    "defaultValue": "Create",
-                                    "constraints": {
-                                        "required": true,
-                                        "allowedValues": [
-                                            {
-                                                "label": "Create",
-                                                "value": true
-                                            },
-                                            {
-                                                "label": "Not create",
-                                                "value": false
-                                            }
-                                        ]
-                                    }
-                                },
-                                {
-                                    "name": "hciClusterName",
-                                    "type": "Microsoft.Common.TextBox",
-                                    "visible": "[steps('labConfiguration').hciClusterSection.shouldCreateHciCluster]",
-                                    "multiLine": false,
-                                    "label": "Cluster name",
-                                    "subLabel": "[concat('.', steps('labConfiguration').addsSection.domainName)]",
-                                    "toolTip": "Specify the cluster name (cluster name object/CNO name) for your HCI cluster.",
-                                    "placeholder": "e.g. hciclus",
-                                    "defaultValue": "hciclus",
-                                    "constraints": {
-                                        "required": true,
-                                        "validations": [
-                                            {
-                                                "regex": "^[A-Za-z0-9-]+$",
-                                                "message": "Invalid cluster name."
-                                            }
-                                        ]
-                                    }
-                                }
-                            ]
-                        },
-                        {
-                            "name": "addsSection",
-                            "type": "Microsoft.Common.Section",
-                            "visible": true,
-                            "label": "Active Directory Domain Services",
-                            "elements": [
-                                {
-                                    "name": "addsSectionText",
-                                    "type": "Microsoft.Common.TextBlock",
-                                    "visible": true,
-                                    "options": {
-                                        "text": "Select the Active Directory Domain Services domain configuration that will be created as a part of your lab environment."
-                                    }
-                                },
-                                {
-                                    "name": "domainName",
-                                    "type": "Microsoft.Common.TextBox",
-                                    "visible": true,
-                                    "multiLine": false,
-                                    "label": "AD domain FQDN",
-                                    "toolTip": "Specify the AD domain FQDN for the lab environment.",
-                                    "placeholder": "e.g. hci.internal",
-                                    "defaultValue": "hci.internal",
-                                    "constraints": {
-                                        "required": true,
-                                        "validations": [
-                                            {
-                                                "regex": "^(?!-)[A-Za-z0-9-]+([\\-\\.]{1}[a-z0-9]+)*\\.[A-Za-z]+$",
-                                                "message": "Invalid AD domain FQDN."
-                                            }
-                                        ]
-                                    }
-                                }
-                            ]
                         }
                     ]
                 },
                 {
-                    "name": "advancedSettings",
-                    "label": "Advanced",
-                    "description": "This page provides advanced settings. You can change the advanced settings if you are familiar with the HCI Lab.",
+                    "name": "customStep",
+                    "label": "Custom",
+                    "description": "This page provides custom deployment settings. You can use the custom settings if you are familiar with the HCI Lab.",
                     "elements": [
                         {
                             "name": "shouldChangeAdvancedSettings",
                             "type": "Microsoft.Common.CheckBox",
-                            "label": "Change advanced settings",
+                            "label": "Use custom settings",
                             "visible": true,
-                            "toolTip": "Check this if you want to change the advanced settings.",
+                            "toolTip": "Check this if you want to use custom settings.",
                             "defaultValue": false,
                             "constraints": {
                                 "required": false
                             }
-                        },                        
+                        },
                         {
                             "name": "repoBaseUri",
                             "type": "Microsoft.Common.TextBox",
-                            "visible": "[steps('advancedSettings').shouldChangeAdvancedSettings]",
+                            "visible": "[steps('customStep').shouldChangeAdvancedSettings]",
                             "multiLine": false,
                             "label": "Base URI for artifacts",
                             "toolTip": "The base URI for artifacts.",
@@ -2124,26 +2316,38 @@
                 "adminPassword": "[steps('basics').adminAccountSection.adminPassword.password]",
                 "labHostVmName": "[steps('basics').vmName]",
                 "labHostVmSize": "[steps('basics').vmSize]",
-                "labHostVmOsDiskType": "[steps('labHostVmDetails').diskSection.osDiskType]",
-                "labHostVmDataDiskType": "[steps('labHostVmDetails').diskSection.dataDiskType]",
-                "labHostVmDataDiskSize": "[steps('labHostVmDetails').dataVolumeSection.dataDiskSize]",
+
+                "labHostVmOsDiskType": "[steps('labHostStep').diskSection.osDiskType]",
+                "labHostVmDataDiskType": "[steps('labHostStep').diskSection.dataDiskType]",
+                "labHostVmDataDiskSize": "[steps('labHostStep').dataVolumeSection.dataDiskSize]",
                 "labHostVmDataDiskCount": "[first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount))]",
                 "hasEligibleWindowsServerLicense": "[steps('basics').azureHybridBenefitSection.hasEligibleWindowsServerLicense]",
-                "toolsToInstall": "[concat(if(steps('labHostVmDetails').toolsSection.shouldInstallVisualStudioCode, 'vscode', ''), ';')]",
-                "shouldEnabledAutoshutdown": "[steps('labHostVmDetails').autoshutdownSection.shouldEnabledAutoshutdown]",
-                "autoshutdownTime": "[steps('labHostVmDetails').autoshutdownSection.shutdownTime]",
-                "autoshutdownTimeZone": "[steps('labHostVmDetails').autoshutdownSection.shutdownTimeZone]",
-                "labVmOsCulture": "[steps('labConfiguration').generalSection.labVmCulture]",
-                "labVmOsTimeZone": "[steps('labConfiguration').generalSection.labVmTimeZone]",
-                "shouldInstallUpdatesToLabVm": "[steps('labConfiguration').generalSection.shouldInstallUpdatesToLabVm]",
-                "hciNodeOsSku": "[steps('labConfiguration').hciClusterNodesSection.hciNodeOperatingSystem.sku]",
-                "hciNodeOsImageIndex": "[steps('labConfiguration').hciClusterNodesSection.hciNodeOperatingSystem.imageIndex]",
-                "hciNodeCount": "[steps('labConfiguration').hciClusterNodesSection.hciNodeCount]",
-                "shouldHciNodeJoinToAddsDomain": "[steps('labConfiguration').hciClusterNodesSection.shouldJoinToAddsDomain]",
-                "addsDomainFqdn": "[steps('labConfiguration').addsSection.domainName]",
-                "shouldCreateHciCluster": "[steps('labConfiguration').hciClusterSection.shouldCreateHciCluster]",
-                "hciClusterName": "[steps('labConfiguration').hciClusterSection.hciClusterName]",
-                "repoBaseUri": "[steps('advancedSettings').repoBaseUri]"
+                "toolsToInstall": "[concat(if(steps('labHostStep').toolsSection.shouldInstallVisualStudioCode, 'vscode', ''), ';')]",
+                "shouldEnabledAutoshutdown": "[steps('labHostStep').autoshutdownSection.shouldEnabledAutoshutdown]",
+                "autoshutdownTime": "[steps('labHostStep').autoshutdownSection.shutdownTime]",
+                "autoshutdownTimeZone": "[steps('labHostStep').autoshutdownSection.shutdownTimeZone]",
+
+                "hciNodeOsSku": "[steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.sku]",
+                "hciNodeOsImageIndex": "[steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.imageIndex]",
+                "hciNodeCount": "[steps('hciNodeStep').hciClusterNodesSection.hciNodeCount]",
+                "shouldHciNodeJoinToAddsDomain": "[steps('hciNodeStep').addsSection.shouldJoinToAddsDomain]",
+                "isAzureLocalDeployment": "[contains('ashci23h2', steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.sku)]",
+
+                "shouldCreateHciCluster": "[steps('hciClusterStep').hciClusterSection.shouldCreateHciCluster]",
+                "hciClusterName": "[steps('hciClusterStep').hciClusterSection.hciClusterName]",
+
+                "addsDomainFqdn": "[steps('addsStep').addsSection.domainName]",
+                "shouldPrepareAddsForAzureLocal": "[steps('addsStep').azureLocalPrepSection.shouldPrepareAddsForAzureLocal]",
+                "orgUnitForAzureLocal": "[steps('addsStep').azureLocalPrepSection.orgUnit]",
+                "lcmUserName": "[steps('addsStep').azureLocalPrepSection.lcmUserName]",
+
+                "shouldInstallConfigAppForAzureLocal": "[steps('mgmtServerStep').azureLocalSection.shouldInstallConfigAppForAzureLocal]",
+
+                "labVmOsCulture": "[steps('advancedStep').generalSection.labVmCulture]",
+                "labVmOsTimeZone": "[steps('advancedStep').generalSection.labVmTimeZone]",
+                "shouldInstallUpdatesToLabVm": "[steps('advancedStep').generalSection.shouldInstallUpdatesToLabVm]",
+
+                "repoBaseUri": "[steps('customStep').repoBaseUri]"
             }
         }
     }

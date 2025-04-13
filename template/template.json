@@ -323,7 +323,7 @@
         },
         "shouldHciNodeJoinToAddsDomain": {
             "type": "bool",
-            "defaultValue": true,
+            "defaultValue": false,
             "metadata": {
                 "description": "By specifying True, the HCI nodes join to the AD DS domain during the deployment."
             }
@@ -349,9 +349,16 @@
                 "description": "The cluster name (cluster name object/CNO) for the HCI cluster."
             }
         },
+        "isAzureLocalDeployment": {
+            "type": "bool",
+            "defaultValue": false,
+            "metadata": {
+                "description": "By specifying True, it means the deployment is Azure Local."
+            }
+        },
         "shouldPrepareAddsForAzureLocal": {
             "type": "bool",
-            "defaultValue": true,
+            "defaultValue": false,
             "metadata": {
                 "description": "By specifying True, the Azure Local AD objects will be created during the deployment."
             }
@@ -372,7 +379,7 @@
         },
         "shouldInstallConfigAppForAzureLocal": {
             "type": "bool",
-            "defaultValue": true,
+            "defaultValue": false,
             "metadata": {
                 "description": "By specifying True, the Configurator App for Azure Local will be installed during the deployment."
             }
@@ -579,6 +586,7 @@
                 },
                 "nodeCount": "[parameters('hciNodeCount')]",
                 "shouldJoinToAddsDomain": "[parameters('shouldHciNodeJoinToAddsDomain')]",
+                "isAzureLocalDeployment": "[parameters('isAzureLocalDeployment')]",
                 "dataDiskSizeBytes": 1099511627776,
                 "ipAddressOffset": 11,
                 "netAdapters": {
