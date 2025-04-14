@@ -503,7 +503,7 @@
                                         "text": "Select auto-shutdown whether enable or not for your lab host.",
                                         "link": {
                                             "label": "Learn more",
-                                            "uri": "https://learn.microsoft.com/en-us/azure/virtual-machines/auto-shutdown-vm"
+                                            "uri": "https://learn.microsoft.com/azure/virtual-machines/auto-shutdown-vm"
                                         }
                                     }
                                 },
@@ -1360,7 +1360,7 @@
                             "visible": "[and(not(contains('ashci23h2', steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.sku)), not(steps('hciNodeStep').addsSection.shouldJoinToAddsDomain))]",
                             "options": {
                                 "style": "Info",
-                                "text": "Please skip this page because member servers are not joined to the Active directory domain. If you want to create an HCI cluster during the HCI Lab deployment, select the domain join option on the previous page."
+                                "text": "Please skip this page because you chose that not join member servers to the Active Directory domain. If you want to create an HCI cluster during the HCI Lab deployment, select the domain join option on the previous page."
                             }
                         },
                         {
@@ -1432,7 +1432,7 @@
                 {
                     "name": "addsStep",
                     "label": "Active Directory",
-                    "description": "Configure Active Directory domain services details for your lab environment.",
+                    "description": "Configure Active Directory Domain Services details for your lab environment.",
                     "elements": [
                         {
                             "name": "addsSection",
@@ -1539,7 +1539,7 @@
                 {
                     "name": "mgmtServerStep",
                     "label": "Management server",
-                    "description": "Server management tools to manage Azure Local instances, HCI clusters, Active Directory and more are installed on this server.",
+                    "description": "Server management tools to manage Azure Local instances, HCI clusters, Active Directory and more are installed on the management server.",
                     "elements": [
                         {
                             "name": "wacSection",
