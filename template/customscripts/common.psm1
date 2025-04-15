@@ -793,6 +793,11 @@ function Stop-VMSurely
         }
         catch {
             New-ExceptionMessage -ErrorRecord $_ -AsHandled | Write-ScriptLog -Level Warning
+            if (($_.Exception -is [Microsoft.HyperV.PowerShell.VirtualizationException]) -and ($_.Exception.Message -like '*0x800704a6*')) {
+                'A system shutdown has already been scheduled.' -f $VMName | Write-ScriptLog
+                $isStopVMInitiated = $true
+                break
+            }
         }
         Start-Sleep -Seconds $AttemptIntervalSeconds
 
