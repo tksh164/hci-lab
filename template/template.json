@@ -323,7 +323,7 @@
         },
         "shouldHciNodeJoinToAddsDomain": {
             "type": "bool",
-            "defaultValue": true,
+            "defaultValue": false,
             "metadata": {
                 "description": "By specifying True, the HCI nodes join to the AD DS domain during the deployment."
             }
@@ -347,6 +347,41 @@
             "defaultValue": "hciclus",
             "metadata": {
                 "description": "The cluster name (cluster name object/CNO) for the HCI cluster."
+            }
+        },
+        "isAzureLocalDeployment": {
+            "type": "bool",
+            "defaultValue": false,
+            "metadata": {
+                "description": "By specifying True, it means the deployment is Azure Local."
+            }
+        },
+        "shouldPrepareAddsForAzureLocal": {
+            "type": "bool",
+            "defaultValue": false,
+            "metadata": {
+                "description": "By specifying True, the Azure Local AD objects will be created during the deployment."
+            }
+        },
+        "orgUnitForAzureLocal": {
+            "type": "string",
+            "defaultValue": "OU=AzureLocal,DC=hci,DC=internal",
+            "metadata": {
+                "description": "The organizational Unit (OU) to place the Azure Local related objects."
+            }
+        },
+        "lcmUserName": {
+            "type": "string",
+            "defaultValue": "lcmuser",
+            "metadata": {
+                "description": "The Lifecycle Manager (LCM) deployment user account."
+            }
+        },
+        "shouldInstallConfigAppForAzureLocal": {
+            "type": "bool",
+            "defaultValue": false,
+            "metadata": {
+                "description": "By specifying True, the Configurator App for Azure Local will be installed during the deployment."
             }
         },
         "repoBaseUri": {
@@ -523,7 +558,10 @@
                         "defaultGateway": "172.16.0.1",
                         "dnsServerAddresses": [ "168.63.129.16" ]
                     }
-                }
+                },
+                "shouldPrepareAddsForAzureLocal": "[parameters('shouldPrepareAddsForAzureLocal')]",
+                "orgUnitForAzureLocal": "[parameters('orgUnitForAzureLocal')]",
+                "lcmUserName": "[parameters('lcmUserName')]"
             },
             "wac": {
                 "vmName": "wac",
@@ -536,7 +574,8 @@
                         "defaultGateway": "172.16.0.1",
                         "dnsServerAddresses": [ "172.16.0.2" ]
                     }
-                }
+                },
+                "shouldInstallConfigAppForAzureLocal": "[parameters('shouldInstallConfigAppForAzureLocal')]"
             },
             "hciNode": {
                 "vmName": "hcinode{0:00}",  // vmNameOffset + ZeroBasedNodeIndex
@@ -547,6 +586,7 @@
                 },
                 "nodeCount": "[parameters('hciNodeCount')]",
                 "shouldJoinToAddsDomain": "[parameters('shouldHciNodeJoinToAddsDomain')]",
+                "isAzureLocalDeployment": "[parameters('isAzureLocalDeployment')]",
                 "dataDiskSizeBytes": 1099511627776,
                 "ipAddressOffset": 11,
                 "netAdapters": {

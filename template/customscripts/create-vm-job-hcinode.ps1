@@ -95,6 +95,7 @@ try {
     $nodeVMName = Format-HciNodeName -Format $labConfig.hciNode.vmName -Offset $labConfig.hciNode.vmNameOffset -Index $NodeIndex
     Set-ScriptLogDefaultContext -LogContext $nodeVMName
 
+    'Script file: {0}' -f $PSScriptRoot | Write-ScriptLog
     'Lab deployment config:' | Write-ScriptLog
     $labConfig | ConvertTo-Json -Depth 16 | Out-String | Write-ScriptLog
 
@@ -495,81 +496,87 @@ try {
     }
     'Configure the IP & DNS on the "{0}" network adapter completed.' -f $netAdapterConfig.Name | Write-ScriptLog
 
-    # Storage 1
-    $netAdapterConfig = $nodeConfig.NetAdapters.Storage1
-    'Configure the IP & DNS on the "{0}" network adapter.' -f $netAdapterConfig.Name | Write-ScriptLog
-    Invoke-CommandWithinVM @invokeWithinVMParams -WithRetry -ScriptBlockParamList $netAdapterConfig -ScriptBlock {
-        param (
-            [Parameter(Mandatory = $true)]
-            [PSCustomObject] $NetAdapterConfig
-        )
-
-        # Remove existing NetIPAddresses.
-        Get-NetAdapter -Name $NetAdapterConfig.Name |
-        Get-NetIPInterface -AddressFamily 'IPv4' |
-        Remove-NetIPAddress -Confirm:$false -ErrorAction SilentlyContinue
-        
-        # Configure the IP, DNS and VLAN on the network adapter.
-        $paramsForSetNetAdapter = @{
-            VlanID   = $NetAdapterConfig.VlanId
-            Confirm  = $false
-            PassThru = $true
-        }
-        $paramsForSetNetIPInterface = @{
-            AddressFamily = 'IPv4'
-            Dhcp          = 'Disabled'
-            PassThru      = $true
-        }
-        $paramsForNewIPAddress = @{
-            AddressFamily = 'IPv4'
-            IPAddress     = $NetAdapterConfig.IPAddress
-            PrefixLength  = $NetAdapterConfig.PrefixLength
-        }
-        Get-NetAdapter -Name $NetAdapterConfig.Name |
-        Set-NetAdapter @paramsForSetNetAdapter |
-        Set-NetIPInterface @paramsForSetNetIPInterface |
-        New-NetIPAddress @paramsForNewIPAddress |
-        Out-Null
+    if ($labConfig.hciNode.isAzureLocalDeployment) {
+        # NOTE: The storage network configuration is not needed for Azure Local deployment. It will configure during the Azure Local deployment process.
+        'Skip the storage network configuration because the deployment is Azure Local deployment.' | Write-ScriptLog
     }
-    'Configure the IP & DNS on the "{0}" network adapter completed.' -f $netAdapterConfig.Name | Write-ScriptLog
+    else {
+        # Storage 1
+        $netAdapterConfig = $nodeConfig.NetAdapters.Storage1
+        'Configure the IP & DNS on the "{0}" network adapter.' -f $netAdapterConfig.Name | Write-ScriptLog
+        Invoke-CommandWithinVM @invokeWithinVMParams -WithRetry -ScriptBlockParamList $netAdapterConfig -ScriptBlock {
+            param (
+                [Parameter(Mandatory = $true)]
+                [PSCustomObject] $NetAdapterConfig
+            )
 
-    # Storage 2
-    $netAdapterConfig = $nodeConfig.NetAdapters.Storage2
-    'Configure the IP & DNS on the "{0}" network adapter.' -f $netAdapterConfig.Name | Write-ScriptLog
-    Invoke-CommandWithinVM @invokeWithinVMParams -WithRetry -ScriptBlockParamList $netAdapterConfig -ScriptBlock {
-        param (
-            [Parameter(Mandatory = $true)]
-            [PSCustomObject] $NetAdapterConfig
-        )
+            # Remove existing NetIPAddresses.
+            Get-NetAdapter -Name $NetAdapterConfig.Name |
+            Get-NetIPInterface -AddressFamily 'IPv4' |
+            Remove-NetIPAddress -Confirm:$false -ErrorAction SilentlyContinue
+            
+            # Configure the IP, DNS and VLAN on the network adapter.
+            $paramsForSetNetAdapter = @{
+                VlanID   = $NetAdapterConfig.VlanId
+                Confirm  = $false
+                PassThru = $true
+            }
+            $paramsForSetNetIPInterface = @{
+                AddressFamily = 'IPv4'
+                Dhcp          = 'Disabled'
+                PassThru      = $true
+            }
+            $paramsForNewIPAddress = @{
+                AddressFamily = 'IPv4'
+                IPAddress     = $NetAdapterConfig.IPAddress
+                PrefixLength  = $NetAdapterConfig.PrefixLength
+            }
+            Get-NetAdapter -Name $NetAdapterConfig.Name |
+            Set-NetAdapter @paramsForSetNetAdapter |
+            Set-NetIPInterface @paramsForSetNetIPInterface |
+            New-NetIPAddress @paramsForNewIPAddress |
+            Out-Null
+        }
+        'Configure the IP & DNS on the "{0}" network adapter completed.' -f $netAdapterConfig.Name | Write-ScriptLog
 
-        # Remove existing NetIPAddresses.
-        Get-NetAdapter -Name $NetAdapterConfig.Name |
-        Get-NetIPInterface -AddressFamily 'IPv4' |
-        Remove-NetIPAddress -Confirm:$false -ErrorAction SilentlyContinue
-        
-        # Configure the IP, DNS and VLAN on the network adapter.
-        $paramsForSetNetAdapter = @{
-            VlanID   = $NetAdapterConfig.VlanId
-            Confirm  = $false
-            PassThru = $true
+        # Storage 2
+        $netAdapterConfig = $nodeConfig.NetAdapters.Storage2
+        'Configure the IP & DNS on the "{0}" network adapter.' -f $netAdapterConfig.Name | Write-ScriptLog
+        Invoke-CommandWithinVM @invokeWithinVMParams -WithRetry -ScriptBlockParamList $netAdapterConfig -ScriptBlock {
+            param (
+                [Parameter(Mandatory = $true)]
+                [PSCustomObject] $NetAdapterConfig
+            )
+
+            # Remove existing NetIPAddresses.
+            Get-NetAdapter -Name $NetAdapterConfig.Name |
+            Get-NetIPInterface -AddressFamily 'IPv4' |
+            Remove-NetIPAddress -Confirm:$false -ErrorAction SilentlyContinue
+            
+            # Configure the IP, DNS and VLAN on the network adapter.
+            $paramsForSetNetAdapter = @{
+                VlanID   = $NetAdapterConfig.VlanId
+                Confirm  = $false
+                PassThru = $true
+            }
+            $paramsForSetNetIPInterface = @{
+                AddressFamily = 'IPv4'
+                Dhcp          = 'Disabled'
+                PassThru      = $true
+            }
+            $paramsForNewIPAddress = @{
+                AddressFamily = 'IPv4'
+                IPAddress     = $NetAdapterConfig.IPAddress
+                PrefixLength  = $NetAdapterConfig.PrefixLength
+            }
+            Get-NetAdapter -Name $NetAdapterConfig.Name |
+            Set-NetAdapter @paramsForSetNetAdapter |
+            Set-NetIPInterface @paramsForSetNetIPInterface |
+            New-NetIPAddress @paramsForNewIPAddress |
+            Out-Null
         }
-        $paramsForSetNetIPInterface = @{
-            AddressFamily = 'IPv4'
-            Dhcp          = 'Disabled'
-            PassThru      = $true
-        }
-        $paramsForNewIPAddress = @{
-            AddressFamily = 'IPv4'
-            IPAddress     = $NetAdapterConfig.IPAddress
-            PrefixLength  = $NetAdapterConfig.PrefixLength
-        }
-        Get-NetAdapter -Name $NetAdapterConfig.Name |
-        Set-NetAdapter @paramsForSetNetAdapter |
-        Set-NetIPInterface @paramsForSetNetIPInterface |
-        New-NetIPAddress @paramsForNewIPAddress |
-        Out-Null
+        'Configure the IP & DNS on the "{0}" network adapter completed.' -f $netAdapterConfig.Name | Write-ScriptLog
     }
-    'Configure the IP & DNS on the "{0}" network adapter completed.' -f $netAdapterConfig.Name | Write-ScriptLog
 
     'Log the network settings within the VM.' | Write-ScriptLog
     Invoke-CommandWithinVM @invokeWithinVMParams -WithRetry -ScriptBlock {

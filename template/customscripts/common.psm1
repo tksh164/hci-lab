@@ -782,20 +782,42 @@ function Stop-VMSurely
     )
 
     'Stop the VM "{0}".' -f $VMName | Write-ScriptLog
-    try {
-        Stop-VM -Name $VMName
-    }
-    catch [Microsoft.HyperV.PowerShell.VirtualizationException] {
-        # A system shutdown has already been scheduled.
-        if ($_.Exception.Message -like '*0x800704a6*') {
+    $isStopVMInitiated = $false
+    $attemptStopVMStartTime = Get-Date
+    while ((Get-Date) -lt ($attemptStopVMStartTime + $AttemptDuration)) {
+        try {
+            Stop-VM -Name $VMName
+            'Stop the VM "{0}" was initiated.' -f $VMName | Write-ScriptLog
+            $isStopVMInitiated = $true
+            break
+        }
+        catch {
             New-ExceptionMessage -ErrorRecord $_ -AsHandled | Write-ScriptLog -Level Warning
+            if (($_.Exception -is [Microsoft.HyperV.PowerShell.VirtualizationException]) -and ($_.Exception.Message -like '*0x800704a6*')) {
+                'A system shutdown has already been scheduled.' -f $VMName | Write-ScriptLog
+                $isStopVMInitiated = $true
+                break
+            }
         }
-        else {
-            throw $_
-        }
+        Start-Sleep -Seconds $AttemptIntervalSeconds
+
+        # catch [Microsoft.HyperV.PowerShell.VirtualizationException] {
+        #     # A system shutdown has already been scheduled.
+        #     if ($_.Exception.Message -like '*0x800704a6*') {
+        #         New-ExceptionMessage -ErrorRecord $_ -AsHandled | Write-ScriptLog -Level Warning
+        #         Start-Sleep -Seconds $AttemptIntervalSeconds
+        #     }
+        #     else {
+        #         throw $_
+        #     }
+        # }
     }
 
-    'Stop the VM "{0}" succeeded.' -f $VMName | Write-ScriptLog
+    if (-not $isStopVMInitiated) {
+        $exceptionMessage = 'Stop the VM "{0}" could not initiated in the acceptable time ({1}).' -f $VMName, $AttemptDuration.ToString('hh\:mm\:ss')
+        $exceptionMessage | Write-ScriptLog -Level Error
+        throw $exceptionMessage
+    }
 
     # Wait for the VM to turn off.
     $turnOffProbingStartTime = Get-Date
@@ -805,11 +827,11 @@ function Stop-VMSurely
             'The VM "{0}" is stopped.' -f $VMName | Write-ScriptLog
             return
         }
-        'Wait for the VM "{0}" to stop.' -f $VMName | Write-ScriptLog
+        'The VM "{0}" is "{1}". Wait for the VM "{0}" to stop.' -f $VMName, $vm.State | Write-ScriptLog
         Start-Sleep -Seconds $AttemptIntervalSeconds
     }
 
-    $exceptionMessage = 'The the VM "{0}" was not stopped in the acceptable time ({1}).' -f $VMName, $AttemptDuration.ToString('hh\:mm\:ss')
+    $exceptionMessage = 'The VM "{0}" was not stopped in the acceptable time ({1}).' -f $VMName, $AttemptDuration.ToString('hh\:mm\:ss')
     $exceptionMessage | Write-ScriptLog -Level Error
     throw $exceptionMessage
 }
@@ -1023,6 +1045,7 @@ function New-LogonCredential
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
+        [AllowEmptyString()]
         [string] $DomainFqdn,
 
         [Parameter(Mandatory = $true)]
@@ -1035,7 +1058,7 @@ function New-LogonCredential
     $params = @{
         TypeName     = 'System.Management.Automation.PSCredential'
         ArgumentList = @(
-            ('{0}\{1}' -f $DomainFqdn, $UserName),
+            if ($DomainFqdn -eq '') { $UserName } else { '{0}\{1}' -f $DomainFqdn, $UserName },
             $Password
         )
     }
@@ -1118,7 +1141,7 @@ function New-PSDirectSession
     for ($attempts = 0; $attempts -lt $attemptLimit; $attempts++) {
         try {
             'Create a new PowerShell Direct session to "{0}" with "{1}".' -f $VMName, $Credential.UserName | Write-ScriptLog
-            $pss = New-PSSession -VMName $VMName -Credential $Credential -Name ('{0}:{1}' -f $VMName, $Credential.UserName)
+            $pss = New-PSSession -VMName $VMName -Credential $Credential -Name ('"{0}" with "{1}"' -f $VMName, $Credential.UserName)
             'Create a new PowerShell Direct session to "{0}" with "{1}" succeeded.' -f $VMName, $Credential.UserName | Write-ScriptLog
             return $pss
         }
@@ -1142,9 +1165,9 @@ function Remove-PSDirectSession
         [System.Management.Automation.Runspaces.PSSession] $Session
     )
 
-    'Delete a PowerShell Direct session "{0}".' -f $Session.Name | Write-ScriptLog
+    'Delete a PowerShell Direct session to {0}.' -f $Session.Name | Write-ScriptLog
     Remove-PSSession -Session $Session
-    'Delete a PowerShell Direct session "{0}" succeeded.' -f $Session.Name | Write-ScriptLog
+    'Delete a PowerShell Direct session to {0} succeeded.' -f $Session.Name | Write-ScriptLog
 }
 
 function Invoke-PSDirectSessionGroundwork
