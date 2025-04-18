@@ -783,6 +783,7 @@ function Stop-VMSurely
 
     'Stop the VM "{0}".' -f $VMName | Write-ScriptLog
     $isStopVMInitiated = $false
+    $isGuestOsRebooted = $false
     $attemptStopVMStartTime = Get-Date
     while ((Get-Date) -lt ($attemptStopVMStartTime + $AttemptDuration)) {
         try {
@@ -793,8 +794,11 @@ function Stop-VMSurely
         }
         catch {
             New-ExceptionMessage -ErrorRecord $_ -AsHandled | Write-ScriptLog -Level Warning
+
+            # A system shutdown has already been scheduled.
             if (($_.Exception -is [Microsoft.HyperV.PowerShell.VirtualizationException]) -and ($_.Exception.Message -like '*0x800704a6*')) {
                 'A system shutdown has already been scheduled.' -f $VMName | Write-ScriptLog
+                $isGuestOsRebooted = $true
                 $isStopVMInitiated = $true
                 break
             }
@@ -822,11 +826,22 @@ function Stop-VMSurely
     # Wait for the VM to turn off.
     $turnOffProbingStartTime = Get-Date
     while ((Get-Date) -lt ($turnOffProbingStartTime + $AttemptDuration)) {
+        # Check the VM was turned off.
         $vm = Get-VM -VMName $VMName
         if ($vm.State -eq 'Off') {
             'The VM "{0}" is stopped.' -f $VMName | Write-ScriptLog
             return
         }
+
+        # Check the VM is rebooted if the guest OS is rebooted instead of turning off.
+        if ($isGuestOsRebooted) {
+            $heartbeatVmis = Get-VMIntegrationService -VMName $VMName -Name 'Heartbeat'
+            if ($heartbeatVmis.PrimaryOperationalStatus -ne 'Ok') {
+                'The heartbeat service on the VM "{0}" is not available. It seems rebooted.' -f $VMName | Write-ScriptLog
+                return
+            }
+        }
+
         'The VM "{0}" is "{1}". Wait for the VM "{0}" to stop.' -f $VMName, $vm.State | Write-ScriptLog
         Start-Sleep -Seconds $AttemptIntervalSeconds
     }
