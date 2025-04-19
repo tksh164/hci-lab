@@ -1161,7 +1161,7 @@ function New-PSDirectSession
             return $pss
         }
         catch {
-            'Create a new PowerShell Direct session to "{0}" with "{1}" failed.' -f $VMName, $Credential.UserName | Write-ScriptLog -Level Warning
+            'Create a new PowerShell Direct session to "{0}" with "{1}" failed. It will retry.' -f $VMName, $Credential.UserName | Write-ScriptLog -Level Warning
             New-ExceptionMessage -ErrorRecord $_ -AsHandled | Write-ScriptLog -Level Warning
             Start-Sleep -Seconds 5
         }
