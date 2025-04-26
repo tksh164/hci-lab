@@ -120,7 +120,22 @@
             "apiVersion": "2023-04-01",
             "location": "[parameters('location')]",
             "properties": {
-                "securityRules": []
+                "securityRules": [
+                    {
+                        "name": "AllowBastionRDPInbound",
+                        "properties": {
+                            "direction": "Inbound",
+                            "priority": 3000,
+                            "access": "Allow",
+                            "protocol": "Tcp",
+                            "sourceAddressPrefix": "168.63.129.16",
+                            "sourcePortRange": "*",
+                            "destinationAddressPrefix": "VirtualNetwork",
+                            "destinationPortRange": "3389",
+                            "description": "Allow Bastion Developer RDP inbound."
+                        }
+                    }
+                ]
             }
         },
 
