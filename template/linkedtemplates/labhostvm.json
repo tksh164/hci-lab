@@ -216,7 +216,7 @@
             "apiVersion": "2023-04-01",
             "location": "[parameters('location')]",
             "dependsOn": [
-                "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
+                "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
                 "[resourceId('Microsoft.Network/publicIpAddresses', variables('publicIpAddressName'))]"
             ],
             "properties": {
