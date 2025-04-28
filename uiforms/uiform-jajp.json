@@ -453,6 +453,37 @@
                             ]
                         },
                         {
+                            "name": "bastionSection",
+                            "type": "Microsoft.Common.Section",
+                            "visible": true,
+                            "label": "Azure Bastion Developer",
+                            "elements": [
+                                {
+                                    "name": "bastionSectionText",
+                                    "type": "Microsoft.Common.TextBlock",
+                                    "visible": true,
+                                    "options": {
+                                        "text": "Bastion Developer は、Azure Bastion サービスの無償の軽量版です。VM にセキュアに接続したく、Bastion の追加機能やホストのスケーリングは不要という開発やテスト目的のユーザに最適です。",
+                                        "link": {
+                                            "label": "詳細情報",
+                                            "uri": "https://learn.microsoft.com/azure/bastion/quickstart-developer"
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "shouldDeployBastionDeveloper",
+                                    "type": "Microsoft.Common.CheckBox",
+                                    "label": "Azure Bastion Developer を有効にする",
+                                    "visible": true,
+                                    "toolTip": "Azure Bastion Developer を有効にする場合はチェックを付けます。",
+                                    "defaultValue": true,
+                                    "constraints": {
+                                        "required": false
+                                    }
+                                }
+                            ]
+                        },
+                        {
                             "name": "toolsSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
