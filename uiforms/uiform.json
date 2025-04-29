@@ -453,6 +453,47 @@
                             ]
                         },
                         {
+                            "name": "bastionSection",
+                            "type": "Microsoft.Common.Section",
+                            "visible": true,
+                            "label": "Azure Bastion Developer",
+                            "elements": [
+                                {
+                                    "name": "bastionSectionText",
+                                    "type": "Microsoft.Common.TextBlock",
+                                    "visible": true,
+                                    "options": {
+                                        "text": "Bastion Developer is a free, lightweight offering of the Azure Bastion service. It is ideal for Dev/Test users who want to securely connect to their VMs, but don't need additional Bastion features or host scaling.",
+                                        "link": {
+                                            "label": "Learn more",
+                                            "uri": "https://learn.microsoft.com/azure/bastion/quickstart-developer"
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "shouldDeployBastionDeveloper",
+                                    "type": "Microsoft.Common.OptionsGroup",
+                                    "visible": true,
+                                    "label": "Azure Bastion Developer",
+                                    "toolTip": "Bastion Developer is a free, lightweight offering of the Azure Bastion service.",
+                                    "defaultValue": "Enable",
+                                    "constraints": {
+                                        "required": true,
+                                        "allowedValues": [
+                                            {
+                                                "label": "Enable",
+                                                "value": true
+                                            },
+                                            {
+                                                "label": "Disable",
+                                                "value": false
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        },
+                        {
                             "name": "toolsSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
@@ -2322,6 +2363,7 @@
                 "labHostVmDataDiskSize": "[steps('labHostStep').dataVolumeSection.dataDiskSize]",
                 "labHostVmDataDiskCount": "[first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount))]",
                 "hasEligibleWindowsServerLicense": "[steps('basics').azureHybridBenefitSection.hasEligibleWindowsServerLicense]",
+                "shouldDeployBastionDeveloper": "[steps('labHostStep').bastionSection.shouldDeployBastionDeveloper]",
                 "toolsToInstall": "[concat(if(steps('labHostStep').toolsSection.shouldInstallVisualStudioCode, 'vscode', ''), ';')]",
                 "shouldEnabledAutoshutdown": "[steps('labHostStep').autoshutdownSection.shouldEnabledAutoshutdown]",
                 "autoshutdownTime": "[steps('labHostStep').autoshutdownSection.shutdownTime]",
