@@ -70,6 +70,12 @@
                 "description": "THe base64 encode user data for the lab host virtual machine."
             }
         },
+        "shouldDeployBastionDeveloper" : {
+            "type": "bool",
+            "metadata": {
+                "description": "By specifying True, will be deploy Azure Bastion Developer."
+            }
+        },
         "shouldEnabledAutoshutdown": {
             "type": "bool",
             "metadata": {
@@ -124,22 +130,27 @@
             "apiVersion": "2023-04-01",
             "location": "[parameters('location')]",
             "properties": {
-                "securityRules": [
-                    {
-                        "name": "AllowBastionRDPInbound",
-                        "properties": {
-                            "direction": "Inbound",
-                            "priority": 3000,
-                            "access": "Allow",
-                            "protocol": "Tcp",
-                            "sourceAddressPrefix": "168.63.129.16",
-                            "sourcePortRange": "*",
-                            "destinationAddressPrefix": "VirtualNetwork",
-                            "destinationPortRange": "3389",
-                            "description": "Allow Bastion Developer RDP inbound."
-                        }
-                    }
-                ]
+                "securityRules": []
+            }
+        },
+        {
+            "condition": "[parameters('shouldDeployBastionDeveloper')]",
+            "name": "[concat(variables('subnetNetworkSecurityGroupName'), '/AllowBastionRDPInbound')]",
+            "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+            "apiVersion": "2024-05-01",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', variables('subnetNetworkSecurityGroupName'))]"
+            ],
+            "properties": {
+                "direction": "Inbound",
+                "priority": 3000,
+                "access": "Allow",
+                "protocol": "Tcp",
+                "sourceAddressPrefix": "168.63.129.16",
+                "sourcePortRange": "*",
+                "destinationAddressPrefix": "VirtualNetwork",
+                "destinationPortRange": "3389",
+                "description": "Allow Bastion Developer RDP inbound."
             }
         },
 
@@ -176,6 +187,7 @@
         // Bastion.
 
         {
+            "condition": "[parameters('shouldDeployBastionDeveloper')]",
             "name": "[variables('bastionName')]",
             "type": "Microsoft.Network/bastionHosts",
             "apiVersion": "2024-05-01",

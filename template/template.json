@@ -232,6 +232,13 @@
                 "description": "By specifying True, you confirm you have an eligible Windows Server license with Software Assurance or Windows Server subscription to apply this Azure Hybrid Benefit. You can read more about compliance here: http://go.microsoft.com/fwlink/?LinkId=859786"
             }
         },
+        "shouldDeployBastionDeveloper" : {
+            "type": "bool",
+            "defaultValue": false,
+            "metadata": {
+                "description": "By specifying True, will be deploy Azure Bastion Developer."
+            }
+        },
         "toolsToInstall": {
             "type": "string",
             "defaultValue": "",
@@ -704,6 +711,9 @@
                     },
                     "base64EncodedLabConfig": {
                         "value": "[base64(string(variables('labConfig')))]"
+                    },
+                    "shouldDeployBastionDeveloper": {
+                        "value": "[parameters('shouldDeployBastionDeveloper')]"
                     },
                     "shouldEnabledAutoshutdown": {
                         "value": "[parameters('shouldEnabledAutoshutdown')]"
