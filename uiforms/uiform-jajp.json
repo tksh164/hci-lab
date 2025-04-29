@@ -472,13 +472,23 @@
                                 },
                                 {
                                     "name": "shouldDeployBastionDeveloper",
-                                    "type": "Microsoft.Common.CheckBox",
-                                    "label": "Azure Bastion Developer を有効にする",
+                                    "type": "Microsoft.Common.OptionsGroup",
                                     "visible": true,
-                                    "toolTip": "Azure Bastion Developer を有効にする場合はチェックを付けます。",
-                                    "defaultValue": true,
+                                    "label": "Azure Bastion Developer",
+                                    "toolTip": "Bastion Developer は、Azure Bastion サービスの無償の軽量版です。",
+                                    "defaultValue": "有効にする",
                                     "constraints": {
-                                        "required": false
+                                        "required": true,
+                                        "allowedValues": [
+                                            {
+                                                "label": "有効にする",
+                                                "value": true
+                                            },
+                                            {
+                                                "label": "無効にする",
+                                                "value": false
+                                            }
+                                        ]
                                     }
                                 }
                             ]
@@ -2353,6 +2363,7 @@
                 "labHostVmDataDiskSize": "[steps('labHostStep').dataVolumeSection.dataDiskSize]",
                 "labHostVmDataDiskCount": "[first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount))]",
                 "hasEligibleWindowsServerLicense": "[steps('basics').azureHybridBenefitSection.hasEligibleWindowsServerLicense]",
+                "shouldDeployBastionDeveloper": "[steps('labHostStep').bastionSection.shouldDeployBastionDeveloper]",
                 "toolsToInstall": "[concat(if(steps('labHostStep').toolsSection.shouldInstallVisualStudioCode, 'vscode', ''), ';')]",
                 "shouldEnabledAutoshutdown": "[steps('labHostStep').autoshutdownSection.shouldEnabledAutoshutdown]",
                 "autoshutdownTime": "[steps('labHostStep').autoshutdownSection.shutdownTime]",

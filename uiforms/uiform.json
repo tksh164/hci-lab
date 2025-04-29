@@ -472,13 +472,23 @@
                                 },
                                 {
                                     "name": "shouldDeployBastionDeveloper",
-                                    "type": "Microsoft.Common.CheckBox",
-                                    "label": "Enable Azure Bastion Developer",
+                                    "type": "Microsoft.Common.OptionsGroup",
                                     "visible": true,
-                                    "toolTip": "Check this if you want to enable Azure Bastion Developer.",
-                                    "defaultValue": true,
+                                    "label": "Azure Bastion Developer",
+                                    "toolTip": "Bastion Developer is a free, lightweight offering of the Azure Bastion service.",
+                                    "defaultValue": "Enable",
                                     "constraints": {
-                                        "required": false
+                                        "required": true,
+                                        "allowedValues": [
+                                            {
+                                                "label": "Enable",
+                                                "value": true
+                                            },
+                                            {
+                                                "label": "Disable",
+                                                "value": false
+                                            }
+                                        ]
                                     }
                                 }
                             ]
@@ -2353,6 +2363,7 @@
                 "labHostVmDataDiskSize": "[steps('labHostStep').dataVolumeSection.dataDiskSize]",
                 "labHostVmDataDiskCount": "[first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount))]",
                 "hasEligibleWindowsServerLicense": "[steps('basics').azureHybridBenefitSection.hasEligibleWindowsServerLicense]",
+                "shouldDeployBastionDeveloper": "[steps('labHostStep').bastionSection.shouldDeployBastionDeveloper]",
                 "toolsToInstall": "[concat(if(steps('labHostStep').toolsSection.shouldInstallVisualStudioCode, 'vscode', ''), ';')]",
                 "shouldEnabledAutoshutdown": "[steps('labHostStep').autoshutdownSection.shouldEnabledAutoshutdown]",
                 "autoshutdownTime": "[steps('labHostStep').autoshutdownSection.shutdownTime]",
