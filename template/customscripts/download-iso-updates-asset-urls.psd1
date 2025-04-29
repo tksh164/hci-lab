@@ -41,9 +41,9 @@
         }
         'updates' = @(
             # OS
-            'https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/35c4d02b-0711-4c65-a664-c0894127349d/public/windows11.0-kb5053599-x64_f3821f6320e32b8a4f8115584f78499f519e467c.msu',
+            'https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/b712d58a-0f46-423b-ad41-ad8398318230/public/windows11.0-kb5055527-x64_ae74e95f08111d3530de7e81870cc6cd21b29556.msu',
             # .NET Framework
-            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2024/12/windows11.0-kb5049620-x64-ndp481_a34707964a2b5e592a7c057287714c636b2b13d5.msu'
+            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/updt/2025/03/windows11.0-kb5054705-x64-ndp481_e21ab281c54a6becc425189425e6099e93dc438b.msu'
         )
     }
     'ashci22h2' = @{
@@ -53,11 +53,11 @@
         }
         'updates' = @(
             # OS
-            'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2024/05/windows10.0-kb5037782-x64_a28aa2576fc6b120b127acfbb901d3546ba9db82.msu',  # For SSU of 2025-03
-            'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2025/03/windows10.0-kb5053603-x64_38c42a8609e7b977498c65c46ad080aa3c637547.msu',
+            'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2024/05/windows10.0-kb5037782-x64_a28aa2576fc6b120b127acfbb901d3546ba9db82.msu',  # For SSU of 2025-04
+            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2025/04/windows10.0-kb5055526-x64_70f346aababda91456cf7fb6e8f206f80c5bd310.msu',
             # .NET Framework
-            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2024/12/windows10.0-kb5049617-x64-ndp48_5adfae2ccbb4743d93898ff35010c77daa8f130f.msu',
-            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2024/12/windows10.0-kb5049625-x64-ndp481_cced48b8de758c3d5407c0fc62f198fca222c5b4.msu'
+            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/updt/2025/03/windows10.0-kb5055169-x64-ndp48_07015721a8fc001c5b1946fc49584bb649a4aa49.msu',
+            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/updt/2025/03/windows10.0-kb5054693-x64-ndp481_e81e514fe650aee149be6b260b44d97b134a1b2b.msu'
         )
     }
     'ashci21h2' = @{
@@ -97,9 +97,9 @@
         'updates' = @(
             # OS
             'https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/d8b7f92b-bd35-4b4c-96e5-46ce984b31e0/public/windows11.0-kb5043080-x64_953449672073f8fb99badb4cc6d5d7849b9c83e8.msu',
-            'https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/4807b0b1-6c5a-4a70-ab45-b378235fb9d6/public/windows11.0-kb5053598-x64_6cb3ffc5c4d652793dc71705248426eecdacdfd0.msu',
+            'https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/584ce7f1-b0c7-43c8-b2af-256fb291c5e3/public/windows11.0-kb5059087-x64_180d9c16b32cbda1c941e2e1c83f93439d6c004c.msu',
             # .NET Framework
-            'https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/8dbe7535-1d3a-450a-8f67-984c0206fb5b/public/windows11.0-kb5049622-x64-ndp481_afb8c71d1958d98de4082ff732762242e9460fad.msu'
+            'https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/02cd9c83-8312-424d-9a06-b042095804a8/public/windows11.0-kb5054979-x64-ndp481_8e2f730bc747de0f90aaee95d4862e4f88751c07.msu'
         )
     }
     'ws2022' = @{
@@ -109,11 +109,11 @@
         }
         'updates' = @(
             # OS
-            'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2024/05/windows10.0-kb5037782-x64_a28aa2576fc6b120b127acfbb901d3546ba9db82.msu',  # For SSU of 2025-03
-            'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2025/03/windows10.0-kb5053603-x64_38c42a8609e7b977498c65c46ad080aa3c637547.msu',
+            'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2024/05/windows10.0-kb5037782-x64_a28aa2576fc6b120b127acfbb901d3546ba9db82.msu',  # For SSU of 2025-04
+            'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/updt/2025/04/windows10.0-kb5059092-x64_71d4ebfa1489defbb9fe209e1f7217b2ae052c8e.msu',
             # .NET Framework
-            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2024/12/windows10.0-kb5049617-x64-ndp48_5adfae2ccbb4743d93898ff35010c77daa8f130f.msu',
-            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2024/12/windows10.0-kb5049625-x64-ndp481_cced48b8de758c3d5407c0fc62f198fca222c5b4.msu'
+            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/updt/2025/03/windows10.0-kb5055169-x64-ndp48_07015721a8fc001c5b1946fc49584bb649a4aa49.msu',
+            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/updt/2025/03/windows10.0-kb5054693-x64-ndp481_e81e514fe650aee149be6b260b44d97b134a1b2b.msu'
         )
     }
 }
