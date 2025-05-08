@@ -37,7 +37,8 @@ Learn more about the HCI lab in the [HCI Lab tour](./docs/hci-lab-tour.md).
 
 | Operating system | Description | HCI Lab |
 | ---- | ---- | ---- |
-| Azure Local, version 23H2 | The latest generally available version of Azure Local (formerly Azure Stack HCI). | Available |
+| Azure Local 2504 | The latest generally available version of Azure Local. | Available |
+| Azure Local 2503 | The previous version of Azure Local (formerly Azure Stack HCI). | Available |
 | Azure Stack HCI, version 22H2 | The previous generally available version of Azure Stack HCI. | Available |
 | Azure Stack HCI, version 21H2 | You can still use this OS to deploy your HCI lab environment by HCI Lab. However, **this version of Azure Stack HCI reached the end of service on November 14, 2023.** | Selectable. Not tested. |
 | Azure Stack HCI, version 20H2 | You can still use this OS to deploy your HCI lab environment by HCI Lab. However, **this version of Azure Stack HCI reached the end of service on December 13, 2022.** | Selectable. Not tested. |
