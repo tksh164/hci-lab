@@ -382,7 +382,7 @@
             "type": "string",
             "defaultValue": "lcmuser",
             "metadata": {
-                "description": "The Lifecycle Manager (LCM) deployment user account."
+                "description": "The user name of the Lifecycle Manager (LCM) deployment user account."
             }
         },
         "shouldInstallConfigAppForAzureLocal": {
