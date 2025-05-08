@@ -1261,13 +1261,21 @@
                                     "placeholder": "Select the member server's operating system...",
                                     "defaultDescription": "---",
                                     "filterPlaceholder": "Filter member server's operating systems...",
-                                    "defaultValue": "Azure Local, version 23H2",
+                                    "defaultValue": "Azure Local 2504",
                                     "constraints": {
                                         "required": true,
                                         "allowedValues": [
                                             {
-                                                "label": "Azure Local, version 23H2",
+                                                "label": "Azure Local 2504",
                                                 "description": "The latest generally available version.",
+                                                "value": {
+                                                    "sku": "azloc24h2",
+                                                    "imageIndex": 1
+                                                }
+                                            },
+                                            {
+                                                "label": "Azure Local 2503",
+                                                "description": "The previous version.",
                                                 "value": {
                                                     "sku": "ashci23h2",
                                                     "imageIndex": 1
@@ -1350,7 +1358,7 @@
                                 {
                                     "name": "addsDomainJoinInfo",
                                     "type": "Microsoft.Common.InfoBox",
-                                    "visible": "[contains('ashci23h2', steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.sku)]",
+                                    "visible": "[contains('ashci23h2|azloc24h2', steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.sku)]",
                                     "options": {
                                         "style": "Info",
                                         "text": "Azure Local machines must not be joined to Active Directory before deployment."
@@ -1359,7 +1367,7 @@
                                 {
                                     "name": "shouldJoinToAddsDomain",
                                     "type": "Microsoft.Common.OptionsGroup",
-                                    "visible": "[not(contains('ashci23h2', steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.sku))]",
+                                    "visible": "[not(contains('ashci23h2|azloc24h2', steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.sku))]",
                                     "label": "Join to the AD domain",
                                     "toolTip": "Select whether or not the HCI servers are to be joined to the AD domain.",
                                     "defaultValue": "Not join",
@@ -1389,7 +1397,7 @@
                         {
                             "name": "azureLocalInfo",
                             "type": "Microsoft.Common.InfoBox",
-                            "visible": "[contains('ashci23h2', steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.sku)]",
+                            "visible": "[contains('ashci23h2|azloc24h2', steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.sku)]",
                             "options": {
                                 "style": "Info",
                                 "text": "Please skip this page because not applicable to Azure Local deployment."
@@ -1398,7 +1406,7 @@
                         {
                             "name": "notDomainJoinInfo",
                             "type": "Microsoft.Common.InfoBox",
-                            "visible": "[and(not(contains('ashci23h2', steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.sku)), not(steps('hciNodeStep').addsSection.shouldJoinToAddsDomain))]",
+                            "visible": "[and(not(contains('ashci23h2|azloc24h2', steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.sku)), not(steps('hciNodeStep').addsSection.shouldJoinToAddsDomain))]",
                             "options": {
                                 "style": "Info",
                                 "text": "Please skip this page because you chose that not join member servers to the Active Directory domain. If you want to create an HCI cluster during the HCI Lab deployment, select the domain join option on the previous page."
@@ -1407,7 +1415,7 @@
                         {
                             "name": "hciClusterSection",
                             "type": "Microsoft.Common.Section",
-                            "visible": "[and(not(contains('ashci23h2', steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.sku)), steps('hciNodeStep').addsSection.shouldJoinToAddsDomain)]",
+                            "visible": "[and(not(contains('ashci23h2|azloc24h2', steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.sku)), steps('hciNodeStep').addsSection.shouldJoinToAddsDomain)]",
                             "label": "HCI cluster",
                             "elements": [
                                 {
@@ -1513,7 +1521,7 @@
                         {
                             "name": "azureLocalPrepSection",
                             "type": "Microsoft.Common.Section",
-                            "visible": "[contains('ashci23h2', steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.sku)]",
+                            "visible": "[contains('ashci23h2|azloc24h2', steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.sku)]",
                             "label": "Preparation for Azure Local deployment",
                             "elements": [
                                 {
@@ -1610,7 +1618,7 @@
                         {
                             "name": "azureLocalSection",
                             "type": "Microsoft.Common.Section",
-                            "visible": "[contains('ashci23h2', steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.sku)]",
+                            "visible": "[contains('ashci23h2|azloc24h2', steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.sku)]",
                             "label": "Configurator App for Azure Local",
                             "elements": [
                                 {
@@ -2373,7 +2381,7 @@
                 "hciNodeOsImageIndex": "[steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.imageIndex]",
                 "hciNodeCount": "[steps('hciNodeStep').hciClusterNodesSection.hciNodeCount]",
                 "shouldHciNodeJoinToAddsDomain": "[steps('hciNodeStep').addsSection.shouldJoinToAddsDomain]",
-                "isAzureLocalDeployment": "[contains('ashci23h2', steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.sku)]",
+                "isAzureLocalDeployment": "[contains('ashci23h2|azloc24h2', steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.sku)]",
 
                 "shouldCreateHciCluster": "[steps('hciClusterStep').hciClusterSection.shouldCreateHciCluster]",
                 "hciClusterName": "[steps('hciClusterStep').hciClusterSection.hciClusterName]",
