@@ -294,9 +294,10 @@
         },
         "hciNodeOsSku": {
             "type": "string",
-            "defaultValue": "ashci22h2",
+            "defaultValue": "azloc24h2",
             "allowedValues": [
-                "ashci23h2",  // Azure Stack HCI 23H2
+                "azloc24h2",  // Azure Local 24H2
+                "ashci23h2",  // Azure Stack HCI 23H2 / Azure Local 23H2
                 "ashci22h2",  // Azure Stack HCI 22H2
                 "ashci21h2",  // Azure Stack HCI 21H2
                 "ashci20h2",  // Azure Stack HCI 20H2
@@ -381,7 +382,7 @@
             "type": "string",
             "defaultValue": "lcmuser",
             "metadata": {
-                "description": "The Lifecycle Manager (LCM) deployment user account."
+                "description": "The user name of the Lifecycle Manager (LCM) deployment user account."
             }
         },
         "shouldInstallConfigAppForAzureLocal": {

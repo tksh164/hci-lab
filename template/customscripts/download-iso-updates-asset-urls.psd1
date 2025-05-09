@@ -1,6 +1,10 @@
+# Azure Local 24H2 - OS build: 26100
+#
+# OS: https://learn.microsoft.com/azure/azure-local/release-information-23h2?view=azloc-2504
+
 # Azure Stack HCI 23H2 - OS build: 25398
 #
-# OS: https://learn.microsoft.com/azure-stack/hci/release-information-23h2
+# OS: https://learn.microsoft.com/azure/azure-local/release-information-23h2?view=azloc-2503
 # OS (legacy): https://support.microsoft.com/topic/018b9b10-a75b-4ad7-b9d1-7755f81e5b0b
 # .NET: https://support.microsoft.com/topic/789dbbae-ea0f-4a31-9500-dff68e9995d5
 
@@ -25,18 +29,30 @@
 # Windows Server release information
 # OS: https://learn.microsoft.com/windows/release-health/windows-server-release-info
 #
-# Windows Server 2025 - OS buidl: 26100 - 24H2
+# Windows Server 2025 - OS build: 26100 - 24H2
 # OS: https://support.microsoft.com/topic/10f58da7-e57b-4a9d-9c16-9f1dcd72d7d7
 # .NET: TBD
 #
-# Windows Server 2022 - OS buidl: 20348 - 21H2
+# Windows Server 2022 - OS build: 20348 - 21H2
 # OS: https://support.microsoft.com/topic/e1caa597-00c5-4ab9-9f3e-8212fe80b2ee
 # .NET: https://support.microsoft.com/topic/56635939-4249-4eaa-ac39-394fcaec6a94
 
 @{
-    'ashci23h2' = @{
+    'azloc24h2' = @{
         'iso' = @{
             'en-us' = 'https://azurestackreleases.download.prss.microsoft.com/dbazure/AzureStackHCI/OS-Composition/12.2504.0.3142/AzureLocal24H2.26100.1742.LCM.12.2504.0.3142.x64.en-us.iso'
+            #'ja-jp' = ''
+        }
+        'updates' = @(
+            # OS
+            #'',
+            # .NET Framework
+            #''
+        )
+    }
+    'ashci23h2' = @{
+        'iso' = @{
+            'en-us' = 'https://azurestackreleases.download.prss.microsoft.com/dbazure/AzureLocal/WindowsPlatform/10.2503.0.3057/AzureLocal23H2.25398.469.LCM.10.2503.0.3057.x64.en-us.iso'
             'ja-jp' = 'https://software-static.download.prss.microsoft.com/dbazure/888969d5-f34g-4e03-ac9d-1f9786c66749/25398.469.231004-1141.zn_release_svc_refresh_SERVERAZURESTACKHCICOR_OEMRET_x64FRE_ja-jp.iso'
         }
         'updates' = @(
