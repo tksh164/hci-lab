@@ -371,11 +371,11 @@
                 "description": "By specifying True, the Azure Local AD objects will be created during the deployment."
             }
         },
-        "orgUnitForAzureLocal": {
+        "addsOrgUnitPathForAzureLocal": {
             "type": "string",
             "defaultValue": "OU=AzureLocal,DC=hci,DC=internal",
             "metadata": {
-                "description": "The organizational Unit (OU) to place the Azure Local related objects."
+                "description": "The Active Directory organizational Unit (OU) path to place the Azure Local related objects."
             }
         },
         "lcmUserName": {
@@ -568,7 +568,7 @@
                     }
                 },
                 "shouldPrepareAddsForAzureLocal": "[parameters('shouldPrepareAddsForAzureLocal')]",
-                "orgUnitForAzureLocal": "[parameters('orgUnitForAzureLocal')]",
+                "orgUnitForAzureLocal": "[parameters('addsOrgUnitPathForAzureLocal')]",
                 "lcmUserName": "[parameters('lcmUserName')]"
             },
             "wac": {
