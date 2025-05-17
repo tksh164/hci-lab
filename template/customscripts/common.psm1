@@ -61,7 +61,7 @@ function New-ExceptionMessage
         $fenceChar = '='
     }
 
-    $ex = $_.Exception
+    $ex = $ErrorRecord.Exception
     $builder = New-Object -TypeName 'System.Text.StringBuilder'
     [void] $builder.AppendLine('')
     [void] $builder.AppendLine($fenceChar * $horizontalLineLength)
@@ -70,11 +70,11 @@ function New-ExceptionMessage
     [void] $builder.AppendLine($ex.Message)
     [void] $builder.AppendLine('')
     [void] $builder.AppendLine('Exception             : ' + $ex.GetType().FullName)
-    [void] $builder.AppendLine('FullyQualifiedErrorId : ' + $_.FullyQualifiedErrorId)
-    [void] $builder.AppendLine('ErrorDetailsMessage   : ' + $_.ErrorDetails.Message)
-    [void] $builder.AppendLine('CategoryInfo          : ' + $_.CategoryInfo.ToString())
+    [void] $builder.AppendLine('FullyQualifiedErrorId : ' + $ErrorRecord.FullyQualifiedErrorId)
+    [void] $builder.AppendLine('ErrorDetailsMessage   : ' + $ErrorRecord.ErrorDetails.Message)
+    [void] $builder.AppendLine('CategoryInfo          : ' + $ErrorRecord.CategoryInfo.ToString())
     [void] $builder.AppendLine('StackTrace            :')
-    [void] $builder.AppendLine($_.ScriptStackTrace)
+    [void] $builder.AppendLine($ErrorRecord.ScriptStackTrace)
 
     [void] $builder.AppendLine('')
     [void] $builder.AppendLine('-------- Exception --------')
