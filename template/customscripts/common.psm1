@@ -61,7 +61,7 @@ function New-ExceptionMessage
         $fenceChar = '='
     }
 
-    $ex = $_.Exception
+    $ex = $ErrorRecord.Exception
     $builder = New-Object -TypeName 'System.Text.StringBuilder'
     [void] $builder.AppendLine('')
     [void] $builder.AppendLine($fenceChar * $horizontalLineLength)
@@ -70,11 +70,11 @@ function New-ExceptionMessage
     [void] $builder.AppendLine($ex.Message)
     [void] $builder.AppendLine('')
     [void] $builder.AppendLine('Exception             : ' + $ex.GetType().FullName)
-    [void] $builder.AppendLine('FullyQualifiedErrorId : ' + $_.FullyQualifiedErrorId)
-    [void] $builder.AppendLine('ErrorDetailsMessage   : ' + $_.ErrorDetails.Message)
-    [void] $builder.AppendLine('CategoryInfo          : ' + $_.CategoryInfo.ToString())
+    [void] $builder.AppendLine('FullyQualifiedErrorId : ' + $ErrorRecord.FullyQualifiedErrorId)
+    [void] $builder.AppendLine('ErrorDetailsMessage   : ' + $ErrorRecord.ErrorDetails.Message)
+    [void] $builder.AppendLine('CategoryInfo          : ' + $ErrorRecord.CategoryInfo.ToString())
     [void] $builder.AppendLine('StackTrace            :')
-    [void] $builder.AppendLine($_.ScriptStackTrace)
+    [void] $builder.AppendLine($ErrorRecord.ScriptStackTrace)
 
     [void] $builder.AppendLine('')
     [void] $builder.AppendLine('-------- Exception --------')
@@ -85,18 +85,18 @@ function New-ExceptionMessage
     [void] $builder.AppendLine('StackTrace :')
     [void] $builder.AppendLine($ex.StackTrace)
 
-    $level = 1
+    $depth = 1
     while ($ex.InnerException) {
         $ex = $ex.InnerException
         [void] $builder.AppendLine('')
-        [void] $builder.AppendLine('-------- InnerException {0} --------' -f $level)
+        [void] $builder.AppendLine('-------- InnerException {0} --------' -f $depth)
         [void] $builder.AppendLine('Exception  : ' + $ex.GetType().FullName)
         [void] $builder.AppendLine('Message    : ' + $ex.Message)
         [void] $builder.AppendLine('Source     : ' + $ex.Source)
         [void] $builder.AppendLine('HResult    : ' + $ex.HResult)
         [void] $builder.AppendLine('StackTrace :')
         [void] $builder.AppendLine($ex.StackTrace)
-        $level++
+        $depth++
     }
 
     [void] $builder.AppendLine($fenceChar * $horizontalLineLength)
