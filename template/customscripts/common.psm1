@@ -85,18 +85,18 @@ function New-ExceptionMessage
     [void] $builder.AppendLine('StackTrace :')
     [void] $builder.AppendLine($ex.StackTrace)
 
-    $level = 1
+    $depth = 1
     while ($ex.InnerException) {
         $ex = $ex.InnerException
         [void] $builder.AppendLine('')
-        [void] $builder.AppendLine('-------- InnerException {0} --------' -f $level)
+        [void] $builder.AppendLine('-------- InnerException {0} --------' -f $depth)
         [void] $builder.AppendLine('Exception  : ' + $ex.GetType().FullName)
         [void] $builder.AppendLine('Message    : ' + $ex.Message)
         [void] $builder.AppendLine('Source     : ' + $ex.Source)
         [void] $builder.AppendLine('HResult    : ' + $ex.HResult)
         [void] $builder.AppendLine('StackTrace :')
         [void] $builder.AppendLine($ex.StackTrace)
-        $level++
+        $depth++
     }
 
     [void] $builder.AppendLine($fenceChar * $horizontalLineLength)
