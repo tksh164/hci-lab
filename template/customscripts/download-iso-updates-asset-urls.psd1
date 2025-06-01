@@ -1,6 +1,6 @@
 # Azure Local 24H2 - OS build: 26100
 #
-# OS: https://learn.microsoft.com/azure/azure-local/release-information-23h2?view=azloc-2504
+# OS: https://learn.microsoft.com/azure/azure-local/release-information-23h2
 
 # Azure Stack HCI 23H2 - OS build: 25398
 #
@@ -38,7 +38,19 @@
 # .NET: https://support.microsoft.com/topic/56635939-4249-4eaa-ac39-394fcaec6a94
 
 @{
-    'azloc24h2' = @{
+    'azloc24h2_2505' = @{
+        'iso' = @{
+            'en-us' = 'https://azurestackreleases.download.prss.microsoft.com/dbazure/AzureLocal/WindowsPlatform/12.2505.0.3139/AzureLocal24H2.26100.1742.LCM.12.2505.0.3139.x64.en-us.iso'
+            #'ja-jp' = ''
+        }
+        'updates' = @(
+            # OS
+            #'',
+            # .NET Framework
+            #''
+        )
+    }
+    'azloc24h2_2504' = @{
         'iso' = @{
             'en-us' = 'https://azurestackreleases.download.prss.microsoft.com/dbazure/AzureStackHCI/OS-Composition/12.2504.0.3142/AzureLocal24H2.26100.1742.LCM.12.2504.0.3142.x64.en-us.iso'
             #'ja-jp' = ''

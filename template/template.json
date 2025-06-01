@@ -294,15 +294,16 @@
         },
         "hciNodeOsSku": {
             "type": "string",
-            "defaultValue": "azloc24h2",
+            "defaultValue": "azloc24h2_2505",
             "allowedValues": [
-                "azloc24h2",  // Azure Local 24H2
-                "ashci23h2",  // Azure Stack HCI 23H2 / Azure Local 23H2
-                "ashci22h2",  // Azure Stack HCI 22H2
-                "ashci21h2",  // Azure Stack HCI 21H2
-                "ashci20h2",  // Azure Stack HCI 20H2
-                "ws2025",     // Windows Server 2025
-                "ws2022"      // Windows Server 2022
+                "azloc24h2_2505",  // Azure Local 24H2 2505
+                "azloc24h2_2504",  // Azure Local 24H2 2504
+                "ashci23h2",       // Azure Stack HCI 23H2 / Azure Local 23H2 2503
+                "ashci22h2",       // Azure Stack HCI 22H2
+                "ashci21h2",       // Azure Stack HCI 21H2
+                "ashci20h2",       // Azure Stack HCI 20H2
+                "ws2025",          // Windows Server 2025
+                "ws2022"           // Windows Server 2022
             ],
             "metadata": {
                 "description": "The operating system for the HCI node virtual machines."

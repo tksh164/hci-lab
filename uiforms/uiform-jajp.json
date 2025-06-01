@@ -1261,16 +1261,26 @@
                                     "placeholder": "メンバー サーバーのオペレーティング システムを選択...",
                                     "defaultDescription": "---",
                                     "filterPlaceholder": "メンバー サーバーのオペレーティング システムをフィルター...",
-                                    "defaultValue": "Azure Local 2504",
+                                    "defaultValue": "Azure Local 2505",
                                     "constraints": {
                                         "required": true,
                                         "allowedValues": [
                                             {
-                                                "label": "Azure Local 2504",
+                                                "label": "Azure Local 2505",
                                                 "description": "最新の一般提供バージョンです。",
                                                 "value": {
-                                                    "sku": "azloc24h2",
-                                                    "imageIndex": 1
+                                                    "sku": "azloc24h2_2505",
+                                                    "imageIndex": 1,
+                                                    "isAzureLocal": true
+                                                }
+                                            },
+                                            {
+                                                "label": "Azure Local 2504",
+                                                "description": "以前のバージョンです。",
+                                                "value": {
+                                                    "sku": "azloc24h2_2504",
+                                                    "imageIndex": 1,
+                                                    "isAzureLocal": true
                                                 }
                                             },
                                             {
@@ -1278,7 +1288,8 @@
                                                 "description": "以前のバージョンです。",
                                                 "value": {
                                                     "sku": "ashci23h2",
-                                                    "imageIndex": 1
+                                                    "imageIndex": 1,
+                                                    "isAzureLocal": true
                                                 }
                                             },
                                             {
@@ -1286,7 +1297,8 @@
                                                 "description": "このバージョンはサポートされています。",
                                                 "value": {
                                                     "sku": "ashci22h2",
-                                                    "imageIndex": 1
+                                                    "imageIndex": 1,
+                                                    "isAzureLocal": false
                                                 }
                                             },
                                             {
@@ -1294,7 +1306,8 @@
                                                 "description": "<strong>注意:</strong> このバージョンは 2023 年 11 月 14 日にサービス終了しました。",
                                                 "value": {
                                                     "sku": "ashci21h2",
-                                                    "imageIndex": 1
+                                                    "imageIndex": 1,
+                                                    "isAzureLocal": false
                                                 }
                                             },
                                             {
@@ -1302,7 +1315,8 @@
                                                 "description": "<strong>注意:</strong> このバージョンは 2022 年 12 月 13 日にサービス終了しました。",
                                                 "value": {
                                                     "sku": "ashci20h2",
-                                                    "imageIndex": 1
+                                                    "imageIndex": 1,
+                                                    "isAzureLocal": false
                                                 }
                                             },
                                             {
@@ -1310,7 +1324,8 @@
                                                 "description": "標準グラフィカル ユーザー インターフェイスを備えた Windows Server 2025 Datacenter です。",
                                                 "value": {
                                                     "sku": "ws2025",
-                                                    "imageIndex": 4
+                                                    "imageIndex": 4,
+                                                    "isAzureLocal": false
                                                 }
                                             },
                                             {
@@ -1318,7 +1333,8 @@
                                                 "description": "標準グラフィカル ユーザー インターフェイスを備えた Windows Server 2022 Datacenter です。",
                                                 "value": {
                                                     "sku": "ws2022",
-                                                    "imageIndex": 4
+                                                    "imageIndex": 4,
+                                                    "isAzureLocal": false
                                                 }
                                             }
                                         ]
@@ -1358,7 +1374,7 @@
                                 {
                                     "name": "addsDomainJoinInfo",
                                     "type": "Microsoft.Common.InfoBox",
-                                    "visible": "[contains('ashci23h2|azloc24h2', steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.sku)]",
+                                    "visible": "[steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.isAzureLocal]",
                                     "options": {
                                         "style": "Info",
                                         "text": "Azure Local マシンは、デプロイ前に Active Directory に参加させるべきではありません。"
@@ -1367,7 +1383,7 @@
                                 {
                                     "name": "shouldJoinToAddsDomain",
                                     "type": "Microsoft.Common.OptionsGroup",
-                                    "visible": "[not(contains('ashci23h2|azloc24h2', steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.sku))]",
+                                    "visible": "[not(steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.isAzureLocal)]",
                                     "label": "AD ドメインへの参加",
                                     "toolTip": "AD ドメインに HCI サーバーを参加させるかどうかを選択します。",
                                     "defaultValue": "参加させない",
@@ -1397,7 +1413,7 @@
                         {
                             "name": "azureLocalInfo",
                             "type": "Microsoft.Common.InfoBox",
-                            "visible": "[contains('ashci23h2|azloc24h2', steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.sku)]",
+                            "visible": "[steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.isAzureLocal]",
                             "options": {
                                 "style": "Info",
                                 "text": "Azure Local のデプロイには適用されないため、このページはスキップしてください。"
@@ -1406,7 +1422,7 @@
                         {
                             "name": "notDomainJoinInfo",
                             "type": "Microsoft.Common.InfoBox",
-                            "visible": "[and(not(contains('ashci23h2|azloc24h2', steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.sku)), not(steps('hciNodeStep').addsSection.shouldJoinToAddsDomain))]",
+                            "visible": "[and(not(steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.isAzureLocal), not(steps('hciNodeStep').addsSection.shouldJoinToAddsDomain))]",
                             "options": {
                                 "style": "Info",
                                 "text": "メンバー サーバーを Active Directory に参加させないことを選択しているため、このページはスキップしてください。HCI Lab のデプロイ中に HCI クラスターを作成したい場合は、前のページでドメイン参加オプションを選択します。"
@@ -1415,7 +1431,7 @@
                         {
                             "name": "hciClusterSection",
                             "type": "Microsoft.Common.Section",
-                            "visible": "[and(not(contains('ashci23h2|azloc24h2', steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.sku)), steps('hciNodeStep').addsSection.shouldJoinToAddsDomain)]",
+                            "visible": "[and(not(steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.isAzureLocal), steps('hciNodeStep').addsSection.shouldJoinToAddsDomain)]",
                             "label": "HCI クラスター",
                             "elements": [
                                 {
@@ -1521,7 +1537,7 @@
                         {
                             "name": "azureLocalPrepSection",
                             "type": "Microsoft.Common.Section",
-                            "visible": "[contains('ashci23h2|azloc24h2', steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.sku)]",
+                            "visible": "[steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.isAzureLocal]",
                             "label": "Azure Local をデプロイするための準備",
                             "elements": [
                                 {
@@ -1618,7 +1634,7 @@
                         {
                             "name": "azureLocalSection",
                             "type": "Microsoft.Common.Section",
-                            "visible": "[contains('ashci23h2|azloc24h2', steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.sku)]",
+                            "visible": "[steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.isAzureLocal]",
                             "label": "Configurator App for Azure Local",
                             "elements": [
                                 {
@@ -2381,7 +2397,7 @@
                 "hciNodeOsImageIndex": "[steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.imageIndex]",
                 "hciNodeCount": "[steps('hciNodeStep').hciClusterNodesSection.hciNodeCount]",
                 "shouldHciNodeJoinToAddsDomain": "[steps('hciNodeStep').addsSection.shouldJoinToAddsDomain]",
-                "isAzureLocalDeployment": "[contains('ashci23h2|azloc24h2', steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.sku)]",
+                "isAzureLocalDeployment": "[steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.isAzureLocal]",
 
                 "shouldCreateHciCluster": "[steps('hciClusterStep').hciClusterSection.shouldCreateHciCluster]",
                 "hciClusterName": "[steps('hciClusterStep').hciClusterSection.hciClusterName]",

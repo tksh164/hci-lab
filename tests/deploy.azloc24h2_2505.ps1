@@ -1,9 +1,9 @@
 [CmdletBinding()]
 param (
-    [string] $ResourceGroupName = 'hcilab-azloc24h2-{0}' -f [datetime]::Now.TOstring('yyMMddHHmmss'),
+    [string] $ResourceGroupName = 'hcilab-azloc24h2-2505-{0}' -f [datetime]::Now.TOstring('yyMMddHHmmss'),
     [string] $ResourceGroupLocation = 'japaneast',
     [string] $TemplateFile = '../template/template.json',
-    [string] $TemplateParametersFile = './parameters.azloc24h2.json',
+    [string] $TemplateParametersFile = './parameters.azloc24h2_2505.json',
     [HashTable] $ResourceGroupTag = @{ 'usage' = 'experimental' },
     [switch] $WhatIf,
     [switch] $ValidateOnly

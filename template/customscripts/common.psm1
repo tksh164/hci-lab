@@ -6,13 +6,14 @@ namespace HciLab
     public static class OSSku
     {
         // Operating system symbols.
-        public const string WindowsServer2022 = "ws2022";
-        public const string WindowsServer2025 = "ws2025";
-        public const string AzureStackHci20H2 = "ashci20h2";
-        public const string AzureStackHci21H2 = "ashci21h2";
-        public const string AzureStackHci22H2 = "ashci22h2";
-        public const string AzureStackHci23H2 = "ashci23h2";  // Azure Local 23H2
-        public const string AzureLocal24H2    = "azloc24h2";
+        public const string WindowsServer2022   = "ws2022";
+        public const string WindowsServer2025   = "ws2025";
+        public const string AzureStackHci20H2   = "ashci20h2";
+        public const string AzureStackHci21H2   = "ashci21h2";
+        public const string AzureStackHci22H2   = "ashci22h2";
+        public const string AzureStackHci23H2   = "ashci23h2";  // Azure Local 23H2 2503
+        public const string AzureLocal24H2_2504 = "azloc24h2_2504";
+        public const string AzureLocal24H2_2505 = "azloc24h2_2505";
 
         // Azure Stack HCI's operating system symbols.
         public static string[] AzureStackHciSkus
@@ -24,7 +25,8 @@ namespace HciLab
                     AzureStackHci21H2,
                     AzureStackHci22H2,
                     AzureStackHci23H2,
-                    AzureLocal24H2
+                    AzureLocal24H2_2504,
+                    AzureLocal24H2_2505
                 };
             }
         }
