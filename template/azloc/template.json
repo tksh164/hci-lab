@@ -176,7 +176,52 @@
 
         // Secret values for Azure Local
         "secretValueLocalAdminCredential": "[base64(concat(parameters('localAdminUserName'), ':', parameters('localAdminPassword')))]",
-        "secretValueAzureStackLCMUserCredential": "[base64(concat(parameters('lcmUserName'), ':', parameters('lcmUserPassword')))]"
+        "secretValueAzureStackLCMUserCredential": "[base64(concat(parameters('lcmUserName'), ':', parameters('lcmUserPassword')))]",
+
+        // Arc Machine extensions
+        "arcMachineExtensions": {
+            "telemetryAndDiagnostics": {
+                "version": "2.0.23.0"
+            },
+            "lcmController": {
+                "version": "30.2505.0.961",
+                "settings": {
+                    "AssemblyDeployPackage": "10.2505.0.16",
+                    "Payload": [
+                        {
+                            "identifier": "CloudDeployment_zip",
+                            "hash": "15AC356747BDAEEE56A22AB103AE2E57A0B6C700A307A0E07B0B50AF675F0F2D",
+                            "fileName": "CloudDeployment_10.2505.0.16.zip",
+                            "url": "https://azurestackreleases.download.prss.microsoft.com/dbazure/AzureStackHCI/Deployment/10.2505.0.16/CloudDeployment_10.2505.0.16.zip"
+                        },
+                        {
+                            "identifier": "VerifyCloudDeployment_ps1",
+                            "hash": "05F4251C6B630503165B2C15B3BB6A8B08C5255236AF236F67B22F9D86A9ECCE",
+                            "fileName": "Verify-CloudDeployment_10.2505.0.16.zip_Hash.ps1",
+                            "url": "https://azurestackreleases.download.prss.microsoft.com/dbazure/AzureStackHCI/Deployment/10.2505.0.16/Verify-CloudDeployment_10.2505.0.16.zip_Hash.ps1"
+                        },
+                        {
+                            "identifier": "BootstrapCloudDeploymentTool_ps1",
+                            "hash": "813042BDD4078A682F84C9C154BED708D121F96CDD52E4F4A351B7FA7A6415CF",
+                            "fileName": "BootstrapCloudDeploymentTool.ps1",
+                            "url": "https://azurestackreleases.download.prss.microsoft.com/dbazure/AzureStackHCI/Deployment/10.2505.0.16/BootstrapCloudDeploymentTool.ps1"
+                        },
+                        {
+                            "identifier": "SolutionVersion",
+                            "hash": "",
+                            "fileName": "12.2505.1001.23",
+                            "url": ""
+                        }
+                    ]
+                }
+            },
+            "deviceManagementExtension": {
+                "version": "1.2504.0.3002"
+            },
+            "edgeRemoteSupport": {
+                "version": "1.0.9.2"
+            }
+        }
     },
     "resources": {
         //
@@ -257,7 +302,7 @@
             "properties": {
                 "publisher": "Microsoft.AzureStack.Observability",
                 "type": "TelemetryAndDiagnostics",
-                "typeHandlerVersion": "2.0.21.0",
+                "typeHandlerVersion": "[Variables('arcMachineExtensions').telemetryAndDiagnostics.version]",
                 "autoUpgradeMinorVersion": false,
                 "enableAutomaticUpgrade": true,
                 "settings": {
@@ -284,38 +329,10 @@
             "properties": {
                 "publisher": "Microsoft.AzureStack.Orchestration",
                 "type": "LcmController",
-                "typeHandlerVersion": "30.2504.0.922",
+                "typeHandlerVersion": "[variables('arcMachineExtensions').lcmController.version]",
                 "autoUpgradeMinorVersion": false,
                 "enableAutomaticUpgrade": false,
-                "settings": {
-                    "AssemblyDeployPackage": "10.2504.0.21",
-                    "Payload": [
-                        {
-                            "identifier": "CloudDeployment_zip",
-                            "url": "https://azurestackreleases.download.prss.microsoft.com/dbazure/AzureStackHCI/Deployment/10.2504.0.21/CloudDeployment_10.2504.0.21.zip",
-                            "fileName": "CloudDeployment_10.2504.0.21.zip",
-                            "hash": "67162758ECFC546C16A42B3B874219CAC48CC2F8C04EA883BD61CA0EC64A55EC"
-                        },
-                        {
-                            "identifier": "VerifyCloudDeployment_ps1",
-                            "url": "https://azurestackreleases.download.prss.microsoft.com/dbazure/AzureStackHCI/Deployment/10.2504.0.21/Verify-CloudDeployment_10.2504.0.21.zip_Hash.ps1",
-                            "fileName": "Verify-CloudDeployment_10.2504.0.21.zip_Hash.ps1",
-                            "hash": "039FAB827F610ABF64F52C35E074BFADCB32B3F6221E09352950B4E50177E5B7"
-                        },
-                        {
-                            "identifier": "BootstrapCloudDeploymentTool_ps1",
-                            "url": "https://azurestackreleases.download.prss.microsoft.com/dbazure/AzureStackHCI/Deployment/10.2504.0.21/BootstrapCloudDeploymentTool.ps1",
-                            "fileName": "BootstrapCloudDeploymentTool.ps1",
-                            "hash": "A347CCDFF25E700B31E80D32CEF9E5E165433F5807D163FAD0C4C8F9CF8B21B2"
-                        },
-                        {
-                            "identifier": "SolutionVersion",
-                            "url": "",
-                            "fileName": "12.2504.1001.20",
-                            "hash": ""
-                        }
-                    ]
-                }
+                "settings": "[variables('arcMachineExtensions').lcmController.settings]"
             }
         },
 
@@ -335,7 +352,7 @@
             "properties": {
                 "publisher": "Microsoft.Edge",
                 "type": "DeviceManagementExtension",
-                "typeHandlerVersion": "1.2504.0.3002",
+                "typeHandlerVersion": "[variables('arcMachineExtensions').deviceManagementExtension.version]",
                 "autoUpgradeMinorVersion": false,
                 "enableAutomaticUpgrade": false,
                 "settings": {}
@@ -358,7 +375,7 @@
             "properties": {
                 "publisher": "Microsoft.AzureStack.Observability",
                 "type": "EdgeRemoteSupport",
-                "typeHandlerVersion": "1.0.9.2",
+                "typeHandlerVersion": "[variables('arcMachineExtensions').edgeRemoteSupport.version]",
                 "autoUpgradeMinorVersion": false,
                 "enableAutomaticUpgrade": true,
                 "settings": {}
