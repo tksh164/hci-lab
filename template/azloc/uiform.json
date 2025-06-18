@@ -322,6 +322,24 @@
             "location": "[steps('basics').resourceScope.location.name]",
             "resourceGroupId": "[steps('basics').resourceScope.resourceGroup.id]",
             "parameters": {
+                "hciResourceProviderServicePrincipalObjectId": "",
+                "hciClusterName": "",
+                "arcMachineResourceIds": "",
+                "managementAdapterNames": "",
+                "computeAdapterNames": "",
+                "storageAdapterNames": "",
+                "startingIPAddress": "",
+                "endingIPAddress": "",
+                "subnetMask": "",
+                "defaultGateway": "",
+                "dnsServers": "",
+                "customLocationName": "",
+                "addsDomainFqdn": "",
+                "addsOrgUnitPath": "",
+                "lcmUserName": "",
+                "lcmUserPassword": "",
+                "localAdminUserName": "",
+                "localAdminPassword": ""
             }
         }
     }
