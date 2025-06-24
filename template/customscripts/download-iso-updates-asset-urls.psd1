@@ -136,8 +136,8 @@
         }
         'updates' = @(
             # OS
-            'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2024/05/windows10.0-kb5037782-x64_a28aa2576fc6b120b127acfbb901d3546ba9db82.msu',  # For SSU of 2025-05
-            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/updt/2025/05/windows10.0-kb5061906-x64_324f8865f9d7314a50110255ccbe975f0eeeae6a.msu',
+            'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2024/05/windows10.0-kb5037782-x64_a28aa2576fc6b120b127acfbb901d3546ba9db82.msu',  # For SSU of 2025-06
+            'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2025/06/windows10.0-kb5060526-x64_bb347435ff5c378bf2fd1b390c412b4e73b883c4.msu',
             # .NET Framework
             'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/updt/2025/03/windows10.0-kb5055169-x64-ndp48_07015721a8fc001c5b1946fc49584bb649a4aa49.msu',
             'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/updt/2025/03/windows10.0-kb5054693-x64-ndp481_e81e514fe650aee149be6b260b44d97b134a1b2b.msu'
