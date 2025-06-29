@@ -1,0 +1,70 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "hciResourceProviderServicePrincipalObjectId": {
+            "value": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+        },
+        "hciClusterName": {
+            "value": "azloc01"
+        },
+        "arcMachineResourceIds": {
+            "value": [
+            ]
+        },
+        "managementAdapterNames": {
+            "value": [
+                "Management"
+            ]
+        },
+        "computeAdapterNames": {
+            "value": [
+                "Compute"
+            ]
+        },
+        "storageAdapterNames": {
+            "value": [
+                "Storage1",
+                "Storage2"
+            ]
+        },
+        "startingIPAddress": {
+            "value": "172.16.0.21"
+        },
+        "endingIPAddress": {
+            "value": "172.16.0.26"
+        },
+        "subnetMask": {
+            "value": "255.255.255.0"
+        },
+        "defaultGateway": {
+            "value": "172.16.0.1"
+        },
+        "dnsServers": {
+            "value": [
+                "172.16.0.2"
+            ]
+        },
+        "customLocationName": {
+            "value": "azloc01-location"
+        },
+        "addsDomainFqdn": {
+            "value": "hci.internal"
+        },
+        "addsOrgUnitPath": {
+            "value": "OU=AzureLocal,DC=hci,DC=internal"
+        },
+        "lcmUserName": {
+            "value": "lcmuser"
+        },
+        // "lcmUserPassword": {
+        //    "value": ""
+        // },
+        "localAdminUserName": {
+            "value": "Administrator"
+        }//,
+        // "localAdminPassword": {
+        //     "value": ""
+        // },
+    }
+}

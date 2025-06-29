@@ -31,9 +31,9 @@
             "apiVersion": "2022-04-01",
             "scope": "[format('Microsoft.KeyVault/vaults/{0}', parameters('keyVaultName'))]",
             "properties": {
+                "roleDefinitionId": "[parameters('roleDefinitionId')]",
                 "principalType": "ServicePrincipal",
-                "principalId": "[parameters('servicePrincipalId')]",
-                "roleDefinitionId": "[parameters('roleDefinitionId')]"
+                "principalId": "[parameters('servicePrincipalId')]"
             }
         }
     ],

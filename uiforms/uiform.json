@@ -2404,7 +2404,7 @@
 
                 "addsDomainFqdn": "[steps('addsStep').addsSection.domainName]",
                 "shouldPrepareAddsForAzureLocal": "[steps('addsStep').azureLocalPrepSection.shouldPrepareAddsForAzureLocal]",
-                "orgUnitForAzureLocal": "[steps('addsStep').azureLocalPrepSection.orgUnit]",
+                "addsOrgUnitPathForAzureLocal": "[steps('addsStep').azureLocalPrepSection.orgUnit]",
                 "lcmUserName": "[steps('addsStep').azureLocalPrepSection.lcmUserName]",
 
                 "shouldInstallConfigAppForAzureLocal": "[steps('mgmtServerStep').azureLocalSection.shouldInstallConfigAppForAzureLocal]",
