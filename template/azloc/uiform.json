@@ -27,15 +27,12 @@
                                 "validationMessage": "Only alphanumeric characters are allowed, and the value must be 1-30 characters long."
                             }
                         },
-
-
                         {
                             "name": "arcMachineSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
                             "label": "Select machines",
                             "elements": [
-
                                 {
                                     "name": "getHybridMachineArgQuery",
                                     "type": "Microsoft.Solutions.ArmApiControl",
@@ -55,39 +52,6 @@
                                         }
                                     }
                                 },
-
-                                {
-                                    "name": "hybridMachineListArg",
-                                    "type": "Microsoft.Common.DropDown",
-                                    "visible": true,
-                                    "multiselect": true,
-                                    "selectAll": false,
-                                    "filter": true,
-                                    "multiLine": true,
-                                    "label": "Azure Local machines",
-                                    "toolTip": "TODO",
-                                    "placeholder": "Select Azure Local machines...",
-                                    "defaultDescription": "---",
-                                    "filterPlaceholder": "Filter Azure Local machines...",
-                                    "constraints": {
-                                        "required": true,
-                                        "allowedValues": "[map(steps('basics').arcMachineSection.getHybridMachineArgQuery.data, (item) => parse(format('{\"label\":\"<strong>{0}</strong>\",\"value\":\"{1}\",\"description\":\"Resource group1: {2}<br>Operating system: {3} ({4})<br>Solution version: {5}<br>Model: {6}\"}', item.name, item.id, item.resourceGroup, item.osSku, item.osVersion, item.solutionVersion, item.model)))]"
-                                    }
-                                },
-
-                                {
-                                    "name": "getHybridMachineArmApi",
-                                    "type": "Microsoft.Solutions.ArmApiControl",
-                                    "condition": true,
-                                    "request": {
-                                        "method": "GET",
-                                        "path": "[format('{0}/providers/Microsoft.HybridCompute/machines?api-version=2024-11-10-preview', steps('basics').resourceScope.subscription.id)]",
-                                        "transforms": {
-                                            "list": "value[?properties.parentClusterResourceId == null && kind == null].{ name:name, id:id, osSku:properties.osSku, model:properties.detectedProperties.model }"
-                                        }
-                                    }
-                                },
-
                                 {
                                     "name": "hybridMachineList",
                                     "type": "Microsoft.Common.DropDown",
