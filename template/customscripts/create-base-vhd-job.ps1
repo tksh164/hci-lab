@@ -173,7 +173,10 @@ try {
         ScratchDirectory = $labConfig.labHost.folderPath.temp
         LogFilePath      = Resolve-LogFilePath -FolderPath $labConfig.labHost.folderPath.log -LogFileName ($LogFileName + '_test-image.log')
     }
-    if (-not (Test-WimFile @params)) {
+    if (Test-WimFile @params) {
+        'The WIM file "{0}" with the image index {1} is valid.' -f $WimFilePath, $ImageIndex | Write-ScriptLog
+    }
+    else {
         throw 'The specified Windows image "{0}" has not the image index {1}.' -f $WimFilePath, $ImageIndex
     }
     
