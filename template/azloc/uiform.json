@@ -71,7 +71,7 @@
                                     "filterPlaceholder": "Filter Azure Local machines...",
                                     "constraints": {
                                         "required": true,
-                                        "allowedValues": "[map(steps('basics').arcMachineSection.getHybridMachineArgQuery.data, (item) => parse(concat('{\"label\":\"<strong>', item.name, '</strong>\",\"value\":\"', item.id, '\",\"description\":\"Resource group: ', item.resourceGroup, '<br>Operating system: ', item.osSku, ' (', item.osVersion, ')<br>Solution version: ', item.solutionVersion, '<br>Model: ', item.model, '\"}')))]"
+                                        "allowedValues": "[map(steps('basics').arcMachineSection.getHybridMachineArgQuery.data, (item) => parse(format('{\"label\":\"<strong>{0}</strong>\",\"value\":\"{1}\",\"description\":\"Resource group1: {2}<br>Operating system: {3} ({4})<br>Solution version: {5}<br>Model: {6}\"}', item.name, item.id, item.resourceGroup, item.osSku, item.osVersion, item.solutionVersion, item.model)))]"
                                     }
                                 },
 
