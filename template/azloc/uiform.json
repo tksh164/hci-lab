@@ -27,12 +27,54 @@
                                 "validationMessage": "Only alphanumeric characters are allowed, and the value must be 1-30 characters long."
                             }
                         },
+
+
                         {
                             "name": "arcMachineSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
                             "label": "Select machines",
                             "elements": [
+
+                                {
+                                    "name": "getHybridMachineArg",
+                                    "type": "Microsoft.Solutions.ArmApiControl",
+                                    "condition": "[not(empty(steps('basics').resourceScope.resourceGroup.name))]",
+                                    "request": {
+                                        "method": "POST",
+                                        "path": "/providers/Microsoft.ResourceGraph/resources?api-version=2024-04-01",
+                                        "body": {
+                                            "subscriptions": [
+                                                "[last(split(steps('basics').resourceScope.subscription.id, '/'))]"
+                                            ],
+                                            "options": {
+                                                "enablePaging": true,
+                                                "resultFormat": "ObjectArray"
+                                            },
+                                            "query": "[format('resources | where type =~ ''Microsoft.HybridCompute/machines'' and resourceGroup =~ ''{0}'' and location =~ ''{1}'' and properties.osSku =~ 'Azure Stack HCI' and isnull(properties.parentClusterResourceId) | project id, name, resourceGroup, computerName = properties.displayName, osName = properties.osName, osSku = properties.osSku, osVersion = properties.osVersion, model = properties.detectedProperties.model, solutionVersion = properties.detectedProperties[''azurelocal.solutionversion''], steps('basics').resourceScope.resourceGroup.name, steps('basics').resourceScope.location.name)]"
+                                        }
+                                    }
+                                },
+
+                                {
+                                    "name": "hybridMachineListArg",
+                                    "type": "Microsoft.Common.DropDown",
+                                    "visible": true,
+                                    "multiselect": true,
+                                    "selectAll": false,
+                                    "filter": true,
+                                    "multiLine": true,
+                                    "label": "Azure Local machines",
+                                    "toolTip": "TODO",
+                                    "placeholder": "Select Azure Local machines...",
+                                    "defaultDescription": "---",
+                                    "filterPlaceholder": "Filter Azure Local machines...",
+                                    "constraints": {
+                                        "required": true,
+                                        "allowedValues": "[map(steps('basics').arcMachineSection.getHybridMachineArg.data, (item) => parse(concat('{\"label\":\"<strong>', item.name, '</strong>\",\"value\":\"', item.id, '\",\"description\":\"Resource group: ', item.resourceGroup, '<br>Operating system: ', item.osSku, '<br>Model: ', item.model, '\"}')))]"
+                                    }
+                                },
+
                                 {
                                     "name": "getHybridMachineArmApi",
                                     "type": "Microsoft.Solutions.ArmApiControl",
@@ -45,6 +87,7 @@
                                         }
                                     }
                                 },
+
                                 {
                                     "name": "hybridMachineList",
                                     "type": "Microsoft.Common.DropDown",
