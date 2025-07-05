@@ -38,6 +38,18 @@
 # .NET: https://support.microsoft.com/topic/56635939-4249-4eaa-ac39-394fcaec6a94
 
 @{
+    'azloc24h2_2506' = @{
+        'iso' = @{
+            'en-us' = 'https://azurestackreleases.download.prss.microsoft.com/dbazure/AzureLocal/WindowsPlatform/12.2506.0.3136/AzureLocal24H2.26100.1742.LCM.12.2506.0.3136.x64.en-us.iso'
+            #'ja-jp' = ''
+        }
+        'updates' = @(
+            # OS
+            #'',
+            # .NET Framework
+            #''
+        )
+    }
     'azloc24h2_2505' = @{
         'iso' = @{
             'en-us' = 'https://azurestackreleases.download.prss.microsoft.com/dbazure/AzureLocal/WindowsPlatform/12.2505.0.3139/AzureLocal24H2.26100.1742.LCM.12.2505.0.3139.x64.en-us.iso'

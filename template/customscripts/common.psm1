@@ -14,6 +14,7 @@ namespace HciLab
         public const string AzureStackHci23H2   = "ashci23h2";  // Azure Local 23H2 2503
         public const string AzureLocal24H2_2504 = "azloc24h2_2504";
         public const string AzureLocal24H2_2505 = "azloc24h2_2505";
+        public const string AzureLocal24H2_2506 = "azloc24h2_2506";
 
         // Azure Stack HCI's operating system symbols.
         public static string[] AzureStackHciSkus
@@ -26,7 +27,8 @@ namespace HciLab
                     AzureStackHci22H2,
                     AzureStackHci23H2,
                     AzureLocal24H2_2504,
-                    AzureLocal24H2_2505
+                    AzureLocal24H2_2505,
+                    AzureLocal24H2_2506
                 };
             }
         }
