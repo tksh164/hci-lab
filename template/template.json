@@ -294,8 +294,9 @@
         },
         "hciNodeOsSku": {
             "type": "string",
-            "defaultValue": "azloc24h2_2505",
+            "defaultValue": "azloc24h2_2506",
             "allowedValues": [
+                "azloc24h2_2506",  // Azure Local 24H2 2506
                 "azloc24h2_2505",  // Azure Local 24H2 2505
                 "azloc24h2_2504",  // Azure Local 24H2 2504
                 "ashci23h2",       // Azure Stack HCI 23H2 / Azure Local 23H2 2503

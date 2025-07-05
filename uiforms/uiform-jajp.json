@@ -1261,13 +1261,22 @@
                                     "placeholder": "メンバー サーバーのオペレーティング システムを選択...",
                                     "defaultDescription": "---",
                                     "filterPlaceholder": "メンバー サーバーのオペレーティング システムをフィルター...",
-                                    "defaultValue": "Azure Local 2505",
+                                    "defaultValue": "Azure Local 2506",
                                     "constraints": {
                                         "required": true,
                                         "allowedValues": [
                                             {
-                                                "label": "Azure Local 2505",
+                                                "label": "Azure Local 2506",
                                                 "description": "最新の一般提供バージョンです。",
+                                                "value": {
+                                                    "sku": "azloc24h2_2506",
+                                                    "imageIndex": 1,
+                                                    "isAzureLocal": true
+                                                }
+                                            },
+                                            {
+                                                "label": "Azure Local 2505",
+                                                "description": "以前のバージョンです。",
                                                 "value": {
                                                     "sku": "azloc24h2_2505",
                                                     "imageIndex": 1,
