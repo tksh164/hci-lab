@@ -51,7 +51,7 @@
                                                 "enablePaging": true,
                                                 "resultFormat": "ObjectArray"
                                             },
-                                            "query": "[format('resources | where type =~ ''Microsoft.HybridCompute/machines'' and resourceGroup =~ ''{0}'' and location =~ ''{1}'' and properties.osSku =~ 'Azure Stack HCI' and isnull(properties.parentClusterResourceId) | project id, name, resourceGroup, computerName = properties.displayName, osName = properties.osName, osSku = properties.osSku, osVersion = properties.osVersion, model = properties.detectedProperties.model, solutionVersion = properties.detectedProperties[''azurelocal.solutionversion''], steps('basics').resourceScope.resourceGroup.name, steps('basics').resourceScope.location.name)]"
+                                            "query": "[format('resources | where type =~ \"Microsoft.HybridCompute/machines\" and resourceGroup =~ \"{0}\" and location =~ \"{1}\" and properties.osSku =~ \"Azure Stack HCI\" and isnull(properties.parentClusterResourceId) | project id, name, resourceGroup, computerName = properties.displayName, osName = properties.osName, osSku = properties.osSku, osVersion = properties.osVersion, model = properties.detectedProperties.model, solutionVersion = properties.detectedProperties[\"azurelocal.solutionversion\"]', steps('basics').resourceScope.resourceGroup.name, steps('basics').resourceScope.location.name)]"
                                         }
                                     }
                                 },
