@@ -37,7 +37,7 @@
                             "elements": [
 
                                 {
-                                    "name": "getHybridMachineArg",
+                                    "name": "getHybridMachineArgQuery",
                                     "type": "Microsoft.Solutions.ArmApiControl",
                                     "condition": "[not(empty(steps('basics').resourceScope.resourceGroup.name))]",
                                     "request": {
@@ -71,7 +71,7 @@
                                     "filterPlaceholder": "Filter Azure Local machines...",
                                     "constraints": {
                                         "required": true,
-                                        "allowedValues": "[map(steps('basics').arcMachineSection.getHybridMachineArg.data, (item) => parse(concat('{\"label\":\"<strong>', item.name, '</strong>\",\"value\":\"', item.id, '\",\"description\":\"Resource group: ', item.resourceGroup, '<br>Operating system: ', item.osSku, '<br>Model: ', item.model, '\"}')))]"
+                                        "allowedValues": "[map(steps('basics').arcMachineSection.getHybridMachineArgQuery.data, (item) => parse(concat('{\"label\":\"<strong>', item.name, '</strong>\",\"value\":\"', item.id, '\",\"description\":\"Resource group: ', item.resourceGroup, '<br>Operating system: ', item.osSku, ' (', item.osVersion, ')<br>Solution version: ', item.solutionVersion, '<br>Model: ', item.model, '\"}')))]"
                                     }
                                 },
 
