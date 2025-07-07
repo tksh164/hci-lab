@@ -653,14 +653,14 @@ function Install-WindowsFeatureToVhd
         [int] $RetryIntervalSeconds = 15,
 
         [Parameter(Mandatory = $false)]
-        [TimeSpan] $RetyTimeout = (New-TimeSpan -Minutes 30)
+        [TimeSpan] $RetryTimeout = (New-TimeSpan -Minutes 30)
     )
 
     $logFilePath = [IO.Path]::Combine($LogFolder, (New-LogFileName -FileName ('installwinfeature-' + [IO.Path]::GetFileNameWithoutExtension([IO.Path]::GetDirectoryName($VhdPath)))))
     'LogFilePath: "{0}"' -f $logFilePath | Write-ScriptLog -LogContext $VhdPath
 
     $startTime = Get-Date
-    while ((Get-Date) -lt ($startTime + $RetyTimeout)) {
+    while ((Get-Date) -lt ($startTime + $RetryTimeout)) {
         # NOTE: Effort to prevent collision of concurrent DISM operations.
         $waitHandle = CreateWaitHandleForSerialization -SyncEventName 'Local\hcilab-install-windows-feature-to-vhd'
         'Wait for the turn to doing the Install-WindowsFeature cmdlet''s DISM operations.' | Write-ScriptLog -LogContext $VhdPath
@@ -711,7 +711,7 @@ function Install-WindowsFeatureToVhd
         Start-Sleep -Seconds $RetryIntervalSeconds
     }
 
-    throw 'The Install-WindowsFeature cmdlet execution for "{0}" was not succeeded in the acceptable time ({1}).' -f $VhdPath, $RetyTimeout.ToString()
+    throw 'The Install-WindowsFeature cmdlet execution for "{0}" was not succeeded in the acceptable time ({1}).' -f $VhdPath, $RetryTimeout.ToString()
 }
 
 function Start-VMSurely
