@@ -872,11 +872,11 @@ function Wait-PowerShellDirectReady
         [int] $RetryIntervalSeconds = 15,
 
         [Parameter(Mandatory = $false)]
-        [TimeSpan] $RetyTimeout = (New-TimeSpan -Minutes 30)
+        [TimeSpan] $RetryTimeout = (New-TimeSpan -Minutes 30)
     )
 
     $startTime = Get-Date
-    while ((Get-Date) -lt ($startTime + $RetyTimeout)) {
+    while ((Get-Date) -lt ($startTime + $RetryTimeout)) {
         try {
             $params = @{
                 VMName      = $VMName
@@ -902,7 +902,7 @@ function Wait-PowerShellDirectReady
         Start-Sleep -Seconds $RetryIntervalSeconds
     }
 
-    throw 'The VM "{0}" was not ready in the acceptable time ({1}).' -f $VMName, $RetyTimeout.ToString()
+    throw 'The VM "{0}" was not ready in the acceptable time ({1}).' -f $VMName, $RetryTimeout.ToString()
 }
 
 # A sync event name for blocking the AD DS operations.
