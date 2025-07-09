@@ -982,11 +982,11 @@ function Wait-DomainControllerServiceReady
         [int] $RetryIntervalSeconds = 15,
 
         [Parameter(Mandatory = $false)]
-        [TimeSpan] $RetyTimeout = (New-TimeSpan -Minutes 30)
+        [TimeSpan] $RetryTimeout = (New-TimeSpan -Minutes 30)
     )
 
     $startTime = Get-Date
-    while ((Get-Date) -lt ($startTime + $RetyTimeout)) {
+    while ((Get-Date) -lt ($startTime + $RetryTimeout)) {
         try {
             $params = @{
                 VMName       = $AddsDcVMName
@@ -1058,7 +1058,7 @@ function Wait-DomainControllerServiceReady
         Start-Sleep -Seconds $RetryIntervalSeconds
     }
 
-    throw 'The AD DS domain controller "{0}" was not ready in the acceptable time ({1}).' -f $AddsDcVMName, $RetyTimeout.ToString()
+    throw 'The AD DS domain controller "{0}" was not ready in the acceptable time ({1}).' -f $AddsDcVMName, $RetryTimeout.ToString()
 }
 
 function New-LogonCredential
