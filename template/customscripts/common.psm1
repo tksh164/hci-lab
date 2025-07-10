@@ -1107,13 +1107,13 @@ function Add-VMToADDomain
         [int] $RetryIntervalSeconds = 15,
 
         [Parameter(Mandatory = $false)]
-        [TimeSpan] $RetyTimeout = (New-TimeSpan -Minutes 30)
+        [TimeSpan] $RetryTimeout = (New-TimeSpan -Minutes 30)
     )
 
     'Join the "{0}" VM to the AD domain "{1}".' -f $VMName, $DomainFqdn | Write-ScriptLog
 
     $startTime = Get-Date
-    while ((Get-Date) -lt ($startTime + $RetyTimeout)) {
+    while ((Get-Date) -lt ($startTime + $RetryTimeout)) {
         try {
             # NOTE: Domain joining will fail sometimes due to AD DS domain controller VM state.
             $params = @{
@@ -1144,7 +1144,7 @@ function Add-VMToADDomain
         Start-Sleep -Seconds $RetryIntervalSeconds
     }
 
-    throw 'Domain join the "{0}" VM to the AD domain "{1}" was not complete in the acceptable time ({2}).' -f $VMName, $DomainFqdn, $RetyTimeout.ToString()
+    throw 'Domain join the "{0}" VM to the AD domain "{1}" was not complete in the acceptable time ({2}).' -f $VMName, $DomainFqdn, $RetryTimeout.ToString()
 }
 
 function New-PSDirectSession
