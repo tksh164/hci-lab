@@ -653,14 +653,14 @@ function Install-WindowsFeatureToVhd
         [int] $RetryIntervalSeconds = 15,
 
         [Parameter(Mandatory = $false)]
-        [TimeSpan] $RetyTimeout = (New-TimeSpan -Minutes 30)
+        [TimeSpan] $RetryTimeout = (New-TimeSpan -Minutes 30)
     )
 
     $logFilePath = [IO.Path]::Combine($LogFolder, (New-LogFileName -FileName ('installwinfeature-' + [IO.Path]::GetFileNameWithoutExtension([IO.Path]::GetDirectoryName($VhdPath)))))
     'LogFilePath: "{0}"' -f $logFilePath | Write-ScriptLog -LogContext $VhdPath
 
     $startTime = Get-Date
-    while ((Get-Date) -lt ($startTime + $RetyTimeout)) {
+    while ((Get-Date) -lt ($startTime + $RetryTimeout)) {
         # NOTE: Effort to prevent collision of concurrent DISM operations.
         $waitHandle = CreateWaitHandleForSerialization -SyncEventName 'Local\hcilab-install-windows-feature-to-vhd'
         'Wait for the turn to doing the Install-WindowsFeature cmdlet''s DISM operations.' | Write-ScriptLog -LogContext $VhdPath
@@ -711,7 +711,7 @@ function Install-WindowsFeatureToVhd
         Start-Sleep -Seconds $RetryIntervalSeconds
     }
 
-    throw 'The Install-WindowsFeature cmdlet execution for "{0}" was not succeeded in the acceptable time ({1}).' -f $VhdPath, $RetyTimeout.ToString()
+    throw 'The Install-WindowsFeature cmdlet execution for "{0}" was not succeeded in the acceptable time ({1}).' -f $VhdPath, $RetryTimeout.ToString()
 }
 
 function Start-VMSurely
@@ -872,11 +872,11 @@ function Wait-PowerShellDirectReady
         [int] $RetryIntervalSeconds = 15,
 
         [Parameter(Mandatory = $false)]
-        [TimeSpan] $RetyTimeout = (New-TimeSpan -Minutes 30)
+        [TimeSpan] $RetryTimeout = (New-TimeSpan -Minutes 30)
     )
 
     $startTime = Get-Date
-    while ((Get-Date) -lt ($startTime + $RetyTimeout)) {
+    while ((Get-Date) -lt ($startTime + $RetryTimeout)) {
         try {
             $params = @{
                 VMName      = $VMName
@@ -902,7 +902,7 @@ function Wait-PowerShellDirectReady
         Start-Sleep -Seconds $RetryIntervalSeconds
     }
 
-    throw 'The VM "{0}" was not ready in the acceptable time ({1}).' -f $VMName, $RetyTimeout.ToString()
+    throw 'The VM "{0}" was not ready in the acceptable time ({1}).' -f $VMName, $RetryTimeout.ToString()
 }
 
 # A sync event name for blocking the AD DS operations.
@@ -982,11 +982,11 @@ function Wait-DomainControllerServiceReady
         [int] $RetryIntervalSeconds = 15,
 
         [Parameter(Mandatory = $false)]
-        [TimeSpan] $RetyTimeout = (New-TimeSpan -Minutes 30)
+        [TimeSpan] $RetryTimeout = (New-TimeSpan -Minutes 30)
     )
 
     $startTime = Get-Date
-    while ((Get-Date) -lt ($startTime + $RetyTimeout)) {
+    while ((Get-Date) -lt ($startTime + $RetryTimeout)) {
         try {
             $params = @{
                 VMName       = $AddsDcVMName
@@ -1058,7 +1058,7 @@ function Wait-DomainControllerServiceReady
         Start-Sleep -Seconds $RetryIntervalSeconds
     }
 
-    throw 'The AD DS domain controller "{0}" was not ready in the acceptable time ({1}).' -f $AddsDcVMName, $RetyTimeout.ToString()
+    throw 'The AD DS domain controller "{0}" was not ready in the acceptable time ({1}).' -f $AddsDcVMName, $RetryTimeout.ToString()
 }
 
 function New-LogonCredential
@@ -1107,13 +1107,13 @@ function Add-VMToADDomain
         [int] $RetryIntervalSeconds = 15,
 
         [Parameter(Mandatory = $false)]
-        [TimeSpan] $RetyTimeout = (New-TimeSpan -Minutes 30)
+        [TimeSpan] $RetryTimeout = (New-TimeSpan -Minutes 30)
     )
 
     'Join the "{0}" VM to the AD domain "{1}".' -f $VMName, $DomainFqdn | Write-ScriptLog
 
     $startTime = Get-Date
-    while ((Get-Date) -lt ($startTime + $RetyTimeout)) {
+    while ((Get-Date) -lt ($startTime + $RetryTimeout)) {
         try {
             # NOTE: Domain joining will fail sometimes due to AD DS domain controller VM state.
             $params = @{
@@ -1144,7 +1144,7 @@ function Add-VMToADDomain
         Start-Sleep -Seconds $RetryIntervalSeconds
     }
 
-    throw 'Domain join the "{0}" VM to the AD domain "{1}" was not complete in the acceptable time ({2}).' -f $VMName, $DomainFqdn, $RetyTimeout.ToString()
+    throw 'Domain join the "{0}" VM to the AD domain "{1}" was not complete in the acceptable time ({2}).' -f $VMName, $DomainFqdn, $RetryTimeout.ToString()
 }
 
 function New-PSDirectSession
