@@ -1194,6 +1194,77 @@
                     }
                 }
             }
+        },
+
+        // Create base virtual hard disks.
+        {
+            "name": "[variables('customScript').createBaseVhd.deploymentName]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[variables('customScript').createBaseVhd.apiVersion]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', variables('customScript').downloadIsoUpdates.deploymentName)]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('customScriptLinkedTemplateUri')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
+                    "parentVmResourceName": {
+                        "value": "[parameters('labHostVmName')]"
+                    },
+                    "extensionName": {
+                        "value": "[variables('customScriptExtensionName')]"
+                    },
+                    "fileUris": {
+                        "value": "[variables('customScript').createBaseVhd.fileUris]"
+                    },
+                    "commandToExecute": {
+                        "value": "[variables('customScript').createBaseVhd.commandToExecute]"
+                    }
+                }
+            }
+        },
+
+        // Reboot the lab host.
+        {
+            "name": "[variables('dsc').rebootHostVm.deploymentName]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[variables('dsc').rebootHostVm.apiVersion]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', variables('customScript').createBaseVhd.deploymentName)]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('dscLinkedTemplateUri')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
+                    "parentVmResourceName": {
+                        "value": "[parameters('labHostVmName')]"
+                    },
+                    "extensionName": {
+                        "value": "[variables('dscExtensionName')]"
+                    },
+                    "zipUri": {
+                        "value": "[variables('dsc').rebootHostVm.zipUri]"
+                    },
+                    "scriptName": {
+                        "value": "[variables('dsc').rebootHostVm.scriptName]"
+                    },
+                    "functionName": {
+                        "value": "[variables('dsc').rebootHostVm.functionName]"
+                    }
+                }
+            }
         }//,
     ],
     "outputs": {
