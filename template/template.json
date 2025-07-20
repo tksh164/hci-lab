@@ -433,6 +433,19 @@
         "storageAccountPrivateDnsZoneDeploymentName": "deploy-private-dns-zone-storage-account",
         "storageAccountPrivateDnsZoneName": "privatelink.blob.core.windows.net",
 
+        // Private DNS zone virtual network link
+        "privateDnsZoneVNetLinkLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/private-dns-zone-vnet-link.json')]",
+        "privateDnsZoneVNetLinkKeyVault": {
+            "deploymentName": "deploy-private-dns-zone-vnet-link-key-vault",
+            "apiVersion": "[variables('deploymentApiVersion')]",
+            "linkedTemplateUri": "[variables('privateDnsZoneVNetLinkLinkedTemplateUri')]"
+        },
+        "privateDnsZoneVNetLinkStorageAccount": {
+            "deploymentName": "deploy-private-dns-zone-vnet-link-storage-account",
+            "apiVersion": "[variables('deploymentApiVersion')]",
+            "linkedTemplateUri": "[variables('privateDnsZoneVNetLinkLinkedTemplateUri')]"
+        },
+
         // Key Vault
         "keyVaultDeploymentName": "deploy-key-vault",
         "keyVaultLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/keyvault.json')]",
@@ -721,6 +734,32 @@
             }
         },
 
+        // Private DNS zone virtual network link for Key Vault
+        {
+            "name": "[variables('privateDnsZoneVNetLinkKeyVault').deploymentName]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[variables('privateDnsZoneVNetLinkKeyVault').apiVersion]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', variables('virtualNetworkDeploymentName'))]",
+                "[resourceId('Microsoft.Resources/deployments', variables('keyVaultPrivateDnsZoneDeploymentName'))]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('privateDnsZoneVNetLinkKeyVault').linkedTemplateUri]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "privateDnsZoneName": {
+                        "value": "[variables('keyVaultPrivateDnsZoneName')]"
+                    },
+                    "virtualNetworkId": {
+                        "value": "[reference(variables('virtualNetworkDeploymentName'), variables('deploymentApiVersion')).outputs.virtualNetworkId.value]"
+                    }
+                }
+            }
+        },
+
         // Private DNS zone for Storage account
         {
             "name": "[variables('storageAccountPrivateDnsZoneDeploymentName')]",
@@ -735,6 +774,32 @@
                 "parameters": {
                     "privateDnsZoneName": {
                         "value": "[variables('storageAccountPrivateDnsZoneName')]"
+                    }
+                }
+            }
+        },
+
+        // Private DNS zone virtual network link for Storage account
+        {
+            "name": "[variables('privateDnsZoneVNetLinkStorageAccount').deploymentName]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[variables('privateDnsZoneVNetLinkStorageAccount').apiVersion]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', variables('virtualNetworkDeploymentName'))]",
+                "[resourceId('Microsoft.Resources/deployments', variables('storageAccountPrivateDnsZoneDeploymentName'))]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('privateDnsZoneVNetLinkStorageAccount').linkedTemplateUri]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "privateDnsZoneName": {
+                        "value": "[variables('storageAccountPrivateDnsZoneName')]"
+                    },
+                    "virtualNetworkId": {
+                        "value": "[reference(variables('virtualNetworkDeploymentName'), variables('deploymentApiVersion')).outputs.virtualNetworkId.value]"
                     }
                 }
             }
