@@ -484,8 +484,11 @@
         },
 
         // Key Vault RBAC
-        "keyVaultRbacDeploymentName": "assign-key-vault-rbac-with-lab-host-managed-id",
-        "keyVaultRbacLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/keyvault-rbac.json')]",
+        "keyVaultRbac": {
+            "deploymentName": "assign-key-vault-rbac-with-host-vm-managed-id",
+            "apiVersion": "[variables('deploymentApiVersion')]",
+            "linkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/keyvault-rbac.json')]",
+        },
 
         // DSC extension
         "dscLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/dsc.json')]",
@@ -948,34 +951,12 @@
                     "uniqueString": {
                         "value": "[variables('uniqueString')]"
                     },
-
-        // Key Vault RBAC
-        {
-            "name": "[variables('keyVaultRbacDeploymentName')]",
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2022-09-01",
-            "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', variables('keyVaultDeploymentName'))]",
-                "[resourceId('Microsoft.Resources/deployments', variables('labHostVmDeploymentName'))]"
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('keyVaultRbacLinkedTemplateUri')]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
                     "keyVaultName": {
-                        "value": "[variables('keyVaultName')]"
                         "value": "[variables('keyVault').name]"
                     },
-                    "servicePrincipalId": {
-                        "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('labHostVmDeploymentName'))).outputs.principalId.value]"
                     "secretNameForStorageAccountName": {
                         "value": "[variables('labConfig').keyVault.secretName.cloudWitnessStorageAccountName]"
                     },
-                    "roleDefinitionId": {
-                        "value": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')]"  // Key Vault Secrets User
                     "secretNameForStorageAccountKey": {
                         "value": "[variables('labConfig').keyVault.secretName.cloudWitnessStorageAccountKey]"
                     }
@@ -983,42 +964,33 @@
             }
         },
 
-        // Install roles and features.
+        // Key Vault RBAC
         {
-            "name": "[variables('dscParams').installRolesFeatures.deploymentName]",
+            "name": "[variables('keyVaultRbac').deploymentName]",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2022-09-01",
+            "apiVersion": "[variables('keyVaultRbac').apiVersion]",
             "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', variables('labHostVmDeploymentName'))]"
+                "[resourceId('Microsoft.Resources/deployments', variables('keyVault').deploymentName)]",
+                "[resourceId('Microsoft.Resources/deployments', variables('hostVm').deploymentName)]"
             ],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[variables('dscLinkedTemplateUri')]",
+                    "uri": "[variables('keyVaultRbac').linkedTemplateUri]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
-                    "location": {
-                        "value": "[variables('location')]"
+                    "keyVaultName": {
+                        "value": "[variables('keyVault').name]"
                     },
-                    "parentVmResourceName": {
-                        "value": "[parameters('labHostVmName')]"
+                    "servicePrincipalId": {
+                        "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('hostVm').deploymentName)).outputs.principalId.value]"
                     },
-                    "extensionName": {
-                        "value": "[variables('dscExtensionName')]"
-                    },
-                    "zipUri": {
-                        "value": "[variables('dscParams').installRolesFeatures.zipUri]"
-                    },
-                    "scriptName": {
-                        "value": "[variables('dscParams').installRolesFeatures.scriptName]"
-                    },
-                    "functionName": {
-                        "value": "[variables('dscParams').installRolesFeatures.functionName]"
+                    "roleDefinitionId": {
+                        "value": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')]"  // Key Vault Secrets User
                     }
                 }
             }
-        },
 
         // Configure the lab host.
         {
