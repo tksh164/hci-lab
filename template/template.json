@@ -520,11 +520,12 @@
 
         // Custom script extension
         "customScriptLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/customscript.json')]",
-        "customScriptBaseUri": "[uri(variables('repoBaseUri'), 'customscripts/')]",  // Must end with "/".
         "customScriptExtensionName": "hci-lab-customscript-extension",
-        "customScriptParams": {
-            "configureLabHost": {
-                "deploymentName": "configure-lab-host",
+        "customScriptBaseUri": "[uri(variables('repoBaseUri'), 'customscripts/')]",  // Must end with "/".
+        "customScript": {
+            "configureHostVm": {
+                "deploymentName": "configure-host-vm",
+                "apiVersion": "[variables('deploymentApiVersion')]",
                 "fileUris": [
                     "[uri(variables('customScriptBaseUri'), 'configure-lab-host.ps1')]",
                     "[uri(variables('customScriptBaseUri'), 'common.psm1')]"
@@ -533,6 +534,7 @@
             },
             "downloadIsoUpdates": {
                 "deploymentName": "download-materials",
+                "apiVersion": "[variables('deploymentApiVersion')]",
                 "fileUris": [
                     "[uri(variables('customScriptBaseUri'), 'download-iso-updates.ps1')]",
                     "[uri(variables('customScriptBaseUri'), 'download-iso-updates-asset-urls.psd1')]",
@@ -542,6 +544,7 @@
             },
             "createBaseVhd": {
                 "deploymentName": "create-base-vhd",
+                "apiVersion": "[variables('deploymentApiVersion')]",
                 "fileUris": [
                     "[uri(variables('customScriptBaseUri'), 'create-base-vhd.ps1')]",
                     "[uri(variables('customScriptBaseUri'), 'create-base-vhd-job.ps1')]",
@@ -551,6 +554,7 @@
             },
             "createVm": {
                 "deploymentName": "create-lab-vms",
+                "apiVersion": "[variables('deploymentApiVersion')]",
                 "fileUris": [
                     "[uri(variables('customScriptBaseUri'), 'create-vm.ps1')]",
                     "[uri(variables('customScriptBaseUri'), 'create-vm-job-addsdc.ps1')]",
@@ -562,6 +566,7 @@
             },
             "createHciCluster": {
                 "deploymentName": "create-hci-cluster",
+                "apiVersion": "[variables('deploymentApiVersion')]",
                 "fileUris": [
                     "[uri(variables('customScriptBaseUri'), 'create-hci-cluster.ps1')]",
                     "[uri(variables('customScriptBaseUri'), 'create-hci-cluster-test-cat-en-us.psd1')]",
@@ -1121,15 +1126,15 @@
             }
         },
 
-        // Create an HCI cluster.
+        // Configure the lab host.
         {
-            "condition": "[variables('labConfig').hciCluster.shouldCreateCluster]",
-            "name": "[variables('customScriptParams').createHciCluster.deploymentName]",
+            "name": "[variables('customScript').configureHostVm.deploymentName]",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2022-09-01",
+            "apiVersion": "[variables('customScript').configureHostVm.apiVersion]",
             "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', variables('cloudWitnessStorageAccountDeploymentName'))]",
-                "[resourceId('Microsoft.Resources/deployments', variables('customScriptParams').createVm.deploymentName)]"
+                "[resourceId('Microsoft.Resources/deployments', variables('privateEndpointKeyVault').deploymentName)]",
+                "[resourceId('Microsoft.Resources/deployments', variables('keyVaultRbac').deploymentName)]",
+                "[resourceId('Microsoft.Resources/deployments', variables('dsc').installRolesFeatures.deploymentName)]"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -1148,14 +1153,48 @@
                         "value": "[variables('customScriptExtensionName')]"
                     },
                     "fileUris": {
-                        "value": "[variables('customScriptParams').createHciCluster.fileUris]"
+                        "value": "[variables('customScript').configureHostVm.fileUris]"
                     },
                     "commandToExecute": {
-                        "value": "[variables('customScriptParams').createHciCluster.commandToExecute]"
+                        "value": "[variables('customScript').configureHostVm.commandToExecute]"
                     }
                 }
             }
-        }
+        },
+
+        // Download ISO files and updates.
+        {
+            "name": "[variables('customScript').downloadIsoUpdates.deploymentName]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[variables('customScript').downloadIsoUpdates.apiVersion]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', variables('customScript').configureHostVm.deploymentName)]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('customScriptLinkedTemplateUri')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
+                    "parentVmResourceName": {
+                        "value": "[parameters('labHostVmName')]"
+                    },
+                    "extensionName": {
+                        "value": "[variables('customScriptExtensionName')]"
+                    },
+                    "fileUris": {
+                        "value": "[variables('customScript').downloadIsoUpdates.fileUris]"
+                    },
+                    "commandToExecute": {
+                        "value": "[variables('customScript').downloadIsoUpdates.commandToExecute]"
+                    }
+                }
+            }
+        }//,
     ],
     "outputs": {
         "adminUserName": {
