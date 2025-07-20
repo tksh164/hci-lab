@@ -437,13 +437,11 @@
         "privateDnsZoneKeyVault": {
             "deploymentName": "deploy-private-dns-zone-key-vault",
             "apiVersion": "[variables('deploymentApiVersion')]",
-            "linkedTemplateUri": "[variables('privateDnsZoneLinkedTemplateUri')]",
             "zoneName": "privatelink.vaultcore.azure.net",
         },
         "privateDnsZoneStorageAccount": {
             "deploymentName": "deploy-private-dns-zone-storage-account",
             "apiVersion": "[variables('deploymentApiVersion')]",
-            "linkedTemplateUri": "[variables('privateDnsZoneLinkedTemplateUri')]",
             "zoneName": "privatelink.blob.core.windows.net",
         },
 
@@ -451,13 +449,11 @@
         "privateDnsZoneVNetLinkLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/private-dns-zone-vnet-link.json')]",
         "privateDnsZoneVNetLinkKeyVault": {
             "deploymentName": "deploy-private-dns-zone-vnet-link-key-vault",
-            "apiVersion": "[variables('deploymentApiVersion')]",
-            "linkedTemplateUri": "[variables('privateDnsZoneVNetLinkLinkedTemplateUri')]"
+            "apiVersion": "[variables('deploymentApiVersion')]"
         },
         "privateDnsZoneVNetLinkStorageAccount": {
             "deploymentName": "deploy-private-dns-zone-vnet-link-storage-account",
-            "apiVersion": "[variables('deploymentApiVersion')]",
-            "linkedTemplateUri": "[variables('privateDnsZoneVNetLinkLinkedTemplateUri')]"
+            "apiVersion": "[variables('deploymentApiVersion')]"
         },
 
         // Key Vault
@@ -494,19 +490,17 @@
         "privateEndpointLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/private-endpoint.json')]",
         "privateEndpointKeyVault": {
             "deploymentName": "deploy-private-endpoint-key-vault",
-            "apiVersion": "[variables('deploymentApiVersion')]",
-            "linkedTemplateUri": "[variables('privateEndpointLinkedTemplateUri')]"
+            "apiVersion": "[variables('deploymentApiVersion')]"
         },
         "privateEndpointStorageAccount": {
             "deploymentName": "deploy-private-endpoint-storage-account",
-            "apiVersion": "[variables('deploymentApiVersion')]",
-            "linkedTemplateUri": "[variables('privateEndpointLinkedTemplateUri')]"
+            "apiVersion": "[variables('deploymentApiVersion')]"
         },
 
         // DSC extension
         "dscLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/dsc.json')]",
-        "dscBaseUri": "[uri(variables('repoBaseUri'), 'dsc/')]",  // Must end with "/".
         "dscExtensionName": "hci-lab-dsc-extension",
+        "dscBaseUri": "[uri(variables('repoBaseUri'), 'dsc/')]",  // Must end with "/".
         "dsc": {
             "installRolesFeatures": {
                 "deploymentName": "install-roles-and-features-on-host-vm",
@@ -765,7 +759,7 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[variables('privateDnsZoneKeyVault').linkedTemplateUri]",
+                    "uri": "[variables('privateDnsZoneLinkedTemplateUri')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
@@ -788,7 +782,7 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[variables('privateDnsZoneVNetLinkKeyVault').linkedTemplateUri]",
+                    "uri": "[variables('privateDnsZoneVNetLinkLinkedTemplateUri')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
@@ -810,7 +804,7 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[variables('privateDnsZoneStorageAccount').linkedTemplateUri]",
+                    "uri": "[variables('privateDnsZoneLinkedTemplateUri')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
@@ -833,7 +827,7 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[variables('privateDnsZoneVNetLinkStorageAccount').linkedTemplateUri]",
+                    "uri": "[variables('privateDnsZoneVNetLinkLinkedTemplateUri')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
@@ -1020,7 +1014,7 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[variables('privateEndpointKeyVault').linkedTemplateUri]",
+                    "uri": "[variables('privateEndpointLinkedTemplateUri')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
@@ -1061,7 +1055,7 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[variables('privateEndpointStorageAccount').linkedTemplateUri]",
+                    "uri": "[variables('privateEndpointLinkedTemplateUri')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
