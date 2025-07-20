@@ -475,9 +475,13 @@
             "linkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/hostvm.json')]",
         },
 
-        // Storage account for Cloud Witness
-        "cloudWitnessStorageAccountDeploymentName": "deploy-storage-account-for-cloud-witness",
-        "cloudWitnessStorageAccountLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/cloudwitness.json')]",
+        // Storage account for witness
+        "witnessStorageAccount": {
+            "deploymentName": "deploy-storage-account-cloud-witness",
+            "apiVersion": "[variables('deploymentApiVersion')]",
+            "linkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/cloudwitness.json')]",
+            "namePrefix": "witness"
+        },
 
         // Key Vault RBAC
         "keyVaultRbacDeploymentName": "assign-key-vault-rbac-with-lab-host-managed-id",
@@ -920,33 +924,30 @@
             }
         },
 
-        // Bastion
+        // Storage account for the witness.
         {
-            "name": "[variables('bastionDeploymentName')]",
+            "name": "[variables('witnessStorageAccount').deploymentName]",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('deploymentApiVersion')]",
+            "apiVersion": "[variables('witnessStorageAccount').apiVersion]",
             "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', variables('virtualNetworkDeploymentName'))]"
+                "[resourceId('Microsoft.Resources/deployments', variables('keyVault').deploymentName)]"
             ],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[variables('bastionLinkedTemplateUri')]",
+                    "uri": "[variables('witnessStorageAccount').linkedTemplateUri]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
                     "location": {
                         "value": "[variables('location')]"
                     },
-                    "bastionName": {
-                        "value": "[variables('bastionName')]"
+                    "storageAccountNamePrefix": {
+                        "value": "[variables('witnessStorageAccount').namePrefix]"
                     },
-                    "virtualNetworkId": {
-                        "value": "[reference(variables('virtualNetworkDeploymentName'), variables('deploymentApiVersion')).outputs.virtualNetworkId.value]"
-                    }
-                }
-            }
-        },
+                    "uniqueString": {
+                        "value": "[variables('uniqueString')]"
+                    },
 
         // Key Vault RBAC
         {
@@ -966,12 +967,17 @@
                 "parameters": {
                     "keyVaultName": {
                         "value": "[variables('keyVaultName')]"
+                        "value": "[variables('keyVault').name]"
                     },
                     "servicePrincipalId": {
                         "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('labHostVmDeploymentName'))).outputs.principalId.value]"
+                    "secretNameForStorageAccountName": {
+                        "value": "[variables('labConfig').keyVault.secretName.cloudWitnessStorageAccountName]"
                     },
                     "roleDefinitionId": {
                         "value": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')]"  // Key Vault Secrets User
+                    "secretNameForStorageAccountKey": {
+                        "value": "[variables('labConfig').keyVault.secretName.cloudWitnessStorageAccountKey]"
                     }
                 }
             }
