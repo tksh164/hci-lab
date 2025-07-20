@@ -1265,6 +1265,40 @@
                     }
                 }
             }
+        },
+
+        // Create VMs.
+        {
+            "name": "[variables('customScript').createVm.deploymentName]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[variables('customScript').createVm.apiVersion]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', variables('dsc').rebootHostVm.deploymentName)]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('customScriptLinkedTemplateUri')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
+                    "parentVmResourceName": {
+                        "value": "[parameters('labHostVmName')]"
+                    },
+                    "extensionName": {
+                        "value": "[variables('customScriptExtensionName')]"
+                    },
+                    "fileUris": {
+                        "value": "[variables('customScript').createVm.fileUris]"
+                    },
+                    "commandToExecute": {
+                        "value": "[variables('customScript').createVm.commandToExecute]"
+                    }
+                }
+            }
         }//,
     ],
     "outputs": {
