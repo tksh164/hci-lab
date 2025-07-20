@@ -507,15 +507,17 @@
         "dscLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/dsc.json')]",
         "dscBaseUri": "[uri(variables('repoBaseUri'), 'dsc/')]",  // Must end with "/".
         "dscExtensionName": "hci-lab-dsc-extension",
-        "dscParams": {
+        "dsc": {
             "installRolesFeatures": {
-                "deploymentName": "install-roles-and-features-on-lab-host",
+                "deploymentName": "install-roles-and-features-on-host-vm",
+                "apiVersion": "[variables('deploymentApiVersion')]",
                 "zipUri": "[uri(variables('dscBaseUri'), 'install-roles-and-features.zip')]",
                 "scriptName": "install-roles-and-features.ps1",
                 "functionName": "install-roles-and-features"
             },
-            "rebootLabHost": {
-                "deploymentName": "reboot-lab-host",
+            "rebootHostVm": {
+                "deploymentName": "reboot-host-vm",
+                "apiVersion": "[variables('deploymentApiVersion')]",
                 "zipUri": "[uri(variables('dscBaseUri'), 'reboot.zip')]",
                 "scriptName": "reboot.ps1",
                 "functionName": "reboot"
@@ -1088,18 +1090,18 @@
             }
         },
 
-        // Create VMs.
+        // Install roles and features.
         {
-            "name": "[variables('customScriptParams').createVm.deploymentName]",
+            "name": "[variables('dsc').installRolesFeatures.deploymentName]",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2022-09-01",
+            "apiVersion": "[variables('dsc').installRolesFeatures.apiVersion]",
             "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', variables('dscParams').rebootLabHost.deploymentName)]"
+                "[resourceId('Microsoft.Resources/deployments', variables('hostVm').deploymentName)]"
             ],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[variables('customScriptLinkedTemplateUri')]",
+                    "uri": "[variables('dscLinkedTemplateUri')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
@@ -1110,13 +1112,16 @@
                         "value": "[parameters('labHostVmName')]"
                     },
                     "extensionName": {
-                        "value": "[variables('customScriptExtensionName')]"
+                        "value": "[variables('dscExtensionName')]"
                     },
-                    "fileUris": {
-                        "value": "[variables('customScriptParams').createVm.fileUris]"
+                    "zipUri": {
+                        "value": "[variables('dsc').installRolesFeatures.zipUri]"
                     },
-                    "commandToExecute": {
-                        "value": "[variables('customScriptParams').createVm.commandToExecute]"
+                    "scriptName": {
+                        "value": "[variables('dsc').installRolesFeatures.scriptName]"
+                    },
+                    "functionName": {
+                        "value": "[variables('dsc').installRolesFeatures.functionName]"
                     }
                 }
             }
