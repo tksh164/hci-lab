@@ -423,9 +423,9 @@
 
         // Private DNS zones
         "privateDnsZoneLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/private-dns-zone.json')]",
-        "keyVaultPrivateDnsZoneDeploymentName": "deploy-key-vault-private-dns-zone",
+        "keyVaultPrivateDnsZoneDeploymentName": "deploy-private-dns-zone-key-vault",
         "keyVaultPrivateDnsZoneName": "privatelink.vaultcore.azure.net",
-        "storageAccountPrivateDnsZoneDeploymentName": "deploy-storage-account-private-dns-zone",
+        "storageAccountPrivateDnsZoneDeploymentName": "deploy-private-dns-zone-storage-account",
         "storageAccountPrivateDnsZoneName": "privatelink.blob.core.windows.net",
 
         // Lab host virtual machine
