@@ -411,13 +411,17 @@
     },
     "variables": {
         // General
-
         "location": "[resourceGroup().location]",
         "uniqueString": "[substring(uniqueString(resourceGroup().id, parameters('salt')), 0, 5)]",
         "repoBaseUri": "[if(endsWith(parameters('repoBaseUri'), '/'), parameters('repoBaseUri'), concat(parameters('repoBaseUri'), '/'))]",
+        "deploymentApiVersion": "2025-04-01",
+
+        // Virtual network
+        "virtualNetworkDeploymentName": "deploy-vnet",
+        "virtualNetworkLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/vnet.json')]",
+        "virtualNetworkName": "hcilab-vnet",
 
         // Private DNS zones
-
         "privateDnsZoneLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/private-dns-zone.json')]",
         "keyVaultPrivateDnsZoneDeploymentName": "deploy-key-vault-private-dns-zone",
         "keyVaultPrivateDnsZoneName": "privatelink.vaultcore.azure.net",
@@ -425,28 +429,23 @@
         "storageAccountPrivateDnsZoneName": "privatelink.blob.core.windows.net",
 
         // Lab host virtual machine
-
-        "labHostVmDeploymentName": "deploy-lab-host",
-        "labHostVmLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/labhostvm.json')]",
+        "hostVmDeploymentName": "deploy-host-vm",
+        "hostVmLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/hostvm.json')]",
 
         // Key Vault
-
         "keyVaultDeploymentName": "deploy-key-vault",
         "keyVaultLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/keyvault.json')]",
         "keyVaultName": "[format('hcilab{0}-kv', toLower(variables('uniqueString')))]",
 
         // Storage account for Cloud Witness
-
         "cloudWitnessStorageAccountDeploymentName": "deploy-storage-account-for-cloud-witness",
         "cloudWitnessStorageAccountLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/cloudwitness.json')]",
 
         // Key Vault RBAC
-
         "keyVaultRbacDeploymentName": "assign-key-vault-rbac-with-lab-host-managed-id",
         "keyVaultRbacLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/keyvault-rbac.json')]",
 
         // DSC extension
-
         "dscLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/dsc.json')]",
         "dscBaseUri": "[uri(variables('repoBaseUri'), 'dsc/')]",  // Must end with "/".
         "dscExtensionName": "hci-lab-dsc-extension",
@@ -466,7 +465,6 @@
         },
 
         // Custom script extension
-
         "customScriptLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/customscript.json')]",
         "customScriptBaseUri": "[uri(variables('repoBaseUri'), 'customscripts/')]",  // Must end with "/".
         "customScriptExtensionName": "hci-lab-customscript-extension",
@@ -521,7 +519,6 @@
         },
 
         // Configuration parameters
-
         "labConfig": {
             "labHost": {
                 "storage": {
@@ -651,6 +648,28 @@
     },
     "resources": [
 
+        // Virtual network
+        {
+            "name": "[variables('virtualNetworkDeploymentName')]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[variables('deploymentApiVersion')]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('virtualNetworkLinkedTemplateUri')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
+                    "virtualNetworkName": {
+                        "value": "[variables('virtualNetworkName')]"
+                    }
+                }
+            }
+        },
+
         // Private DNS zone for Key Vault
         {
             "name": "[variables('keyVaultPrivateDnsZoneDeploymentName')]",
@@ -717,20 +736,26 @@
             }
         },
 
-        // Lab host virtual machine and virtual network.
+        // Lab host virtual machine.
         {
-            "name": "[variables('labHostVmDeploymentName')]",
+            "name": "[variables('hostVmDeploymentName')]",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2022-09-01",
+            "apiVersion": "[variables('deploymentApiVersion')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', variables('virtualNetworkDeploymentName'))]"
+            ],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[variables('labHostVmLinkedTemplateUri')]",
+                    "uri": "[variables('hostVmLinkedTemplateUri')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
                     "location": {
                         "value": "[variables('location')]"
+                    },
+                    "subnetId": {
+                        "value": "[reference(variables('virtualNetworkDeploymentName'), variables('deploymentApiVersion')).outputs.subnetId.value.default]"
                     },
                     "vmName": {
                         "value": "[parameters('labHostVmName')]"
@@ -761,9 +786,6 @@
                     },
                     "base64EncodedLabConfig": {
                         "value": "[base64(string(variables('labConfig')))]"
-                    },
-                    "shouldDeployBastionDeveloper": {
-                        "value": "[parameters('shouldDeployBastionDeveloper')]"
                     },
                     "shouldEnabledAutoshutdown": {
                         "value": "[parameters('shouldEnabledAutoshutdown')]"
@@ -1101,7 +1123,7 @@
         },
         "vmPublicIpFqdn": {
             "type": "string",
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('labHostVmDeploymentName'))).outputs.fqdn.value]"
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('hostVmDeploymentName'))).outputs.fqdn.value]"
         }
     }
 }
