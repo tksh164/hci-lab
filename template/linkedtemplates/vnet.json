@@ -100,10 +100,10 @@
         }
     ],
     "outputs": {
-        // "virtualNetworkId": {
-        //     "type": "string",
-        //     "value": "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]"
-        // },
+        "virtualNetworkId": {
+            "type": "string",
+            "value": "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]"
+        },
         "subnetId": {
             "type": "object",
             "value": {

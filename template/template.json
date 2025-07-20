@@ -803,38 +803,29 @@
             }
         },
 
-        // Storage account for the HCI cluster witness.
+        // Bastion
         {
-            "name": "[variables('cloudWitnessStorageAccountDeploymentName')]",
+            "name": "[variables('bastionDeploymentName')]",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2022-09-01",
+            "apiVersion": "[variables('deploymentApiVersion')]",
             "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', variables('keyVaultDeploymentName'))]"
+                "[resourceId('Microsoft.Resources/deployments', variables('virtualNetworkDeploymentName'))]"
             ],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[variables('cloudWitnessStorageAccountLinkedTemplateUri')]",
+                    "uri": "[variables('bastionLinkedTemplateUri')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
                     "location": {
                         "value": "[variables('location')]"
                     },
-                    "storageAccountNamePrefix": {
-                        "value": "hciclusterwitness"
+                    "bastionName": {
+                        "value": "[variables('bastionName')]"
                     },
-                    "uniqueString": {
-                        "value": "[variables('uniqueString')]"
-                    },
-                    "keyVaultName": {
-                        "value": "[variables('keyVaultName')]"
-                    },
-                    "secretNameForStorageAccountName": {
-                        "value": "[variables('labConfig').keyVault.secretName.cloudWitnessStorageAccountName]"
-                    },
-                    "secretNameForStorageAccountKey": {
-                        "value": "[variables('labConfig').keyVault.secretName.cloudWitnessStorageAccountKey]"
+                    "virtualNetworkId": {
+                        "value": "[reference(variables('virtualNetworkDeploymentName'), variables('deploymentApiVersion')).outputs.virtualNetworkId.value]"
                     }
                 }
             }

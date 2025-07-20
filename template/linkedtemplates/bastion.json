@@ -1,0 +1,42 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string",
+            "metadata": {
+                "description": "The location for the custom script extension resource."
+            }
+        },
+        "bastionName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the Bastion."
+            }
+        },
+        "virtualNetworkId": {
+            "type": "string",
+            "metadata": {
+                "description": "The resource ID of the virtual network."
+            }
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "name": "[parameters('bastionName')]",
+            "type": "Microsoft.Network/bastionHosts",
+            "apiVersion": "2024-07-01",
+            "location": "[parameters('location')]",
+            "sku": {
+                "name": "Developer"
+            },
+            "properties": {
+                "virtualNetwork": {
+                    "id": "[parameters('virtualNetworkId')]"
+                }
+            }
+        }
+    ],
+    "outputs": {}
+}
