@@ -417,21 +417,35 @@
         "deploymentApiVersion": "2025-04-01",
 
         // Virtual network
-        "virtualNetworkDeploymentName": "deploy-vnet",
-        "virtualNetworkLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/vnet.json')]",
-        "virtualNetworkName": "hcilab-vnet",
+        "virtualNetwork": {
+            "deploymentName": "deploy-vnet",
+            "apiVersion": "[variables('deploymentApiVersion')]",
+            "linkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/vnet.json')]",
+            "name": "hcilab-vnet",
+        },
 
         // Bastion
-        "bastionDeploymentName": "deploy-bastion",
-        "bastionLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/bastion.json')]",
-        "bastionName": "hcilab-bastion",
+        "bastion": {
+            "deploymentName": "deploy-bastion",
+            "apiVersion": "[variables('deploymentApiVersion')]",
+            "linkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/bastion.json')]",
+            "name": "hcilab-bastion",
+        },
 
         // Private DNS zones
         "privateDnsZoneLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/private-dns-zone.json')]",
-        "keyVaultPrivateDnsZoneDeploymentName": "deploy-private-dns-zone-key-vault",
-        "keyVaultPrivateDnsZoneName": "privatelink.vaultcore.azure.net",
-        "storageAccountPrivateDnsZoneDeploymentName": "deploy-private-dns-zone-storage-account",
-        "storageAccountPrivateDnsZoneName": "privatelink.blob.core.windows.net",
+        "privateDnsZoneKeyVault": {
+            "deploymentName": "deploy-private-dns-zone-key-vault",
+            "apiVersion": "[variables('deploymentApiVersion')]",
+            "linkedTemplateUri": "[variables('privateDnsZoneLinkedTemplateUri')]",
+            "zoneName": "privatelink.vaultcore.azure.net",
+        },
+        "privateDnsZoneStorageAccount": {
+            "deploymentName": "deploy-private-dns-zone-storage-account",
+            "apiVersion": "[variables('deploymentApiVersion')]",
+            "linkedTemplateUri": "[variables('privateDnsZoneLinkedTemplateUri')]",
+            "zoneName": "privatelink.blob.core.windows.net",
+        },
 
         // Private DNS zone virtual network link
         "privateDnsZoneVNetLinkLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/private-dns-zone-vnet-link.json')]",
@@ -447,13 +461,19 @@
         },
 
         // Key Vault
-        "keyVaultDeploymentName": "deploy-key-vault",
-        "keyVaultLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/keyvault.json')]",
-        "keyVaultName": "[format('hcilab{0}-kv', toLower(variables('uniqueString')))]",
+        "keyVault": {
+            "deploymentName": "deploy-key-vault",
+            "apiVersion": "[variables('deploymentApiVersion')]",
+            "linkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/keyvault.json')]",
+            "name": "[format('hcilab{0}-kv', toLower(variables('uniqueString')))]",
+        },
 
         // Lab host virtual machine
-        "hostVmDeploymentName": "deploy-host-vm",
-        "hostVmLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/hostvm.json')]",
+        "hostVm": {
+            "deploymentName": "deploy-host-vm",
+            "apiVersion": "[variables('deploymentApiVersion')]",
+            "linkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/hostvm.json')]",
+        },
 
         // Storage account for Cloud Witness
         "cloudWitnessStorageAccountDeploymentName": "deploy-storage-account-for-cloud-witness",
@@ -655,7 +675,7 @@
                 "ipAddress": "172.16.0.200"
             },
             "keyVault": {
-                "name": "[variables('keyVaultName')]",
+                "name": "[variables('keyVault').name]",
                 "secretName": {
                     "adminPassword": "AdminPassword",
                     "cloudWitnessStorageAccountName": "CloudWitnessStorageAccountName",
@@ -667,13 +687,13 @@
     "resources": [
         // Virtual network
         {
-            "name": "[variables('virtualNetworkDeploymentName')]",
+            "name": "[variables('virtualNetwork').deploymentName]",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('deploymentApiVersion')]",
+            "apiVersion": "[variables('virtualNetwork').apiVersion]",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[variables('virtualNetworkLinkedTemplateUri')]",
+                    "uri": "[variables('virtualNetwork').linkedTemplateUri]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
@@ -681,7 +701,7 @@
                         "value": "[variables('location')]"
                     },
                     "virtualNetworkName": {
-                        "value": "[variables('virtualNetworkName')]"
+                        "value": "[variables('virtualNetwork').name]"
                     }
                 }
             }
@@ -689,16 +709,16 @@
 
         // Bastion
         {
-            "name": "[variables('bastionDeploymentName')]",
+            "name": "[variables('bastion').deploymentName]",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('deploymentApiVersion')]",
+            "apiVersion": "[variables('bastion').apiVersion]",
             "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', variables('virtualNetworkDeploymentName'))]"
+                "[resourceId('Microsoft.Resources/deployments', variables('virtualNetwork').deploymentName)]"
             ],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[variables('bastionLinkedTemplateUri')]",
+                    "uri": "[variables('bastion').linkedTemplateUri]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
@@ -706,10 +726,10 @@
                         "value": "[variables('location')]"
                     },
                     "bastionName": {
-                        "value": "[variables('bastionName')]"
+                        "value": "[variables('bastion').name]"
                     },
                     "virtualNetworkId": {
-                        "value": "[reference(variables('virtualNetworkDeploymentName'), variables('deploymentApiVersion')).outputs.virtualNetworkId.value]"
+                        "value": "[reference(variables('virtualNetwork').deploymentName, variables('virtualNetwork').apiVersion).outputs.virtualNetworkId.value]"
                     }
                 }
             }
@@ -717,18 +737,18 @@
 
         // Private DNS zone for Key Vault
         {
-            "name": "[variables('keyVaultPrivateDnsZoneDeploymentName')]",
+            "name": "[variables('privateDnsZoneKeyVault').deploymentName]",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2021-04-01",
+            "apiVersion": "[variables('privateDnsZoneKeyVault').apiVersion]",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[variables('privateDnsZoneLinkedTemplateUri')]",
+                    "uri": "[variables('privateDnsZoneKeyVault').linkedTemplateUri]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
                     "privateDnsZoneName": {
-                        "value": "[variables('keyVaultPrivateDnsZoneName')]"
+                        "value": "[variables('privateDnsZoneKeyVault').zoneName]"
                     }
                 }
             }
@@ -740,8 +760,8 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[variables('privateDnsZoneVNetLinkKeyVault').apiVersion]",
             "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', variables('virtualNetworkDeploymentName'))]",
-                "[resourceId('Microsoft.Resources/deployments', variables('keyVaultPrivateDnsZoneDeploymentName'))]"
+                "[resourceId('Microsoft.Resources/deployments', variables('virtualNetwork').deploymentName)]",
+                "[resourceId('Microsoft.Resources/deployments', variables('privateDnsZoneKeyVault').deploymentName)]"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -751,10 +771,10 @@
                 },
                 "parameters": {
                     "privateDnsZoneName": {
-                        "value": "[variables('keyVaultPrivateDnsZoneName')]"
+                        "value": "[variables('privateDnsZoneKeyVault').zoneName]"
                     },
                     "virtualNetworkId": {
-                        "value": "[reference(variables('virtualNetworkDeploymentName'), variables('deploymentApiVersion')).outputs.virtualNetworkId.value]"
+                        "value": "[reference(variables('virtualNetwork').deploymentName, variables('virtualNetwork').apiVersion).outputs.virtualNetworkId.value]"
                     }
                 }
             }
@@ -762,18 +782,18 @@
 
         // Private DNS zone for Storage account
         {
-            "name": "[variables('storageAccountPrivateDnsZoneDeploymentName')]",
+            "name": "[variables('privateDnsZoneStorageAccount').deploymentName]",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2021-04-01",
+            "apiVersion": "[variables('privateDnsZoneStorageAccount').apiVersion]",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[variables('privateDnsZoneLinkedTemplateUri')]",
+                    "uri": "[variables('privateDnsZoneStorageAccount').linkedTemplateUri]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
                     "privateDnsZoneName": {
-                        "value": "[variables('storageAccountPrivateDnsZoneName')]"
+                        "value": "[variables('privateDnsZoneStorageAccount').zoneName]"
                     }
                 }
             }
@@ -785,8 +805,8 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[variables('privateDnsZoneVNetLinkStorageAccount').apiVersion]",
             "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', variables('virtualNetworkDeploymentName'))]",
-                "[resourceId('Microsoft.Resources/deployments', variables('storageAccountPrivateDnsZoneDeploymentName'))]"
+                "[resourceId('Microsoft.Resources/deployments', variables('virtualNetwork').deploymentName)]",
+                "[resourceId('Microsoft.Resources/deployments', variables('privateDnsZoneStorageAccount').deploymentName)]"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -796,10 +816,10 @@
                 },
                 "parameters": {
                     "privateDnsZoneName": {
-                        "value": "[variables('storageAccountPrivateDnsZoneName')]"
+                        "value": "[variables('privateDnsZoneStorageAccount').zoneName]"
                     },
                     "virtualNetworkId": {
-                        "value": "[reference(variables('virtualNetworkDeploymentName'), variables('deploymentApiVersion')).outputs.virtualNetworkId.value]"
+                        "value": "[reference(variables('virtualNetwork').deploymentName, variables('virtualNetwork').apiVersion).outputs.virtualNetworkId.value]"
                     }
                 }
             }
@@ -807,13 +827,13 @@
 
         // Key Vault
         {
-            "name": "[variables('keyVaultDeploymentName')]",
+            "name": "[variables('keyVault').deploymentName]",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2021-04-01",
+            "apiVersion": "[variables('keyVault').apiVersion]",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[variables('keyVaultLinkedTemplateUri')]",
+                    "uri": "[variables('keyVault').linkedTemplateUri]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
@@ -821,7 +841,7 @@
                         "value": "[variables('location')]"
                     },
                     "keyVaultName": {
-                        "value": "[variables('keyVaultName')]"
+                        "value": "[variables('keyVault').name]"
                     },
                     "secretNameForLabHostAdminPassword": {
                         "value": "[variables('labConfig').keyVault.secretName.adminPassword]"
@@ -835,16 +855,16 @@
 
         // Lab host virtual machine.
         {
-            "name": "[variables('hostVmDeploymentName')]",
+            "name": "[variables('hostVm').deploymentName]",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('deploymentApiVersion')]",
+            "apiVersion": "[variables('hostVm').apiVersion]",
             "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', variables('virtualNetworkDeploymentName'))]"
+                "[resourceId('Microsoft.Resources/deployments', variables('virtualNetwork').deploymentName)]"
             ],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[variables('hostVmLinkedTemplateUri')]",
+                    "uri": "[variables('hostVm').linkedTemplateUri]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
@@ -852,7 +872,7 @@
                         "value": "[variables('location')]"
                     },
                     "subnetId": {
-                        "value": "[reference(variables('virtualNetworkDeploymentName'), variables('deploymentApiVersion')).outputs.subnetId.value.default]"
+                        "value": "[reference(variables('virtualNetwork').deploymentName, variables('virtualNetwork').apiVersion).outputs.subnetId.value.default]"
                     },
                     "vmName": {
                         "value": "[parameters('labHostVmName')]"
@@ -1211,7 +1231,7 @@
         },
         "vmPublicIpFqdn": {
             "type": "string",
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('hostVmDeploymentName'))).outputs.fqdn.value]"
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('hostVm').deploymentName)).outputs.fqdn.value]"
         }
     }
 }
