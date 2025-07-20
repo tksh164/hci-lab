@@ -421,6 +421,11 @@
         "virtualNetworkLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/vnet.json')]",
         "virtualNetworkName": "hcilab-vnet",
 
+        // Bastion
+        "bastionDeploymentName": "deploy-bastion",
+        "bastionLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/bastion.json')]",
+        "bastionName": "hcilab-bastion",
+
         // Private DNS zones
         "privateDnsZoneLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/private-dns-zone.json')]",
         "keyVaultPrivateDnsZoneDeploymentName": "deploy-private-dns-zone-key-vault",
@@ -428,14 +433,14 @@
         "storageAccountPrivateDnsZoneDeploymentName": "deploy-private-dns-zone-storage-account",
         "storageAccountPrivateDnsZoneName": "privatelink.blob.core.windows.net",
 
-        // Lab host virtual machine
-        "hostVmDeploymentName": "deploy-host-vm",
-        "hostVmLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/hostvm.json')]",
-
         // Key Vault
         "keyVaultDeploymentName": "deploy-key-vault",
         "keyVaultLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/keyvault.json')]",
         "keyVaultName": "[format('hcilab{0}-kv', toLower(variables('uniqueString')))]",
+
+        // Lab host virtual machine
+        "hostVmDeploymentName": "deploy-host-vm",
+        "hostVmLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/hostvm.json')]",
 
         // Storage account for Cloud Witness
         "cloudWitnessStorageAccountDeploymentName": "deploy-storage-account-for-cloud-witness",
@@ -647,7 +652,6 @@
         }
     },
     "resources": [
-
         // Virtual network
         {
             "name": "[variables('virtualNetworkDeploymentName')]",
@@ -665,6 +669,34 @@
                     },
                     "virtualNetworkName": {
                         "value": "[variables('virtualNetworkName')]"
+                    }
+                }
+            }
+        },
+
+        // Bastion
+        {
+            "name": "[variables('bastionDeploymentName')]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[variables('deploymentApiVersion')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', variables('virtualNetworkDeploymentName'))]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('bastionLinkedTemplateUri')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
+                    "bastionName": {
+                        "value": "[variables('bastionName')]"
+                    },
+                    "virtualNetworkId": {
+                        "value": "[reference(variables('virtualNetworkDeploymentName'), variables('deploymentApiVersion')).outputs.virtualNetworkId.value]"
                     }
                 }
             }
