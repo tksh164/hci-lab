@@ -421,7 +421,7 @@
             "deploymentName": "deploy-vnet",
             "apiVersion": "[variables('deploymentApiVersion')]",
             "linkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/vnet.json')]",
-            "name": "hcilab-vnet",
+            "name": "hcilab-vnet"
         },
 
         // Bastion
@@ -429,7 +429,7 @@
             "deploymentName": "deploy-bastion",
             "apiVersion": "[variables('deploymentApiVersion')]",
             "linkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/bastion.json')]",
-            "name": "hcilab-bastion",
+            "name": "hcilab-bastion"
         },
 
         // Private DNS zones
@@ -437,12 +437,12 @@
         "privateDnsZoneKeyVault": {
             "deploymentName": "deploy-private-dns-zone-key-vault",
             "apiVersion": "[variables('deploymentApiVersion')]",
-            "zoneName": "privatelink.vaultcore.azure.net",
+            "zoneName": "privatelink.vaultcore.azure.net"
         },
         "privateDnsZoneStorageAccount": {
             "deploymentName": "deploy-private-dns-zone-storage-account",
             "apiVersion": "[variables('deploymentApiVersion')]",
-            "zoneName": "privatelink.blob.core.windows.net",
+            "zoneName": "privatelink.blob.core.windows.net"
         },
 
         // Private DNS zone virtual network link
@@ -461,21 +461,21 @@
             "deploymentName": "deploy-key-vault",
             "apiVersion": "[variables('deploymentApiVersion')]",
             "linkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/keyvault.json')]",
-            "name": "[format('hcilab{0}-kv', toLower(variables('uniqueString')))]",
+            "name": "[format('hcilab{0}-kv', toLower(variables('uniqueString')))]"
         },
 
         // Lab host virtual machine
         "hostVm": {
             "deploymentName": "deploy-host-vm",
             "apiVersion": "[variables('deploymentApiVersion')]",
-            "linkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/hostvm.json')]",
+            "linkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/hostvm.json')]"
         },
 
         // Key Vault RBAC
         "keyVaultRbac": {
             "deploymentName": "assign-key-vault-rbac-with-host-vm-managed-id",
             "apiVersion": "[variables('deploymentApiVersion')]",
-            "linkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/keyvault-rbac.json')]",
+            "linkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/keyvault-rbac.json')]"
         },
 
         // Storage account for witness
@@ -1014,7 +1014,7 @@
             "apiVersion": "[variables('privateEndpointKeyVault').apiVersion]",
             "dependsOn": [
                 "[resourceId('Microsoft.Resources/deployments', variables('keyVault').deploymentName)]",
-                "[resourceId('Microsoft.Resources/deployments', variables('privateDnsZoneVNetLinkKeyVault').deploymentName)]",
+                "[resourceId('Microsoft.Resources/deployments', variables('privateDnsZoneVNetLinkKeyVault').deploymentName)]"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -1055,7 +1055,7 @@
             "apiVersion": "[variables('privateEndpointStorageAccount').apiVersion]",
             "dependsOn": [
                 "[resourceId('Microsoft.Resources/deployments', variables('witnessStorageAccount').deploymentName)]",
-                "[resourceId('Microsoft.Resources/deployments', variables('privateDnsZoneVNetLinkStorageAccount').deploymentName)]",
+                "[resourceId('Microsoft.Resources/deployments', variables('privateDnsZoneVNetLinkStorageAccount').deploymentName)]"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -1306,7 +1306,7 @@
             "condition": "[variables('labConfig').hciCluster.shouldCreateCluster]",
             "name": "[variables('customScript').createHciCluster.deploymentName]",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2022-09-01",
+            "apiVersion": "[variables('customScript').createHciCluster.apiVersion]",
             "dependsOn": [
                 "[resourceId('Microsoft.Resources/deployments', variables('privateEndpointStorageAccount').deploymentName)]",
                 "[resourceId('Microsoft.Resources/deployments', variables('customScript').createVm.deploymentName)]"
