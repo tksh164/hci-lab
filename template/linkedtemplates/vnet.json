@@ -1,0 +1,122 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string",
+            "metadata": {
+                "description": "The location for the resources."
+            }
+        },
+        "virtualNetworkName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the virtual network."
+            }
+        }
+    },
+    "variables": {
+        // Virtual network.
+        "virtualNetworkNameAddressPrefix": "192.168.0.0/16",
+
+        // Default subnet.
+        "defaultSubnet": {
+            "name": "default",
+            "addressPrefix": "192.168.0.0/24"
+        },
+
+        // Private endpoint subnet.
+        "privateEndpointSubnet": {
+            "name": "privateEndpointSubnet",
+            "addressPrefix": "192.168.1.0/24"
+        },
+
+        // Network security group names.
+        "subnetNsgName": {
+            "default": "[format('{0}-{1}-nsg', parameters('virtualNetworkName'), variables('defaultSubnet').name)]",
+            "privateEndpointSubnet": "[format('{0}-{1}-nsg', parameters('virtualNetworkName'), variables('privateEndpointSubnet').name)]"
+        }
+    },
+    "resources": [
+        // Network security group for the default subnet.
+        {
+            "name": "[variables('subnetNsgName').default]",
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2024-07-01",
+            "location": "[parameters('location')]",
+            "properties": {
+                "securityRules": []
+            }
+        },
+
+        // Network security group for the private endpoint subnet.
+        {
+            "name": "[variables('subnetNsgName').privateEndpointSubnet]",
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2024-07-01",
+            "location": "[parameters('location')]",
+            "properties": {
+                "securityRules": []
+            }
+        },
+
+        // Virtual network.
+        {
+            "name": "[parameters('virtualNetworkName')]",
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2024-07-01",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', variables('subnetNsgName').default)]",
+                "[resourceId('Microsoft.Network/networkSecurityGroups', variables('subnetNsgName').privateEndpointSubnet)]"
+            ],
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[variables('virtualNetworkNameAddressPrefix')]"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "[variables('defaultSubnet').name]",
+                        "properties": {
+                            "addressPrefix": "[variables('defaultSubnet').addressPrefix]",
+                            "networkSecurityGroup": {
+                                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('subnetNsgName').default)]"
+                            }
+                        }
+                    },
+                    {
+                        "name": "[variables('privateEndpointSubnet').name]",
+                        "properties": {
+                            "addressPrefix": "[variables('privateEndpointSubnet').addressPrefix]",
+                            "networkSecurityGroup": {
+                                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('subnetNsgName').privateEndpointSubnet)]"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    ],
+    "outputs": {
+        "virtualNetworkId": {
+            "type": "string",
+            "value": "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]"
+        },
+        "subnetId": {
+            "type": "object",
+            "value": {
+                "default": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), variables('defaultSubnet').name)]",
+                "privateEndpointSubnet": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), variables('privateEndpointSubnet').name)]"
+            }
+        }//,
+        // "subnetNsgId": {
+        //     "type": "object",
+        //     "value": {
+        //         "default": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('subnetNsgName').default)]",
+        //         "privateEndpointSubnet": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('subnetNsgName').privateEndpointSubnet)]"
+        //     }
+        // }
+    }
+}

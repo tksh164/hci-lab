@@ -1,0 +1,279 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string",
+            "metadata": {
+                "description": "The location for the custom script extension resource."
+            }
+        },
+        "subnetId": {
+            "type": "string",
+            "metadata": {
+                "description": "The resource ID of the subnet to deploy the virtual machine."
+            }
+        },
+        "vmName": {
+            "type": "string",
+            "metadata": {
+                "description": "The lab host virtual machine name."
+            }
+        },
+        "adminUserName": {
+            "type": "string",
+            "metadata": {
+                "description": "The administrator user name."
+            }
+        },
+        "adminPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "The administrator password. The password must have 3 of the following: 1 lower case character, 1 upper case character, 1 number, and 1 special character. And the password must be between 12 and 123 characters long."
+            }
+        },
+        "vmSize": {
+            "type": "string",
+            "metadata": {
+                "description": "The lab host virtual machine size."
+            }
+        },
+        "osDiskType": {
+            "type": "string",
+            "metadata": {
+                "description": "The storage type of the lab host virtual machine's OS disk."
+            }
+        },
+        "dataDiskType": {
+            "type": "string",
+            "metadata": {
+                "description": "The storage type of the lab host virtual machine's data disk."
+            }
+        },
+        "dataDiskSize": {
+            "type": "int",
+            "metadata": {
+                "description": "The size of individual disk of the lab host virtual machine's data disks in GiB."
+            }
+        },
+        "dataDiskCount": {
+            "type": "int",
+            "minValue": 8,
+            "maxValue": 32,
+            "metadata": {
+                "description": "The number of data disks on the lab host virtual machine."
+            }
+        },
+        "hasEligibleWindowsServerLicense": {
+            "type": "bool",
+            "metadata": {
+                "description": "By specifying True, you confirm you have an eligible Windows Server license with Software Assurance or Windows Server subscription to apply this Azure Hybrid Benefit. You can read more about compliance here: http://go.microsoft.com/fwlink/?LinkId=859786"
+            }
+        },
+        "base64EncodedLabConfig": {
+            "type": "string",
+            "metadata": {
+                "description": "THe base64 encode user data for the lab host virtual machine."
+            }
+        },
+        "shouldEnabledAutoshutdown": {
+            "type": "bool",
+            "metadata": {
+                "description": "By specifying True, will be auto-shutdown configured to the lab host virtual machine."
+            }
+        },
+        "autoshutdownTime": {
+            "type": "string",
+            "metadata": {
+                "description": "The auto-shutdown time."
+            }
+        },
+        "autoshutdownTimeZone": {
+            "type": "string",
+            "metadata": {
+                "description": "The time zone for auto-shutdown time."
+            }
+        },
+        "uniqueString": {
+            "type": "string",
+            "metadata": {
+                "description": "The string for uniqueness of resource names."
+            }
+        }
+    },
+    "variables": {
+        // Public IP address.
+        "publicIpAddressName": "[format('{0}-ip1', parameters('vmName'))]",
+        "dnsNameForPublicIP": "[toLower(format('{0}-{1}-{2}', take(resourceGroup().name, 27), take(parameters('vmName'), 27), toLower(parameters('uniqueString'))))]",
+
+        // Network interface.
+        "networkInterfaceName": "[format('{0}-nic1', parameters('vmName'))]",
+        "privateIPAddress": "192.168.0.4",
+
+        // Virtual machine.
+        "virtualMachineApiVersion": "2024-11-01",
+        "computerName": "hcilabhost"
+    },
+    "resources": [
+        // Public IP address.
+        {
+            "name": "[variables('publicIpAddressName')]",
+            "type": "Microsoft.Network/publicIpAddresses",
+            "apiVersion": "2024-07-01",
+            "location": "[parameters('location')]",
+            "sku": {
+                "name": "Standard"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "Static",
+                "dnsSettings": {
+                    "domainNameLabel": "[variables('dnsNameForPublicIP')]"
+                }
+            }
+        },
+
+        // Network interface.
+        {
+            "name": "[variables('networkInterfaceName')]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2024-07-01",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIpAddresses', variables('publicIpAddressName'))]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "subnet": {
+                                "id": "[parameters('subnetId')]"
+                            },
+                            "privateIPAllocationMethod": "Static",
+                            "privateIPAddress": "[variables('privateIPAddress')]",
+                            "publicIpAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIpAddresses', variables('publicIpAddressName'))]"
+                            }
+                        }
+                    }
+                ],
+                "enableAcceleratedNetworking": true
+            }
+        },
+
+        // Virtual machine.
+        {
+            "name": "[parameters('vmName')]",
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "[variables('virtualMachineApiVersion')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfaceName'))]"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[parameters('vmSize')]"
+                },
+                "osProfile": {
+                    "computerName": "[variables('computerName')]",
+                    "adminUsername": "[parameters('adminUserName')]",
+                    "adminPassword": "[parameters('adminPassword')]",
+                    "windowsConfiguration": {
+                        "provisionVmAgent": true,
+                        "enableAutomaticUpdates": true,
+                        "patchSettings": {
+                            "enableHotpatching": true,
+                            "patchMode": "AutomaticByPlatform",
+                            "automaticByPlatformSettings": {
+                                "rebootSetting": "Never"
+                            },
+                            "assessmentMode": "ImageDefault"
+                        }
+                    }
+                },
+                "licenseType": "[if(parameters('hasEligibleWindowsServerLicense'), 'Windows_Server', 'None')]",
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfaceName'))]"
+                        }
+                    ]
+                },
+                "storageProfile": {
+                    "osDisk": {
+                        "name": "[format('{0}-osdisk', parameters('vmName'))]",
+                        "managedDisk": {
+                            "storageAccountType": "[parameters('osDiskType')]"
+                        },
+                        "createOption": "FromImage",
+                        "caching": "ReadWrite",
+                        "deleteOption": "Delete"
+                    },
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "2025-datacenter-azure-edition-smalldisk",
+                        "version": "latest"
+                    },
+                    "copy": [
+                        {
+                            "name": "dataDisks",
+                            "count": "[parameters('dataDiskCount')]",
+                            "input": {
+                                "name": "[format('{0}-datadisk{1:00}', parameters('vmName'), copyIndex('dataDisks'))]",
+                                "lun": "[copyIndex('dataDisks')]",
+                                "managedDisk": {
+                                    "storageAccountType": "[parameters('dataDiskType')]"
+                                },
+                                "diskSizeGB": "[parameters('dataDiskSize')]",
+                                "createOption": "Empty",
+                                "caching": "ReadWrite",
+                                "deleteOption": "Delete"
+                            }
+                        }
+                    ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": true
+                    }
+                },
+                "userData": "[parameters('base64EncodedLabConfig')]"
+            },
+            "identity": {
+                "type": "SystemAssigned"
+            }
+        },
+
+        // Auto-shutdown schedule.
+        {
+            "condition": "[parameters('shouldEnabledAutoshutdown')]",
+            "name": "[format('shutdown-computevm-{0}', parameters('vmName'))]",
+            "type": "Microsoft.DevTestLab/schedules",
+            "apiVersion": "2018-09-15",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachines', parameters('vmName'))]"
+            ],
+            "properties": {
+                "status": "[if(parameters('shouldEnabledAutoshutdown'), 'Enabled', 'Disabled')]",
+                "taskType": "ComputeVmShutdownTask",
+                "dailyRecurrence": {
+                    "time": "[parameters('autoshutdownTime')]"
+                },
+                "timeZoneId": "[parameters('autoshutdownTimeZone')]",
+                "targetResourceId": "[resourceId('Microsoft.Compute/virtualMachines', parameters('vmName'))]"
+            }
+        }
+    ],
+    "outputs": {
+        "fqdn": {
+            "type": "string",
+            "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))).dnsSettings.fqdn]"
+        },
+        "principalId": {
+            "type": "string",
+            "value": "[reference(resourceId('Microsoft.Compute/virtualMachines', parameters('vmName')), variables('virtualMachineApiVersion'), 'Full').identity.principalId]"
+        }
+    }
+}

@@ -57,7 +57,7 @@
                 "accessTier": "Hot",
                 "minimumTlsVersion": "TLS1_2",
                 "supportsHttpsTrafficOnly": true,
-                "publicNetworkAccess": "Enabled",
+                "publicNetworkAccess": "Disabled",
                 "allowBlobPublicAccess": false,
                 "allowSharedKeyAccess": true,
                 "allowCrossTenantReplication": true,
@@ -150,6 +150,10 @@
         }
     ],
     "outputs": {
+        "storageAccountId": {
+            "type": "string",
+            "value": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+        },
         "storageAccountName": {
             "type": "string",
             "value": "[variables('storageAccountName')]"
