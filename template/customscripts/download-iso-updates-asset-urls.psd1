@@ -136,9 +136,9 @@
         }
         'updates' = @(
             # OS
-            'https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/58b46d94-e497-4048-8aea-4b430fd63d12/public/windows11.0-kb5060842-x64_07871bda98c444c14691e0a90560306703b739cf.msu',
+            'https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/2cf31dbf-ac4d-435b-8bc7-5a474dfad46e/public/windows11.0-kb5062553-x64_6fe34113fd31b773e8ecb31682dd95b1934be4c1.msu',
             # .NET Framework
-            'https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/02cd9c83-8312-424d-9a06-b042095804a8/public/windows11.0-kb5054979-x64-ndp481_8e2f730bc747de0f90aaee95d4862e4f88751c07.msu'
+            'https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/66baa9bc-4fa3-4f4b-97b1-af6dc17c64d9/public/windows11.0-kb5056579-x64-ndp481_a062e62bdedd9a2a4b0cbf4e26ff1652a240f1ee.msu'
         )
     }
     'ws2022' = @{
