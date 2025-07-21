@@ -57,7 +57,7 @@
                 "accessTier": "Hot",
                 "minimumTlsVersion": "TLS1_2",
                 "supportsHttpsTrafficOnly": true,
-                "publicNetworkAccess": "Enabled",
+                "publicNetworkAccess": "Disabled",
                 "allowBlobPublicAccess": false,
                 "allowSharedKeyAccess": true,
                 "allowCrossTenantReplication": true,

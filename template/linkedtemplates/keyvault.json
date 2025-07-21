@@ -46,7 +46,7 @@
                 "enabledForDiskEncryption": false,
                 "enableRbacAuthorization": true,
                 "accessPolicies": [],
-                "publicNetworkAccess": "Enabled",
+                "publicNetworkAccess": "Disabled",
                 "networkAcls": {
                     "defaultAction": "allow",
                     "bypass": "AzureServices"
