@@ -480,7 +480,7 @@
 
         // Storage account for witness
         "witnessStorageAccount": {
-            "deploymentName": "deploy-storage-account-cloud-witness",
+            "deploymentName": "deploy-storage-account-witness",
             "apiVersion": "[variables('deploymentApiVersion')]",
             "linkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/cloudwitness.json')]",
             "namePrefix": "witness"
