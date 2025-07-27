@@ -1,10 +1,11 @@
 # HCI Lab
 
-The HCI Lab provides a plain HCI lab environment on Azure in reasonable preparation time and cost.
+The HCI Lab provides a plain lab environment on Azure in reasonable preparation time and cost.
 
-- An HCI lab environment with Azure Local (formerly Azure Stack HCI) or Windows Server 2025/2022 on a single Azure virtual machine in about 30 minutes minimum.
-- Just a plain environment, so you can try many workloads and features to start from the clean environment by yourself. Also, you can customize it to your own needs easily.
-- You can choose an operating system from the [selectable HCI node's operating systems](#-selectable-hci-nodes-operating-systems) to use deploy your HCI lab environment.
+- A lab environment on a single Azure virtual machine for Azure Local or Windows Server 2025/2022 HCI.
+- The lab environment will be deployed in about 30 to 120 minutes.
+- It is just a plain environment, so you can try many workloads and features to start from the clean environment by yourself. Also, you can customize it to your own needs easily.
+- You can choose an [operating system](#-selectable-hci-nodes-operating-systems) to use deploy your lab environment.
 
 ## 🚀 Quickstart
 
@@ -33,7 +34,7 @@ The HCI Lab provides a plain HCI lab environment on Azure in reasonable preparat
 
 Learn more about the HCI lab in the [HCI Lab tour](./docs/hci-lab-tour.md).
 
-## 📚 Selectable HCI node's operating systems
+## 📚 Selectable lab machine operating systems
 
 | Operating system | Description | Availability |
 | ---- | ---- | ---- |
