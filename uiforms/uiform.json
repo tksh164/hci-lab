@@ -1261,13 +1261,22 @@
                                     "placeholder": "Select the member server's operating system...",
                                     "defaultDescription": "---",
                                     "filterPlaceholder": "Filter member server's operating systems...",
-                                    "defaultValue": "Azure Local 2506",
+                                    "defaultValue": "Azure Local 2507",
                                     "constraints": {
                                         "required": true,
                                         "allowedValues": [
                                             {
-                                                "label": "Azure Local 2506",
+                                                "label": "Azure Local 2507",
                                                 "description": "The latest generally available version.",
+                                                "value": {
+                                                    "sku": "azloc24h2_2507",
+                                                    "imageIndex": 1,
+                                                    "isAzureLocal": true
+                                                }
+                                            },
+                                            {
+                                                "label": "Azure Local 2506",
+                                                "description": "The previous version.",
                                                 "value": {
                                                     "sku": "azloc24h2_2506",
                                                     "imageIndex": 1,
