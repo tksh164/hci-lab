@@ -97,7 +97,7 @@ try {
 
     # The Windows Server ISO is always needed for the domain controller VM and the management server.
     if ($labConfig.hciNode.operatingSystem.sku -ne [HciLab.OSSku]::WindowsServer2025) {
-        'Donwload the Windows Server ISO file.' | Write-ScriptLog
+        'Download the Windows Server ISO file.' | Write-ScriptLog
         $params = @{
             OperatingSystem    = [HciLab.OSSku]::WindowsServer2025
             Culture            = $labConfig.guestOS.culture
@@ -105,7 +105,7 @@ try {
             AssetUrls          = $assetUrls
         }
         Invoke-IsoFileDownload @params | Out-String -Width 1000 | Write-ScriptLog
-        'Donwload the Windows Server ISO file completed.' | Write-ScriptLog
+        'Download the Windows Server ISO file completed.' | Write-ScriptLog
     }
 
     # Updates
