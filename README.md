@@ -35,9 +35,10 @@ Learn more about the HCI lab in the [HCI Lab tour](./docs/hci-lab-tour.md).
 
 ## 📚 Selectable HCI node's operating systems
 
-| Operating system | Description | HCI Lab |
+| Operating system | Description | Availability |
 | ---- | ---- | ---- |
-| Azure Local 2506 (24H2) | The latest generally available version of Azure Local. | Available |
+| Azure Local 2507 (24H2) | The latest generally available version of Azure Local. | Available |
+| Azure Local 2506 (24H2) | The previous version of Azure Local. | Selectable. Not tested. |
 | Azure Local 2505 (24H2) | The previous version of Azure Local. | Selectable. Not tested. |
 | Azure Local 2504 (24H2) | The previous version of Azure Local. | Selectable. Not tested. |
 | Azure Local 2503 (23H2) | The previous version of Azure Local (formerly Azure Stack HCI). | Selectable. Not tested. |
