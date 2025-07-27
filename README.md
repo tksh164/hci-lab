@@ -5,7 +5,7 @@ The HCI Lab provides a plain lab environment on Azure in reasonable preparation 
 - A lab environment on a single Azure virtual machine for Azure Local or Windows Server 2025/2022 HCI.
 - The lab environment will be deployed in about 30 to 120 minutes.
 - It is just a plain environment, so you can try many workloads and features to start from the clean environment by yourself. Also, you can customize it to your own needs easily.
-- You can choose an [operating system](#-selectable-hci-nodes-operating-systems) to use deploy your lab environment.
+- You can choose an [operating system](#-selectable-lab-machine-operating-systems) to use deploy your lab environment.
 
 ## 🚀 Quickstart
 
