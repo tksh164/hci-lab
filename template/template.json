@@ -422,7 +422,7 @@
             "deploymentName": "deploy-vnet",
             "apiVersion": "[variables('deploymentApiVersion')]",
             "linkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/vnet.json')]",
-            "name": "hcilab-vnet"
+            "name": "labnet-vnet"
         },
 
         // Bastion
