@@ -430,7 +430,7 @@
             "deploymentName": "deploy-bastion",
             "apiVersion": "[variables('deploymentApiVersion')]",
             "linkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/bastion.json')]",
-            "name": "hcilab-bastion"
+            "name": "labenv-bastion"
         },
 
         // Private DNS zones
