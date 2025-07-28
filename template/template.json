@@ -484,7 +484,7 @@
             "deploymentName": "deploy-storage-account-witness",
             "apiVersion": "[variables('deploymentApiVersion')]",
             "linkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/cloudwitness.json')]",
-            "namePrefix": "witness"
+            "namePrefix": "labwitness"
         },
 
         // Private endpoints
