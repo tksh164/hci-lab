@@ -28,8 +28,8 @@
                             "multiLine": false,
                             "label": "ラボ ホスト VM 名",
                             "toolTip": "ラボ ホスト仮想マシンのリソース名を指定します。この名前は Azure リソース ID として使用されます。ゲストのコンピューター名としては使用されません。",
-                            "placeholder": "例: azloclab-vm1",
-                            "defaultValue": "azloclab-vm1",
+                            "placeholder": "例: labenv-vm1",
+                            "defaultValue": "labenv-vm1",
                             "constraints": {
                                 "required": true,
                                 "validations": [

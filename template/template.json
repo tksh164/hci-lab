@@ -19,7 +19,7 @@
         },
         "labHostVmName": {
             "type": "string",
-            "defaultValue": "hcilab-vm1",
+            "defaultValue": "labenv-vm1",
             "minLength": 1,
             "maxLength": 64,
             "metadata": {

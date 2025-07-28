@@ -28,8 +28,8 @@
                             "multiLine": false,
                             "label": "Lab host VM name",
                             "toolTip": "Specify your lab host virtual machine resource name. The name used as an Azure resource identifier for it, not used for the computer name of the guest operating system.",
-                            "placeholder": "e.g. azloclab-vm1",
-                            "defaultValue": "azloclab-vm1",
+                            "placeholder": "e.g. labenv-vm1",
+                            "defaultValue": "labenv-vm1",
                             "constraints": {
                                 "required": true,
                                 "validations": [
