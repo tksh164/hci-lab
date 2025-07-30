@@ -653,7 +653,7 @@
                 "shouldInstallConfigAppForAzureLocal": "[parameters('shouldInstallConfigAppForAzureLocal')]"
             },
             "hciNode": {
-                "vmName": "hcinode{0:00}",  // vmNameOffset + ZeroBasedNodeIndex
+                "vmName": "machine{0:00}",  // vmNameOffset + ZeroBasedNodeIndex
                 "vmNameOffset": 1,
                 "operatingSystem": {
                     "sku": "[parameters('hciNodeOsSku')]",
