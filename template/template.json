@@ -462,7 +462,7 @@
             "deploymentName": "deploy-key-vault",
             "apiVersion": "[variables('deploymentApiVersion')]",
             "linkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/keyvault.json')]",
-            "name": "[format('labsecret-{0}-kv', toLower(variables('uniqueString')))]"
+            "name": "[format('labenv-{0}-kv', toLower(variables('uniqueString')))]"
         },
 
         // Lab host virtual machine
