@@ -639,7 +639,7 @@
                 "lcmUserName": "[parameters('lcmUserName')]"
             },
             "wac": {
-                "vmName": "wac",
+                "vmName": "workbox",
                 "maximumRamBytes": 6442450944,
                 "netAdapters": {
                     "management": {
