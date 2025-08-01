@@ -341,7 +341,7 @@
         },
         "addsDomainFqdn": {
             "type": "string",
-            "defaultValue": "hci.internal",
+            "defaultValue": "lab.internal",
             "metadata": {
                 "description": "The Active Direcory Domain Services domain FQDN."
             }
@@ -376,7 +376,7 @@
         },
         "addsOrgUnitPathForAzureLocal": {
             "type": "string",
-            "defaultValue": "OU=AzureLocal,DC=hci,DC=internal",
+            "defaultValue": "OU=AzureLocal,DC=lab,DC=internal",
             "metadata": {
                 "description": "The Active Directory organizational Unit (OU) path to place the Azure Local related objects."
             }
