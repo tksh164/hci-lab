@@ -19,7 +19,7 @@
         },
         "labHostVmName": {
             "type": "string",
-            "defaultValue": "hcilab-vm1",
+            "defaultValue": "labenv-vm1",
             "minLength": 1,
             "maxLength": 64,
             "metadata": {
@@ -341,7 +341,7 @@
         },
         "addsDomainFqdn": {
             "type": "string",
-            "defaultValue": "hci.internal",
+            "defaultValue": "lab.internal",
             "metadata": {
                 "description": "The Active Direcory Domain Services domain FQDN."
             }
@@ -376,7 +376,7 @@
         },
         "addsOrgUnitPathForAzureLocal": {
             "type": "string",
-            "defaultValue": "OU=AzureLocal,DC=hci,DC=internal",
+            "defaultValue": "OU=AzureLocal,DC=lab,DC=internal",
             "metadata": {
                 "description": "The Active Directory organizational Unit (OU) path to place the Azure Local related objects."
             }
@@ -422,7 +422,7 @@
             "deploymentName": "deploy-vnet",
             "apiVersion": "[variables('deploymentApiVersion')]",
             "linkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/vnet.json')]",
-            "name": "hcilab-vnet"
+            "name": "labenv-vnet"
         },
 
         // Bastion
@@ -430,7 +430,7 @@
             "deploymentName": "deploy-bastion",
             "apiVersion": "[variables('deploymentApiVersion')]",
             "linkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/bastion.json')]",
-            "name": "hcilab-bastion"
+            "name": "labenv-bastion"
         },
 
         // Private DNS zones
@@ -462,7 +462,7 @@
             "deploymentName": "deploy-key-vault",
             "apiVersion": "[variables('deploymentApiVersion')]",
             "linkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/keyvault.json')]",
-            "name": "[format('hcilab{0}-kv', toLower(variables('uniqueString')))]"
+            "name": "[format('labenv-{0}-kv', toLower(variables('uniqueString')))]"
         },
 
         // Lab host virtual machine
@@ -484,7 +484,7 @@
             "deploymentName": "deploy-storage-account-witness",
             "apiVersion": "[variables('deploymentApiVersion')]",
             "linkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/cloudwitness.json')]",
-            "namePrefix": "witness"
+            "namePrefix": "labenvwitness"
         },
 
         // Private endpoints
@@ -639,7 +639,7 @@
                 "lcmUserName": "[parameters('lcmUserName')]"
             },
             "wac": {
-                "vmName": "wac",
+                "vmName": "workbox",
                 "maximumRamBytes": 6442450944,
                 "netAdapters": {
                     "management": {
@@ -653,7 +653,7 @@
                 "shouldInstallConfigAppForAzureLocal": "[parameters('shouldInstallConfigAppForAzureLocal')]"
             },
             "hciNode": {
-                "vmName": "hcinode{0:00}",  // vmNameOffset + ZeroBasedNodeIndex
+                "vmName": "machine{0:00}",  // vmNameOffset + ZeroBasedNodeIndex
                 "vmNameOffset": 1,
                 "operatingSystem": {
                     "sku": "[parameters('hciNodeOsSku')]",

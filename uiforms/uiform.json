@@ -28,8 +28,8 @@
                             "multiLine": false,
                             "label": "Lab host VM name",
                             "toolTip": "Specify your lab host virtual machine resource name. The name used as an Azure resource identifier for it, not used for the computer name of the guest operating system.",
-                            "placeholder": "e.g. azloclab-vm1",
-                            "defaultValue": "azloclab-vm1",
+                            "placeholder": "e.g. labenv-vm1",
+                            "defaultValue": "labenv-vm1",
                             "constraints": {
                                 "required": true,
                                 "validations": [
@@ -1538,8 +1538,8 @@
                                     "multiLine": false,
                                     "label": "AD domain FQDN",
                                     "toolTip": "Specify the AD domain FQDN for the lab environment.",
-                                    "placeholder": "e.g. hci.internal",
-                                    "defaultValue": "hci.internal",
+                                    "placeholder": "e.g. lab.internal",
+                                    "defaultValue": "lab.internal",
                                     "constraints": {
                                         "required": true,
                                         "validations": [
@@ -1584,8 +1584,8 @@
                                     "multiLine": false,
                                     "label": "AD organization unit (OU) for Azure Local",
                                     "toolTip": "The organization unit to place the Azure Local related objects.",
-                                    "placeholder": "e.g. OU=AzureLocal,DC=hci,DC=internal",
-                                    "defaultValue": "OU=AzureLocal,DC=hci,DC=internal",
+                                    "placeholder": "e.g. OU=AzureLocal,DC=lab,DC=internal",
+                                    "defaultValue": "OU=AzureLocal,DC=lab,DC=internal",
                                     "constraints": {
                                         "required": true
                                     }

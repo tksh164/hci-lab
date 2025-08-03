@@ -4,14 +4,14 @@
 
 The HCI lab environment consists of three roles of Hyper-V VMs on a single Azure VM.
 
-| Computer/VM name | Role | VM kind<br/>(Host) | AD domain joined | Operating system | Notes |
+| Computer/VM name | Description | VM kind | AD domain joined | Operating system | Notes |
 | ---- | ---- | ---- | ---- | ---- | --- |
-| hcilab-vm1 (default) | Lab host | Azure VM<br/>(Azure) | No | Windows Server 2025 Datacenter Azure Edition Hotpatch | |
-| hcinode## | HCI node | Hyper-V VM<br/>(Lab host) | Depends on your deploy option | Depends on your deploy option. You can choose Azure Local or Windows Server (Desktop Experience). | `##` in the name is changed depending on the number of HCI nodes such as `01`, `02`, `03`, ... |
-| addsdc | Domain controller of Active Directory Domain Services | Hyper-V VM<br/>(Lab host) | Yes | Windows Server 2025 Datacenter Evaluation (Server Core) | |
-| wac | Management tools server | Hyper-V VM<br/>(Lab host) | Yes | Windows Server 2025 Datacenter Evaluation (with Desktop Experience) | Windows Admin Center works on this server with gateway mode, and many server management tools are installed on this server. |
+| labenv-vm1 (default) | This Azure VM hosting the lab environment. | Azure VM | No | Windows Server 2025 Datacenter Azure Edition Hotpatch | |
+| machine## | Member machines of the cluster. | Hyper-V VM on Azure VM | Depends on your deployment option | Depends on your deployment option. You can choose Azure Stack HCI OS or Windows Server with Desktop Experience. | `##` in the name is changed depending on the number of machines such as `01`, `02`, `03`, ... |
+| addsdc | A domain controller of Active Directory Domain Services for the lab environment. | Hyper-V VM on Azure VM | Yes | Windows Server 2025 Datacenter Evaluation Server Core | |
+| workbox | A machine for your work in the lab environment. | Hyper-V VM on Azure VM | Yes | Windows Server 2025 Datacenter Evaluation with Desktop Experience | Windows Admin Center works on this server with gateway mode, and many server management tools are installed on this server. |
 
-### Lab host (Azure VM)
+### Azure VM
 
 - Deploy options
     - **Visual Studio Code:** You can install Visual Studio Code during the deployment if you choose the deployment option.
@@ -30,11 +30,11 @@ The HCI lab environment consists of three roles of Hyper-V VMs on a single Azure
 
     | Icon | Notes |
     | ---- | ---- |
-    | Windows Admin Center | Open Windows Admin Center on the management tools server (**wac**) Hyper-V VM with Microsoft Edge.  |
-    | Management tools server | Connect to the management tools server (**wac**) Hyper-V VM using Remote Desktop. |
-    | hcinode01 | Connect to a HCI node (**hcinode01**) Hyper-V VM using Remote Desktop. |
-    | Hyper-V Manager | Open the Hyper-V Manager to manage Hyper-V VMs for the HCI lab environment. |
-    | Visual Studio Code | There is an icon if installed via deployment option. |
+    | Windows Admin Center | Open Windows Admin Center with Microsoft Edge. |
+    | Management tools server | Connect to the **workbox** Hyper-V VM using Remote Desktop. |
+    | machine01 | Connect to the **machine01** Hyper-V VM using Remote Desktop. |
+    | Hyper-V Manager | Open the Hyper-V Manager to manage Hyper-V VMs in the lab environment. |
+    | Visual Studio Code | There is this icon if installed via deployment option. |
 
 - Data volume
     - Volume **V:** is the data volume. Hyper-V VM files, VHD files, ISO file and other working files are stored on this volume.
@@ -45,36 +45,36 @@ The HCI lab environment consists of three roles of Hyper-V VMs on a single Azure
 
 - The log files of the custom scripts are stored under `C:\temp\hcilab-logs` in the lab host Azure VM. Those log files are helpful for troubleshooting when deployment fails.
 
-### VMs in the lab environment (Hyper-V VMs)
+### Hyper-V VMs on Azure VM
 
 - Deploy options
     - **Join to the AD DS domain:** Should you choose to **Not join** if you plan to [provisioning your HCI cluster from Azure portal](https://learn.microsoft.com/en-us/azure-stack/hci/deploy/deploy-via-portal).
     - **Create HCI cluster:** You can automatically create your HCI cluster during the deployment if you choose the deployment option. Also, by not choosing it, you can manually create an HCI cluster for cluster creation with custom configuration such as Network ATC.
 
-- AD domain name (default): **hci.internal**
+- AD domain name (default): **lab.internal**
 
 - Credentials
 
     | Account type | User name | Password |
     | ---- | ---- | ---- |
-    | Domain administrator | HCI\\Administrator | Your supplied password in the HCI Lab deployment. |
-    | Local administrator | Administrator | Your supplied password in the HCI Lab deployment. |
+    | Domain administrator | LAB\Administrator | Your supplied password during the lab deployment. |
+    | Local administrator | Administrator | Your supplied password during the lab deployment. |
 
-- You can access each Hyper-V VM such as **wac**, **hcinode##**, **addsdc** in you lab environment via Remote Desktop connection (mstsc.exe) and Virtual Machine connection (vmconnect.exe) from the lab host VM (Azure VM).
+- You can access each Hyper-V VMs such as **workbox**, **machine##**, **addsdc** in you lab environment via Remote Desktop connection (mstsc.exe) and Virtual Machine connection (vmconnect.exe) from the Azure VM that hosted the lab environment.
 
 - Windows Server 2022/2025 Datacenter Evaluation expires in **180 days**.
 
-- Management tools server (**wac** VM)
+- workbox
 
-    - Windows Admin Center works on the **wac** VM as gateway mode. You can access via `https://wac/` from the **wac** VM and the lab host VM.
-    - Traditional server management tools (RSAT) are installed on the **wac** VM.
+    - Windows Admin Center works on the **workbox** VM as gateway mode. You can access via `https://wac/` from the **workbox** VM and the lab host VM.
+    - Traditional server management tools (RSAT) are installed on the **workbox** VM.
 
     - Desktop icons on the wac VM
 
         | Icon | Notes |
         | ---- | ---- |
-        | Windows Admin Center | Open Windows Admin Center on the management tools server (**wac**) Hyper-V VM with Microsoft Edge.  |
-        | hcinode01 | Connect to a HCI node (**hcinode01**) Hyper-V VM using Remote Desktop. |
+        | Windows Admin Center | Open Windows Admin Center with Microsoft Edge.  |
+        | machine01 | Connect to the **machine01** Hyper-V VM using Remote Desktop. |
 
 ## Networking
 

@@ -140,8 +140,8 @@
                                     "visible": true,
                                     "label": "Active Directory Domain FQDN",
                                     "toolTip": "TODO",
-                                    "placeholder": "e.g. hci.internal",
-                                    "defaultValue": "hci.internal",
+                                    "placeholder": "e.g. lab.internal",
+                                    "defaultValue": "lab.internal",
                                     "constraints": {
                                         "required": true,
                                         "regex": "^[a-z0-9A-Z]{1,30}$",
@@ -154,8 +154,8 @@
                                     "visible": true,
                                     "label": "Active Directory organizational unit",
                                     "toolTip": "TODO",
-                                    "placeholder": "e.g. OU=AzureLocal,DC=hci,DC=internal",
-                                    "defaultValue": "OU=AzureLocal,DC=hci,DC=internal",
+                                    "placeholder": "e.g. OU=AzureLocal,DC=lab,DC=internal",
+                                    "defaultValue": "OU=AzureLocal,DC=lab,DC=internal",
                                     "constraints": {
                                         "required": true,
                                         "regex": "^[a-z0-9A-Z]{1,30}$",
