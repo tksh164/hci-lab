@@ -112,7 +112,7 @@
 
         // Virtual machine.
         "virtualMachineApiVersion": "2024-11-01",
-        "computerName": "hcilabhost"
+        "computerName": "labenv"
     },
     "resources": [
         // Public IP address.
