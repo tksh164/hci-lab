@@ -84,6 +84,68 @@ function Get-WindowsFeatureToInstall
     return $featureNames
 }
 
+function Wait-BootstrapServices
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $VMName,
+
+        [Parameter(Mandatory = $true)]
+        [PSCredential] $Credential,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, 3600)]
+        [int] $RetryTimeoutSeconds = 600,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, 3600)]
+        [int] $RetryIntervalSeconds = 30,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, 3600)]
+        [int] $LoggingIntervalSeconds = 60
+    )
+
+    $startTime = Get-Date
+    $endTime = $startTime.AddSeconds($RetryTimeoutSeconds)
+
+    while ((Get-Date) -lt $endTime) {
+        try {
+            $params = @{
+                VMName      = $VMName
+                Credential  = $Credential
+                ScriptBlock = {
+                    ((Get-Service -Name 'BootstrapManagementService').Status -eq 'Running') -and 
+                    ((Get-Service -Name 'BootstrapRestService').Status -eq 'Running')
+                }
+                ErrorAction = [Management.Automation.ActionPreference]::Stop
+            }
+            if ((Invoke-Command @params)) {
+                'The Bootstrap services are ready on the VM.' | Write-ScriptLog
+                return
+            }
+        }
+        catch {
+            '{0} (ExceptionMessage: {1} | Exception: {2} | FullyQualifiedErrorId: {3} | CategoryInfo: {4} | ErrorDetailsMessage: {5})' -f @(
+                'Checking the Bootstrap services status...',
+                $_.Exception.Message,
+                $_.Exception.GetType().FullName,
+                $_.FullyQualifiedErrorId,
+                $_.CategoryInfo.ToString(),
+                $_.ErrorDetails.Message
+            ) | Write-ScriptLog -Level Warning
+        }
+
+        Start-Sleep -Seconds $RetryIntervalSeconds
+        $elapsedSeconds = [int] ((Get-Date) - $startTime).TotalSeconds
+        if (($elapsedSeconds % $LoggingIntervalSeconds) -eq 0) {
+            Write-Host ('{0} seconds elapsed.' -f $elapsedSeconds)
+        }
+    }
+
+    throw 'The Bootstrap services did not enter the running state in {0} seconds.' -f $RetryTimeoutSeconds
+}
 try {
     $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 
@@ -360,6 +422,20 @@ try {
     $localAdminCredential = New-LogonCredential -DomainFqdn '.' -Password $nodeConfig.AdminPassword
     Wait-PowerShellDirectReady -VMName $nodeConfig.VMName -Credential $localAdminCredential
     'PowerShell Direct is ready.' | Write-ScriptLog
+
+    if ($labConfig.hciNode.isAzureLocalDeployment) {
+        'Wait for the Bootstrap services to be available.' | Write-ScriptLog
+        Wait-BootstrapServices -VMName $nodeConfig.VMName -Credential $localAdminCredential
+        'The Bootstrap services are available.' | Write-ScriptLog
+
+        # NOTE: The VM automatically restarts at some point after the Bootstrap services are available.
+        'A buffer time to wait for the VM to start restarting.' | Write-ScriptLog
+        Start-Sleep -Seconds 60
+
+        'Wait for PowerShell Direct to be ready.' | Write-ScriptLog
+        Wait-PowerShellDirectReady -VMName $nodeConfig.VMName -Credential $localAdminCredential
+        'PowerShell Direct is ready.' | Write-ScriptLog
+    }
 
     #
     # Guest OS configuration
