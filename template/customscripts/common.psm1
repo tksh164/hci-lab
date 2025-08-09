@@ -666,7 +666,7 @@ function Install-WindowsFeatureToVhd
         # NOTE: Effort to prevent collision of concurrent DISM operations.
         $waitHandle = CreateWaitHandleForSerialization -SyncEventName 'Local\hcilab-install-windows-feature-to-vhd'
         'Wait for the turn to doing the Install-WindowsFeature cmdlet''s DISM operations.' | Write-ScriptLog -LogContext $VhdPath
-        $waitHandle.WaitOne()
+        [void] $waitHandle.WaitOne()
         'Acquired the turn to doing the Install-WindowsFeature cmdlet''s DISM operation.' | Write-ScriptLog -LogContext $VhdPath
 
         try {
@@ -707,7 +707,7 @@ function Install-WindowsFeatureToVhd
         }
         finally {
             'Releasing the turn to doing the Install-WindowsFeature cmdlet''s DISM operation.' | Write-ScriptLog -LogContext $VhdPath
-            $waitHandle.Set()
+            [void] $waitHandle.Set()
             $waitHandle.Dispose()
         }
         Start-Sleep -Seconds $RetryIntervalSeconds
