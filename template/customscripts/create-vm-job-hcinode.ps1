@@ -146,6 +146,95 @@ function Wait-BootstrapServices
 
     throw 'The Bootstrap services did not enter the running state in {0} seconds.' -f $RetryTimeoutSeconds
 }
+
+function Invoke-AzureLocalScheduledTask
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $VMName,
+
+        [Parameter(Mandatory = $true)]
+        [PSCredential] $Credential
+    )
+
+    $params = @{
+        VMName      = $VMName
+        Credential  = $Credential
+        ScriptBlock = {
+            $task = Get-ScheduledTask -TaskName 'ImageCustomizationScheduledTask'
+            if ($task.State -eq 'Ready') {
+                $task | Start-ScheduledTask
+            }
+        }
+        ErrorAction = [Management.Automation.ActionPreference]::Stop
+    }
+    Invoke-Command @params
+}
+
+function Wait-AzureLocalScheduledTaskCompletion
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $VMName,
+
+        [Parameter(Mandatory = $true)]
+        [PSCredential] $Credential,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, 3600)]
+        [int] $RetryTimeoutSeconds = 600,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, 3600)]
+        [int] $RetryIntervalSeconds = 10,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, 3600)]
+        [int] $LoggingIntervalSeconds = 60
+    )
+
+    # NOTE: The ImageCustomizationScheduledTask task will disabled after the task has been completed.
+    $startTime = Get-Date
+    $endTime = $startTime.AddSeconds($RetryTimeoutSeconds)
+    while ((Get-Date) -lt $endTime) {
+        try {
+            $params = @{
+                VMName      = $VMName
+                Credential  = $Credential
+                ScriptBlock = {
+                    $task = Get-ScheduledTask -TaskName 'ImageCustomizationScheduledTask'
+                    $task.State -eq 'Disabled'
+                }
+                ErrorAction = [Management.Automation.ActionPreference]::Stop
+            }
+            if ((Invoke-Command @params)) {
+                'The ImageCustomizationScheduledTask task is completed.' | Write-ScriptLog
+                return
+            }
+        }
+        catch {
+            '{0} (ExceptionMessage: {1} | Exception: {2} | FullyQualifiedErrorId: {3} | CategoryInfo: {4} | ErrorDetailsMessage: {5})' -f @(
+                'Checking the ImageCustomizationScheduledTask task completion...',
+                $_.Exception.Message,
+                $_.Exception.GetType().FullName,
+                $_.FullyQualifiedErrorId,
+                $_.CategoryInfo.ToString(),
+                $_.ErrorDetails.Message
+            ) | Write-ScriptLog -Level Warning
+        }
+
+        Start-Sleep -Seconds $RetryIntervalSeconds
+        $elapsedSeconds = [int] ((Get-Date) - $startTime).TotalSeconds
+        if (($elapsedSeconds % $LoggingIntervalSeconds) -eq 0) {
+            Write-Host ('{0} seconds elapsed.' -f $elapsedSeconds)
+        }
+    }
+
+    throw 'The ImageCustomizationScheduledTask task did not complete in {0} seconds.' -f $RetryTimeoutSeconds
+}
+
 try {
     $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 
@@ -723,6 +812,15 @@ try {
         Get-Module -Name 'PowerShellGet' -ListAvailable | Out-String -Width 200 | Write-ScriptLog
     }
     'Install the PowerShellGet module within the VM completed.' | Write-ScriptLog
+
+    if ($labConfig.hciNode.isAzureLocalDeployment) {
+        'Invoke the Azure Local scheduled task.' | Write-ScriptLog
+        Invoke-AzureLocalScheduledTask -VMName $nodeConfig.VMName -Credential $invokeWithinVMParams.Credential
+
+        'Wait for the Azure Local scheduled task to be completed.' | Write-ScriptLog
+        Wait-AzureLocalScheduledTaskCompletion -VMName $nodeConfig.VMName -Credential $invokeWithinVMParams.Credential
+        'The Azure Local scheduled task is completed.' | Write-ScriptLog
+    }
 
     'Delete the module files within the VM.' | Write-ScriptLog
     $params = @{
