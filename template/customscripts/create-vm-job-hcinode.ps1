@@ -355,10 +355,11 @@ try {
 
     Start-VMSurely -VMName $nodeConfig.VMName
 
-    'Wait for the VM to be ready.' | Write-ScriptLog
+    # NOTE: The VM automatically restarts at some point between after the VM started and before PowerShell Direct is ready.
+    'Wait for PowerShell Direct to be ready.' | Write-ScriptLog
     $localAdminCredential = New-LogonCredential -DomainFqdn '.' -Password $nodeConfig.AdminPassword
     Wait-PowerShellDirectReady -VMName $nodeConfig.VMName -Credential $localAdminCredential
-    'The VM is ready.' | Write-ScriptLog
+    'PowerShell Direct is ready.' | Write-ScriptLog
 
     #
     # Guest OS configuration
@@ -669,7 +670,7 @@ try {
         'Join the VM to the AD domain completed.'  | Write-ScriptLog
     }
 
-    # Reboot the VM.
+    # Restart the VM.
     Stop-VMSurely -VMName $nodeConfig.VMName
     Start-VMSurely -VMName $nodeConfig.VMName
 
@@ -693,7 +694,6 @@ catch {
     throw $exceptionMessage
 }
 finally {
-    'The HCI node VM creation has been finished.' | Write-ScriptLog
     $stopWatch.Stop()
     'Duration of this script ran: {0}' -f $stopWatch.Elapsed.toString('hh\:mm\:ss') | Write-ScriptLog
     Stop-ScriptLogging
