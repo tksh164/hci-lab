@@ -20,6 +20,12 @@
                 "description": "The string for uniqueness of the storage account name."
             }
         },
+        "hostVmSubnetId": {
+            "type": "string",
+            "metadata": {
+                "description": "The subnet ID that has the host VM. This subnet ID will be set to the storage account's firewall rules as an allowed subnet."
+            }
+        },
         "keyVaultName": {
             "type": "string",
             "metadata": {
@@ -57,15 +63,21 @@
                 "accessTier": "Hot",
                 "minimumTlsVersion": "TLS1_2",
                 "supportsHttpsTrafficOnly": true,
-                "publicNetworkAccess": "Disabled",
-                "allowBlobPublicAccess": false,
                 "allowSharedKeyAccess": true,
                 "allowCrossTenantReplication": true,
                 "defaultToOAuthAuthentication": false,
+                "allowBlobPublicAccess": false,
+                "publicNetworkAccess": "Enabled",
                 "networkAcls": {
                     "bypass": "AzureServices",
-                    "defaultAction": "Allow",
-                    "ipRules": []
+                    "defaultAction": "Deny",
+                    "ipRules": [],
+                    "virtualNetworkRules": [
+                        {
+                            "id": "[parameters('hostVmSubnetId')]",
+                            "action": "Allow"
+                        }
+                    ]
                 },
                 "dnsEndpointType": "Standard",
                 "encryption": {
@@ -86,6 +98,9 @@
                     },
                     "requireInfrastructureEncryption": false
                 }
+            },
+            "tags": {
+                "SecurityControl": "Ignore"  // Security control exemption
             }
         },
         {

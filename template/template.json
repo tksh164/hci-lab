@@ -433,28 +433,11 @@
             "name": "labenv-bastion"
         },
 
-        // Private DNS zones
-        "privateDnsZoneLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/private-dns-zone.json')]",
-        "privateDnsZoneKeyVault": {
-            "deploymentName": "deploy-private-dns-zone-key-vault",
+        // Lab host virtual machine
+        "hostVm": {
+            "deploymentName": "deploy-host-vm",
             "apiVersion": "[variables('deploymentApiVersion')]",
-            "zoneName": "privatelink.vaultcore.azure.net"
-        },
-        "privateDnsZoneStorageAccount": {
-            "deploymentName": "deploy-private-dns-zone-storage-account",
-            "apiVersion": "[variables('deploymentApiVersion')]",
-            "zoneName": "privatelink.blob.core.windows.net"
-        },
-
-        // Private DNS zone virtual network link
-        "privateDnsZoneVNetLinkLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/private-dns-zone-vnet-link.json')]",
-        "privateDnsZoneVNetLinkKeyVault": {
-            "deploymentName": "deploy-private-dns-zone-vnet-link-key-vault",
-            "apiVersion": "[variables('deploymentApiVersion')]"
-        },
-        "privateDnsZoneVNetLinkStorageAccount": {
-            "deploymentName": "deploy-private-dns-zone-vnet-link-storage-account",
-            "apiVersion": "[variables('deploymentApiVersion')]"
+            "linkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/hostvm.json')]"
         },
 
         // Key Vault
@@ -463,13 +446,6 @@
             "apiVersion": "[variables('deploymentApiVersion')]",
             "linkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/keyvault.json')]",
             "name": "[format('labenv-{0}-kv', toLower(variables('uniqueString')))]"
-        },
-
-        // Lab host virtual machine
-        "hostVm": {
-            "deploymentName": "deploy-host-vm",
-            "apiVersion": "[variables('deploymentApiVersion')]",
-            "linkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/hostvm.json')]"
         },
 
         // Key Vault RBAC
@@ -485,17 +461,6 @@
             "apiVersion": "[variables('deploymentApiVersion')]",
             "linkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/cloudwitness.json')]",
             "namePrefix": "labenvwitness"
-        },
-
-        // Private endpoints
-        "privateEndpointLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/private-endpoint.json')]",
-        "privateEndpointKeyVault": {
-            "deploymentName": "deploy-private-endpoint-key-vault",
-            "apiVersion": "[variables('deploymentApiVersion')]"
-        },
-        "privateEndpointStorageAccount": {
-            "deploymentName": "deploy-private-endpoint-storage-account",
-            "apiVersion": "[variables('deploymentApiVersion')]"
         },
 
         // DSC extension
@@ -519,7 +484,7 @@
             }
         },
 
-        // Custom script extension
+        // Custom script extensions
         "customScriptLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/customscript.json')]",
         "customScriptExtensionName": "hci-lab-customscript-extension",
         "customScriptBaseUri": "[uri(variables('repoBaseUri'), 'customscripts/')]",  // Must end with "/".
@@ -757,124 +722,6 @@
             }
         },
 
-        // Private DNS zone for Key Vault
-        {
-            "name": "[variables('privateDnsZoneKeyVault').deploymentName]",
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('privateDnsZoneKeyVault').apiVersion]",
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('privateDnsZoneLinkedTemplateUri')]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "privateDnsZoneName": {
-                        "value": "[variables('privateDnsZoneKeyVault').zoneName]"
-                    }
-                }
-            }
-        },
-
-        // Private DNS zone virtual network link for Key Vault
-        {
-            "name": "[variables('privateDnsZoneVNetLinkKeyVault').deploymentName]",
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('privateDnsZoneVNetLinkKeyVault').apiVersion]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', variables('virtualNetwork').deploymentName)]",
-                "[resourceId('Microsoft.Resources/deployments', variables('privateDnsZoneKeyVault').deploymentName)]"
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('privateDnsZoneVNetLinkLinkedTemplateUri')]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "privateDnsZoneName": {
-                        "value": "[variables('privateDnsZoneKeyVault').zoneName]"
-                    },
-                    "virtualNetworkId": {
-                        "value": "[reference(variables('virtualNetwork').deploymentName, variables('virtualNetwork').apiVersion).outputs.virtualNetworkId.value]"
-                    }
-                }
-            }
-        },
-
-        // Private DNS zone for Storage account
-        {
-            "name": "[variables('privateDnsZoneStorageAccount').deploymentName]",
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('privateDnsZoneStorageAccount').apiVersion]",
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('privateDnsZoneLinkedTemplateUri')]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "privateDnsZoneName": {
-                        "value": "[variables('privateDnsZoneStorageAccount').zoneName]"
-                    }
-                }
-            }
-        },
-
-        // Private DNS zone virtual network link for Storage account
-        {
-            "name": "[variables('privateDnsZoneVNetLinkStorageAccount').deploymentName]",
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('privateDnsZoneVNetLinkStorageAccount').apiVersion]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', variables('virtualNetwork').deploymentName)]",
-                "[resourceId('Microsoft.Resources/deployments', variables('privateDnsZoneStorageAccount').deploymentName)]"
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('privateDnsZoneVNetLinkLinkedTemplateUri')]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "privateDnsZoneName": {
-                        "value": "[variables('privateDnsZoneStorageAccount').zoneName]"
-                    },
-                    "virtualNetworkId": {
-                        "value": "[reference(variables('virtualNetwork').deploymentName, variables('virtualNetwork').apiVersion).outputs.virtualNetworkId.value]"
-                    }
-                }
-            }
-        },
-
-        // Key Vault
-        {
-            "name": "[variables('keyVault').deploymentName]",
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('keyVault').apiVersion]",
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('keyVault').linkedTemplateUri]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "location": {
-                        "value": "[variables('location')]"
-                    },
-                    "keyVaultName": {
-                        "value": "[variables('keyVault').name]"
-                    },
-                    "secretNameForLabHostAdminPassword": {
-                        "value": "[variables('labConfig').keyVault.secretName.adminPassword]"
-                    },
-                    "labHostAdminPassword": {
-                        "value": "[parameters('adminPassword')]"
-                    }
-                }
-            }
-        },
-
         // Lab host virtual machine.
         {
             "name": "[variables('hostVm').deploymentName]",
@@ -942,14 +789,48 @@
             }
         },
 
+        // Key Vault
+        {
+            "name": "[variables('keyVault').deploymentName]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[variables('keyVault').apiVersion]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', variables('virtualNetwork').deploymentName)]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('keyVault').linkedTemplateUri]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
+                    "keyVaultName": {
+                        "value": "[variables('keyVault').name]"
+                    },
+                    "hostVmSubnetId": {
+                        "value": "[reference(variables('virtualNetwork').deploymentName, variables('virtualNetwork').apiVersion).outputs.subnetId.value.default]"
+                    },
+                    "secretNameForLabHostAdminPassword": {
+                        "value": "[variables('labConfig').keyVault.secretName.adminPassword]"
+                    },
+                    "labHostAdminPassword": {
+                        "value": "[parameters('adminPassword')]"
+                    }
+                }
+            }
+        },
+
         // Key Vault RBAC
         {
             "name": "[variables('keyVaultRbac').deploymentName]",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[variables('keyVaultRbac').apiVersion]",
             "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', variables('keyVault').deploymentName)]",
-                "[resourceId('Microsoft.Resources/deployments', variables('hostVm').deploymentName)]"
+                "[resourceId('Microsoft.Resources/deployments', variables('hostVm').deploymentName)]",
+                "[resourceId('Microsoft.Resources/deployments', variables('keyVault').deploymentName)]"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -977,6 +858,7 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[variables('witnessStorageAccount').apiVersion]",
             "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', variables('virtualNetwork').deploymentName)]",
                 "[resourceId('Microsoft.Resources/deployments', variables('keyVault').deploymentName)]"
             ],
             "properties": {
@@ -995,6 +877,9 @@
                     "uniqueString": {
                         "value": "[variables('uniqueString')]"
                     },
+                    "hostVmSubnetId": {
+                        "value": "[reference(variables('virtualNetwork').deploymentName, variables('virtualNetwork').apiVersion).outputs.subnetId.value.default]"
+                    },
                     "keyVaultName": {
                         "value": "[variables('keyVault').name]"
                     },
@@ -1003,88 +888,6 @@
                     },
                     "secretNameForStorageAccountKey": {
                         "value": "[variables('labConfig').keyVault.secretName.cloudWitnessStorageAccountKey]"
-                    }
-                }
-            }
-        },
-
-        // Private endpoint for the Key Vault.
-        {
-            "name": "[variables('privateEndpointKeyVault').deploymentName]",
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('privateEndpointKeyVault').apiVersion]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', variables('keyVault').deploymentName)]",
-                "[resourceId('Microsoft.Resources/deployments', variables('privateDnsZoneVNetLinkKeyVault').deploymentName)]"
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('privateEndpointLinkedTemplateUri')]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "location": {
-                        "value": "[variables('location')]"
-                    },
-                    "subnetId": {
-                        "value": "[reference(variables('virtualNetwork').deploymentName, variables('virtualNetwork').apiVersion).outputs.subnetId.value.privateEndpointSubnet]"
-                    },
-                    "privateEndpointName": {
-                        "value": "[format('{0}-pe', variables('keyVault').name)]"
-                    },
-                    "networkInterfaceName": {
-                        "value": "[format('{0}-pe-nic', variables('keyVault').name)]"
-                    },
-                    "privateLinkResourceId": {
-                        "value": "[reference(variables('keyVault').deploymentName, variables('keyVault').apiVersion).outputs.keyVaultId.value]"
-                    },
-                    "targetSubresource": {
-                        "value": "vault"
-                    },
-                    "privateDnsZoneName": {
-                        "value": "[variables('privateDnsZoneKeyVault').zoneName]"
-                    }
-                }
-            }
-        },
-
-        // Private endpoint for the storage account.
-        {
-            "name": "[variables('privateEndpointStorageAccount').deploymentName]",
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('privateEndpointStorageAccount').apiVersion]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', variables('witnessStorageAccount').deploymentName)]",
-                "[resourceId('Microsoft.Resources/deployments', variables('privateDnsZoneVNetLinkStorageAccount').deploymentName)]"
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('privateEndpointLinkedTemplateUri')]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "location": {
-                        "value": "[variables('location')]"
-                    },
-                    "subnetId": {
-                        "value": "[reference(variables('virtualNetwork').deploymentName, variables('virtualNetwork').apiVersion).outputs.subnetId.value.privateEndpointSubnet]"
-                    },
-                    "privateEndpointName": {
-                        "value": "[format('{0}-pe', reference(variables('witnessStorageAccount').deploymentName, variables('witnessStorageAccount').apiVersion).outputs.storageAccountName.value)]"
-                    },
-                    "networkInterfaceName": {
-                        "value": "[format('{0}-pe-nic', reference(variables('witnessStorageAccount').deploymentName, variables('witnessStorageAccount').apiVersion).outputs.storageAccountName.value)]"
-                    },
-                    "privateLinkResourceId": {
-                        "value": "[reference(variables('witnessStorageAccount').deploymentName, variables('witnessStorageAccount').apiVersion).outputs.storageAccountId.value]"
-                    },
-                    "targetSubresource": {
-                        "value": "blob"
-                    },
-                    "privateDnsZoneName": {
-                        "value": "[variables('privateDnsZoneStorageAccount').zoneName]"
                     }
                 }
             }
@@ -1133,7 +936,6 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[variables('customScript').configureHostVm.apiVersion]",
             "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', variables('privateEndpointKeyVault').deploymentName)]",
                 "[resourceId('Microsoft.Resources/deployments', variables('keyVaultRbac').deploymentName)]",
                 "[resourceId('Microsoft.Resources/deployments', variables('dsc').installRolesFeatures.deploymentName)]"
             ],
@@ -1309,7 +1111,7 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[variables('customScript').createHciCluster.apiVersion]",
             "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', variables('privateEndpointStorageAccount').deploymentName)]",
+                "[resourceId('Microsoft.Resources/deployments', variables('witnessStorageAccount').deploymentName)]",
                 "[resourceId('Microsoft.Resources/deployments', variables('customScript').createVm.deploymentName)]"
             ],
             "properties": {

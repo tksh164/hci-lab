@@ -14,6 +14,12 @@
                 "description": "The Key Vault name."
             }
         },
+        "hostVmSubnetId": {
+            "type": "string",
+            "metadata": {
+                "description": "The subnet ID that has the host VM. This subnet ID will be set to the key vault's firewall rules as an allowed subnet."
+            }
+        },
         "secretNameForLabHostAdminPassword": {
             "type": "string",
             "metadata": {
@@ -36,8 +42,8 @@
             "location": "[parameters('location')]",
             "properties": {
                 "sku": {
-                    "name": "Standard",
-                    "family": "A"
+                    "family": "A",
+                    "name": "Standard"
                 },
                 "tenantId": "[tenant().tenantId]",
                 "enableSoftDelete": false,
@@ -46,11 +52,21 @@
                 "enabledForDiskEncryption": false,
                 "enableRbacAuthorization": true,
                 "accessPolicies": [],
-                "publicNetworkAccess": "Disabled",
+                "publicNetworkAccess": "Enabled",
                 "networkAcls": {
-                    "defaultAction": "allow",
-                    "bypass": "AzureServices"
+                    "bypass": "AzureServices",
+                    "defaultAction": "Deny",
+                    "ipRules": [],
+                    "virtualNetworkRules": [
+                        {
+                            "id": "[parameters('hostVmSubnetId')]",
+                            "ignoreMissingVnetServiceEndpoint": false
+                        }
+                    ]
                 }
+            },
+            "tags": {
+                "SecurityControl": "Ignore"  // Security control exemption
             }
         },
 
