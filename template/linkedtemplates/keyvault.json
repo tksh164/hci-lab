@@ -14,6 +14,12 @@
                 "description": "The Key Vault name."
             }
         },
+        "hostVmSubnetId": {
+            "type": "string",
+            "metadata": {
+                "description": "The subnet ID that has the host VM. This subnet ID will be set to the key vault's firewall rules as an allowed subnet."
+            }
+        },
         "secretNameForLabHostAdminPassword": {
             "type": "string",
             "metadata": {
@@ -49,8 +55,14 @@
                 "publicNetworkAccess": "Enabled",
                 "networkAcls": {
                     "bypass": "AzureServices",
-                    "defaultAction": "Allow",
-                    "ipRules": []
+                    "defaultAction": "Deny",
+                    "ipRules": [],
+                    "virtualNetworkRules": [
+                        {
+                            "id": "[parameters('hostVmSubnetId')]",
+                            "ignoreMissingVnetServiceEndpoint": false
+                        }
+                    ]
                 }
             },
             "tags": {

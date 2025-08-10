@@ -433,19 +433,19 @@
             "name": "labenv-bastion"
         },
 
+        // Lab host virtual machine
+        "hostVm": {
+            "deploymentName": "deploy-host-vm",
+            "apiVersion": "[variables('deploymentApiVersion')]",
+            "linkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/hostvm.json')]"
+        },
+
         // Key Vault
         "keyVault": {
             "deploymentName": "deploy-key-vault",
             "apiVersion": "[variables('deploymentApiVersion')]",
             "linkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/keyvault.json')]",
             "name": "[format('labenv-{0}-kv', toLower(variables('uniqueString')))]"
-        },
-
-        // Lab host virtual machine
-        "hostVm": {
-            "deploymentName": "deploy-host-vm",
-            "apiVersion": "[variables('deploymentApiVersion')]",
-            "linkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/hostvm.json')]"
         },
 
         // Key Vault RBAC
@@ -484,7 +484,7 @@
             }
         },
 
-        // Custom script extension
+        // Custom script extensions
         "customScriptLinkedTemplateUri": "[uri(variables('repoBaseUri'), 'linkedtemplates/customscript.json')]",
         "customScriptExtensionName": "hci-lab-customscript-extension",
         "customScriptBaseUri": "[uri(variables('repoBaseUri'), 'customscripts/')]",  // Must end with "/".
@@ -722,34 +722,6 @@
             }
         },
 
-        // Key Vault
-        {
-            "name": "[variables('keyVault').deploymentName]",
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('keyVault').apiVersion]",
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('keyVault').linkedTemplateUri]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "location": {
-                        "value": "[variables('location')]"
-                    },
-                    "keyVaultName": {
-                        "value": "[variables('keyVault').name]"
-                    },
-                    "secretNameForLabHostAdminPassword": {
-                        "value": "[variables('labConfig').keyVault.secretName.adminPassword]"
-                    },
-                    "labHostAdminPassword": {
-                        "value": "[parameters('adminPassword')]"
-                    }
-                }
-            }
-        },
-
         // Lab host virtual machine.
         {
             "name": "[variables('hostVm').deploymentName]",
@@ -817,14 +789,48 @@
             }
         },
 
+        // Key Vault
+        {
+            "name": "[variables('keyVault').deploymentName]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[variables('keyVault').apiVersion]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', variables('virtualNetwork').deploymentName)]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('keyVault').linkedTemplateUri]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
+                    "keyVaultName": {
+                        "value": "[variables('keyVault').name]"
+                    },
+                    "hostVmSubnetId": {
+                        "value": "[reference(variables('virtualNetwork').deploymentName, variables('virtualNetwork').apiVersion).outputs.subnetId.value.default]"
+                    },
+                    "secretNameForLabHostAdminPassword": {
+                        "value": "[variables('labConfig').keyVault.secretName.adminPassword]"
+                    },
+                    "labHostAdminPassword": {
+                        "value": "[parameters('adminPassword')]"
+                    }
+                }
+            }
+        },
+
         // Key Vault RBAC
         {
             "name": "[variables('keyVaultRbac').deploymentName]",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[variables('keyVaultRbac').apiVersion]",
             "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', variables('keyVault').deploymentName)]",
-                "[resourceId('Microsoft.Resources/deployments', variables('hostVm').deploymentName)]"
+                "[resourceId('Microsoft.Resources/deployments', variables('hostVm').deploymentName)]",
+                "[resourceId('Microsoft.Resources/deployments', variables('keyVault').deploymentName)]"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -852,6 +858,7 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[variables('witnessStorageAccount').apiVersion]",
             "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', variables('virtualNetwork').deploymentName)]",
                 "[resourceId('Microsoft.Resources/deployments', variables('keyVault').deploymentName)]"
             ],
             "properties": {
@@ -869,6 +876,9 @@
                     },
                     "uniqueString": {
                         "value": "[variables('uniqueString')]"
+                    },
+                    "hostVmSubnetId": {
+                        "value": "[reference(variables('virtualNetwork').deploymentName, variables('virtualNetwork').apiVersion).outputs.subnetId.value.default]"
                     },
                     "keyVaultName": {
                         "value": "[variables('keyVault').name]"
