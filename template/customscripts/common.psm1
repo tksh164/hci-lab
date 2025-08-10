@@ -671,7 +671,7 @@ function Install-WindowsFeatureToVhd
 
         try {
             # NOTE: Install-WindowsFeature cmdlet will fail sometimes due to concurrent operations, etc.
-            'Start Windows features installation to VHD.' | Write-ScriptLog -LogContext $VhdPath
+            'Start Windows features installation to the VHD.' | Write-ScriptLog -LogContext $VhdPath
             $params = @{
                 Vhd                    = $VhdPath
                 Name                   = $FeatureName
@@ -893,7 +893,7 @@ function Wait-PowerShellDirectReady
         }
         catch {
             '{0} (ExceptionMessage: {1} | Exception: {2} | FullyQualifiedErrorId: {3} | CategoryInfo: {4} | ErrorDetailsMessage: {5})' -f @(
-                'Probing the VM ready state...',
+                'Probing PowerShell Direct ready state...',
                 $_.Exception.Message,
                 $_.Exception.GetType().FullName,
                 $_.FullyQualifiedErrorId,
@@ -904,7 +904,7 @@ function Wait-PowerShellDirectReady
         Start-Sleep -Seconds $RetryIntervalSeconds
     }
 
-    throw 'The VM "{0}" was not ready in the acceptable time ({1}).' -f $VMName, $RetryTimeout.ToString()
+    throw 'PowerShell Direct did not ready on the VM "{0}" in the acceptable time ({1}).' -f $VMName, $RetryTimeout.ToString()
 }
 
 # A sync event name for blocking the AD DS operations.

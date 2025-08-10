@@ -84,6 +84,157 @@ function Get-WindowsFeatureToInstall
     return $featureNames
 }
 
+function Wait-BootstrapServices
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $VMName,
+
+        [Parameter(Mandatory = $true)]
+        [PSCredential] $Credential,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, 3600)]
+        [int] $RetryTimeoutSeconds = 600,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, 3600)]
+        [int] $RetryIntervalSeconds = 30,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, 3600)]
+        [int] $LoggingIntervalSeconds = 60
+    )
+
+    $startTime = Get-Date
+    $endTime = $startTime.AddSeconds($RetryTimeoutSeconds)
+
+    while ((Get-Date) -lt $endTime) {
+        try {
+            $params = @{
+                VMName      = $VMName
+                Credential  = $Credential
+                ScriptBlock = {
+                    ((Get-Service -Name 'BootstrapManagementService').Status -eq 'Running') -and 
+                    ((Get-Service -Name 'BootstrapRestService').Status -eq 'Running')
+                }
+                ErrorAction = [Management.Automation.ActionPreference]::Stop
+            }
+            if ((Invoke-Command @params)) {
+                'The Bootstrap services are ready on the VM.' | Write-ScriptLog
+                return
+            }
+        }
+        catch {
+            '{0} (ExceptionMessage: {1} | Exception: {2} | FullyQualifiedErrorId: {3} | CategoryInfo: {4} | ErrorDetailsMessage: {5})' -f @(
+                'Checking the Bootstrap services status...',
+                $_.Exception.Message,
+                $_.Exception.GetType().FullName,
+                $_.FullyQualifiedErrorId,
+                $_.CategoryInfo.ToString(),
+                $_.ErrorDetails.Message
+            ) | Write-ScriptLog -Level Warning
+        }
+
+        Start-Sleep -Seconds $RetryIntervalSeconds
+        $elapsedSeconds = [int] ((Get-Date) - $startTime).TotalSeconds
+        if (($elapsedSeconds % $LoggingIntervalSeconds) -eq 0) {
+            Write-Host ('{0} seconds elapsed.' -f $elapsedSeconds)
+        }
+    }
+
+    throw 'The Bootstrap services did not enter the running state in {0} seconds.' -f $RetryTimeoutSeconds
+}
+
+function Invoke-AzureLocalScheduledTask
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $VMName,
+
+        [Parameter(Mandatory = $true)]
+        [PSCredential] $Credential
+    )
+
+    $params = @{
+        VMName      = $VMName
+        Credential  = $Credential
+        ScriptBlock = {
+            $task = Get-ScheduledTask -TaskName 'ImageCustomizationScheduledTask'
+            if ($task.State -eq 'Ready') {
+                $task | Start-ScheduledTask
+            }
+        }
+        ErrorAction = [Management.Automation.ActionPreference]::Stop
+    }
+    Invoke-Command @params
+}
+
+function Wait-AzureLocalScheduledTaskCompletion
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $VMName,
+
+        [Parameter(Mandatory = $true)]
+        [PSCredential] $Credential,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, 3600)]
+        [int] $RetryTimeoutSeconds = 600,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, 3600)]
+        [int] $RetryIntervalSeconds = 10,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, 3600)]
+        [int] $LoggingIntervalSeconds = 60
+    )
+
+    # NOTE: The ImageCustomizationScheduledTask task will disabled after the task has been completed.
+    $startTime = Get-Date
+    $endTime = $startTime.AddSeconds($RetryTimeoutSeconds)
+    while ((Get-Date) -lt $endTime) {
+        try {
+            $params = @{
+                VMName      = $VMName
+                Credential  = $Credential
+                ScriptBlock = {
+                    $task = Get-ScheduledTask -TaskName 'ImageCustomizationScheduledTask'
+                    $task.State -eq 'Disabled'
+                }
+                ErrorAction = [Management.Automation.ActionPreference]::Stop
+            }
+            if ((Invoke-Command @params)) {
+                'The ImageCustomizationScheduledTask task is completed.' | Write-ScriptLog
+                return
+            }
+        }
+        catch {
+            '{0} (ExceptionMessage: {1} | Exception: {2} | FullyQualifiedErrorId: {3} | CategoryInfo: {4} | ErrorDetailsMessage: {5})' -f @(
+                'Checking the ImageCustomizationScheduledTask task completion...',
+                $_.Exception.Message,
+                $_.Exception.GetType().FullName,
+                $_.FullyQualifiedErrorId,
+                $_.CategoryInfo.ToString(),
+                $_.ErrorDetails.Message
+            ) | Write-ScriptLog -Level Warning
+        }
+
+        Start-Sleep -Seconds $RetryIntervalSeconds
+        $elapsedSeconds = [int] ((Get-Date) - $startTime).TotalSeconds
+        if (($elapsedSeconds % $LoggingIntervalSeconds) -eq 0) {
+            Write-Host ('{0} seconds elapsed.' -f $elapsedSeconds)
+        }
+    }
+
+    throw 'The ImageCustomizationScheduledTask task did not complete in {0} seconds.' -f $RetryTimeoutSeconds
+}
+
 try {
     $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 
@@ -355,10 +506,25 @@ try {
 
     Start-VMSurely -VMName $nodeConfig.VMName
 
-    'Wait for the VM to be ready.' | Write-ScriptLog
+    # NOTE: The VM automatically restarts at some point between after the VM started and before PowerShell Direct is ready.
+    'Wait for PowerShell Direct to be ready.' | Write-ScriptLog
     $localAdminCredential = New-LogonCredential -DomainFqdn '.' -Password $nodeConfig.AdminPassword
     Wait-PowerShellDirectReady -VMName $nodeConfig.VMName -Credential $localAdminCredential
-    'The VM is ready.' | Write-ScriptLog
+    'PowerShell Direct is ready.' | Write-ScriptLog
+
+    if ($labConfig.hciNode.isAzureLocalDeployment) {
+        'Wait for the Bootstrap services to be available.' | Write-ScriptLog
+        Wait-BootstrapServices -VMName $nodeConfig.VMName -Credential $localAdminCredential
+        'The Bootstrap services are available.' | Write-ScriptLog
+
+        # NOTE: The VM automatically restarts at some point after the Bootstrap services are available.
+        'A buffer time to wait for the VM to start restarting.' | Write-ScriptLog
+        Start-Sleep -Seconds 60
+
+        'Wait for PowerShell Direct to be ready.' | Write-ScriptLog
+        Wait-PowerShellDirectReady -VMName $nodeConfig.VMName -Credential $localAdminCredential
+        'PowerShell Direct is ready.' | Write-ScriptLog
+    }
 
     #
     # Guest OS configuration
@@ -647,6 +813,15 @@ try {
     }
     'Install the PowerShellGet module within the VM completed.' | Write-ScriptLog
 
+    if ($labConfig.hciNode.isAzureLocalDeployment) {
+        'Invoke the Azure Local scheduled task.' | Write-ScriptLog
+        Invoke-AzureLocalScheduledTask -VMName $nodeConfig.VMName -Credential $invokeWithinVMParams.Credential
+
+        'Wait for the Azure Local scheduled task to be completed.' | Write-ScriptLog
+        Wait-AzureLocalScheduledTaskCompletion -VMName $nodeConfig.VMName -Credential $invokeWithinVMParams.Credential
+        'The Azure Local scheduled task is completed.' | Write-ScriptLog
+    }
+
     'Delete the module files within the VM.' | Write-ScriptLog
     $params = @{
         VMName               = $invokeWithinVMParams.VMName
@@ -669,7 +844,7 @@ try {
         'Join the VM to the AD domain completed.'  | Write-ScriptLog
     }
 
-    # Reboot the VM.
+    # Restart the VM.
     Stop-VMSurely -VMName $nodeConfig.VMName
     Start-VMSurely -VMName $nodeConfig.VMName
 
@@ -693,7 +868,6 @@ catch {
     throw $exceptionMessage
 }
 finally {
-    'The HCI node VM creation has been finished.' | Write-ScriptLog
     $stopWatch.Stop()
     'Duration of this script ran: {0}' -f $stopWatch.Elapsed.toString('hh\:mm\:ss') | Write-ScriptLog
     Stop-ScriptLogging
