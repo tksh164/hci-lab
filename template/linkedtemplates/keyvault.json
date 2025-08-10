@@ -36,8 +36,8 @@
             "location": "[parameters('location')]",
             "properties": {
                 "sku": {
-                    "name": "Standard",
-                    "family": "A"
+                    "family": "A",
+                    "name": "Standard"
                 },
                 "tenantId": "[tenant().tenantId]",
                 "enableSoftDelete": false,
@@ -46,10 +46,11 @@
                 "enabledForDiskEncryption": false,
                 "enableRbacAuthorization": true,
                 "accessPolicies": [],
-                "publicNetworkAccess": "Disabled",
+                "publicNetworkAccess": "Enabled",
                 "networkAcls": {
-                    "defaultAction": "allow",
-                    "bypass": "AzureServices"
+                    "bypass": "AzureServices",
+                    "defaultAction": "Allow",
+                    "ipRules": []
                 }
             }
         },

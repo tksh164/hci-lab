@@ -25,33 +25,15 @@
             "addressPrefix": "192.168.0.0/24"
         },
 
-        // Private endpoint subnet.
-        "privateEndpointSubnet": {
-            "name": "privateEndpointSubnet",
-            "addressPrefix": "192.168.1.0/24"
-        },
-
         // Network security group names.
         "subnetNsgName": {
-            "default": "[format('{0}-{1}-nsg', parameters('virtualNetworkName'), toLower(variables('defaultSubnet').name))]",
-            "privateEndpointSubnet": "[format('{0}-{1}-nsg', parameters('virtualNetworkName'), toLower(variables('privateEndpointSubnet').name))]"
+            "default": "[format('{0}-{1}-nsg', parameters('virtualNetworkName'), toLower(variables('defaultSubnet').name))]"
         }
     },
     "resources": [
         // Network security group for the default subnet.
         {
             "name": "[variables('subnetNsgName').default]",
-            "type": "Microsoft.Network/networkSecurityGroups",
-            "apiVersion": "2024-07-01",
-            "location": "[parameters('location')]",
-            "properties": {
-                "securityRules": []
-            }
-        },
-
-        // Network security group for the private endpoint subnet.
-        {
-            "name": "[variables('subnetNsgName').privateEndpointSubnet]",
             "type": "Microsoft.Network/networkSecurityGroups",
             "apiVersion": "2024-07-01",
             "location": "[parameters('location')]",
@@ -67,8 +49,7 @@
             "apiVersion": "2024-07-01",
             "location": "[parameters('location')]",
             "dependsOn": [
-                "[resourceId('Microsoft.Network/networkSecurityGroups', variables('subnetNsgName').default)]",
-                "[resourceId('Microsoft.Network/networkSecurityGroups', variables('subnetNsgName').privateEndpointSubnet)]"
+                "[resourceId('Microsoft.Network/networkSecurityGroups', variables('subnetNsgName').default)]"
             ],
             "properties": {
                 "addressSpace": {
@@ -85,15 +66,6 @@
                                 "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('subnetNsgName').default)]"
                             }
                         }
-                    },
-                    {
-                        "name": "[variables('privateEndpointSubnet').name]",
-                        "properties": {
-                            "addressPrefix": "[variables('privateEndpointSubnet').addressPrefix]",
-                            "networkSecurityGroup": {
-                                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('subnetNsgName').privateEndpointSubnet)]"
-                            }
-                        }
                     }
                 ]
             }
@@ -107,16 +79,8 @@
         "subnetId": {
             "type": "object",
             "value": {
-                "default": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), variables('defaultSubnet').name)]",
-                "privateEndpointSubnet": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), variables('privateEndpointSubnet').name)]"
+                "default": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), variables('defaultSubnet').name)]"
             }
-        }//,
-        // "subnetNsgId": {
-        //     "type": "object",
-        //     "value": {
-        //         "default": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('subnetNsgName').default)]",
-        //         "privateEndpointSubnet": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('subnetNsgName').privateEndpointSubnet)]"
-        //     }
-        // }
+        }
     }
 }
