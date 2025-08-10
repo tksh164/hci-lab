@@ -86,6 +86,9 @@
                     },
                     "requireInfrastructureEncryption": false
                 }
+            },
+            "tags": {
+                "SecurityControl": "Ignore"  // Security control exemption
             }
         },
         {

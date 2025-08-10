@@ -52,6 +52,9 @@
                     "defaultAction": "Allow",
                     "ipRules": []
                 }
+            },
+            "tags": {
+                "SecurityControl": "Ignore"  // Security control exemption
             }
         },
 
