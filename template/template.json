@@ -696,6 +696,7 @@
 
         // Bastion
         {
+            "condition": "[parameters('shouldDeployBastionDeveloper')]",
             "name": "[variables('bastion').deploymentName]",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[variables('bastion').apiVersion]",
