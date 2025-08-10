@@ -855,6 +855,7 @@
 
         // Storage account for the witness.
         {
+            "condition": "[not(parameters('isAzureLocalDeployment'))]",
             "name": "[variables('witnessStorageAccount').deploymentName]",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[variables('witnessStorageAccount').apiVersion]",
