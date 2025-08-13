@@ -52,8 +52,8 @@ function Get-HciNodeProcessorCount
     )
 
     # Heuristic calculation.
-    # This calculation keeps the ratio of Hyper-V host logical processors : Toltal Hyper-V VM processors = 1 : approx. 2.5.
-    # Approx. 2.5 = ((Floor((Hyer-V host logical processors / Node count) * 2) * Node count) + ADDDS VM processors + WAC VM processors) / Hyer-V host logical processors
+    # This calculation keeps the ratio of Hyper-V host logical processors : Total Hyper-V VM processors = 1 : approx. 2.5.
+    # Approx. 2.5 = ((Floor((Hyper-V host logical processors / Node count) * 2) * Node count) + ADDDS VM processors + WAC VM processors) / Hyper-V host logical processors
     return [Math]::Floor(((Get-VMHost).LogicalProcessorCount / $NodeCount) * 2)
 }
 
