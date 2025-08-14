@@ -28,7 +28,7 @@
         },
         "labHostVmSize": {
             "type": "string",
-            "defaultValue": "Standard_E16as_v6",
+            "defaultValue": "Standard_E16as_v5",
             "allowedValues": [
                 // Required VM size capabilities:
                 // - 32+ GB RAM
