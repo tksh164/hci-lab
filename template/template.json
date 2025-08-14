@@ -70,12 +70,12 @@
                 "Standard_D96s_v5",
 
                 // Ddsv5 series
-                "Standard_D8ds_v5",
-                "Standard_D16ds_v5",
-                "Standard_D32ds_v5",
-                "Standard_D48ds_v5",
-                "Standard_D64ds_v5",
-                "Standard_D96ds_v5",
+                // "Standard_D8ds_v5",
+                // "Standard_D16ds_v5",
+                // "Standard_D32ds_v5",
+                // "Standard_D48ds_v5",
+                // "Standard_D64ds_v5",
+                // "Standard_D96ds_v5",
 
                 // Dasv5 series
                 // "Standard_D32as_v5",
@@ -97,11 +97,11 @@
                 "Standard_D96ls_v5",
 
                 // Dldsv5 series
-                "Standard_D16lds_v5",
-                "Standard_D32lds_v5",
-                "Standard_D48lds_v5",
-                "Standard_D64lds_v5",
-                "Standard_D96lds_v5",
+                // "Standard_D16lds_v5",
+                // "Standard_D32lds_v5",
+                // "Standard_D48lds_v5",
+                // "Standard_D64lds_v5",
+                // "Standard_D96lds_v5",
 
                 // Dsv4 series
                 "Standard_D8s_v4",
@@ -111,11 +111,11 @@
                 "Standard_D64s_v4",
 
                 // Ddsv4 series
-                "Standard_D8ds_v4",
-                "Standard_D16ds_v4",
-                "Standard_D32ds_v4",
-                "Standard_D48ds_v4",
-                "Standard_D64ds_v4",
+                // "Standard_D8ds_v4",
+                // "Standard_D16ds_v4",
+                // "Standard_D32ds_v4",
+                // "Standard_D48ds_v4",
+                // "Standard_D64ds_v4",
 
                 // Dsv3 series
                 "Standard_D8s_v3",
@@ -135,14 +135,14 @@
                 "Standard_E96s_v5",
 
                 // Edsv5 series
-                "Standard_E4ds_v5",
-                "Standard_E8ds_v5",
-                "Standard_E16ds_v5",
-                "Standard_E20ds_v5",
-                "Standard_E32ds_v5",
-                "Standard_E48ds_v5",
-                "Standard_E64ds_v5",
-                "Standard_E96ds_v5",
+                // "Standard_E4ds_v5",
+                // "Standard_E8ds_v5",
+                // "Standard_E16ds_v5",
+                // "Standard_E20ds_v5",
+                // "Standard_E32ds_v5",
+                // "Standard_E48ds_v5",
+                // "Standard_E64ds_v5",
+                // "Standard_E96ds_v5",
 
                 // Easv6 series
                 "Standard_E16as_v6",
@@ -185,12 +185,12 @@
                 "Standard_E64bs_v5",
 
                 // Ebdsv5 series
-                "Standard_E4bds_v5",
-                "Standard_E8bds_v5",
-                "Standard_E16bds_v5",
-                "Standard_E32bds_v5",
-                "Standard_E48bds_v5",
-                "Standard_E64bds_v5",
+                // "Standard_E4bds_v5",
+                // "Standard_E8bds_v5",
+                // "Standard_E16bds_v5",
+                // "Standard_E32bds_v5",
+                // "Standard_E48bds_v5",
+                // "Standard_E64bds_v5",
 
                 // Fsv2 series
                 "Standard_F16s_v2",
