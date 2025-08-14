@@ -133,7 +133,24 @@
                 "Standard_E48ds_v5",
                 "Standard_E64ds_v5",
                 "Standard_E96ds_v5",
-                // Easv5-series
+
+                // Easv6 series
+                "Standard_E16as_v6",
+                "Standard_E20as_v6",
+                "Standard_E32as_v6",
+                "Standard_E48as_v6",
+                "Standard_E64as_v6",
+                "Standard_E96as_v6",
+
+                // Eadsv6 series
+                // "Standard_E16ads_v6",
+                // "Standard_E20ads_v6",
+                // "Standard_E32ads_v6",
+                // "Standard_E48ads_v6",
+                // "Standard_E64ads_v6",
+                // "Standard_E96ads_v6",
+
+                // Easv5 series
                 // "Standard_E16as_v5",
                 // "Standard_E20as_v5",
                 // "Standard_E32as_v5",
