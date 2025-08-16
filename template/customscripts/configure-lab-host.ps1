@@ -136,11 +136,16 @@ try {
     Disable-ScheduledTask -TaskName 'StartComponentCleanup' -TaskPath '\Microsoft\Windows\Servicing'
     'Disable WinSxS clean up completed.' | Write-ScriptLog
 
+    # Stop and disable SysMain service
+
+    Stop-Service -Name 'SysMain' -NoWait
+    Set-Service -Name 'SysMain' -StartupType Disabled
+
     # Defender configuration
 
     'Set Defender exclusions.' | Write-ScriptLog
     $exclusionPaths = @(
-        $volume.DriveLetter + ':\',
+        ($volume.DriveLetter + ':\'),
         '%SystemDrive%\Temp\hcilab-logs',
         '%ProgramData%\Microsoft\Windows\Hyper-V',
         '%ProgramData%\Microsoft\Windows\Hyper-V\Snapshots',
