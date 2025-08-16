@@ -374,7 +374,7 @@ function Invoke-FileDownload
 
     for ($retryCount = 0; $retryCount -lt $MaxRetryCount; $retryCount++) {
         try {
-            'Donwload the file to "{0}" from "{1}".' -f $destinationFilePath, $SourceUri | Write-ScriptLog
+            'Download the file to "{0}" from "{1}".' -f $destinationFilePath, $SourceUri | Write-ScriptLog
             Start-BitsTransfer -Source $SourceUri -Destination $destinationFilePath
             return Get-Item -LiteralPath $destinationFilePath
         }
