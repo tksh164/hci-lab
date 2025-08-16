@@ -130,6 +130,12 @@ try {
     New-Item -ItemType Directory -Path $labConfig.labHost.folderPath.vm -Force
     'Create the folder structure on the volume completed.' | Write-ScriptLog
 
+    # Disable WinSxS clean up
+
+    'Disable WinSxS clean up.' | Write-ScriptLog
+    Disable-ScheduledTask -TaskName 'StartComponentCleanup' -TaskPath '\Microsoft\Windows\Servicing'
+    'Disable WinSxS clean up completed.' | Write-ScriptLog
+
     # Defender configuration
 
     'Set Defender exclusions.' | Write-ScriptLog
