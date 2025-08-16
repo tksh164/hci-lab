@@ -121,13 +121,7 @@ try {
     $volume | Format-List -Property '*'
     'Format the partition completed.' | Write-ScriptLog
 
-    'Set Defender exclusions.' | Write-ScriptLog
-    $exclusionPath = $storageVolume.DriveLetter + ':\'
-    Add-MpPreference -ExclusionPath $exclusionPath
-    if ((Get-MpPreference).ExclusionPath -notcontains $exclusionPath) {
-        throw 'Defender exclusion setting failed.'
-    }
-    'Set Defender exclusions completed.' | Write-ScriptLog
+    # Folder structure
 
     'Create the folder structure on the volume.' | Write-ScriptLog
     New-Item -ItemType Directory -Path $labConfig.labHost.folderPath.temp -Force
@@ -135,6 +129,16 @@ try {
     New-Item -ItemType Directory -Path $labConfig.labHost.folderPath.vhd -Force
     New-Item -ItemType Directory -Path $labConfig.labHost.folderPath.vm -Force
     'Create the folder structure on the volume completed.' | Write-ScriptLog
+
+    # Defender configuration
+
+    'Set Defender exclusions.' | Write-ScriptLog
+    $exclusionPath = $storageVolume.DriveLetter + ':\'
+    Add-MpPreference -ExclusionPath $exclusionPath
+    if ((Get-MpPreference).ExclusionPath -notcontains $exclusionPath) {
+        throw 'Defender exclusion setting failed.'
+    }
+    'Set Defender exclusions completed.' | Write-ScriptLog
 
     # Hyper-V
 
