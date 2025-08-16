@@ -274,6 +274,7 @@ try {
 
     # Shortcuts on the desktop
 
+    $firstHciNodeName = Format-HciNodeName -Format $labConfig.hciNode.vmName -Offset $labConfig.hciNode.vmNameOffset -Index 0
     $shortcutParams = @(
         # @{
         #     ShortcutFilePath = 'C:\Users\Public\Desktop\Windows Admin Center.lnk'
