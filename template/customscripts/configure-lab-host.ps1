@@ -207,6 +207,10 @@ try {
 
     # Tweaks for Server Manager
 
+    'Disable ServerManager scheduled task.' | Write-ScriptLog
+    Disable-ScheduledTask -TaskName 'ServerManager' -TaskPath '\Microsoft\Windows\Server Manager'
+    'Disable ServerManager scheduled task completed.' | Write-ScriptLog
+
     'Stop Server Manager launch at logon.' | Write-ScriptLog
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotOpenServerManagerAtLogon' -Value 1
     'Stop Server Manager launch at logon completed.' | Write-ScriptLog
