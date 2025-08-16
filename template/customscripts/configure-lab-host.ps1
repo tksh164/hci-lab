@@ -157,6 +157,8 @@ try {
     Set-VMHost @params
     'Configure Hyper-V host settings completed.' | Write-ScriptLog
 
+    # NAT
+
     'Create a new NAT vSwitch.' | Write-ScriptLog
     $params = @{
         Name       = $labConfig.labHost.vSwitch.nat.name
@@ -166,13 +168,10 @@ try {
     'Create a new NAT vSwitch completed.' | Write-ScriptLog
 
     'Enable forwarding on the lab host''s NAT network interface.' | Write-ScriptLog
-    $paramsForGet = @{
+    $params = @{
         InterfaceAlias = '*{0}*' -f $labConfig.labHost.vSwitch.nat.name
     }
-    $paramsForSet = @{
-        Forwarding = 'Enabled'
-    }
-    Get-NetIPInterface @paramsForGet | Set-NetIPInterface @paramsForSet
+    Get-NetIPInterface @params | Set-NetIPInterface -Forwarding 'Enabled'
     'Enable forwarding on the lab host''s NAT network interface completed.' | Write-ScriptLog
 
     foreach ($netNat in $labConfig.labHost.netNat) {
