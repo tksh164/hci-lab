@@ -172,7 +172,8 @@ try {
         '%SystemRoot%\System32\vmms.exe',
         '%SystemRoot%\System32\vmwp.exe',
         '%SystemRoot%\System32\vmsp.exe',
-        '%SystemRoot%\System32\vmcompute.exe'
+        '%SystemRoot%\System32\vmcompute.exe',
+        '%SystemRoot%\System32\vmconnect.exe'
     )
     Add-MpPreference -ExclusionPath $exclusionPaths -ExclusionExtension $exclusionExtensions -ExclusionProcess $exclusionProcess
     'Set Defender exclusions completed.' | Write-ScriptLog
