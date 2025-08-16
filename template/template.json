@@ -31,11 +31,12 @@
             "defaultValue": "Standard_E16s_v5",
             "allowedValues": [
                 // Required VM size capabilities:
-                // - 32+ GB RAM
                 // - Generation 2 VM support
                 // - Premium storage support
                 // - Accelerated networking support
                 // - Nested virtualization support
+                // - 32+ GB RAM
+                // - No temp storage
 
                 // Esv6 series
                 "Standard_E4s_v6",
