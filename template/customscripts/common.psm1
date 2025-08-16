@@ -375,7 +375,22 @@ function Invoke-FileDownload
     for ($retryCount = 0; $retryCount -lt $MaxRetryCount; $retryCount++) {
         try {
             'Download the file to "{0}" from "{1}".' -f $destinationFilePath, $SourceUri | Write-ScriptLog
-            Start-BitsTransfer -Source $SourceUri -Destination $destinationFilePath
+            $params = @{
+                FilePath     = 'C:\Windows\System32\curl.exe'
+                ArgumentList = '--location --silent --fail --output {0} {1}' -f $destinationFilePath, $SourceUri
+                PassThru     = $true
+                Wait         = $true
+                NoNewWindow  = $true
+            }
+            $proc = Start-Process @params
+
+            if ($proc.ExitCode -ne 0) {
+                throw 'The curl command failed with exit code {0} when downloading the file from {1}.' -f $proc.ExitCode, $SourceUri
+            }
+
+            # TODO: Compute file hash and verify
+            # Get-FileHash -LiteralPath $destinationFilePath -Algorithm SHA256
+
             return Get-Item -LiteralPath $destinationFilePath
         }
         catch {
