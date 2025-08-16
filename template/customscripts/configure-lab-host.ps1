@@ -139,11 +139,37 @@ try {
     # Defender configuration
 
     'Set Defender exclusions.' | Write-ScriptLog
-    $exclusionPath = $storageVolume.DriveLetter + ':\'
-    Add-MpPreference -ExclusionPath $exclusionPath
-    if ((Get-MpPreference).ExclusionPath -notcontains $exclusionPath) {
-        throw 'Defender exclusion setting failed.'
-    }
+    $exclusionPaths = @(
+        $storageVolume.DriveLetter + ':\',
+        '%SystemDrive%\Temp\hcilab-logs',
+        '%ProgramData%\Microsoft\Windows\Hyper-V',
+        '%ProgramData%\Microsoft\Windows\Hyper-V\Snapshots',
+        '%Public%\Documents\Hyper-V\Virtual Hard Disks'
+    )
+    $exclusionExtensions = @(
+        '.vhd',
+        '.vhdx',
+        '.avhd',
+        '.avhdx',
+        '.vhds',
+        '.vhdpmem',
+        '.iso',
+        '.rct',
+        '.mrt',
+        '.vsv',
+        '.bin',
+        '.xml',
+        '.vmcx',
+        '.vmrs',
+        '.vmgs'
+    )
+    $exclusionProcess = @(
+        '%SystemRoot%\System32\vmms.exe',
+        '%SystemRoot%\System32\vmwp.exe',
+        '%SystemRoot%\System32\vmsp.exe',
+        '%SystemRoot%\System32\vmcompute.exe'
+    )
+    Add-MpPreference -ExclusionPath $exclusionPaths -ExclusionExtension $exclusionExtensions -ExclusionProcess $exclusionProcess
     'Set Defender exclusions completed.' | Write-ScriptLog
 
     # Hyper-V
