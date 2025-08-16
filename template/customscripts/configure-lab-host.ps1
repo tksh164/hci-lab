@@ -140,7 +140,7 @@ try {
 
     'Set Defender exclusions.' | Write-ScriptLog
     $exclusionPaths = @(
-        $storageVolume.DriveLetter + ':\',
+        $volume.DriveLetter + ':\',
         '%SystemDrive%\Temp\hcilab-logs',
         '%ProgramData%\Microsoft\Windows\Hyper-V',
         '%ProgramData%\Microsoft\Windows\Hyper-V\Snapshots',
