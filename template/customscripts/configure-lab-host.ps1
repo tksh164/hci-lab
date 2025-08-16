@@ -240,11 +240,12 @@ try {
     New-ShortcutFile @params
     'Create a new shortcut on the desktop for accessing Windows Admin Center completed.' | Write-ScriptLog
     #>
+
     # Shortcuts: Remote Desktop connection
 
     'Create a new shortcut on the desktop for connecting to the management server using Remote Desktop connection.' | Write-ScriptLog
     $params = @{
-        ShortcutFilePath = 'C:\Users\Public\Desktop\Management tools server.lnk'
+        ShortcutFilePath = 'C:\Users\Public\Desktop\{0}.lnk' -f $labConfig.wac.vmName
         TargetPath       = '%windir%\System32\mstsc.exe'
         Arguments        = '/v:{0}' -f $labConfig.wac.vmName  # The VM name is also the computer name.
         Description      = 'Make a remote desktop connection to the Windows Admin Center VM in your lab environment.'
