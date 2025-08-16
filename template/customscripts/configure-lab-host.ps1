@@ -226,6 +226,17 @@ try {
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Edge' -Name 'HideFirstRunExperience' -Value 1
     'Hide the first run experience of Microsoft Edge completed.' | Write-ScriptLog
 
+    # Windows Terminal
+    
+    # Set Windows Terminal as the default terminal application as the default user setting.
+    New-PSDrive -PSProvider Registry -Name 'HKU' -Root 'HKEY_USERS'
+    $registryPath = 'HKU:\.DEFAULT\Console\%%Startup'
+    if (-not (Test-Path -LiteralPath $registryPath)) {
+        New-Item -Path $registryPath -Force
+    }
+    Set-ItemProperty -LiteralPath $registryPath -Name 'DelegationConsole' -Value '{2EACA947-7F5F-4CFA-BA87-8F7FBEEFBE69}'
+    Set-ItemProperty -LiteralPath $registryPath -Name 'DelegationTerminal' -Value '{E12CFF52-A866-4C77-9A90-F570A7AA2C6B}'
+
     # Install tools
 
     $toolsToInstall = $labConfig.labHost.toolsToInstall -split ';'
