@@ -227,55 +227,41 @@ try {
         'Install Visual Studio Code completed.' | Write-ScriptLog
     }
 
-    # Shortcuts: Windows Admin Center
-    <#
-    'Create a new shortcut on the desktop for accessing Windows Admin Center.' | Write-ScriptLog
-    $params = @{
-        ShortcutFilePath = 'C:\Users\Public\Desktop\Windows Admin Center.lnk'
-        TargetPath       = 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
-        Arguments        = 'https://{0}' -f $labConfig.wac.vmName  # The VM name is also the computer name.
-        Description      = 'Open Windows Admin Center for your lab environment.'
-        IconLocation     = 'imageres.dll,-1028'
+    # Shortcuts on the desktop
+
+    $shortcutParams = @(
+        # @{
+        #     ShortcutFilePath = 'C:\Users\Public\Desktop\Windows Admin Center.lnk'
+        #     TargetPath       = 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
+        #     Arguments        = 'https://{0}' -f $labConfig.wac.vmName  # The VM name is also the computer name.
+        #     Description      = 'Open Windows Admin Center for your lab environment.'
+        #     IconLocation     = 'imageres.dll,-1028'
+        # },
+        @{
+            ShortcutFilePath = 'C:\Users\Public\Desktop\{0}.lnk' -f $labConfig.wac.vmName
+            TargetPath       = '%windir%\System32\mstsc.exe'
+            Arguments        = '/v:{0}' -f $labConfig.wac.vmName  # The VM name is also the computer name.
+            Description      = 'Make a remote desktop connection to the Windows Admin Center VM in your lab environment.'
+        },
+        @{
+            ShortcutFilePath = 'C:\Users\Public\Desktop\{0}.lnk' -f $firstHciNodeName
+            TargetPath       = '%windir%\System32\mstsc.exe'
+            Arguments        = '/v:{0}' -f $firstHciNodeName  # The VM name is also the computer name.
+            Description      = 'Make a remote desktop connection to the member node "{0}" VM of the HCI cluster in your lab environment.' -f $firstHciNodeName
+        },
+        @{
+            ShortcutFilePath = 'C:\Users\Public\Desktop\Hyper-V Manager.lnk'
+            TargetPath       = '%windir%\System32\mmc.exe'
+            Arguments        = '"%windir%\System32\virtmgmt.msc"'
+            Description      = 'Hyper-V Manager provides management access to virtual machines in your lab environment.'
+            IconLocation     = '%ProgramFiles%\Hyper-V\SnapInAbout.dll,0'
+        }
+    )
+    foreach ($params in $shortcutParams) {
+        'Create a new shortcut on the desktop: "{0}".' -f $params.ShortcutFilePath | Write-ScriptLog
+        New-ShortcutFile @params
+        'Create a new shortcut on the desktop: "{0}" completed.' -f $params.ShortcutFilePath | Write-ScriptLog
     }
-    New-ShortcutFile @params
-    'Create a new shortcut on the desktop for accessing Windows Admin Center completed.' | Write-ScriptLog
-    #>
-
-    # Shortcuts: Remote Desktop connection
-
-    'Create a new shortcut on the desktop for connecting to the management server using Remote Desktop connection.' | Write-ScriptLog
-    $params = @{
-        ShortcutFilePath = 'C:\Users\Public\Desktop\{0}.lnk' -f $labConfig.wac.vmName
-        TargetPath       = '%windir%\System32\mstsc.exe'
-        Arguments        = '/v:{0}' -f $labConfig.wac.vmName  # The VM name is also the computer name.
-        Description      = 'Make a remote desktop connection to the Windows Admin Center VM in your lab environment.'
-    }
-    New-ShortcutFile @params
-    'Create a new shortcut on the desktop for connecting to the management server using Remote Desktop connection completed.' | Write-ScriptLog
-
-    'Create a new shortcut on the desktop for connecting to the first HCI node using Remote Desktop connection.' | Write-ScriptLog
-    $firstHciNodeName = Format-HciNodeName -Format $labConfig.hciNode.vmName -Offset $labConfig.hciNode.vmNameOffset -Index 0
-    $params = @{
-        ShortcutFilePath = 'C:\Users\Public\Desktop\{0}.lnk' -f $firstHciNodeName
-        TargetPath       = '%windir%\System32\mstsc.exe'
-        Arguments        = '/v:{0}' -f $firstHciNodeName  # The VM name is also the computer name.
-        Description      = 'Make a remote desktop connection to the member node "{0}" VM of the HCI cluster in your lab environment.' -f $firstHciNodeName
-    }
-    New-ShortcutFile @params
-    'Create a new shortcut on the desktop for connecting to the first HCI node using Remote Desktop connection completed.' | Write-ScriptLog
-
-    # Shortcuts: Hyper-V Manager
-
-    'Create a new shortcut on the desktop for launching Hyper-V Manager.' | Write-ScriptLog
-    $params = @{
-        ShortcutFilePath = 'C:\Users\Public\Desktop\Hyper-V Manager.lnk'
-        TargetPath       = '%windir%\System32\mmc.exe'
-        Arguments        = '"%windir%\System32\virtmgmt.msc"'
-        Description      = 'Hyper-V Manager provides management access to virtual machines in your lab environment.'
-        IconLocation     = '%ProgramFiles%\Hyper-V\SnapInAbout.dll,0'
-    }
-    New-ShortcutFile @params
-    'Create a new shortcut on the desktop for launching Hyper-V Manager completed.' | Write-ScriptLog
 
     'The lab host configuration has been successfully completed.' | Write-ScriptLog
 }
