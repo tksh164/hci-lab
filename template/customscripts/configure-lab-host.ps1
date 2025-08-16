@@ -194,12 +194,18 @@ try {
         'Assign an internal IP configuration to the host''s NAT network interface completed.' | Write-ScriptLog
     }
 
-    # Tweaks
+    # Tweaks for Windows
 
     'Disable diagnostics data send screen.' | Write-ScriptLog
     New-RegistryKey -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows' -KeyName 'OOBE'
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\OOBE' -Name 'DisablePrivacyExperience' -Value 1
     'Disable diagnostics data send screen completed.' | Write-ScriptLog
+
+    'Hide the Network Location wizard. All networks will be Public.' | Write-ScriptLog
+    New-RegistryKey -ParentPath 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -KeyName 'NewNetworkWindowOff'
+    'Hide the Network Location wizard completed.' | Write-ScriptLog
+
+    # Tweaks for Server Manager
 
     'Stop Server Manager launch at logon.' | Write-ScriptLog
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotOpenServerManagerAtLogon' -Value 1
@@ -209,9 +215,7 @@ try {
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotPopWACConsoleAtSMLaunch' -Value 1
     'Stop Windows Admin Center popup at Server Manager launch completed.' | Write-ScriptLog
 
-    'Hide the Network Location wizard. All networks will be Public.' | Write-ScriptLog
-    New-RegistryKey -ParentPath 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -KeyName 'NewNetworkWindowOff'
-    'Hide the Network Location wizard completed.' | Write-ScriptLog
+    # Tweaks for Microsoft Edge
 
     'Hide the first run experience of Microsoft Edge.' | Write-ScriptLog
     New-RegistryKey -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft' -KeyName 'Edge'
