@@ -95,3 +95,7 @@ The HCI lab environment consists of three roles of Hyper-V VMs on a single Azure
 - [Large image](https://raw.githubusercontent.com/tksh164/hci-lab/main/docs/media/hci-lab-networking-without-hci-cluster.svg)
 
 ![](./media/hci-lab-networking-without-hci-cluster.svg)
+
+
+## Troubleshooting steps
+
