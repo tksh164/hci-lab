@@ -99,3 +99,16 @@ The HCI lab environment consists of three roles of Hyper-V VMs on a single Azure
 
 ## Troubleshooting steps
 
+You can do troubleshoot the following steps when your HCI Lab deployment failed.
+
+1. Check the deployments of the target resource group in Azure portal then identify which step failed.
+2. Connect to the labenv VM via RDP or Bastion.
+3. Identify the last modified log file in `C:\Temp\hcilab-logs`. It's achieved by sorting the Date modified column.
+    - If your deployment failed in the base VHD creation or VM creation, you should also check the labenv_create-base-vhd.log or labenv_create-vm.log because they are working in parallel and those files have summary information to get which parallel jobs were failed. The summary information is located at the end part of the files. 
+3. Check the exception information in the identified log file. The exception information fenced `====` or `####`, and it's titled with `Handled Exception` or `UNHANDLED EXCEPTION`. The exception information has stack trace in the PowerShell script, it will help to identify the cause.
+
+Also, you can check input values and output values of each deployment on the target resource group in Azure portal. They are helpful to troubleshoot if the input value was incorrect.
+
+**HCI Lab deployment dependencies:**
+
+![](./media/hci-lab-deployment-flow.svg)
