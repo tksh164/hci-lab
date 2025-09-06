@@ -1,0 +1,24 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "shouldInstallUpdatesToLabVm": {
+            "value": false
+        },
+        "shouldCreateHciCluster": {
+            "value": false
+        },
+        "hciNodeCount": {
+            "value": 2
+        },
+        "hciNodeOsSku": {
+            "value": "azloc24h2_2508"
+        },
+        "hciNodeOsImageIndex": {
+            "value": 1
+        },
+        "repoBaseUri": {
+            "value": "https://storage-account-name.xxx.web.core.windows.net/template/"
+        }
+    }
+}
