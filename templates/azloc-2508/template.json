@@ -1,0 +1,931 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "languageVersion": "2.0",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "hciResourceProviderServicePrincipalObjectId": {
+            "type": "string",
+            "minLength": 36,
+            "maxLength": 36,
+            "metadata": {
+                "description": "The object ID of the Microsoft.AzureStackHCI Resource Provider service principal. It is there by default and unique per Azure tenant."
+            }
+        },
+        "hciClusterName": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 15,
+            "metadata": {
+                "description": "The name of the HCI cluster (Azure Local instance). The name must contain between 3 to 15 characters. The name only allows alphanumeric characters and hyphens."
+            }
+        },
+        "arcMachineResourceIds": {
+            "type": "array",
+            "minLength": 1,
+            "maxLength": 16,
+            "metadata": {
+                "description": "The Azure Arc Machine (Azure Local machine) resource IDs to consist of the HCI cluster (Azure Local instance)."
+            }
+        },
+        "managementAdapterNames": {
+            "type": "array",
+            "minLength": 1,
+            "metadata": {
+                "description": "The network adapter names for management intent on Arc Machines."
+            }
+        },
+        "computeAdapterNames": {
+            "type": "array",
+            "minLength": 1,
+            "metadata": {
+                "description": "The network adapter names for compute intent on Arc Machines."
+            }
+        },
+        "storageAdapterNames": {
+            "type": "array",
+            "minLength": 1,
+            "metadata": {
+                "description": "The network adapter names for storage intent on Arc Machines."
+            }
+        },
+        "startingIPAddress": {
+            "type": "string",
+            "minLength": 1,
+            "metadata": {
+                "description": "The starting IP address for deploying an Azure Local instance (HCI cluster)."
+            }
+        },
+        "endingIPAddress": {
+            "type": "string",
+            "minLength": 1,
+            "metadata": {
+                "description": "The ending IP address for deploying an Azure Local instance (HCI cluster)."
+            }
+        },
+        "subnetMask": {
+            "type": "string",
+            "minLength": 1,
+            "metadata": {
+                "description": "The subnet mask for deploying an Azure Local instance (HCI cluster)."
+            }
+        },
+        "defaultGateway": {
+            "type": "string",
+            "minLength": 1,
+            "metadata": {
+                "description": "The default gateway for deploying an Azure Local instance (HCI cluster)."
+            }
+        },
+        "dnsServers": {
+            "type": "array",
+            "minLength": 1,
+            "metadata": {
+                "description": "The DNS servers for deploying an Azure Local instance (HCI cluster)."
+            }
+        },
+        "customLocationName": {
+            "type": "string",
+            "minLength": 1,
+            "metadata": {
+                "description": "The custom location name for deploying an Azure Local instance (HCI cluster)."
+            }
+        },
+        "addsDomainFqdn": {
+            "type": "string",
+            "minLength": 1,
+            "metadata": {
+                "description": "The domain name of the Active Directory Domain Services."
+            }
+        },
+        "addsOrgUnitPath": {
+            "type": "string",
+            "minLength": 1,
+            "metadata": {
+                "description": "The Active Directory organizational Unit (OU) path to place the Azure Local related objects."
+            }
+        },
+        "lcmUserName": {
+            "type": "string",
+            "minLength": 1,
+            "metadata": {
+                "description": "The user name of the Lifecycle Manager (LCM) deployment user account."
+            }
+        },
+        "lcmUserPassword": {
+            "type": "securestring",
+            "minLength": 1,
+            "metadata": {
+                "description": "The password of the Lifecycle Manager (LCM) deployment user account."
+            }
+        },
+        "localAdminUserName": {
+            "type": "string",
+            "minLength": 1,
+            "metadata": {
+                "description": "The user name of the local administrator account."
+            }
+        },
+        "localAdminPassword": {
+            "type": "securestring",
+            "minLength": 1,
+            "metadata": {
+                "description": "The password of the local administrator account."
+            }
+        },
+        "utcNow": {
+            "type": "string",
+            "defaultValue": "[utcNow('yyyy-MM-dd HH:mm:ss (zzz)')]",
+            "metadata": {
+                "description": "The UTC timestamp."
+            }
+        }
+    },
+    "variables": {
+        "location": "[resourceGroup().location]",
+        "tenantId": "[subscription().tenantId]",
+        "uniqueString": "[take(uniqueString(resourceGroup().id), 4)]",
+
+        // Resource names
+        "sanitizedClusterName": "[take(replace(parameters('hciClusterName'), '_', ''), 15)]",
+        "keyVaultName": "[concat(variables('sanitizedClusterName'), '-', variables('uniqueString'), '-kv')]",
+        "keyVaultAuditStorageAccountName": "[concat(replace(variables('sanitizedClusterName'), '-', ''), 'audit', variables('uniqueString'))]",
+        "keyVaultAuditDiagSettingName": "[concat('azurelocal-audit-', variables('sanitizedClusterName'), '-', variables('uniqueString'))]",
+        "witnessStorageAccountName": "[concat(replace(variables('sanitizedClusterName'), '-', ''), 'witness', variables('uniqueString'))]",
+
+        // Role definition IDs
+        "roleDefinitionId_AzureConnectedMachineResourceManager": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'f5819b54-e033-4d82-ac66-4fec3cbf3f4c')]",  // Azure Connected Machine Resource Manager
+        "roleDefinitionId_AzureStackHCIDeviceManagementRole": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '865ae368-6a45-4bd1-8fbf-0d5151f56fc1')]",     // Azure Stack HCI Device Management Role
+        "roleDefinitionId_AzureStackHCIConnectedInfraVMs": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'c99c945f-8bd1-4fb1-a903-01460aae6068')]",        // Azure Stack HCI Connected InfraVMs
+        "roleDefinitionId_KeyVaultDataAccessAdministrator": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '8b54135c-b56d-4d72-a534-26097cfdc8d8')]",       // Key Vault Data Access Administrator
+        "roleDefinitionId_KeyVaultSecretsOfficer": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7')]",                // Key Vault Secrets Officer
+        "roleDefinitionId_KeyVaultSecretsUser": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')]",                   // Key Vault Secrets User
+
+        // Role assignment description
+        "roleAssignmentDescription": "[concat('For the cluster \"', parameters('hciClusterName'), '\" in the resource group \"', resourceGroup().name, '\" on ', parameters('utcNow'), '.')]",
+
+        // ECE Secret names
+        "eceSecretNameLocalAdminCredential": "LocalAdminCredential",
+        "eceSecretNameAzureStackLCMUserCredential": "AzureStackLCMUserCredential",
+        "eceSecretNameWitnessStorageKey": "WitnessStorageKey",
+        //"eceSecretNameDefaultARBApplication": "DefaultARBApplication",
+
+        // Secret names for Azure Local
+        "secretNameLocalAdminCredential": "[concat(variables('sanitizedClusterName'), '-', variables('eceSecretNameLocalAdminCredential'), '-', variables('uniqueString'))]",
+        "secretNameAzureStackLCMUserCredential": "[concat(variables('sanitizedClusterName'), '-', variables('eceSecretNameAzureStackLCMUserCredential'), '-', variables('uniqueString'))]",
+        "secretNameWitnessStorageKey": "[concat(variables('sanitizedClusterName'), '-', variables('eceSecretNameWitnessStorageKey'), '-', variables('uniqueString'))]",
+
+        // Secret values for Azure Local
+        "secretValueLocalAdminCredential": "[base64(concat(parameters('localAdminUserName'), ':', parameters('localAdminPassword')))]",
+        "secretValueAzureStackLCMUserCredential": "[base64(concat(parameters('lcmUserName'), ':', parameters('lcmUserPassword')))]",
+
+        // Arc Machine extensions
+        "arcMachineExtensions": {
+            "telemetryAndDiagnostics": {
+                "version": "2.0.26.0"
+            },
+            "lcmController": {
+                "version": "30.2508.0.1064",
+                "settings": {
+                    "AssemblyDeployPackage": "10.2508.0.21",
+                    "Payload": [
+                        {
+                            "identifier": "CloudDeployment_zip",
+                            "hash": "FB0C38A50278E236F4CA1AE663AF70985BAE3AFD671A18BF9554CE59F4276F35",
+                            "fileName": "CloudDeployment_10.2508.0.21.zip",
+                            "url": "https://azurestackreleases.download.prss.microsoft.com/dbazure/AzureLocal/CloudDeployment/10.2507.0.7/CloudDeployment_10.2507.0.7.zip"
+                        },
+                        {
+                            "identifier": "VerifyCloudDeployment_ps1",
+                            "hash": "28C0812D4C5C8DD1A90729408B010CA0AF965B9E66D235071C7C1CC868389DC9",
+                            "fileName": "Verify-CloudDeployment_10.2508.0.21.zip_Hash.ps1",
+                            "url": "https://azurestackreleases.download.prss.microsoft.com/dbazure/AzureLocal/CloudDeployment/10.2508.0.21/Verify-CloudDeployment_10.2508.0.21.zip_Hash.ps1"
+                        },
+                        {
+                            "identifier": "BootstrapCloudDeploymentTool_ps1",
+                            "hash": "547960693BD67D08813D5101676817302BA002D1C9AFB3C9917BE088D42F194E",
+                            "fileName": "BootstrapCloudDeploymentTool.ps1",
+                            "url": "https://azurestackreleases.download.prss.microsoft.com/dbazure/AzureLocal/CloudDeployment/10.2508.0.21/BootstrapCloudDeploymentTool.ps1"
+                        },
+                        {
+                            "identifier": "SolutionVersion",
+                            "hash": "",
+                            "fileName": "12.2508.1001.52",
+                            "url": ""
+                        }
+                    ]
+                }
+            },
+            "deviceManagementExtension": {
+                "version": "1.2508.0.3000"
+            },
+            "edgeRemoteSupport": {
+                "version": "1.0.9.2"
+            }
+        }
+    },
+    "resources": {
+        //
+        // Role assignment for the resource group.
+        //
+
+        // Role assignment:
+        //   Scope: Resource group
+        //   Role: Azure Connected Machine Resource Manager
+        //   Assign access to: The Microsoft.AzureStackHCI Resource Provider (Service Principal)
+        "rbacResourceGroupAzureConnectedMachineResourceManager": {
+            "name": "[guid(resourceGroup().id, variables('roleDefinitionId_AzureConnectedMachineResourceManager'), parameters('hciResourceProviderServicePrincipalObjectId'))]",
+            "type": "Microsoft.Authorization/roleAssignments",
+            "apiVersion": "2022-04-01",
+            "properties": {
+                "roleDefinitionId": "[variables('roleDefinitionId_AzureConnectedMachineResourceManager')]",
+                "principalType": "ServicePrincipal",
+                "principalId": "[parameters('hciResourceProviderServicePrincipalObjectId')]",
+                "description": "[variables('roleAssignmentDescription')]"
+            }
+        },
+
+        // Role assignment:
+        //   Scope: Resource group
+        //   Role: Azure Stack HCI Device Management Role
+        //   Assign access to: The Arc Machine (Managed Identity)
+        "rbacResourceGroupAzureStackHCIDeviceManagementRole": {
+            "copy": {
+                "name": "rbacAzureStackHCIDeviceManagementRole",
+                "count": "[length(parameters('arcMachineResourceIds'))]"
+            },
+            "name": "[guid(resourceGroup().id, variables('roleDefinitionId_AzureStackHCIDeviceManagementRole'), parameters('arcMachineResourceIds')[copyIndex()])]",
+            "type": "Microsoft.Authorization/roleAssignments",
+            "apiVersion": "2022-04-01",
+            "properties": {
+                "roleDefinitionId": "[variables('roleDefinitionId_AzureStackHCIDeviceManagementRole')]",
+                "principalType": "ServicePrincipal",
+                "principalId": "[reference(parameters('arcMachineResourceIds')[copyIndex()], '2024-07-10', 'full').identity.principalId]",
+                "description": "[variables('roleAssignmentDescription')]"
+            }
+        },
+
+        // Role assignment:
+        //   Scope: Resource group
+        //   Role: Azure Stack HCI Connected InfraVMs
+        //   Assign access to: The Arc Machine (Managed Identity)
+        "rbacResourceGroupAzureStackHCIConnectedInfraVMs": {
+            "copy": {
+                "name": "rbacAzureStackHCIConnectedInfraVMs",
+                "count": "[length(parameters('arcMachineResourceIds'))]"
+            },
+            "name": "[guid(resourceGroup().id, variables('roleDefinitionId_AzureStackHCIConnectedInfraVMs'), parameters('arcMachineResourceIds')[copyIndex()])]",
+            "type": "Microsoft.Authorization/roleAssignments",
+            "apiVersion": "2022-04-01",
+            "properties": {
+                "roleDefinitionId": "[variables('roleDefinitionId_AzureStackHCIConnectedInfraVMs')]",
+                "principalType": "ServicePrincipal",
+                "principalId": "[reference(parameters('arcMachineResourceIds')[copyIndex()], '2024-07-10', 'full').identity.principalId]",
+                "description": "[variables('roleAssignmentDescription')]"
+            }
+        },
+
+        //
+        // Install extensions to the Azure Arc Machines.
+        // NOTE: The extensions can be installed in parallel but Azure portal installs them in sequence. We follow the same order as Azure portal.
+        //
+
+        // Azure Edge Telemetry And Diagnostics extension.
+        "arcExtensionAzureEdgeTelemetryAndDiagnostics": {
+            "copy": {
+                "name": "azureEdgeTelemetryAndDiagnostics",
+                "count": "[length(parameters('arcMachineResourceIds'))]"
+            },
+            "name": "[concat(last(split(parameters('arcMachineResourceIds')[copyIndex()], '/')), '/AzureEdgeTelemetryAndDiagnostics')]",
+            "type": "Microsoft.HybridCompute/machines/extensions",
+            "apiVersion": "2024-07-10",
+            "location": "[variables('location')]",
+            "properties": {
+                "publisher": "Microsoft.AzureStack.Observability",
+                "type": "TelemetryAndDiagnostics",
+                "typeHandlerVersion": "[Variables('arcMachineExtensions').telemetryAndDiagnostics.version]",
+                "autoUpgradeMinorVersion": false,
+                "enableAutomaticUpgrade": true,
+                "settings": {
+                    "CloudName": "AzurePublicCloud",
+                    "RegionName": "[variables('location')]",
+                    "DeviceType": "HCI"
+                }
+            }
+        },
+
+        // Azure Edge Lifecycle Manager extension.
+        "arcExtensionAzureEdgeLifecycleManager": {
+            "dependsOn": [
+                "arcExtensionAzureEdgeTelemetryAndDiagnostics"
+            ],
+            "copy": {
+                "name": "azureEdgeLifecycleManager",
+                "count": "[length(parameters('arcMachineResourceIds'))]"
+            },
+            "name": "[concat(last(split(parameters('arcMachineResourceIds')[copyIndex()], '/')), '/AzureEdgeLifecycleManager')]",
+            "type": "Microsoft.HybridCompute/machines/extensions",
+            "apiVersion": "2024-07-10",
+            "location": "[variables('location')]",
+            "properties": {
+                "publisher": "Microsoft.AzureStack.Orchestration",
+                "type": "LcmController",
+                "typeHandlerVersion": "[variables('arcMachineExtensions').lcmController.version]",
+                "autoUpgradeMinorVersion": false,
+                "enableAutomaticUpgrade": false,
+                "settings": "[variables('arcMachineExtensions').lcmController.settings]"
+            }
+        },
+
+        // Azure Edge Device Management extension.
+        "arcExtensionAzureEdgeDeviceManagement": {
+            "dependsOn": [
+                "arcExtensionAzureEdgeLifecycleManager"
+            ],
+            "copy": {
+                "name": "azureEdgeDeviceManagement",
+                "count": "[length(parameters('arcMachineResourceIds'))]"
+            },
+            "name": "[concat(last(split(parameters('arcMachineResourceIds')[copyIndex()], '/')), '/AzureEdgeDeviceManagement')]",
+            "type": "Microsoft.HybridCompute/machines/extensions",
+            "apiVersion": "2024-07-10",
+            "location": "[variables('location')]",
+            "properties": {
+                "publisher": "Microsoft.Edge",
+                "type": "DeviceManagementExtension",
+                "typeHandlerVersion": "[variables('arcMachineExtensions').deviceManagementExtension.version]",
+                "autoUpgradeMinorVersion": false,
+                "enableAutomaticUpgrade": false,
+                "settings": {}
+            }
+        },
+
+        // Azure Edge Remote Support extension.
+        "arcExtensionAzureEdgeRemoteSupport": {
+            "dependsOn": [
+                "arcExtensionAzureEdgeDeviceManagement"
+            ],
+            "copy": {
+                "name": "azureEdgeRemoteSupport",
+                "count": "[length(parameters('arcMachineResourceIds'))]"
+            },
+            "name": "[concat(last(split(parameters('arcMachineResourceIds')[copyIndex()], '/')), '/AzureEdgeRemoteSupport')]",
+            "type": "Microsoft.HybridCompute/machines/extensions",
+            "apiVersion": "2024-07-10",
+            "location": "[variables('location')]",
+            "properties": {
+                "publisher": "Microsoft.AzureStack.Observability",
+                "type": "EdgeRemoteSupport",
+                "typeHandlerVersion": "[variables('arcMachineExtensions').edgeRemoteSupport.version]",
+                "autoUpgradeMinorVersion": false,
+                "enableAutomaticUpgrade": true,
+                "settings": {}
+            }
+        },
+
+        //
+        // Key Vault for the Azure Local instance deployment.
+        //
+
+        // Key Vault for the Azure Local instance.
+        "keyVault": {
+            "name": "[variables('keyVaultName')]",
+            "type": "Microsoft.KeyVault/vaults",
+            "apiVersion": "2024-11-01",
+            "location": "[variables('location')]",
+            "properties": {
+                "sku": {
+                    "name": "standard",
+                    "family": "A"
+                },
+                "tenantId": "[variables('tenantId')]",
+                "enableRbacAuthorization": true,
+                "enableSoftDelete": true,
+                "softDeleteRetentionInDays": 90,
+                "enabledForDeployment": true,
+                "enabledForTemplateDeployment": true,
+                "enabledForDiskEncryption": true,
+                "publicNetworkAccess": "Enabled",
+                "accessPolicies": []
+            }
+        },
+
+        // Storage account for audit logging on the Key Vault.
+        "storageAccountKeyVaultAudit": {
+            "name": "[variables('keyVaultAuditStorageAccountName')]",
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2024-01-01",
+            "location": "[variables('location')]",
+            "kind": "StorageV2",
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            },
+            "properties": {
+                "publicNetworkAccess": "Disabled",
+                "networkAcls": {
+                    "defaultAction": "Deny"
+                },
+                "supportsHttpsTrafficOnly": true,
+                "minimumTlsVersion": "TLS1_2"
+            }
+        },
+
+        // Enable audit logging on the Key Vault.
+        "keyVaultAuditDiag": {
+            "dependsOn": [
+                "keyVault",
+                "storageAccountKeyVaultAudit"
+            ],
+            "scope": "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]",
+            "name": "[variables('keyVaultAuditDiagSettingName')]",
+            "type": "Microsoft.Insights/diagnosticSettings",
+            "apiVersion": "2021-05-01-preview",
+            "location": "[variables('location')]",
+            "properties": {
+                "storageAccountId": "[resourceId('Microsoft.Storage/storageAccounts', variables('keyVaultAuditStorageAccountName'))]",
+                "logs": [
+                    {
+                        "category": "AuditEvent",
+                        "enabled": true
+                    }
+                ]
+            }
+        },
+
+        //
+        // Role assignment for the Key Vault.
+        //
+
+        // Role assignment:
+        //   Scope: Key Vault
+        //   Role: Key Vault Secrets Officer
+        //   Assign access to: The current deployment principal (Assumed as a user)
+        "rbacKeyVaultKeyVaultSecretsOfficer": {
+            "dependsOn": [
+                "keyVault"
+            ],
+            "scope": "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]",
+            "name": "[guid(resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName')), variables('roleDefinitionId_KeyVaultSecretsOfficer'), deployer().objectId)]",
+            "type": "Microsoft.Authorization/roleAssignments",
+            "apiVersion": "2022-04-01",
+            "properties": {
+                "roleDefinitionId": "[variables('roleDefinitionId_KeyVaultSecretsOfficer')]",
+                "principalType": "User",
+                "principalId": "[deployer().objectId]",
+                "description": "[variables('roleAssignmentDescription')]"
+            }
+        },
+
+        // Role assignment:
+        //   Scope: Key Vault
+        //   Role: Key Vault Data Access Administrator
+        //   Assign access to: The current deployment principal (Assumed as a user)
+        "rbacKeyVaultKeyVaultDataAccessAdministrator": {
+            "dependsOn": [
+                "keyVault"
+            ],
+            "scope": "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]",
+            "name": "[guid(resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName')), variables('roleDefinitionId_KeyVaultDataAccessAdministrator'), deployer().objectId)]",
+            "type": "Microsoft.Authorization/roleAssignments",
+            "apiVersion": "2022-04-01",
+            "properties": {
+                "roleDefinitionId": "[variables('roleDefinitionId_KeyVaultDataAccessAdministrator')]",
+                "principalType": "User",
+                "principalId": "[deployer().objectId]",
+                "description": "[variables('roleAssignmentDescription')]"
+            }
+        },
+
+        //
+        // Storage account for the Cloud witness.
+        //
+
+        // // Storage account for the Cloud witness of the Azure Local instance.
+        "storageAccountWitness": {
+            "name": "[variables('witnessStorageAccountName')]",
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2024-01-01",
+            "location": "[variables('location')]",
+            "kind": "StorageV2",
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            },
+            "properties": {
+                "supportsHttpsTrafficOnly": true,
+                "minimumTlsVersion": "TLS1_2"
+            }
+        },
+
+        //
+        // Secrets for the Azure Local instance.
+        //
+
+        // Credential for the local administrator account.
+        "secretLocalAdminCredential": {
+            "dependsOn": [
+                "keyVaultAuditDiag"
+            ],
+            "name": "[concat(variables('keyVaultName'), '/', variables('secretNameLocalAdminCredential'))]",
+            "type": "Microsoft.KeyVault/vaults/secrets",
+            "apiVersion": "2024-11-01",
+            "properties": {
+                "contentType": "Secret",
+                "value": "[variables('secretValueLocalAdminCredential')]",
+                "attributes": {
+                    "enabled": true
+                }
+            }
+        },
+
+        // Credential for the Lifecycle Manager (LCM) deployment user account.
+        "secretAzureStackLCMUserCredential": {
+            "dependsOn": [
+                "keyVaultAuditDiag"
+            ],
+            "name": "[concat(variables('keyVaultName'), '/', variables('secretNameAzureStackLCMUserCredential'))]",
+            "type": "Microsoft.KeyVault/vaults/secrets",
+            "apiVersion": "2024-11-01",
+            "properties": {
+                "contentType": "Secret",
+                "value": "[variables('secretValueAzureStackLCMUserCredential')]",
+                "attributes": {
+                    "enabled": true
+                }
+            }
+        },
+
+        // Storage account key for the Cloud witness.
+        "secretWitnessStorageKey": {
+            "dependsOn": [
+                "keyVaultAuditDiag",
+                "storageAccountWitness"
+            ],
+            "name": "[concat(variables('keyVaultName'), '/', variables('secretNameWitnessStorageKey'))]",
+            "type": "Microsoft.KeyVault/vaults/secrets",
+            "apiVersion": "2024-11-01",
+            "properties": {
+                "contentType": "Secret",
+                "value": "[base64(listKeys('storageAccountWitness', '2024-01-01').keys[0].value)]",
+                "attributes": {
+                    "enabled": true
+                }
+            }
+        },
+
+        //
+        // Role assignments for the secrets.
+        //
+
+        // Role assignment:
+        //   Scope: Secret (LocalAdminCredential)
+        //   Role: Key Vault Secrets User
+        //   Assign access to: The Arc Machine (Managed Identity)
+        "rbacSecretLocalAdminCredential": {
+            "dependsOn": [
+                "secretLocalAdminCredential"
+            ],
+            "scope": "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('keyVaultName'), variables('secretNameLocalAdminCredential'))]",
+            "copy": {
+                "name": "rbacLocalAdminCredential",
+                "count": "[length(parameters('arcMachineResourceIds'))]"
+            },
+            "type": "Microsoft.Authorization/roleAssignments",
+            "apiVersion": "2022-04-01",
+            "name": "[guid(resourceId('Microsoft.KeyVault/vaults/secrets', variables('keyVaultName'), variables('secretNameLocalAdminCredential')), variables('roleDefinitionId_KeyVaultSecretsUser'), parameters('arcMachineResourceIds')[copyIndex()])]",
+            "properties": {
+                "roleDefinitionId": "[variables('roleDefinitionId_KeyVaultSecretsUser')]",
+                "principalType": "ServicePrincipal",
+                "principalId": "[reference(parameters('arcMachineResourceIds')[copyIndex()], '2024-07-10', 'full').identity.principalId]",
+                "description": "[variables('roleAssignmentDescription')]"
+            }
+        },
+
+        // Role assignment:
+        //   Scope: Secret (AzureStackLCMUserCredential)
+        //   Role: Key Vault Secrets User
+        //   Assign access to: The Arc Machine (Managed Identity)
+        "rbacSecretAzureStackLCMUserCredential": {
+            "dependsOn": [
+                "secretAzureStackLCMUserCredential"
+            ],
+            "scope": "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('keyVaultName'), variables('secretNameAzureStackLCMUserCredential'))]",
+            "copy": {
+                "name": "rbacAzureStackLCMUserCredential",
+                "count": "[length(parameters('arcMachineResourceIds'))]"
+            },
+            "type": "Microsoft.Authorization/roleAssignments",
+            "apiVersion": "2022-04-01",
+            "name": "[guid(resourceId('Microsoft.KeyVault/vaults/secrets', variables('keyVaultName'), variables('secretNameAzureStackLCMUserCredential')), variables('roleDefinitionId_KeyVaultSecretsUser'), parameters('arcMachineResourceIds')[copyIndex()])]",
+            "properties": {
+                "roleDefinitionId": "[variables('roleDefinitionId_KeyVaultSecretsUser')]",
+                "principalType": "ServicePrincipal",
+                "principalId": "[reference(parameters('arcMachineResourceIds')[copyIndex()], '2024-07-10', 'full').identity.principalId]",
+                "description": "[variables('roleAssignmentDescription')]"
+            }
+        },
+
+        // Role assignment:
+        //   Scope: Secret (WitnessStorageKey)
+        //   Role: Key Vault Secrets User
+        //   Assign access to: The Arc Machine (Managed Identity)
+        "rbacSecretWitnessStorageKey": {
+            "dependsOn": [
+                "secretWitnessStorageKey"
+            ],
+            "scope": "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('keyVaultName'), variables('secretNameWitnessStorageKey'))]",
+            "copy": {
+                "name": "rbacWitnessStorageKey",
+                "count": "[length(parameters('arcMachineResourceIds'))]"
+            },
+            "type": "Microsoft.Authorization/roleAssignments",
+            "apiVersion": "2022-04-01",
+            "name": "[guid(resourceId('Microsoft.KeyVault/vaults/secrets', variables('keyVaultName'), variables('secretNameWitnessStorageKey')), variables('roleDefinitionId_KeyVaultSecretsUser'), parameters('arcMachineResourceIds')[copyIndex()])]",
+            "properties": {
+                "roleDefinitionId": "[variables('roleDefinitionId_KeyVaultSecretsUser')]",
+                "principalType": "ServicePrincipal",
+                "principalId": "[reference(parameters('arcMachineResourceIds')[copyIndex()], '2024-07-10', 'full').identity.principalId]",
+                "description": "[variables('roleAssignmentDescription')]"
+            }
+        },
+
+        //
+        // Azure Local related resources
+        //
+
+        // Azure Local instance (HCI cluster)
+        "hciCluster": {
+            "dependsOn": [
+                // Role assignments on the resource group.
+                "rbacResourceGroupAzureConnectedMachineResourceManager",
+                "rbacResourceGroupAzureStackHCIDeviceManagementRole",
+                "rbacResourceGroupAzureStackHCIConnectedInfraVMs",
+                // Extensions on Arc Machines.
+                "arcExtensionAzureEdgeTelemetryAndDiagnostics",
+                "arcExtensionAzureEdgeLifecycleManager",
+                "arcExtensionAzureEdgeDeviceManagement",
+                "arcExtensionAzureEdgeRemoteSupport",
+                // Key Vault
+                "keyVaultAuditDiag",
+                "rbacKeyVaultKeyVaultSecretsOfficer",
+                "rbacKeyVaultKeyVaultDataAccessAdministrator",
+                // Secrets
+                "rbacSecretLocalAdminCredential",
+                "rbacSecretAzureStackLCMUserCredential",
+                "rbacSecretWitnessStorageKey"
+            ],
+            "name": "[variables('sanitizedClusterName')]",
+            "type": "Microsoft.AzureStackHCI/clusters",
+            "apiVersion": "2025-02-01-preview",
+            "location": "[variables('location')]",
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {}
+        },
+
+        // Validate the Azure Local instance deployment.
+        "deploymentSettingsValidate": {
+            "dependsOn": [
+                "hciCluster"
+            ],
+            "name": "[format('{0}/default', variables('sanitizedClusterName'))]",
+            "type": "Microsoft.AzureStackHCI/clusters/deploymentSettings",
+            "apiVersion": "2024-09-01-preview",
+            "properties": {
+                "arcNodeResourceIds": "[parameters('arcMachineResourceIds')]",
+                "deploymentMode": "Validate",
+                "deploymentConfiguration": {
+                    "version": "10.0.0.0",
+                    "scaleUnits": [
+                        {
+                            "deploymentData": {
+                                "cluster": {
+                                    "name": "[variables('sanitizedClusterName')]",
+                                    "witnessType": "Cloud",
+                                    "witnessPath": "",
+                                    "cloudAccountName": "[variables('witnessStorageAccountName')]",
+                                    "azureServiceEndpoint": "core.windows.net"
+                                },
+                                "namingPrefix": "HCI01",
+                                "copy": [
+                                    {
+                                        "name": "physicalNodes",
+                                        "count": "[length(parameters('arcMachineResourceIds'))]",
+                                        "input": {
+                                            "name": "[last(split(parameters('arcMachineResourceIds')[copyIndex('physicalNodes')], '/'))]",
+                                            "ipv4Address": "[first(first(filter(reference(parameters('arcMachineResourceIds')[copyIndex('physicalNodes')], '2024-07-10').networkProfile.networkInterfaces, lambda('nic', equals('Management', lambdaVariables('nic').name)))).ipAddresses).address]"
+                                        }
+                                    }
+                                ],
+                                "secretsLocation": "[reference('keyVault').vaultUri]",
+                                "secrets": [
+                                    {
+                                        "secretName": "[variables('secretNameLocalAdminCredential')]",
+                                        "eceSecretName": "[variables('eceSecretNameLocalAdminCredential')]",
+                                        "secretLocation": "[concat(reference('keyVault').vaultUri, 'secrets/', variables('secretNameLocalAdminCredential'))]"
+                                    },
+                                    {
+                                        "secretName": "[variables('secretNameAzureStackLCMUserCredential')]",
+                                        "eceSecretName": "[variables('eceSecretNameAzureStackLCMUserCredential')]",
+                                        "secretLocation": "[concat(reference('keyVault').vaultUri, 'secrets/', variables('secretNameAzureStackLCMUserCredential'))]"
+                                    },
+                                    {
+                                        "secretName": "[variables('secretNameWitnessStorageKey')]",
+                                        "eceSecretName": "[variables('eceSecretNameWitnessStorageKey')]",
+                                        "secretLocation": "[concat(reference('keyVault').vaultUri, 'secrets/', variables('secretNameWitnessStorageKey'))]"
+                                    }
+                                ],
+                                "hostNetwork": {
+                                    "storageConnectivitySwitchless": false,
+                                    "enableStorageAutoIp": true,
+                                    "intents": [
+                                        {
+                                            "name": "Management",
+                                            "trafficType": [
+                                                "Management"
+                                            ],
+                                            "adapter": "[parameters('managementAdapterNames')]",
+                                            "overrideVirtualSwitchConfiguration": false,
+                                            "virtualSwitchConfigurationOverrides": {
+                                                "enableIov": "",
+                                                "loadBalancingAlgorithm": ""
+                                            },
+                                            "overrideQosPolicy": false,
+                                            "qosPolicyOverrides": {
+                                                "priorityValue8021Action_Cluster": "7",
+                                                "priorityValue8021Action_SMB": "3",
+                                                "bandwidthPercentage_SMB": "50"
+                                            },
+                                            "overrideAdapterProperty": true,
+                                            "adapterPropertyOverrides": {
+                                                "jumboPacket": "1514",
+                                                "networkDirect": "Disabled",
+                                                "networkDirectTechnology": ""
+                                            }
+                                        },
+                                        {
+                                            "name": "Compute",
+                                            "trafficType": [
+                                                "Compute"
+                                            ],
+                                            "adapter": "[parameters('computeAdapterNames')]",
+                                            "overrideVirtualSwitchConfiguration": false,
+                                            "virtualSwitchConfigurationOverrides": {
+                                                "enableIov": "",
+                                                "loadBalancingAlgorithm": ""
+                                            },
+                                            "overrideQosPolicy": false,
+                                            "qosPolicyOverrides": {
+                                                "priorityValue8021Action_Cluster": "7",
+                                                "priorityValue8021Action_SMB": "3",
+                                                "bandwidthPercentage_SMB": "50"
+                                            },
+                                            "overrideAdapterProperty": true,
+                                            "adapterPropertyOverrides": {
+                                                "jumboPacket": "1514",
+                                                "networkDirect": "Disabled",
+                                                "networkDirectTechnology": ""
+                                            }
+                                        },
+                                        {
+                                            "name": "Storage",
+                                            "trafficType": [
+                                                "Storage"
+                                            ],
+                                            "adapter": "[parameters('storageAdapterNames')]",
+                                            "overrideVirtualSwitchConfiguration": false,
+                                            "virtualSwitchConfigurationOverrides": {
+                                                "enableIov": "",
+                                                "loadBalancingAlgorithm": ""
+                                            },
+                                            "overrideQosPolicy": false,
+                                            "qosPolicyOverrides": {
+                                                "priorityValue8021Action_Cluster": "7",
+                                                "priorityValue8021Action_SMB": "3",
+                                                "bandwidthPercentage_SMB": "50"
+                                            },
+                                            "overrideAdapterProperty": true,
+                                            "adapterPropertyOverrides": {
+                                                "jumboPacket": "1514",
+                                                "networkDirect": "Disabled",
+                                                "networkDirectTechnology": ""
+                                            }
+                                        }
+                                    ],
+                                    "copy": [
+                                        {
+                                            "name": "storageNetworks",
+                                            "count": "[length(parameters('storageAdapterNames'))]",
+                                            "input": {
+                                                "name": "[concat('StorageNetwork', copyIndex('storageNetworks', 1))]",
+                                                "networkAdapterName": "[parameters('storageAdapterNames')[copyIndex('storageNetworks')]]",
+                                                "vlanId": "[string(add(711, copyIndex('storageNetworks')))]"
+                                            }
+                                        }
+                                    ]
+                                },
+                                "infrastructureNetwork": [
+                                    {
+                                        "useDhcp": false,
+                                        "ipPools": [
+                                            {
+                                                "startingAddress": "[parameters('startingIPAddress')]",
+                                                "endingAddress": "[parameters('endingIPAddress')]"
+                                            }
+                                        ],
+                                        "subnetMask": "[parameters('subnetMask')]",
+                                        "gateway": "[parameters('defaultGateway')]",
+                                        "dnsServers": "[parameters('dnsServers')]"
+                                    }
+                                ],
+                                "domainFqdn": "[parameters('addsDomainFqdn')]",
+                                "adouPath": "[parameters('addsOrgUnitPath')]",
+                                "optionalServices": {
+                                    "customLocation": "[parameters('customLocationName')]"
+                                },
+                                "securitySettings": {
+                                    "hvciProtection": true,
+                                    "drtmProtection": true,
+                                    "driftControlEnforced": true,
+                                    "credentialGuardEnforced": true,
+                                    "smbSigningEnforced": true,
+                                    "smbClusterEncryption": false,
+                                    "sideChannelMitigationEnforced": true,
+                                    "bitlockerBootVolume": true,
+                                    "bitlockerDataVolumes": true,
+                                    "wdacEnforced": true
+                                },
+                                "storage": {
+                                    "configurationMode": "Express"
+                                },
+                                "observability": {
+                                    "streamingDataClient": true,
+                                    "euLocation": true,
+                                    "episodicDataUpload": true
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+
+        // Start the Azure Local instance deployment.
+        "deploymentSettingsDeploy": {
+            "dependsOn": [
+                "deploymentSettingsValidate"
+            ],
+            "name": "[concat('deploy-azure-local-', variables('uniqueString'))]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2024-11-01",
+            "properties": {
+                "mode": "Incremental",
+                "parameters": {
+                    "resourceName": {
+                        "value": "[format('{0}/default', variables('sanitizedClusterName'))]"
+                    },
+                    "arcMachineResourceIds": {
+                        "value": "[parameters('arcMachineResourceIds')]"
+                    },
+                    "deploymentConfiguration": {
+                        "value": "[reference('deploymentSettingsValidate').deploymentConfiguration]"
+                    }
+                },
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "resourceName": {
+                            "type": "string"
+                        },
+                        "arcMachineResourceIds": {
+                            "type": "array"
+                        },
+                        "deploymentConfiguration": {
+                            "type": "object"
+                        }
+                    },
+                    "resources": [
+                        {
+                            "name": "[parameters('resourceName')]",
+                            "type": "Microsoft.AzureStackHCI/clusters/deploymentSettings",
+                            "apiVersion": "2024-09-01-preview",
+                            "properties": {
+                                "arcNodeResourceIds": "[parameters('arcMachineResourceIds')]",
+                                "deploymentMode": "Deploy",
+                                "deploymentConfiguration": "[parameters('deploymentConfiguration')]"
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    "outputs": {
+        "assignmentName": {
+            "type": "string",
+            "value": "[guid(parameters('hciResourceProviderServicePrincipalObjectId'))]"
+        }
+    }
+}
