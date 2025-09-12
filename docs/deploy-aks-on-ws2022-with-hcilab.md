@@ -1,22 +1,22 @@
-# Deploy AKs on Windows Server 2022 with HCI Lab
+# Deploy AKS on Windows Server 2022 with HCI Lab
 
-This document describes deployment steps to deploy AKS on Windows Server 2022 using HCI Lab.
+This document describes the steps to deploy AKS on Windows Server 2022 using HCI Lab.
 
 ## 1. Deploy HCI Lab
 
 **Basics tab**
 
 - **Project details**
-    - **Subscription:** Select a subscription to use deploy your HCI Lab.
-    - **Resource group:** Select a resource group to use deploy your HCI Lab.
+    - **Subscription:** Select a subscription to deploy your HCI Lab.
+    - **Resource group:** Select a resource group to deploy your HCI Lab.
 
 - **Instance details**
     - **Region:** Select a region to deploy your HCI Lab resources.
     - **Lab host VM name:** Specify your HCI Lab host VM's name.
-    - **Size:** Select a your lab host VM size. Recommend the default VM size or larger VM sizes.
+    - **Size:** Select your lab host VM size. The default VM size or lager is recommended.
 
 - **Administrator account**
-    - **Username:** Specify the user name for your HCI Lab host VM. Also, this user name will be used for Hyper-V VMs in your HCI Lab environment.
+    - **Username:** Specify the username for your HCI Lab host VM. This username will also be used for Hyper-V VMs in your HCI Lab environment.
     - **Password:** Specify the password for your HCI Lab host VM. Also, this password will be used for Hyper-V VMs in your HCI Lab environment.
     - **Confirm password:** Re-enter the password for confirmation.
 
@@ -26,11 +26,11 @@ This document describes deployment steps to deploy AKS on Windows Server 2022 us
 **Lab host details tab**
 
 - **Disks**
-    - **OS disk type:** Select the lab host VM's OS disk type. Recommend to use the default value.
-    - **Data disk type:** Select the lab host VM's data disk type. Recommend to use the default value.
+    - **OS disk type:** Select the lab host VM's OS disk type. It is recommended to use the default value.
+    - **Data disk type:** Select the lab host VM's data disk type. It is recommended to use the default value.
 
 - **Data volume**
-    - **Data volume capacity:** Select the data volume capacity. All assets in your lab stored on this volume. Recommend the default volume size or larger.
+    - **Data volume capacity:** Select the data volume capacity. All assets in your lab are stored on this volume. It is recommended to use the default volume size or larger.
 
 - **Apps**
     - **Visual Studio Code:** Select this if you want to install Visual Studio Code on your HCI lab host VM.
@@ -64,7 +64,7 @@ Click the **Create** button to start your HCI Lab deployment.
 
 ## 2. Register resource providers
 
-You have to register resource providers before your management cluster registration. You can do this on Azure Cloud Shell.
+You must register resource providers before registering your management cluster. You can do this on Azure Cloud Shell.
 
 ```powershell
 $providerNamespaces = @(
