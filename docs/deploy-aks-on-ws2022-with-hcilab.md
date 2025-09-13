@@ -13,7 +13,7 @@ This document describes the steps to deploy AKS on Windows Server 2022 using HCI
 - **Instance details**
     - **Region:** Select a region to deploy your HCI Lab resources.
     - **Lab host VM name:** Specify your HCI Lab host VM's name.
-    - **Size:** Select your lab host VM size. The default VM size or lager is recommended.
+    - **Size:** Select your lab host VM size. The default VM size or larger is recommended.
 
 - **Administrator account**
     - **Username:** Specify the username for your HCI Lab host VM. This username will also be used for Hyper-V VMs in your HCI Lab environment.
@@ -41,9 +41,9 @@ This document describes the steps to deploy AKS on Windows Server 2022 using HCI
 **Lab environment tab**
 
 - **Common configuration**
-    - **Culture:** Select a culture for Hyper-V VMs in your HCI Lab environment. The culture represents the UI language, locale and input method.
+    - **Culture:** Select a culture for Hyper-V VMs in your HCI Lab environment. The culture represents the UI language, locale, and input method.
     - **Time zone:** Select a time zone for Hyper-V VMs in your HCI Lab environment.
-    - **Operating system's updates:** Select this if you want to install updates to Hyper-VMs in your HCI Lab environment. The operating system's updates installation will increase the deployment time.
+    - **Operating system's updates:** Select this if you want to install updates to Hyper-V VMs in your HCI Lab environment. The operating system's updates installation will increase the deployment time.
 
 - **HCI node**
     - **Operating system:** Select **Windows Server 2022 Datacenter Evaluation (Desktop Experience)**.
@@ -82,7 +82,7 @@ You must have sufficient permissions in your Azure environment. See [the details
 
 ## 4. Connect to your HCI Lab host using RDP connection
 
-After completing the deployment, you need to allow Remote Desktop access to your lab host Azure VM from your local machine. It can be by [enabling JIT VM access](https://learn.microsoft.com/azure/defender-for-cloud/just-in-time-access-usage) or [adding an inbound security rule in the Network Security Group](https://learn.microsoft.com/azure/virtual-network/tutorial-filter-network-traffic#create-security-rules). The recommended way is using JIT VM access.
+After completing the deployment, you need to allow Remote Desktop access to your lab host Azure VM from your local machine. You can do this by [enabling JIT VM access](https://learn.microsoft.com/azure/defender-for-cloud/just-in-time-access-usage) or [adding an inbound security rule in the Network Security Group](https://learn.microsoft.com/azure/virtual-network/tutorial-filter-network-traffic#create-security-rules). The recommended way is using JIT VM access.
 
 Next, connect to your lab host Azure VM using your favorite Remote Desktop client. To connect, use the credentials that you specified at deployment.
 
@@ -90,7 +90,7 @@ Next, connect to your lab host Azure VM using your favorite Remote Desktop clien
 
 ### 5.1. Install the AksHci PowerShell module
 
-Install the AksHci PowerShell module to all HCI nodes. You can do this at once **from the HCI Lab host** using PowerShell Direct.
+Install the AksHci PowerShell module to all HCI nodes. You can do this all at once **from the HCI Lab host** using PowerShell Direct.
 
 ```powershell
 $cred = Get-Credential -UserName 'HCI\Administrator' -Message 'Enter domain administrator password.'
@@ -103,7 +103,7 @@ Invoke-Command -VMName $vmName -Credential $cred -ScriptBlock {
 }
 ```
 
-You will get the following output as the result.
+You will get the following output:
 
 ```powershell
     Directory: C:\Program Files\WindowsPowerShell\Modules
@@ -126,7 +126,7 @@ Invoke-Command -VMName $vmName -Credential $cred -ScriptBlock {
 }
 ```
 
-You will see the following messages the same number of times as the number of your HCI nodes.
+You will see the following messages once for each of your HCI nodes.
 
 ```
 WinRM service is already running on this machine.
@@ -135,9 +135,9 @@ WinRM is already set up for remote management on this computer.
 
 ## 6. Create a new management cluster
 
-First of all, you need to deploy a new management cluster. It's AKS itself, some times it called an AKS host. **You should do this on one of the HCI nodes**.
+First of all, you need to deploy a new management cluster. This is AKS itself, sometimes it called an AKS host. **You should do this on one of the HCI nodes**.
 
-### 6.1. Signin to the one of your HCI nodes
+### 6.1. Sign in to the one of your HCI nodes
 
 Connect to the one of your HCI nodes then Sign-in to it with `HCI\Administrator` and the password for that account.
 
@@ -185,10 +185,10 @@ K8snodeIPPoolEnd   : 10.0.0.40
 
 ### 6.3. Set an AKS configuration
 
-Set AKS configuration for your AKS deployment using [Set-AksHciConfig](https://learn.microsoft.com/azure/aks/hybrid/reference/ps/set-akshciconfig). The configuration will be saved on your volume.
+Set the AKS configuration for your AKS deployment using [Set-AksHciConfig](https://learn.microsoft.com/azure/aks/hybrid/reference/ps/set-akshciconfig). The configuration will be saved to your volume.
 
 > [!TIP]
-> You can specify AKS hybrid version by the `Version` parameter if you want to deploy not latest version.
+> You can specify the AKS hybrid version using the `Version` parameter if you do not want to deploy the latest version.
 
 ```powershell
 $clusterRoleName = 'akshci-mgmt-cluster-{0}' -f (Get-Date).ToString('yyMMdd-HHmm')
@@ -203,7 +203,7 @@ $params = @{
     VNet                = $vnet
     KvaName             = $clusterRoleName
     ControlplaneVmSize  = 'Standard_A4_v2'
-    #Version            = '1.0.23.10605'    # Specify AKS hybrid version to deploy if you want to deploy not the latest version.
+    #Version            = '1.0.23.10605'    # Specify the AKS hybrid version to deploy if you do not want to deploy the latest version.
     Verbose             = $true
 }
 Set-AksHciConfig @params
@@ -217,7 +217,7 @@ You need to register your management cluster to Azure as an Azure Arc connected 
 $params = @{
     TenantId                = 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
     SubscriptionId          = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
-    ResourceGroupName       = 'aksws2022-rg'  # The resource group name that put an Arc-enabled Kubernetes resource of your management cluster.
+    ResourceGroupName       = 'aksws2022-rg'  # The resource group name where the Arc-enabled Kubernetes resource for your management cluster will be placed.
     UseDeviceAuthentication = $true
     Verbose                 = $true
 }
@@ -226,7 +226,7 @@ Set-AksHciRegistration @params
 
 ### 6.5. Deploy your management cluster
 
-Start a task to deploy your management cluster using [Install-AksHci](https://learn.microsoft.com/azure/aks/hybrid/reference/ps/install-akshci).
+Start deployment of your management cluster using [Install-AksHci](https://learn.microsoft.com/azure/aks/hybrid/reference/ps/install-akshci).
 
 ```powershell
 Install-AksHci -Verbose
@@ -338,15 +338,15 @@ gateway                        10.0.0.1
 
 ## 7. Create a new workload cluster
 
-Create a new workload cluster. You can create multiple workload clusters and use those to run your workloads.
+Create a new workload cluster. You can create multiple workload clusters and use them to run your workloads.
 
 > [!TIP]
-> You can specify Kubernetes version of your workload cluster by the `KubernetesVersion` parameter if you want to deploy not latest version.
+> You can specify the Kubernetes version of your workload cluster using the `KubernetesVersion` parameter if you do not want to deploy the latest version.
 
 ```powershell
 $params = @{
     Name                  = 'akswc1'
-    #KubernetesVersion    = 'v1.26.12'    # Specify the Kubernetes version of the workload cluster to deploy if you want to deploy not the latest version.
+    #KubernetesVersion    = 'v1.26.12'    # Specify the Kubernetes version of your workload cluster to deploy if you do not want to deploy the latest version.
     ControlplaneVmSize    = 'Standard_A4_v2'
     ControlPlaneNodeCount = 1
     LoadBalancerVmSize    = 'Standard_A2_v2'
@@ -409,7 +409,7 @@ ImageName             : Linux_k8s_1.0.24.11029
 Name                  : akswc2
 ```
 
-### Get a credential for connect to your workload cluster
+### Get a credential to connect to your workload cluster
 
 <!-- TODO: Fill here out later. -->
 
@@ -433,7 +433,7 @@ Remove-AksHciCluster -Name 'akswc1'
 Uninstall-AksHci
 ```
 
-### Connect to AKS node in your AKS cluster
+### Connect to an AKS node in your AKS cluster
 
 <!-- TODO: Fill here out later. -->
 
