@@ -1592,7 +1592,7 @@
                                         "validations": [
                                             {
                                                 "regex": "^(OU=[^,]+,)+(DC=[^,]+,)*DC=[^,]+$",
-                                                "message": "無効な組織単位 (OU) 形式です。形式は 'OU=AzureLocal,DC=lab,DC=internal' のようにする必要があります。"
+                                                "message": "組織単位 (OU) の識別名 (DN) 形式が無効です。次のように指定する必要があります: 'OU=AzureLocal,DC=lab,DC=internal'"
                                             }
                                         ]
                                     }

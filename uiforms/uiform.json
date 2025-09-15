@@ -1592,7 +1592,7 @@
                                         "validations": [
                                             {
                                                 "regex": "^(OU=[^,]+,)+(DC=[^,]+,)*DC=[^,]+$",
-                                                "message": "Invalid organization unit (OU) format. It should be like 'OU=AzureLocal,DC=lab,DC=internal'."
+                                                "message": "Invalid distinguished name (DN) format for an organization unit (OU). It should be specify like 'OU=AzureLocal,DC=lab,DC=internal'."
                                             }
                                         ]
                                     }
