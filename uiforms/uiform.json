@@ -1588,7 +1588,13 @@
                                     "placeholder": "e.g. OU=AzureLocal,DC=lab,DC=internal",
                                     "defaultValue": "OU=AzureLocal,DC=lab,DC=internal",
                                     "constraints": {
-                                        "required": true
+                                        "required": true,
+                                        "validations": [
+                                            {
+                                                "regex": "^(OU=[^,]+,)+(DC=[^,]+,)*DC=[^,]+$",
+                                                "message": "Invalid organization unit (OU) format. It should be like 'OU=AzureLocal,DC=lab,DC=internal'."
+                                            }
+                                        ]
                                     }
                                 },
                                 {
