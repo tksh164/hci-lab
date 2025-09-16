@@ -1588,7 +1588,13 @@
                                     "placeholder": "e.g. OU=AzureLocal,DC=lab,DC=internal",
                                     "defaultValue": "OU=AzureLocal,DC=lab,DC=internal",
                                     "constraints": {
-                                        "required": true
+                                        "required": true,
+                                        "validations": [
+                                            {
+                                                "regex": "^(OU=[^,]+,)+(DC=[^,]+,)*DC=[^,]+$",
+                                                "message": "組織単位 (OU) の識別名 (DN) 形式が無効です。次のように指定する必要があります: 'OU=AzureLocal,DC=lab,DC=internal'"
+                                            }
+                                        ]
                                     }
                                 },
                                 {

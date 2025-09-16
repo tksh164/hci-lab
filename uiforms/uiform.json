@@ -1588,7 +1588,13 @@
                                     "placeholder": "e.g. OU=AzureLocal,DC=lab,DC=internal",
                                     "defaultValue": "OU=AzureLocal,DC=lab,DC=internal",
                                     "constraints": {
-                                        "required": true
+                                        "required": true,
+                                        "validations": [
+                                            {
+                                                "regex": "^(OU=[^,]+,)+(DC=[^,]+,)*DC=[^,]+$",
+                                                "message": "Invalid distinguished name (DN) format for an organization unit (OU). It should be specify like 'OU=AzureLocal,DC=lab,DC=internal'."
+                                            }
+                                        ]
                                     }
                                 },
                                 {
