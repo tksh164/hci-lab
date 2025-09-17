@@ -47,50 +47,26 @@
     'azloc24h2_2507' = @{
         'iso' = @{
             'en-us' = 'https://azurestackreleases.download.prss.microsoft.com/dbazure/AzureLocal/WindowsPlatform/12.2507.0.3028/AzureLocal24H2.26100.1742.LCM.12.2507.0.3028.x64.en-us.iso'
-            #'ja-jp' = ''
         }
-        'updates' = @(
-            # OS
-            #'',
-            # .NET Framework
-            #''
-        )
+        'updates' = @()
     }
     'azloc24h2_2506' = @{
         'iso' = @{
             'en-us' = 'https://azurestackreleases.download.prss.microsoft.com/dbazure/AzureLocal/WindowsPlatform/12.2506.0.3136/AzureLocal24H2.26100.1742.LCM.12.2506.0.3136.x64.en-us.iso'
-            #'ja-jp' = ''
         }
-        'updates' = @(
-            # OS
-            #'',
-            # .NET Framework
-            #''
-        )
+        'updates' = @()
     }
     'azloc24h2_2505' = @{
         'iso' = @{
             'en-us' = 'https://azurestackreleases.download.prss.microsoft.com/dbazure/AzureLocal/WindowsPlatform/12.2505.0.3139/AzureLocal24H2.26100.1742.LCM.12.2505.0.3139.x64.en-us.iso'
-            #'ja-jp' = ''
         }
-        'updates' = @(
-            # OS
-            #'',
-            # .NET Framework
-            #''
-        )
+        'updates' = @()
     }
     'azloc24h2_2504' = @{
         'iso' = @{
             'en-us' = 'https://azurestackreleases.download.prss.microsoft.com/dbazure/AzureStackHCI/OS-Composition/12.2504.0.3142/AzureLocal24H2.26100.1742.LCM.12.2504.0.3142.x64.en-us.iso'
-            #'ja-jp' = ''
         }
-        'updates' = @(
-            # OS
-            #'',
-            # .NET Framework
-            #''
-        )
+        'updates' = @()
     }
     'ashci23h2' = @{
         'iso' = @{
