@@ -31,7 +31,7 @@
 #
 # Windows Server 2025 - OS build: 26100 - 24H2
 # OS: https://support.microsoft.com/topic/10f58da7-e57b-4a9d-9c16-9f1dcd72d7d7
-# .NET: TBD
+# .NET: https://support.microsoft.com/topic/71f4180b-3364-4d0e-8032-e8aca043b0fe
 #
 # Windows Server 2022 - OS build: 20348 - 21H2
 # OS: https://support.microsoft.com/topic/e1caa597-00c5-4ab9-9f3e-8212fe80b2ee
@@ -47,50 +47,26 @@
     'azloc24h2_2507' = @{
         'iso' = @{
             'en-us' = 'https://azurestackreleases.download.prss.microsoft.com/dbazure/AzureLocal/WindowsPlatform/12.2507.0.3028/AzureLocal24H2.26100.1742.LCM.12.2507.0.3028.x64.en-us.iso'
-            #'ja-jp' = ''
         }
-        'updates' = @(
-            # OS
-            #'',
-            # .NET Framework
-            #''
-        )
+        'updates' = @()
     }
     'azloc24h2_2506' = @{
         'iso' = @{
             'en-us' = 'https://azurestackreleases.download.prss.microsoft.com/dbazure/AzureLocal/WindowsPlatform/12.2506.0.3136/AzureLocal24H2.26100.1742.LCM.12.2506.0.3136.x64.en-us.iso'
-            #'ja-jp' = ''
         }
-        'updates' = @(
-            # OS
-            #'',
-            # .NET Framework
-            #''
-        )
+        'updates' = @()
     }
     'azloc24h2_2505' = @{
         'iso' = @{
             'en-us' = 'https://azurestackreleases.download.prss.microsoft.com/dbazure/AzureLocal/WindowsPlatform/12.2505.0.3139/AzureLocal24H2.26100.1742.LCM.12.2505.0.3139.x64.en-us.iso'
-            #'ja-jp' = ''
         }
-        'updates' = @(
-            # OS
-            #'',
-            # .NET Framework
-            #''
-        )
+        'updates' = @()
     }
     'azloc24h2_2504' = @{
         'iso' = @{
             'en-us' = 'https://azurestackreleases.download.prss.microsoft.com/dbazure/AzureStackHCI/OS-Composition/12.2504.0.3142/AzureLocal24H2.26100.1742.LCM.12.2504.0.3142.x64.en-us.iso'
-            #'ja-jp' = ''
         }
-        'updates' = @(
-            # OS
-            #'',
-            # .NET Framework
-            #''
-        )
+        'updates' = @()
     }
     'ashci23h2' = @{
         'iso' = @{
@@ -154,9 +130,9 @@
         }
         'updates' = @(
             # OS
-            'https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/6d57381b-2334-4031-acd9-549c3611e767/public/windows11.0-kb5063878-x64_c2d51482402fd8fc112d2c022210dd7c3266896d.msu',
+            'https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/7342fa97-e584-4465-9b3d-71e771c9db5b/public/windows11.0-kb5065426-x64_32b5f85e0f4f08e5d6eabec6586014a02d3b6224.msu',
             # .NET Framework
-            'https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/66baa9bc-4fa3-4f4b-97b1-af6dc17c64d9/public/windows11.0-kb5056579-x64-ndp481_a062e62bdedd9a2a4b0cbf4e26ff1652a240f1ee.msu'
+            'https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/e7d2c572-7ce6-4df1-b2c9-0b341f438299/public/windows11.0-kb5064401-x64-ndp481_03d42dc42df2db6f1812c2fa3d768780c079a843.msu'
         )
     }
     'ws2022' = @{
@@ -166,11 +142,11 @@
         }
         'updates' = @(
             # OS
-            'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2024/05/windows10.0-kb5037782-x64_a28aa2576fc6b120b127acfbb901d3546ba9db82.msu',  # For SSU of 2025-08
-            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2025/08/windows10.0-kb5063880-x64_18105d848843f095d3d9d1ea1ff59975a43380fb.msu',
+            'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2024/05/windows10.0-kb5037782-x64_a28aa2576fc6b120b127acfbb901d3546ba9db82.msu',  # For SSU of 2025-09
+            'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2025/09/windows10.0-kb5065432-x64_a714744bd7eedbcc58a38130e1307fb4c7fa020b.msu',
             # .NET Framework
-            'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/updt/2025/06/windows10.0-kb5062063-x64-ndp48_72cc83da771f25d2ec68a4565fe7711e99e47d19.msu',
-            'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/updt/2025/06/windows10.0-kb5062061-x64-ndp481_e65eb8b476a8b9172416d965066dba2664817993.msu'
+            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/updt/2025/08/windows10.0-kb5065748-x64-ndp48_594caaa5fc001f8968a575759286cbc987760ff5.msu',
+            'https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/updt/2025/08/windows10.0-kb5065753-x64-ndp481_1e27c546762083659a59800379a6730b2bde4bc7.msu'
         )
     }
 }
