@@ -94,7 +94,7 @@ Install the AksHci PowerShell module to all HCI nodes. You can do this all at on
 
 ```powershell
 $cred = Get-Credential -UserName 'LAB\Administrator' -Message 'Enter domain administrator password.'
-$vmName = 'hcinode01', 'hcinode02'
+$vmName = 'machine01', 'machine02'
 Invoke-Command -VMName $vmName -Credential $cred -ScriptBlock {
     Install-Module -Name 'AksHci' -Repository 'PSGallery' -AcceptLicense -Force -Verbose
 }
@@ -110,8 +110,8 @@ You will get the following output:
 
 ModuleType Version    Name   ExportedCommands                            PSComputerName
 ---------- -------    ----   ----------------                            --------------
-Script     1.2.16     AksHci {New-AksHciStorageContainer, Enable-AksH... hcinode01
-Script     1.2.16     AksHci {New-AksHciStorageContainer, Enable-AksH... hcinode02
+Script     1.2.16     AksHci {New-AksHciStorageContainer, Enable-AksH... machine01
+Script     1.2.16     AksHci {New-AksHciStorageContainer, Enable-AksH... machine02
 ```
 
 ### 5.2. Initialize HCI nodes
@@ -120,7 +120,7 @@ Initialize HCI nodes. You can do this at once **from the HCI Lab host** using Po
 
 ```powershell
 $cred = Get-Credential -UserName 'LAB\Administrator' -Message 'Enter domain administrator password.'
-$vmName = 'hcinode01', 'hcinode02'
+$vmName = 'machine01', 'machine02'
 Invoke-Command -VMName $vmName -Credential $cred -ScriptBlock {
     Initialize-AksHciNode
 }
@@ -142,7 +142,7 @@ First of all, you need to deploy a new management cluster. This is AKS itself, s
 Connect to the one of your HCI nodes then Sign-in to it with `LAB\Administrator` and the password for that account.
 
 ```powershell
-vmconnect localhost hcinode01
+vmconnect localhost machine01
 ```
 
 ### 6.2. Create a virtual network setting for your management cluster
