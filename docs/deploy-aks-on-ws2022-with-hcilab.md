@@ -373,6 +373,8 @@ Enable-AksHciArcConnection -Name 'akswc1'
 
 <!-- TODO: Fill here out later. -->
 
+- [Get-AksHciCluster](https://learn.microsoft.com/azure/aks/aksarc/reference/ps/get-akshcicluster)
+
 ```powershell
 PS C:\> Get-AksHciCluster
 
@@ -413,6 +415,8 @@ Name                  : akswc2
 
 <!-- TODO: Fill here out later. -->
 
+- [Get-AksHciCredential](https://learn.microsoft.com/azure/aks/aksarc/reference/ps/get-akshcicredential)
+
 ```powershell
 Get-AksHciCredential -Name 'akswc1'
 ```
@@ -420,6 +424,8 @@ Get-AksHciCredential -Name 'akswc1'
 ### Delete your workload cluster
 
 <!-- TODO: Fill here out later. -->
+
+- [Remove-AksHciCluster](https://learn.microsoft.com/azure/aks/aksarc/reference/ps/remove-akshcicluster)
 
 ```powershell
 Remove-AksHciCluster -Name 'akswc1'
@@ -429,6 +435,8 @@ Remove-AksHciCluster -Name 'akswc1'
 
 <!-- TODO: Fill here out later. -->
 
+- [Uninstall-AksHci](https://learn.microsoft.com/azure/aks/aksarc/reference/ps/uninstall-akshci)
+
 ```powershell
 Uninstall-AksHci
 ```
@@ -436,6 +444,8 @@ Uninstall-AksHci
 ### Connect to an AKS node in your AKS cluster
 
 <!-- TODO: Fill here out later. -->
+
+- [Get-AksHciConfig](https://learn.microsoft.com/azure/aks/aksarc/reference/ps/get-akshciconfig)
 
 ```powershell
 PS C:\> kubectl get node -o wide
