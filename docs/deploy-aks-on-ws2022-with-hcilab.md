@@ -93,7 +93,7 @@ Next, connect to your lab host Azure VM using your favorite Remote Desktop clien
 Install the AksHci PowerShell module to all HCI nodes. You can do this all at once **from the HCI Lab host** using PowerShell Direct.
 
 ```powershell
-$cred = Get-Credential -UserName 'HCI\Administrator' -Message 'Enter domain administrator password.'
+$cred = Get-Credential -UserName 'LAB\Administrator' -Message 'Enter domain administrator password.'
 $vmName = 'hcinode01', 'hcinode02'
 Invoke-Command -VMName $vmName -Credential $cred -ScriptBlock {
     Install-Module -Name 'AksHci' -Repository 'PSGallery' -AcceptLicense -Force -Verbose
@@ -119,7 +119,7 @@ Script     1.2.16     AksHci {New-AksHciStorageContainer, Enable-AksH... hcinode
 Initialize HCI nodes. You can do this at once **from the HCI Lab host** using PowerShell Direct.
 
 ```powershell
-$cred = Get-Credential -UserName 'HCI\Administrator' -Message 'Enter domain administrator password.'
+$cred = Get-Credential -UserName 'LAB\Administrator' -Message 'Enter domain administrator password.'
 $vmName = 'hcinode01', 'hcinode02'
 Invoke-Command -VMName $vmName -Credential $cred -ScriptBlock {
     Initialize-AksHciNode
@@ -139,7 +139,7 @@ First of all, you need to deploy a new management cluster. This is AKS itself, s
 
 ### 6.1. Sign in to the one of your HCI nodes
 
-Connect to the one of your HCI nodes then Sign-in to it with `HCI\Administrator` and the password for that account.
+Connect to the one of your HCI nodes then Sign-in to it with `LAB\Administrator` and the password for that account.
 
 ```powershell
 vmconnect localhost hcinode01
