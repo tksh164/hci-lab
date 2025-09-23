@@ -93,8 +93,8 @@ Next, connect to your lab host Azure VM using your favorite Remote Desktop clien
 Install the AksHci PowerShell module to all HCI nodes. You can do this all at once **from the HCI Lab host** using PowerShell Direct.
 
 ```powershell
-$cred = Get-Credential -UserName 'HCI\Administrator' -Message 'Enter domain administrator password.'
-$vmName = 'hcinode01', 'hcinode02'
+$cred = Get-Credential -UserName 'LAB\Administrator' -Message 'Enter domain administrator password.'
+$vmName = 'machine01', 'machine02'
 Invoke-Command -VMName $vmName -Credential $cred -ScriptBlock {
     Install-Module -Name 'AksHci' -Repository 'PSGallery' -AcceptLicense -Force -Verbose
 }
@@ -110,8 +110,8 @@ You will get the following output:
 
 ModuleType Version    Name   ExportedCommands                            PSComputerName
 ---------- -------    ----   ----------------                            --------------
-Script     1.2.16     AksHci {New-AksHciStorageContainer, Enable-AksH... hcinode01
-Script     1.2.16     AksHci {New-AksHciStorageContainer, Enable-AksH... hcinode02
+Script     1.2.16     AksHci {New-AksHciStorageContainer, Enable-AksH... machine01
+Script     1.2.16     AksHci {New-AksHciStorageContainer, Enable-AksH... machine02
 ```
 
 ### 5.2. Initialize HCI nodes
@@ -119,8 +119,8 @@ Script     1.2.16     AksHci {New-AksHciStorageContainer, Enable-AksH... hcinode
 Initialize HCI nodes. You can do this at once **from the HCI Lab host** using PowerShell Direct.
 
 ```powershell
-$cred = Get-Credential -UserName 'HCI\Administrator' -Message 'Enter domain administrator password.'
-$vmName = 'hcinode01', 'hcinode02'
+$cred = Get-Credential -UserName 'LAB\Administrator' -Message 'Enter domain administrator password.'
+$vmName = 'machine01', 'machine02'
 Invoke-Command -VMName $vmName -Credential $cred -ScriptBlock {
     Initialize-AksHciNode
 }
@@ -139,10 +139,10 @@ First of all, you need to deploy a new management cluster. This is AKS itself, s
 
 ### 6.1. Sign in to the one of your HCI nodes
 
-Connect to the one of your HCI nodes then Sign-in to it with `HCI\Administrator` and the password for that account.
+Connect to the one of your HCI nodes then Sign-in to it with `LAB\Administrator` and the password for that account.
 
 ```powershell
-vmconnect localhost hcinode01
+vmconnect localhost machine01
 ```
 
 ### 6.2. Create a virtual network setting for your management cluster
@@ -373,6 +373,8 @@ Enable-AksHciArcConnection -Name 'akswc1'
 
 <!-- TODO: Fill here out later. -->
 
+- [Get-AksHciCluster](https://learn.microsoft.com/azure/aks/aksarc/reference/ps/get-akshcicluster)
+
 ```powershell
 PS C:\> Get-AksHciCluster
 
@@ -413,6 +415,8 @@ Name                  : akswc2
 
 <!-- TODO: Fill here out later. -->
 
+- [Get-AksHciCredential](https://learn.microsoft.com/azure/aks/aksarc/reference/ps/get-akshcicredential)
+
 ```powershell
 Get-AksHciCredential -Name 'akswc1'
 ```
@@ -420,6 +424,8 @@ Get-AksHciCredential -Name 'akswc1'
 ### Delete your workload cluster
 
 <!-- TODO: Fill here out later. -->
+
+- [Remove-AksHciCluster](https://learn.microsoft.com/azure/aks/aksarc/reference/ps/remove-akshcicluster)
 
 ```powershell
 Remove-AksHciCluster -Name 'akswc1'
@@ -429,6 +435,8 @@ Remove-AksHciCluster -Name 'akswc1'
 
 <!-- TODO: Fill here out later. -->
 
+- [Uninstall-AksHci](https://learn.microsoft.com/azure/aks/aksarc/reference/ps/uninstall-akshci)
+
 ```powershell
 Uninstall-AksHci
 ```
@@ -436,6 +444,8 @@ Uninstall-AksHci
 ### Connect to an AKS node in your AKS cluster
 
 <!-- TODO: Fill here out later. -->
+
+- [Get-AksHciConfig](https://learn.microsoft.com/azure/aks/aksarc/reference/ps/get-akshciconfig)
 
 ```powershell
 PS C:\> kubectl get node -o wide
