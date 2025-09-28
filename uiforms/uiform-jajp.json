@@ -1253,13 +1253,22 @@
                                     "placeholder": "メンバー サーバーのオペレーティング システムを選択...",
                                     "defaultDescription": "---",
                                     "filterPlaceholder": "メンバー サーバーのオペレーティング システムをフィルター...",
-                                    "defaultValue": "Azure Local 2508",
+                                    "defaultValue": "Azure Local 2509",
                                     "constraints": {
                                         "required": true,
                                         "allowedValues": [
                                             {
-                                                "label": "Azure Local 2508",
+                                                "label": "Azure Local 2509",
                                                 "description": "最新の一般提供バージョンです。",
+                                                "value": {
+                                                    "sku": "azloc24h2_2509",
+                                                    "imageIndex": 1,
+                                                    "isAzureLocal": true
+                                                }
+                                            },
+                                            {
+                                                "label": "Azure Local 2508",
+                                                "description": "以前のバージョンです。",
                                                 "value": {
                                                     "sku": "azloc24h2_2508",
                                                     "imageIndex": 1,
@@ -1303,8 +1312,8 @@
                                                 }
                                             },
                                             {
-                                                "label": "Azure Local 2503",
-                                                "description": "以前のバージョンです。",
+                                                "label": "Azure Local 2503 [サポート終了]",
+                                                "description": "<strong>注意:</strong> このバージョンのサポート期間は終了しました。",
                                                 "value": {
                                                     "sku": "ashci23h2",
                                                     "imageIndex": 1,
@@ -1312,8 +1321,8 @@
                                                 }
                                             },
                                             {
-                                                "label": "Azure Stack HCI, version 22H2",
-                                                "description": "このバージョンはサポートされています。",
+                                                "label": "Azure Stack HCI, version 22H2 [サポート終了]",
+                                                "description": "<strong>注意:</strong> このバージョンは 2025 年 5 月 31 日にサポート終了しました。",
                                                 "value": {
                                                     "sku": "ashci22h2",
                                                     "imageIndex": 1,
@@ -1321,8 +1330,8 @@
                                                 }
                                             },
                                             {
-                                                "label": "Azure Stack HCI, version 21H2 [サービス終了]",
-                                                "description": "<strong>注意:</strong> このバージョンは 2023 年 11 月 14 日にサービス終了しました。",
+                                                "label": "Azure Stack HCI, version 21H2 [サポート終了]",
+                                                "description": "<strong>注意:</strong> このバージョンは 2023 年 11 月 14 日にサポート終了しました。",
                                                 "value": {
                                                     "sku": "ashci21h2",
                                                     "imageIndex": 1,
@@ -1330,8 +1339,8 @@
                                                 }
                                             },
                                             {
-                                                "label": "Azure Stack HCI, version 20H2 [サービス終了]",
-                                                "description": "<strong>注意:</strong> このバージョンは 2022 年 12 月 13 日にサービス終了しました。",
+                                                "label": "Azure Stack HCI, version 20H2 [サポート終了]",
+                                                "description": "<strong>注意:</strong> このバージョンは 2022 年 12 月 13 日にサポート終了しました。",
                                                 "value": {
                                                     "sku": "ashci20h2",
                                                     "imageIndex": 1,
