@@ -1253,13 +1253,22 @@
                                     "placeholder": "Select the member server's operating system...",
                                     "defaultDescription": "---",
                                     "filterPlaceholder": "Filter member server's operating systems...",
-                                    "defaultValue": "Azure Local 2508",
+                                    "defaultValue": "Azure Local 2509",
                                     "constraints": {
                                         "required": true,
                                         "allowedValues": [
                                             {
-                                                "label": "Azure Local 2508",
+                                                "label": "Azure Local 2509",
                                                 "description": "The latest generally available version.",
+                                                "value": {
+                                                    "sku": "azloc24h2_2509",
+                                                    "imageIndex": 1,
+                                                    "isAzureLocal": true
+                                                }
+                                            },
+                                            {
+                                                "label": "Azure Local 2508",
+                                                "description": "The previous version.",
                                                 "value": {
                                                     "sku": "azloc24h2_2508",
                                                     "imageIndex": 1,
@@ -1303,8 +1312,8 @@
                                                 }
                                             },
                                             {
-                                                "label": "Azure Local 2503",
-                                                "description": "The previous version.",
+                                                "label": "Azure Local 2503 [End of support]",
+                                                "description": "<strong>Notice:</strong> This version reached the end of support.",
                                                 "value": {
                                                     "sku": "ashci23h2",
                                                     "imageIndex": 1,
@@ -1312,8 +1321,8 @@
                                                 }
                                             },
                                             {
-                                                "label": "Azure Stack HCI, version 22H2",
-                                                "description": "This version is supported.",
+                                                "label": "Azure Stack HCI, version 22H2 [End of support]",
+                                                "description": "<strong>Notice:</strong> This version reached the end of support on May 31, 2025.",
                                                 "value": {
                                                     "sku": "ashci22h2",
                                                     "imageIndex": 1,
@@ -1321,8 +1330,8 @@
                                                 }
                                             },
                                             {
-                                                "label": "Azure Stack HCI, version 21H2 [End of Service]",
-                                                "description": "<strong>Notice:</strong> This version reached the end of service on November 14, 2023.",
+                                                "label": "Azure Stack HCI, version 21H2 [End of support]",
+                                                "description": "<strong>Notice:</strong> This version reached the end of support on November 14, 2023.",
                                                 "value": {
                                                     "sku": "ashci21h2",
                                                     "imageIndex": 1,
@@ -1330,8 +1339,8 @@
                                                 }
                                             },
                                             {
-                                                "label": "Azure Stack HCI, version 20H2 [End of Service]",
-                                                "description": "<strong>Notice:</strong> This version reached the end of service on December 13, 2022.",
+                                                "label": "Azure Stack HCI, version 20H2 [End of support]",
+                                                "description": "<strong>Notice:</strong> This version reached the end of support on December 13, 2022.",
                                                 "value": {
                                                     "sku": "ashci20h2",
                                                     "imageIndex": 1,
