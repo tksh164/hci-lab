@@ -49,10 +49,10 @@
             "value": "azloc01-location"
         },
         "addsDomainFqdn": {
-            "value": "hci.internal"
+            "value": "lab.internal"
         },
         "addsOrgUnitPath": {
-            "value": "OU=AzureLocal,DC=hci,DC=internal"
+            "value": "OU=AzureLocal,DC=lab,DC=internal"
         },
         "lcmUserName": {
             "value": "lcmuser"
