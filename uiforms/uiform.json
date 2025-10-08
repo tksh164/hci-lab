@@ -1312,6 +1312,24 @@
                                                 }
                                             },
                                             {
+                                                "label": "Windows Server 2025 Datacenter Evaluation (Desktop Experience)",
+                                                "description": "Windows Server 2025 Datacenter with the standard graphical user interface.",
+                                                "value": {
+                                                    "sku": "ws2025",
+                                                    "imageIndex": 4,
+                                                    "isAzureLocal": false
+                                                }
+                                            },
+                                            {
+                                                "label": "Windows Server 2022 Datacenter Evaluation (Desktop Experience)",
+                                                "description": "Windows Server 2022 Datacenter with the standard graphical user interface.",
+                                                "value": {
+                                                    "sku": "ws2022",
+                                                    "imageIndex": 4,
+                                                    "isAzureLocal": false
+                                                }
+                                            },
+                                            {
                                                 "label": "Azure Local 2503 [End of support]",
                                                 "description": "<strong>Notice:</strong> This version reached the end of support.",
                                                 "value": {
@@ -1344,24 +1362,6 @@
                                                 "value": {
                                                     "sku": "ashci20h2",
                                                     "imageIndex": 1,
-                                                    "isAzureLocal": false
-                                                }
-                                            },
-                                            {
-                                                "label": "Windows Server 2025 Datacenter Evaluation (Desktop Experience)",
-                                                "description": "Windows Server 2025 Datacenter with the standard graphical user interface.",
-                                                "value": {
-                                                    "sku": "ws2025",
-                                                    "imageIndex": 4,
-                                                    "isAzureLocal": false
-                                                }
-                                            },
-                                            {
-                                                "label": "Windows Server 2022 Datacenter Evaluation (Desktop Experience)",
-                                                "description": "Windows Server 2022 Datacenter with the standard graphical user interface.",
-                                                "value": {
-                                                    "sku": "ws2022",
-                                                    "imageIndex": 4,
                                                     "isAzureLocal": false
                                                 }
                                             }
