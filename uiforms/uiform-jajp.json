@@ -1312,6 +1312,24 @@
                                                 }
                                             },
                                             {
+                                                "label": "Windows Server 2025 Datacenter Evaluation (Desktop Experience)",
+                                                "description": "標準グラフィカル ユーザー インターフェイスを備えた Windows Server 2025 Datacenter です。",
+                                                "value": {
+                                                    "sku": "ws2025",
+                                                    "imageIndex": 4,
+                                                    "isAzureLocal": false
+                                                }
+                                            },
+                                            {
+                                                "label": "Windows Server 2022 Datacenter Evaluation (Desktop Experience)",
+                                                "description": "標準グラフィカル ユーザー インターフェイスを備えた Windows Server 2022 Datacenter です。",
+                                                "value": {
+                                                    "sku": "ws2022",
+                                                    "imageIndex": 4,
+                                                    "isAzureLocal": false
+                                                }
+                                            },
+                                            {
                                                 "label": "Azure Local 2503 [サポート終了]",
                                                 "description": "<strong>注意:</strong> このバージョンのサポート期間は終了しました。",
                                                 "value": {
@@ -1344,24 +1362,6 @@
                                                 "value": {
                                                     "sku": "ashci20h2",
                                                     "imageIndex": 1,
-                                                    "isAzureLocal": false
-                                                }
-                                            },
-                                            {
-                                                "label": "Windows Server 2025 Datacenter Evaluation (Desktop Experience)",
-                                                "description": "標準グラフィカル ユーザー インターフェイスを備えた Windows Server 2025 Datacenter です。",
-                                                "value": {
-                                                    "sku": "ws2025",
-                                                    "imageIndex": 4,
-                                                    "isAzureLocal": false
-                                                }
-                                            },
-                                            {
-                                                "label": "Windows Server 2022 Datacenter Evaluation (Desktop Experience)",
-                                                "description": "標準グラフィカル ユーザー インターフェイスを備えた Windows Server 2022 Datacenter です。",
-                                                "value": {
-                                                    "sku": "ws2022",
-                                                    "imageIndex": 4,
                                                     "isAzureLocal": false
                                                 }
                                             }
