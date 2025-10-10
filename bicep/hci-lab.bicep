@@ -1,0 +1,363 @@
+//
+// Parameters
+//
+
+@description('''The administrator user name.''')
+@minLength(1)
+@maxLength(20)
+param adminUserName string = 'AzureUser'
+
+@description('''The administrator password. The password must have 3 of the following: 1 lower case character, 1 upper case character, 1 number, and 1 special character. And the password must be between 12 and 123 characters long.''')
+@secure()
+param adminPassword string
+
+@description('''The name of the lab host virtual machine resource name. This value is not used for the virtual machine's computer name.''')
+@minLength(1)
+@maxLength(64)
+param labHostVmName string = 'labenv-vm1'
+
+@description('''The size of the lab host virtual machine.''')
+@allowed([
+  // Required VM size capabilities:
+  // - Generation 2 VM support
+  // - Premium storage support
+  // - Accelerated networking support
+  // - Nested virtualization support
+  // - 32+ GB RAM
+  // - No temp storage
+
+  // Esv6 series
+  'Standard_E4s_v6'
+  'Standard_E8s_v6'
+  'Standard_E16s_v6'
+  'Standard_E20s_v6'
+  'Standard_E32s_v6'
+  'Standard_E48s_v6'
+  'Standard_E64s_v6'
+  'Standard_E96s_v6'
+  // 'Standard_E128s_v6'
+  // 'Standard_E192s_v6'
+
+  // Edsv6 series
+  // 'Standard_E4ds_v6'
+  // 'Standard_E8ds_v6'
+  // 'Standard_E16ds_v6'
+  // 'Standard_E20ds_v6'
+  // 'Standard_E32ds_v6'
+  // 'Standard_E48ds_v6'
+  // 'Standard_E64ds_v6'
+  // 'Standard_E96ds_v6'
+  // 'Standard_E128ds_v6'
+  // 'Standard_E192ds_v6'
+
+  // Esv5 series
+  'Standard_E4s_v5'
+  'Standard_E8s_v5'
+  'Standard_E16s_v5'
+  'Standard_E20s_v5'
+  'Standard_E32s_v5'
+  'Standard_E48s_v5'
+  'Standard_E64s_v5'
+  'Standard_E96s_v5'
+
+  // Edsv5 series
+  // 'Standard_E4ds_v5'
+  // 'Standard_E8ds_v5'
+  // 'Standard_E16ds_v5'
+  // 'Standard_E20ds_v5'
+  // 'Standard_E32ds_v5'
+  // 'Standard_E48ds_v5'
+  // 'Standard_E64ds_v5'
+  // 'Standard_E96ds_v5'
+
+  // Ebsv5 series
+  'Standard_E4bs_v5'
+  'Standard_E8bs_v5'
+  'Standard_E16bs_v5'
+  'Standard_E32bs_v5'
+  'Standard_E48bs_v5'
+  'Standard_E64bs_v5'
+
+  // Ebdsv5 series
+  // 'Standard_E4bds_v5'
+  // 'Standard_E8bds_v5'
+  // 'Standard_E16bds_v5'
+  // 'Standard_E32bds_v5'
+  // 'Standard_E48bds_v5'
+  // 'Standard_E64bds_v5'
+
+  // Easv6 series
+  'Standard_E16as_v6'
+  'Standard_E20as_v6'
+  'Standard_E32as_v6'
+  'Standard_E48as_v6'
+  'Standard_E64as_v6'
+  'Standard_E96as_v6'
+
+  // Eadsv6 series
+  // 'Standard_E16ads_v6'
+  // 'Standard_E20ads_v6'
+  // 'Standard_E32ads_v6'
+  // 'Standard_E48ads_v6'
+  // 'Standard_E64ads_v6'
+  // 'Standard_E96ads_v6'
+
+  // Easv5 series
+  'Standard_E16as_v5'
+  'Standard_E20as_v5'
+  'Standard_E32as_v5'
+  'Standard_E48as_v5'
+  'Standard_E64as_v5'
+  'Standard_E96as_v5'
+
+  // Eadsv5 series
+  // 'Standard_E16ads_v5'
+  // 'Standard_E20ads_v5'
+  // 'Standard_E32ads_v5'
+  // 'Standard_E48ads_v5'
+  // 'Standard_E64ads_v5'
+  // 'Standard_E96ads_v5'
+
+  // Dsv6 series
+  'Standard_D8s_v6'
+  'Standard_D16s_v6'
+  'Standard_D32s_v6'
+  'Standard_D48s_v6'
+  'Standard_D64s_v6'
+  'Standard_D96s_v6'
+
+  // Ddsv6 series
+  // 'Standard_D8ds_v6'
+  // 'Standard_D16ds_v6'
+  // 'Standard_D32ds_v6'
+  // 'Standard_D48ds_v6'
+  // 'Standard_D64ds_v6'
+  // 'Standard_D96ds_v6'
+
+  // Dsv5 series
+  'Standard_D8s_v5'
+  'Standard_D16s_v5'
+  'Standard_D32s_v5'
+  'Standard_D48s_v5'
+  'Standard_D64s_v5'
+  'Standard_D96s_v5'
+
+  // Ddsv5 series
+  // 'Standard_D8ds_v5'
+  // 'Standard_D16ds_v5'
+  // 'Standard_D32ds_v5'
+  // 'Standard_D48ds_v5'
+  // 'Standard_D64ds_v5'
+  // 'Standard_D96ds_v5'
+
+  // Dasv6 series
+  'Standard_D32as_v6'
+  'Standard_D48as_v6'
+  'Standard_D64as_v6'
+  'Standard_D96as_v6'
+
+  // Dadsv6 series
+  // 'Standard_D32ads_v6'
+  // 'Standard_D48ads_v6'
+  // 'Standard_D64ads_v6'
+  // 'Standard_D96ads_v6'
+
+  // Dasv5 series
+  'Standard_D32as_v5'
+  'Standard_D48as_v5'
+  'Standard_D64as_v5'
+  'Standard_D96as_v5'
+
+  // Dadsv5 series
+  // 'Standard_D32ads_v5'
+  // 'Standard_D48ads_v5'
+  // 'Standard_D64ads_v5'
+  // 'Standard_D96ads_v5'
+
+  // Dlsv6 series
+  'Standard_D16ls_v6'
+  'Standard_D32ls_v6'
+  'Standard_D48ls_v6'
+  'Standard_D64ls_v6'
+  'Standard_D96ls_v6'
+
+  // Dldsv6 series
+  // 'Standard_D16lds_v6'
+  // 'Standard_D32lds_v6'
+  // 'Standard_D48lds_v6'
+  // 'Standard_D64lds_v6'
+  // 'Standard_D96lds_v6'
+
+  // Dlsv5 series
+  'Standard_D16ls_v5'
+  'Standard_D32ls_v5'
+  'Standard_D48ls_v5'
+  'Standard_D64ls_v5'
+  'Standard_D96ls_v5'
+
+  // Dldsv5 series
+  // 'Standard_D16lds_v5'
+  // 'Standard_D32lds_v5'
+  // 'Standard_D48lds_v5'
+  // 'Standard_D64lds_v5'
+  // 'Standard_D96lds_v5'
+
+  // Dsv4 series
+  'Standard_D8s_v4'
+  'Standard_D16s_v4'
+  'Standard_D32s_v4'
+  'Standard_D48s_v4'
+  'Standard_D64s_v4'
+
+  // Ddsv4 series
+  // 'Standard_D8ds_v4'
+  // 'Standard_D16ds_v4'
+  // 'Standard_D32ds_v4'
+  // 'Standard_D48ds_v4'
+  // 'Standard_D64ds_v4'
+
+  // Fasv6 series
+  'Standard_F8as_v6'
+  'Standard_F16as_v6'
+  'Standard_F32as_v6'
+  'Standard_F48as_v6'
+  'Standard_F64as_v6'
+
+  // Falsv6 series
+  'Standard_F16als_v6'
+  'Standard_F32als_v6'
+  'Standard_F48als_v6'
+  'Standard_F64als_v6'
+
+  // Fsv2 series
+  'Standard_F16s_v2'
+  'Standard_F32s_v2'
+  'Standard_F48s_v2'
+  'Standard_F64s_v2'
+  'Standard_F72s_v2'
+
+  // FX series
+  'Standard_FX4mds'
+  'Standard_FX12mds'
+  'Standard_FX24mds'
+  'Standard_FX36mds'
+  'Standard_FX48mds'
+])
+param labHostVmSize string = 'Standard_E16s_v5'
+
+@description('''The storage type of the lab host virtual machine's OS disk.''')
+@allowed([ 'Premium_LRS', 'StandardSSD_LRS', 'Standard_LRS' ])
+param labHostVmOsDiskType string = 'StandardSSD_LRS'
+
+@description('''The storage type of the lab host virtual machine's data disk.''')
+@allowed([ 'Premium_LRS', 'StandardSSD_LRS' ])
+param labHostVmDataDiskType string = 'StandardSSD_LRS'
+
+@description('''The size of individual disk of the lab host virtual machine's data disks in GiB.''')
+@allowed([ 32, 64, 128, 256, 512, 1024 ])
+param labHostVmDataDiskSize int = 64
+
+@description('''The number of data disks on the lab host virtual machine.''')
+@minValue(8)
+@maxValue(32)
+param labHostVmDataDiskCount int = 8
+
+@description('''By specifying True, you confirm you have an eligible Windows Server license with Software Assurance or Windows Server subscription to apply this Azure Hybrid Benefit. You can read more about compliance here: http://go.microsoft.com/fwlink/?LinkId=859786''')
+param hasEligibleWindowsServerLicense bool = false
+
+@description('''By specifying True, will be deploy Azure Bastion Developer.''')
+param shouldDeployBastionDeveloper bool = false
+
+@description('''The tools to be installed on the lab host virtual machine. Use ';' to separate tool's symbol. Supported tool's symbols are windowsterminal, vscode.''')
+param toolsToInstall string = ''
+
+@description('''By specifying True, will be auto-shutdown configured to the lab host virtual machine.''')
+param shouldEnabledAutoshutdown bool = false
+
+@description('''The auto-shutdown time.''')
+param autoshutdownTime string = '22:00'
+
+@description('''The time zone for auto-shutdown time.''')
+param autoshutdownTimeZone string = 'UTC'
+
+@description('''The operating system's culture of the lab virtual machines. This affects such as language and input method of the operating system.''')
+@allowed([ 'en-us', 'ja-jp' ])
+param labVmOsCulture string = 'en-us'
+
+@description('''The time zone of the lab virtual machines.''')
+param labVmOsTimeZone string = 'UTC'
+
+@description('''By specifying True, operating system's updates will be installed during the deployment.''')
+param shouldInstallUpdatesToLabVm bool = false
+
+@description('''The operating system for the HCI node virtual machines.''')
+@allowed([
+  'azloc24h2_2509'  // Azure Local 24H2 2509
+  'azloc24h2_2508'  // Azure Local 24H2 2508
+  'azloc24h2_2507'  // Azure Local 24H2 2507
+  'azloc24h2_2506'  // Azure Local 24H2 2506
+  'azloc24h2_2505'  // Azure Local 24H2 2505
+  'azloc24h2_2504'  // Azure Local 24H2 2504
+  'ashci23h2'       // Azure Stack HCI 23H2 / Azure Local 23H2 2503
+  'ashci22h2'       // Azure Stack HCI 22H2
+  'ashci21h2'       // Azure Stack HCI 21H2
+  'ashci20h2'       // Azure Stack HCI 20H2
+  'ws2025'          // Windows Server 2025
+  'ws2022'          // Windows Server 2022
+])
+param hciNodeOsSku string = 'azloc24h2_2509'
+
+@description('''The image index of the operating system for the HCI node virtual machines.''')
+@allowed([
+  1   // For Azure Stack HCI
+  //3   // For Windows Server Datacenter Server Core
+  4   // For Windows Server Datacenter with Desktop Experience
+])
+param hciNodeOsImageIndex int = 1
+
+@description('''The number of HCI nodes to deploy.''')
+@minValue(2)
+@maxValue(8)
+param hciNodeCount int = 2
+
+@description('''By specifying True, the HCI nodes join to the AD DS domain during the deployment.''')
+param shouldHciNodeJoinToAddsDomain bool = false
+
+@description('''The Active Directory Domain Services domain FQDN.''')
+param addsDomainFqdn string = 'lab.internal'
+
+@description('''By specifying True, automatically create an HCI cluster during the deployment.''')
+param shouldCreateHciCluster bool = false
+
+@description('''The cluster name (cluster name object/CNO) for the HCI cluster.''')
+param hciClusterName string = 'hciclus'
+
+@description('''By specifying True, it means the deployment is Azure Local.''')
+param isAzureLocalDeployment bool = false
+
+@description('''By specifying True, the Azure Local AD objects will be created during the deployment.''')
+param shouldPrepareAddsForAzureLocal bool = false
+
+@description('''The Active Directory organizational Unit (OU) path to place the Azure Local related objects.''')
+param addsOrgUnitPathForAzureLocal string = 'OU=AzureLocal,DC=lab,DC=internal'
+
+@description('''The user name of the Lifecycle Manager (LCM) deployment user account.''')
+param lcmUserName string = 'lcmuser'
+
+@description('''By specifying True, the Configurator App for Azure Local will be installed during the deployment.''')
+param shouldInstallConfigAppForAzureLocal bool = false
+
+@description('''The base URI of template's repository. The value must end with '/'.''')
+param repoBaseUri string = 'https://raw.githubusercontent.com/tksh164/hci-lab/main/template/'
+
+@description('''The value for generate unique values.''')
+param salt string = utcNow()
+
+//
+// Variables
+//
+
+
+//
+// Resources
+//
