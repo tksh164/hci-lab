@@ -357,6 +357,265 @@ param salt string = utcNow()
 // Variables
 //
 
+// General
+var location = resourceGroup().location
+var uniquePart = substring(uniqueString(resourceGroup().id, salt), 0, 5)
+var repoBaseUriWithSlash = endsWith(repoBaseUri, '/') ? repoBaseUri : '${repoBaseUri}/'
+var deploymentApiVersion = '2025-04-01'
+
+// Virtual network
+var virtualNetwork = {
+  deploymentName: 'deploy-vnet'
+  apiVersion: deploymentApiVersion
+  linkedTemplateUri: uri(repoBaseUriWithSlash, 'linkedtemplates/vnet.json')
+  name: 'labenv-vnet'
+}
+
+// Bastion
+var bastion = {
+  deploymentName: 'deploy-bastion'
+  apiVersion: deploymentApiVersion
+  linkedTemplateUri: uri(repoBaseUriWithSlash, 'linkedtemplates/bastion.json')
+  name: 'labenv-bastion'
+}
+
+// Lab host virtual machine
+var hostVm = {
+  deploymentName: 'deploy-host-vm'
+  apiVersion: deploymentApiVersion
+  linkedTemplateUri: uri(repoBaseUriWithSlash, 'linkedtemplates/hostvm.json')
+}
+
+// Key Vault
+var keyVault = {
+  deploymentName: 'deploy-key-vault'
+  apiVersion: deploymentApiVersion
+  linkedTemplateUri: uri(repoBaseUriWithSlash, 'linkedtemplates/keyvault.json')
+  name: format('labenv-{0}-kv', toLower(uniquePart))
+}
+
+// Key Vault RBAC
+var keyVaultRbac = {
+  deploymentName: 'assign-key-vault-rbac-with-host-vm-managed-id'
+  apiVersion: deploymentApiVersion
+  linkedTemplateUri: uri(repoBaseUriWithSlash, 'linkedtemplates/keyvault-rbac.json')
+}
+
+// Storage account for witness
+var witnessStorageAccount = {
+  deploymentName: 'deploy-storage-account-witness'
+  apiVersion: deploymentApiVersion
+  linkedTemplateUri: uri(repoBaseUriWithSlash, 'linkedtemplates/cloudwitness.json')
+  namePrefix: 'labenvwitness'
+}
+
+// DSC extension
+var dscLinkedTemplateUri = uri(repoBaseUriWithSlash, 'linkedtemplates/dsc.json')
+var dscExtensionName = 'hci-lab-dsc-extension'
+var dscBaseUriWithSlash = uri(repoBaseUriWithSlash, 'dsc/')  // Must end with "/".
+var dsc = {
+  installRolesFeatures: {
+    deploymentName: 'install-roles-and-features-on-host-vm'
+    apiVersion: deploymentApiVersion
+    zipUri: uri(dscBaseUriWithSlash, 'install-roles-and-features.zip')
+    scriptName: 'install-roles-and-features.ps1'
+    functionName: 'install-roles-and-features'
+  }
+  rebootHostVm: {
+    deploymentName: 'reboot-host-vm'
+    apiVersion: deploymentApiVersion
+    zipUri: uri(dscBaseUriWithSlash, 'reboot.zip')
+    scriptName: 'reboot.ps1'
+    functionName: 'reboot'
+  }
+}
+
+// Custom script extensions
+var customScriptLinkedTemplateUri = uri(repoBaseUriWithSlash, 'linkedtemplates/customscript.json')
+var customScriptExtensionName = 'hci-lab-customscript-extension'
+var customScriptBaseUriWithSlash = uri(repoBaseUriWithSlash, 'customscripts/')  // Must end with "/".
+var customScript = {
+  configureHostVm: {
+    deploymentName: 'configure-host-vm'
+    apiVersion: deploymentApiVersion
+    fileUris: [
+      uri(customScriptBaseUriWithSlash, 'configure-lab-host.ps1')
+      uri(customScriptBaseUriWithSlash, 'common.psm1')
+    ]
+    commandToExecute: 'powershell.exe -ExecutionPolicy Unrestricted -File .\\configure-lab-host.ps1'
+  }
+  downloadIsoUpdates: {
+    deploymentName: 'download-materials'
+    apiVersion: deploymentApiVersion
+    fileUris: [
+      uri(customScriptBaseUriWithSlash, 'download-iso-updates.ps1')
+      uri(customScriptBaseUriWithSlash, 'download-iso-updates-asset-urls.psd1')
+      uri(customScriptBaseUriWithSlash, 'common.psm1')
+    ]
+    commandToExecute: 'powershell.exe -ExecutionPolicy Unrestricted -File .\\download-iso-updates.ps1'
+  }
+  createBaseVhd: {
+    deploymentName: 'create-base-vhd'
+    apiVersion: deploymentApiVersion
+    fileUris: [
+      uri(customScriptBaseUriWithSlash, 'create-base-vhd.ps1')
+      uri(customScriptBaseUriWithSlash, 'create-base-vhd-job.ps1')
+      uri(customScriptBaseUriWithSlash, 'common.psm1')
+    ]
+    commandToExecute: 'powershell.exe -ExecutionPolicy Unrestricted -File .\\create-base-vhd.ps1'
+  }
+  createVm: {
+    deploymentName: 'create-lab-vms'
+    apiVersion: deploymentApiVersion
+    fileUris: [
+      uri(customScriptBaseUriWithSlash, 'create-vm.ps1')
+      uri(customScriptBaseUriWithSlash, 'create-vm-job-addsdc.ps1')
+      uri(customScriptBaseUriWithSlash, 'create-vm-job-wac.ps1')
+      uri(customScriptBaseUriWithSlash, 'create-vm-job-hcinode.ps1')
+      uri(customScriptBaseUriWithSlash, 'common.psm1')
+    ]
+    commandToExecute: 'powershell.exe -ExecutionPolicy Unrestricted -File .\\create-vm.ps1'
+  }
+  createHciCluster: {
+    deploymentName: 'create-hci-cluster'
+    apiVersion: deploymentApiVersion
+    fileUris: [
+      uri(customScriptBaseUriWithSlash, 'create-hci-cluster.ps1')
+      uri(customScriptBaseUriWithSlash, 'create-hci-cluster-test-cat-en-us.psd1')
+      uri(customScriptBaseUriWithSlash, 'create-hci-cluster-test-cat-ja-jp.psd1')
+      uri(customScriptBaseUriWithSlash, 'common.psm1')
+    ]
+    commandToExecute: 'powershell.exe -ExecutionPolicy Unrestricted -File .\\create-hci-cluster.ps1'
+  }
+}
+
+// Configuration parameters
+var labConfig = {
+  labHost: {
+    storage: {
+      poolName: 'hcilabpool'
+      driveLetter: 'V'
+      volumeLabel: 'HCI Lab Data'
+    }
+    folderPath: {
+      log: 'C:\\temp\\hcilab-logs'
+      temp: 'V:\\temp'
+      updates: 'V:\\temp\\updates'
+      vhd: 'V:\\vhd'
+      vm: 'V:\\vm'
+    }
+    vSwitch: {
+      nat: {
+        name: 'HciLabNAT'
+      }
+    }
+    netNat: [
+      {
+        name: 'ManagementNAT'
+        InternalAddressPrefix: '172.16.0.0/24'
+        hostInternalIPAddress: '172.16.0.1'
+        hostInternalPrefixLength: 24
+      }
+      {
+        name: 'ComputeNAT'
+        InternalAddressPrefix: '10.0.0.0/16'
+        hostInternalIPAddress: '10.0.0.1'
+        hostInternalPrefixLength: 16
+      }
+    ]
+    toolsToInstall: toolsToInstall
+  }
+  guestOS: {
+    culture: labVmOsCulture
+    timeZone: labVmOsTimeZone
+    shouldInstallUpdates: shouldInstallUpdatesToLabVm
+  }
+  addsDomain: {
+    fqdn: addsDomainFqdn
+  }
+  addsDC: {
+    vmName: 'addsdc'
+    maximumRamBytes: 2147483648
+    netAdapters: {
+      management: {
+        name: 'Management'
+        ipAddress: '172.16.0.2'
+        prefixLength: 24
+        defaultGateway: '172.16.0.1'
+        dnsServerAddresses: [ '168.63.129.16' ]
+      }
+    }
+    shouldPrepareAddsForAzureLocal: shouldPrepareAddsForAzureLocal
+    orgUnitForAzureLocal: addsOrgUnitPathForAzureLocal
+    lcmUserName: lcmUserName
+  }
+  wac: {
+    vmName: 'workbox'
+    maximumRamBytes: 6442450944
+    netAdapters: {
+      management: {
+        name: 'Management'
+        ipAddress: '172.16.0.3'
+        prefixLength: 24
+        defaultGateway: '172.16.0.1'
+        dnsServerAddresses: [ '172.16.0.2' ]
+      }
+    }
+    shouldInstallConfigAppForAzureLocal: shouldInstallConfigAppForAzureLocal
+  }
+  hciNode: {
+    vmName: 'machine{0:00}'  // vmNameOffset + ZeroBasedNodeIndex
+    vmNameOffset: 1
+    operatingSystem: {
+      sku: hciNodeOsSku
+      imageIndex: hciNodeOsImageIndex
+    }
+    nodeCount: hciNodeCount
+    shouldJoinToAddsDomain: shouldHciNodeJoinToAddsDomain
+    isAzureLocalDeployment: isAzureLocalDeployment
+    dataDiskSizeBytes: 1099511627776
+    ipAddressOffset: 11
+    netAdapters: {
+      management: {
+        name: 'Management'
+        ipAddress: '172.16.0.{0}'  // ipAddressOffset + ZeroBasedNodeIndex
+        prefixLength: 24
+        defaultGateway: '172.16.0.1'
+        dnsServerAddresses: [ '172.16.0.2' ]
+      }
+      compute: {
+        name: 'Compute'
+        ipAddress: '10.0.0.{0}'  // ipAddressOffset + ZeroBasedNodeIndex
+        prefixLength: 16
+      }
+      storage1: {
+        name: 'Storage1'
+        vlanId: 711
+        ipAddress: '172.20.1.{0}'  // ipAddressOffset + ZeroBasedNodeIndex
+        prefixLength: 24
+      }
+      storage2: {
+        name: 'Storage2'
+        vlanId: 712
+        ipAddress: '172.20.2.{0}'  // ipAddressOffset + ZeroBasedNodeIndex
+        prefixLength: 24
+      }
+    }
+  }
+  hciCluster: {
+    shouldCreateCluster: shouldHciNodeJoinToAddsDomain && shouldCreateHciCluster
+    name: hciClusterName
+    ipAddress: '172.16.0.200'
+  }
+  keyVault: {
+    name: keyVault.name
+    secretName: {
+      adminPassword: 'AdminPassword'
+      cloudWitnessStorageAccountName: 'CloudWitnessStorageAccountName'
+      cloudWitnessStorageAccountKey: 'CloudWitnessStorageAccountKey'
+    }
+  }
+}
 
 //
 // Resources
