@@ -620,3 +620,32 @@ var labConfig = {
 //
 // Resources
 //
+
+// Virtual network
+resource vnet 'Microsoft.Resources/deployments@2025-04-01' = {
+  name: virtualNetwork.deploymentName
+  properties: {
+    mode: 'Incremental'
+    templateLink: {
+      uri: virtualNetwork.linkedTemplateUri
+      contentVersion: '1.0.0.0'
+    }
+    parameters: {
+      location: {
+        value: location
+      }
+      virtualNetworkName: {
+        value: virtualNetwork.name
+      }
+    }
+  }
+}
+
+// module vnet './vnet.bicep' = {
+//   name: virtualNetwork.deploymentName
+//   params: {
+//     location: location
+//     virtualNetworkName: virtualNetwork.name
+//   }
+// }
+
