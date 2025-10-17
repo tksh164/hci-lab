@@ -622,7 +622,7 @@ var labConfig = {
 //
 
 // Virtual network
-resource vnet 'Microsoft.Resources/deployments@2025-04-01' = {
+resource res_vnet 'Microsoft.Resources/deployments@2025-04-01' = {
   name: virtualNetwork.deploymentName
   properties: {
     mode: 'Incremental'
@@ -649,3 +649,28 @@ resource vnet 'Microsoft.Resources/deployments@2025-04-01' = {
 //   }
 // }
 
+// Bastion
+resource res_bastion 'Microsoft.Resources/deployments@2025-04-01' = if (shouldDeployBastionDeveloper) {
+  name: bastion.deploymentName
+  dependsOn: [
+    res_vnet
+  ]
+  properties: {
+    mode: 'Incremental'
+    templateLink: {
+      uri: bastion.linkedTemplateUri
+      contentVersion: '1.0.0.0'
+    }
+    parameters: {
+      location: {
+        value: location
+      }
+      bastionName: {
+        value: bastion.name
+      }
+      virtualNetworkId: {
+        value: res_vnet.properties.outputs.virtualNetworkId.value
+      }
+    }
+  }
+}
