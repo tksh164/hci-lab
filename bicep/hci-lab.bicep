@@ -674,3 +674,68 @@ resource res_bastion 'Microsoft.Resources/deployments@2025-04-01' = if (shouldDe
     }
   }
 }
+
+// Lab host virtual machine.
+resource res_labHostVm 'Microsoft.Resources/deployments@2025-04-01' = {
+  name: hostVm.deploymentName
+  dependsOn: [
+    res_vnet
+  ]
+  properties: {
+    mode: 'Incremental'
+    templateLink: {
+      uri: hostVm.linkedTemplateUri
+      contentVersion: '1.0.0.0'
+    }
+    parameters: {
+      location: {
+        value: location
+      }
+      subnetId: {
+        value: res_vnet.properties.outputs.subnetId.value.default
+      }
+      vmName: {
+        value: labHostVmName
+      }
+      adminUserName: {
+        value: adminUserName
+      }
+      adminPassword: {
+        value: adminPassword
+      }
+      vmSize: {
+        value: labHostVmSize
+      }
+      osDiskType: {
+        value: labHostVmOsDiskType
+      }
+      dataDiskType: {
+        value: labHostVmDataDiskType
+      }
+      dataDiskSize: {
+        value: labHostVmDataDiskSize
+      }
+      dataDiskCount: {
+        value: labHostVmDataDiskCount
+      }
+      hasEligibleWindowsServerLicense: {
+        value: hasEligibleWindowsServerLicense
+      }
+      base64EncodedLabConfig: {
+        value: base64(string(labConfig))
+      }
+      shouldEnabledAutoshutdown: {
+        value: shouldEnabledAutoshutdown
+      }
+      autoshutdownTime: {
+        value: autoshutdownTime
+      }
+      autoshutdownTimeZone: {
+        value: autoshutdownTimeZone
+      }
+      uniqueString: {
+        value: uniquePart
+      }
+    }
+  }
+}
