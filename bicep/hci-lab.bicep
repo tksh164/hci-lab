@@ -739,3 +739,35 @@ resource res_labHostVm 'Microsoft.Resources/deployments@2025-04-01' = {
     }
   }
 }
+
+// Key Vault
+resource res_keyVault 'Microsoft.Resources/deployments@2025-04-01' = {
+    name: keyVault.deploymentName
+  dependsOn: [
+    res_vnet
+  ]
+  properties: {
+    mode: 'Incremental'
+    templateLink: {
+      uri: keyVault.linkedTemplateUri
+      contentVersion: '1.0.0.0'
+    }
+    parameters: {
+      location: {
+        value: location
+      }
+      keyVaultName: {
+        value: keyVault.name
+      }
+      hostVmSubnetId: {
+        value: res_vnet.properties.outputs.subnetId.value.default
+      }
+      secretNameForLabHostAdminPassword: {
+        value: labConfig.keyVault.secretName.adminPassword
+      }
+      labHostAdminPassword: {
+        value: adminPassword
+      }
+    }
+  }
+}
