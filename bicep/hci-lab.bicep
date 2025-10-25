@@ -771,3 +771,30 @@ resource res_keyVault 'Microsoft.Resources/deployments@2025-04-01' = {
     }
   }
 }
+
+// Key Vault RBAC
+resource res_keyVaultRbac 'Microsoft.Resources/deployments@2025-04-01' = {
+  name: keyVaultRbac.deploymentName
+  dependsOn: [
+    res_labHostVm
+    res_keyVault
+  ]
+  properties: {
+    mode: 'Incremental'
+    templateLink: {
+      uri: keyVaultRbac.linkedTemplateUri
+      contentVersion: '1.0.0.0'
+    }
+    parameters: {
+      keyVaultName: {
+        value: keyVault.name
+      }
+      servicePrincipalId: {
+        value: res_labHostVm.properties.outputs.principalId.value
+      }
+      roleDefinitionId: {
+        value: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')  // Key Vault Secrets User
+      }
+    }
+  }
+}
