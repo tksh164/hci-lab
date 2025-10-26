@@ -798,3 +798,43 @@ resource res_keyVaultRbac 'Microsoft.Resources/deployments@2025-04-01' = {
     }
   }
 }
+
+// Storage account for the witness.
+resource res_witnessStorageAccount 'Microsoft.Resources/deployments@2025-04-01' = if (!isAzureLocalDeployment) {
+  name: witnessStorageAccount.deploymentName
+  dependsOn: [
+    res_vnet
+    res_keyVault
+  ]
+  properties: {
+    mode: 'Incremental'
+    templateLink: {
+      uri: witnessStorageAccount.linkedTemplateUri
+      contentVersion: '1.0.0.0'
+    }
+    parameters: {
+      location: {
+        value: location
+      }
+      storageAccountNamePrefix: {
+        value: witnessStorageAccount.namePrefix
+      }
+      uniqueString: {
+        value: uniquePart
+      }
+      hostVmSubnetId: {
+        value: res_vnet.properties.outputs.subnetId.value.default
+      }
+      keyVaultName: {
+        value: keyVault.name
+      }
+      secretNameForStorageAccountName: {
+        value: labConfig.keyVault.secretName.cloudWitnessStorageAccountName
+      }
+      secretNameForStorageAccountKey: {
+        value: labConfig.keyVault.secretName.cloudWitnessStorageAccountKey
+      }
+    }
+  }
+}
+
