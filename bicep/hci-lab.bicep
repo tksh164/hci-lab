@@ -246,15 +246,15 @@ param labHostVmName string = 'labenv-vm1'
 param labHostVmSize string = 'Standard_E16s_v5'
 
 @description('''The storage type of the lab host virtual machine's OS disk.''')
-@allowed([ 'Premium_LRS', 'StandardSSD_LRS', 'Standard_LRS' ])
+@allowed(['Premium_LRS', 'StandardSSD_LRS', 'Standard_LRS'])
 param labHostVmOsDiskType string = 'StandardSSD_LRS'
 
 @description('''The storage type of the lab host virtual machine's data disk.''')
-@allowed([ 'Premium_LRS', 'StandardSSD_LRS' ])
+@allowed(['Premium_LRS', 'StandardSSD_LRS'])
 param labHostVmDataDiskType string = 'StandardSSD_LRS'
 
 @description('''The size of individual disk of the lab host virtual machine's data disks in GiB.''')
-@allowed([ 32, 64, 128, 256, 512, 1024 ])
+@allowed([32, 64, 128, 256, 512, 1024])
 param labHostVmDataDiskSize int = 64
 
 @description('''The number of data disks on the lab host virtual machine.''')
@@ -281,7 +281,7 @@ param autoshutdownTime string = '22:00'
 param autoshutdownTimeZone string = 'UTC'
 
 @description('''The operating system's culture of the lab virtual machines. This affects such as language and input method of the operating system.''')
-@allowed([ 'en-us', 'ja-jp' ])
+@allowed(['en-us', 'ja-jp'])
 param labVmOsCulture string = 'en-us'
 
 @description('''The time zone of the lab virtual machines.''')
@@ -292,26 +292,26 @@ param shouldInstallUpdatesToLabVm bool = false
 
 @description('''The operating system for the HCI node virtual machines.''')
 @allowed([
-  'azloc24h2_2509'  // Azure Local 24H2 2509
-  'azloc24h2_2508'  // Azure Local 24H2 2508
-  'azloc24h2_2507'  // Azure Local 24H2 2507
-  'azloc24h2_2506'  // Azure Local 24H2 2506
-  'azloc24h2_2505'  // Azure Local 24H2 2505
-  'azloc24h2_2504'  // Azure Local 24H2 2504
-  'ashci23h2'       // Azure Stack HCI 23H2 / Azure Local 23H2 2503
-  'ashci22h2'       // Azure Stack HCI 22H2
-  'ashci21h2'       // Azure Stack HCI 21H2
-  'ashci20h2'       // Azure Stack HCI 20H2
-  'ws2025'          // Windows Server 2025
-  'ws2022'          // Windows Server 2022
+  'azloc24h2_2509' // Azure Local 24H2 2509
+  'azloc24h2_2508' // Azure Local 24H2 2508
+  'azloc24h2_2507' // Azure Local 24H2 2507
+  'azloc24h2_2506' // Azure Local 24H2 2506
+  'azloc24h2_2505' // Azure Local 24H2 2505
+  'azloc24h2_2504' // Azure Local 24H2 2504
+  'ashci23h2' // Azure Stack HCI 23H2 / Azure Local 23H2 2503
+  'ashci22h2' // Azure Stack HCI 22H2
+  'ashci21h2' // Azure Stack HCI 21H2
+  'ashci20h2' // Azure Stack HCI 20H2
+  'ws2025' // Windows Server 2025
+  'ws2022' // Windows Server 2022
 ])
 param hciNodeOsSku string = 'azloc24h2_2509'
 
 @description('''The image index of the operating system for the HCI node virtual machines.''')
 @allowed([
-  1   // For Azure Stack HCI
+  1 // For Azure Stack HCI
   //3   // For Windows Server Datacenter Server Core
-  4   // For Windows Server Datacenter with Desktop Experience
+  4 // For Windows Server Datacenter with Desktop Experience
 ])
 param hciNodeOsImageIndex int = 1
 
@@ -412,7 +412,7 @@ var witnessStorageAccount = {
 // DSC extension
 var dscLinkedTemplateUri = uri(repoBaseUriWithSlash, 'linkedtemplates/dsc.json')
 var dscExtensionName = 'hci-lab-dsc-extension'
-var dscBaseUriWithSlash = uri(repoBaseUriWithSlash, 'dsc/')  // Must end with "/".
+var dscBaseUriWithSlash = uri(repoBaseUriWithSlash, 'dsc/') // Must end with "/".
 var dsc = {
   installRolesFeatures: {
     deploymentName: 'install-roles-and-features-on-host-vm'
@@ -433,7 +433,7 @@ var dsc = {
 // Custom script extensions
 var customScriptLinkedTemplateUri = uri(repoBaseUriWithSlash, 'linkedtemplates/customscript.json')
 var customScriptExtensionName = 'hci-lab-customscript-extension'
-var customScriptBaseUriWithSlash = uri(repoBaseUriWithSlash, 'customscripts/')  // Must end with "/".
+var customScriptBaseUriWithSlash = uri(repoBaseUriWithSlash, 'customscripts/') // Must end with "/".
 var customScript = {
   configureHostVm: {
     deploymentName: 'configure-host-vm'
@@ -542,7 +542,7 @@ var labConfig = {
         ipAddress: '172.16.0.2'
         prefixLength: 24
         defaultGateway: '172.16.0.1'
-        dnsServerAddresses: [ '168.63.129.16' ]
+        dnsServerAddresses: ['168.63.129.16']
       }
     }
     shouldPrepareAddsForAzureLocal: shouldPrepareAddsForAzureLocal
@@ -558,13 +558,13 @@ var labConfig = {
         ipAddress: '172.16.0.3'
         prefixLength: 24
         defaultGateway: '172.16.0.1'
-        dnsServerAddresses: [ '172.16.0.2' ]
+        dnsServerAddresses: ['172.16.0.2']
       }
     }
     shouldInstallConfigAppForAzureLocal: shouldInstallConfigAppForAzureLocal
   }
   hciNode: {
-    vmName: 'machine{0:00}'  // vmNameOffset + ZeroBasedNodeIndex
+    vmName: 'machine{0:00}' // vmNameOffset + ZeroBasedNodeIndex
     vmNameOffset: 1
     operatingSystem: {
       sku: hciNodeOsSku
@@ -578,26 +578,26 @@ var labConfig = {
     netAdapters: {
       management: {
         name: 'Management'
-        ipAddress: '172.16.0.{0}'  // ipAddressOffset + ZeroBasedNodeIndex
+        ipAddress: '172.16.0.{0}' // ipAddressOffset + ZeroBasedNodeIndex
         prefixLength: 24
         defaultGateway: '172.16.0.1'
-        dnsServerAddresses: [ '172.16.0.2' ]
+        dnsServerAddresses: ['172.16.0.2']
       }
       compute: {
         name: 'Compute'
-        ipAddress: '10.0.0.{0}'  // ipAddressOffset + ZeroBasedNodeIndex
+        ipAddress: '10.0.0.{0}' // ipAddressOffset + ZeroBasedNodeIndex
         prefixLength: 16
       }
       storage1: {
         name: 'Storage1'
         vlanId: 711
-        ipAddress: '172.20.1.{0}'  // ipAddressOffset + ZeroBasedNodeIndex
+        ipAddress: '172.20.1.{0}' // ipAddressOffset + ZeroBasedNodeIndex
         prefixLength: 24
       }
       storage2: {
         name: 'Storage2'
         vlanId: 712
-        ipAddress: '172.20.2.{0}'  // ipAddressOffset + ZeroBasedNodeIndex
+        ipAddress: '172.20.2.{0}' // ipAddressOffset + ZeroBasedNodeIndex
         prefixLength: 24
       }
     }
@@ -742,7 +742,7 @@ resource res_labHostVm 'Microsoft.Resources/deployments@2025-04-01' = {
 
 // Key Vault
 resource res_keyVault 'Microsoft.Resources/deployments@2025-04-01' = {
-    name: keyVault.deploymentName
+  name: keyVault.deploymentName
   dependsOn: [
     res_vnet
   ]
@@ -793,7 +793,7 @@ resource res_keyVaultRbac 'Microsoft.Resources/deployments@2025-04-01' = {
         value: res_labHostVm.properties.outputs.principalId.value
       }
       roleDefinitionId: {
-        value: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')  // Key Vault Secrets User
+        value: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6') // Key Vault Secrets User
       }
     }
   }
@@ -838,3 +838,37 @@ resource res_witnessStorageAccount 'Microsoft.Resources/deployments@2025-04-01' 
   }
 }
 
+// Install roles and features.
+resource res_installRolesFeatures 'Microsoft.Resources/deployments@2025-04-01' = {
+  name: dsc.installRolesFeatures.deploymentName
+  dependsOn: [
+    res_labHostVm
+  ]
+  properties: {
+    mode: 'Incremental'
+    templateLink: {
+      uri: dscLinkedTemplateUri
+      contentVersion: '1.0.0.0'
+    }
+    parameters: {
+      location: {
+        value: location
+      }
+      parentVmResourceName: {
+        value: labHostVmName
+      }
+      extensionName: {
+        value: dscExtensionName
+      }
+      zipUri: {
+        value: dsc.installRolesFeatures.zipUri
+      }
+      scriptName: {
+        value: dsc.installRolesFeatures.scriptName
+      }
+      functionName: {
+        value: dsc.installRolesFeatures.functionName
+      }
+    }
+  }
+}
