@@ -872,3 +872,36 @@ resource res_installRolesFeatures 'Microsoft.Resources/deployments@2025-04-01' =
     }
   }
 }
+
+// Configure the lab host.
+resource res_configureHostVm 'Microsoft.Resources/deployments@2025-04-01' = {
+  name: customScript.configureHostVm.deploymentName
+  dependsOn: [
+    res_keyVaultRbac
+    res_installRolesFeatures
+  ]
+  properties: {
+    mode: 'Incremental'
+    templateLink: {
+      uri: customScriptLinkedTemplateUri
+      contentVersion: '1.0.0.0'
+    }
+    parameters: {
+      location: {
+        value: location
+      }
+      parentVmResourceName: {
+        value: labHostVmName
+      }
+      extensionName: {
+        value: customScriptExtensionName
+      }
+      fileUris: {
+        value: customScript.configureHostVm.fileUris
+      }
+      commandToExecute: {
+        value: customScript.configureHostVm.commandToExecute
+      }
+    }
+  }
+}
