@@ -1253,13 +1253,22 @@
                                     "placeholder": "メンバー サーバーのオペレーティング システムを選択...",
                                     "defaultDescription": "---",
                                     "filterPlaceholder": "メンバー サーバーのオペレーティング システムをフィルター...",
-                                    "defaultValue": "Azure Local 2509",
+                                    "defaultValue": "Azure Local 2510",
                                     "constraints": {
                                         "required": true,
                                         "allowedValues": [
                                             {
-                                                "label": "Azure Local 2509",
+                                                "label": "Azure Local 2510",
                                                 "description": "最新の一般提供バージョンです。",
+                                                "value": {
+                                                    "sku": "azloc24h2_2510",
+                                                    "imageIndex": 1,
+                                                    "isAzureLocal": true
+                                                }
+                                            },
+                                            {
+                                                "label": "Azure Local 2509",
+                                                "description": "以前のバージョンです。",
                                                 "value": {
                                                     "sku": "azloc24h2_2509",
                                                     "imageIndex": 1,
@@ -1303,15 +1312,6 @@
                                                 }
                                             },
                                             {
-                                                "label": "Azure Local 2504",
-                                                "description": "以前のバージョンです。",
-                                                "value": {
-                                                    "sku": "azloc24h2_2504",
-                                                    "imageIndex": 1,
-                                                    "isAzureLocal": true
-                                                }
-                                            },
-                                            {
                                                 "label": "Windows Server 2025 Datacenter Evaluation (Desktop Experience)",
                                                 "description": "標準グラフィカル ユーザー インターフェイスを備えた Windows Server 2025 Datacenter です。",
                                                 "value": {
@@ -1327,6 +1327,15 @@
                                                     "sku": "ws2022",
                                                     "imageIndex": 4,
                                                     "isAzureLocal": false
+                                                }
+                                            },
+                                            {
+                                                "label": "Azure Local 2504 [サポート終了]",
+                                                "description": "<strong>注意:</strong> このバージョンのサポート期間は終了しました。",
+                                                "value": {
+                                                    "sku": "azloc24h2_2504",
+                                                    "imageIndex": 1,
+                                                    "isAzureLocal": true
                                                 }
                                             },
                                             {
