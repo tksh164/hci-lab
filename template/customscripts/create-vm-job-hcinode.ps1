@@ -813,13 +813,25 @@ try {
     }
     'Install the PowerShellGet module within the VM completed.' | Write-ScriptLog
 
-    if ($labConfig.hciNode.isAzureLocalDeployment) {
+    # The following Azure Local versions have the ImageCustomizationScheduledTask task.
+    $osVersionsShouldInvokeScheduledTask = @(
+        [HciLab.OSSku]::AzureLocal24H2_2509,
+        [HciLab.OSSku]::AzureLocal24H2_2508,
+        [HciLab.OSSku]::AzureLocal24H2_2507,
+        [HciLab.OSSku]::AzureLocal24H2_2506,
+        [HciLab.OSSku]::AzureLocal24H2_2505,
+        [HciLab.OSSku]::AzureLocal24H2_2504
+    )
+    if ($labConfig.hciNode.isAzureLocalDeployment -and $labConfig.hciNode.operatingSystem.sku -in $osVersionsShouldInvokeScheduledTask) {
         'Invoke the Azure Local scheduled task.' | Write-ScriptLog
         Invoke-AzureLocalScheduledTask -VMName $nodeConfig.VMName -Credential $invokeWithinVMParams.Credential
 
         'Wait for the Azure Local scheduled task to be completed.' | Write-ScriptLog
         Wait-AzureLocalScheduledTaskCompletion -VMName $nodeConfig.VMName -Credential $invokeWithinVMParams.Credential
         'The Azure Local scheduled task is completed.' | Write-ScriptLog
+    }
+    else {
+        'Skip the Azure Local scheduled task invocation because {0} does not have the scheduled task.' -f $labConfig.hciNode.operatingSystem.sku | Write-ScriptLog
     }
 
     'Delete the module files within the VM.' | Write-ScriptLog
