@@ -76,7 +76,7 @@ function Get-WindowsFeatureToInstall
     if ([HciLab.OSSku]::AzureStackHciSkus -contains $HciNodeOperatingSystemSku) {
         $featureNames += 'FS-Data-Deduplication'
         $featureNames += 'BitLocker'
-    
+
         if ($HciNodeOperatingSystemSku -ne [HciLab.OSSku]::AzureStackHci20H2) {
             $featureNames += 'NetworkATC'
         }
@@ -116,7 +116,7 @@ function Wait-BootstrapServices
                 VMName      = $VMName
                 Credential  = $Credential
                 ScriptBlock = {
-                    ((Get-Service -Name 'BootstrapManagementService').Status -eq 'Running') -and 
+                    ((Get-Service -Name 'BootstrapManagementService').Status -eq 'Running') -and
                     ((Get-Service -Name 'BootstrapRestService').Status -eq 'Running')
                 }
                 ErrorAction = [Management.Automation.ActionPreference]::Stop
@@ -559,15 +559,15 @@ try {
             New-RegistryKey -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows' -KeyName 'OOBE'
             Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\OOBE' -Name 'DisablePrivacyExperience' -Value 1
             'Disable diagnostics data send screen completed.' | Write-ScriptLog
-        
+
             'Stop Server Manager launch at logon.' | Write-ScriptLog
             Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotOpenServerManagerAtLogon' -Value 1
             'Stop Server Manager launch at logon completed.' | Write-ScriptLog
-        
+
             'Stop Windows Admin Center popup at Server Manager launch.' | Write-ScriptLog
             Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotPopWACConsoleAtSMLaunch' -Value 1
             'Stop Windows Admin Center popup at Server Manager launch completed.' | Write-ScriptLog
-        
+
             'Hide the Network Location wizard. All networks will be Public.' | Write-ScriptLog
             New-RegistryKey -ParentPath 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -KeyName 'NewNetworkWindowOff'
             'Hide the Network Location wizard completed.' | Write-ScriptLog
@@ -680,7 +680,7 @@ try {
             Get-NetAdapter -Name $NetAdapterConfig.Name |
             Get-NetIPInterface -AddressFamily 'IPv4' |
             Remove-NetIPAddress -Confirm:$false -ErrorAction SilentlyContinue
-            
+
             # Configure the IP, DNS and VLAN on the network adapter.
             $paramsForSetNetAdapter = @{
                 VlanID   = $NetAdapterConfig.VlanId
@@ -718,7 +718,7 @@ try {
             Get-NetAdapter -Name $NetAdapterConfig.Name |
             Get-NetIPInterface -AddressFamily 'IPv4' |
             Remove-NetIPAddress -Confirm:$false -ErrorAction SilentlyContinue
-            
+
             # Configure the IP, DNS and VLAN on the network adapter.
             $paramsForSetNetAdapter = @{
                 VlanID   = $NetAdapterConfig.VlanId
