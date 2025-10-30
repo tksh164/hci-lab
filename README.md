@@ -38,7 +38,7 @@ Learn more about the HCI lab in the [HCI Lab tour](./docs/hci-lab-tour.md).
 
 | Operating system | OS build | Description |
 | ---- | ---- | ---- |
-| Azure Local 2509 (24H2) | 26100.6584 | The latest generally available version of Azure Local. |
+| Azure Local 2510 (24H2) | 26100.6899 | The latest generally available version of Azure Local. |
 | Windows Server 2025 Datacenter Evaluation (Desktop Experience) | 26100.1742 | Windows Server 2025 Datacenter with the standard graphical user interface. |
 | Windows Server 2022 Datacenter Evaluation (Desktop Experience) | 20348.587 | Windows Server 2022 Datacenter with the standard graphical user interface. |
 
@@ -46,11 +46,12 @@ Learn more about the HCI lab in the [HCI Lab tour](./docs/hci-lab-tour.md).
 
 | Operating system | OS build | Description |
 | ---- | ---- | ---- |
+| Azure Local 2509 (24H2) | 26100.6584 | The previous version of Azure Local. |
 | Azure Local 2508 (24H2) | 26100.4946 | The previous version of Azure Local. |
 | Azure Local 2507 (24H2) | 26100.4652 | The previous version of Azure Local. |
 | Azure Local 2506 (24H2) | 26100.4349 | The previous version of Azure Local. |
 | Azure Local 2505 (24H2) | 26100.4061 | The previous version of Azure Local. |
-| Azure Local 2504 (24H2) | 26100.3775 | The previous version of Azure Local. |
+| Azure Local 2504 (24H2) | 26100.3775 | This version of Azure Local reached the end of support. |
 | Azure Local 2503 (23H2)<br>Azure Stack HCI, version 23H2 | 25398.1486 | This version of Azure Local (formerly Azure Stack HCI) reached the end of support. |
 | Azure Stack HCI, version 22H2 | 20348.1607 | This version of Azure Stack HCI reached the end of support on May 31, 2025. |
 | Azure Stack HCI, version 21H2 | 20348.288 | This version of Azure Stack HCI reached the end of support on November 14, 2023. |
