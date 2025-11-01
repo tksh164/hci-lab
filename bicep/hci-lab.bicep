@@ -905,3 +905,35 @@ resource res_configureHostVm 'Microsoft.Resources/deployments@2025-04-01' = {
     }
   }
 }
+
+// Download ISO files and updates.
+resource res_downloadIsoUpdates 'Microsoft.Resources/deployments@2025-04-01' = {
+  name: customScript.downloadIsoUpdates.deploymentName
+  dependsOn: [
+    res_configureHostVm
+  ]
+  properties: {
+    mode: 'Incremental'
+    templateLink: {
+      uri: customScriptLinkedTemplateUri
+      contentVersion: '1.0.0.0'
+    }
+    parameters: {
+      location: {
+        value: location
+      }
+      parentVmResourceName: {
+        value: labHostVmName
+      }
+      extensionName: {
+        value: customScriptExtensionName
+      }
+      fileUris: {
+        value: customScript.downloadIsoUpdates.fileUris
+      }
+      commandToExecute: {
+        value: customScript.downloadIsoUpdates.commandToExecute
+      }
+    }
+  }
+}
