@@ -937,3 +937,35 @@ resource res_downloadIsoUpdates 'Microsoft.Resources/deployments@2025-04-01' = {
     }
   }
 }
+
+// Create base virtual hard disks.
+resource res_createBaseVhd 'Microsoft.Resources/deployments@2025-04-01' = {
+  name:customScript.createBaseVhd.deploymentName
+  dependsOn: [
+    res_downloadIsoUpdates
+  ]
+  properties: {
+    mode: 'Incremental'
+    templateLink: {
+      uri: customScriptLinkedTemplateUri
+      contentVersion: '1.0.0.0'
+    }
+    parameters: {
+      location: {
+        value: location
+      }
+      parentVmResourceName: {
+        value: labHostVmName
+      }
+      extensionName: {
+        value: customScriptExtensionName
+      }
+      fileUris: {
+        value: customScript.createBaseVhd.fileUris
+      }
+      commandToExecute: {
+        value: customScript.createBaseVhd.commandToExecute
+      }
+    }
+  }
+}
