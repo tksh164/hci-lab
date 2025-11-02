@@ -940,7 +940,7 @@ resource res_downloadIsoUpdates 'Microsoft.Resources/deployments@2025-04-01' = {
 
 // Create base virtual hard disks.
 resource res_createBaseVhd 'Microsoft.Resources/deployments@2025-04-01' = {
-  name:customScript.createBaseVhd.deploymentName
+  name: customScript.createBaseVhd.deploymentName
   dependsOn: [
     res_downloadIsoUpdates
   ]
