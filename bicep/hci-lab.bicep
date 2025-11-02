@@ -969,3 +969,38 @@ resource res_createBaseVhd 'Microsoft.Resources/deployments@2025-04-01' = {
     }
   }
 }
+
+// Reboot the lab host.
+resource res_rebootHostVm 'Microsoft.Resources/deployments@2025-04-01' = {
+  name: dsc.rebootHostVm.deploymentName
+  dependsOn: [
+    res_createBaseVhd
+  ]
+  properties: {
+    mode: 'Incremental'
+    templateLink: {
+      uri: dscLinkedTemplateUri
+      contentVersion: '1.0.0.0'
+    }
+    parameters: {
+      location: {
+        value: location
+      }
+      parentVmResourceName: {
+        value: labHostVmName
+      }
+      extensionName: {
+        value: dscExtensionName
+      }
+      zipUri: {
+        value: dsc.rebootHostVm.zipUri
+      }
+      scriptName: {
+        value: dsc.rebootHostVm.scriptName
+      }
+      functionName: {
+        value: dsc.rebootHostVm.functionName
+      }
+    }
+  }
+}
