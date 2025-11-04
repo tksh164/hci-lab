@@ -1004,3 +1004,35 @@ resource res_rebootHostVm 'Microsoft.Resources/deployments@2025-04-01' = {
     }
   }
 }
+
+// Create VMs.
+resource res_createVm 'Microsoft.Resources/deployments@2025-04-01' = {
+  name: customScript.createVm.deploymentName
+  dependsOn: [
+    res_rebootHostVm
+  ]
+  properties: {
+    mode: 'Incremental'
+    templateLink: {
+      uri: customScriptLinkedTemplateUri
+      contentVersion: '1.0.0.0'
+    }
+    parameters: {
+      location: {
+        value: location
+      }
+      parentVmResourceName: {
+        value: labHostVmName
+      }
+      extensionName: {
+        value: customScriptExtensionName
+      }
+      fileUris: {
+        value: customScript.createVm.fileUris
+      }
+      commandToExecute: {
+        value: customScript.createVm.commandToExecute
+      }
+    }
+  }
+}
