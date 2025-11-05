@@ -1036,3 +1036,36 @@ resource res_createVm 'Microsoft.Resources/deployments@2025-04-01' = {
     }
   }
 }
+
+// Create an HCI cluster.
+resource res_hciCluster 'Microsoft.Resources/deployments@2025-04-01' = if (labConfig.hciCluster.shouldCreateCluster) {
+  name: customScript.createHciCluster.deploymentName
+  dependsOn: [
+    res_witnessStorageAccount
+    res_createVm
+  ]
+  properties: {
+    mode: 'Incremental'
+    templateLink: {
+      uri: customScriptLinkedTemplateUri
+      contentVersion: '1.0.0.0'
+    }
+    parameters: {
+      location: {
+        value: location
+      }
+      parentVmResourceName: {
+        value: labHostVmName
+      }
+      extensionName: {
+        value: customScriptExtensionName
+      }
+      fileUris: {
+        value: customScript.createHciCluster.fileUris
+      }
+      commandToExecute: {
+        value: customScript.createHciCluster.commandToExecute
+      }
+    }
+  }
+}
