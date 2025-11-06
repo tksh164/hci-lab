@@ -1069,3 +1069,6 @@ resource res_hciCluster 'Microsoft.Resources/deployments@2025-04-01' = if (labCo
     }
   }
 }
+
+output adminUserName string = adminUserName
+output vmPublicIpFqdn string = res_labHostVm.properties.outputs.fqdn.value
