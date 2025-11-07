@@ -292,20 +292,21 @@ param shouldInstallUpdatesToLabVm bool = false
 
 @description('''The operating system for the HCI node virtual machines.''')
 @allowed([
+  'azloc24h2_2510' // Azure Local 24H2 2510
   'azloc24h2_2509' // Azure Local 24H2 2509
   'azloc24h2_2508' // Azure Local 24H2 2508
   'azloc24h2_2507' // Azure Local 24H2 2507
   'azloc24h2_2506' // Azure Local 24H2 2506
   'azloc24h2_2505' // Azure Local 24H2 2505
   'azloc24h2_2504' // Azure Local 24H2 2504
-  'ashci23h2' // Azure Stack HCI 23H2 / Azure Local 23H2 2503
-  'ashci22h2' // Azure Stack HCI 22H2
-  'ashci21h2' // Azure Stack HCI 21H2
-  'ashci20h2' // Azure Stack HCI 20H2
-  'ws2025' // Windows Server 2025
-  'ws2022' // Windows Server 2022
+  'ashci23h2'      // Azure Stack HCI 23H2 / Azure Local 23H2 2503
+  'ashci22h2'      // Azure Stack HCI 22H2
+  'ashci21h2'      // Azure Stack HCI 21H2
+  'ashci20h2'      // Azure Stack HCI 20H2
+  'ws2025'         // Windows Server 2025
+  'ws2022'         // Windows Server 2022
 ])
-param hciNodeOsSku string = 'azloc24h2_2509'
+param hciNodeOsSku string = 'azloc24h2_2510'
 
 @description('''The image index of the operating system for the HCI node virtual machines.''')
 @allowed([
