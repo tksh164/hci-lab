@@ -1,7 +1,7 @@
 #Requires -Version 7
 
 $bicepFilePaths = @(
-    './hci-lab/hci-lab.bicep'
+    './labenv/hci-lab.bicep'
 )
 $outputBaseFolderPath = '../templates'
 
