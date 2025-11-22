@@ -148,7 +148,7 @@
         }
         'updates' = @(
             # OS
-            'https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/7c0d1a12-9944-4b26-bed7-a722c040d631/public/windows11.0-kb5066835-x64_2f193bc50987a9c27e42eceeb90648af19cc813a.msu',
+            'https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/b3d0f58f-6b73-4d8b-927e-5da83900f1c5/public/windows11.0-kb5072359-x64_9de812f726178f4c43c10ad84a8d6168daf7260d.msu',
             # .NET Framework
             'https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/035cd7e9-5769-4168-80e4-d73bc6b746c8/public/windows11.0-kb5066131-x64-ndp481_b2ab1290d276d5cb9c9d03dce5ad2d6e2b66f615.msu'
         )
