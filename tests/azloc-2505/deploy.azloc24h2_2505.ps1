@@ -2,7 +2,7 @@
 param (
     [string] $ResourceGroupName = 'hcilab-azloc24h2-2505-{0}' -f [datetime]::Now.TOstring('yyMMddHHmmss'),
     [string] $ResourceGroupLocation = 'japaneast',
-    [string] $TemplateFile = '../template/template.json',
+    [string] $TemplateFile = '../../template/template.json',
     [string] $TemplateParametersFile = './parameters.azloc24h2_2505.json',
     [HashTable] $ResourceGroupTag = @{ 'usage' = 'experimental' },
     [switch] $WhatIf,
@@ -64,7 +64,7 @@ else {
         $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 
         $params = @{
-            ResourceGroupName = $ResourceGroupName
+            ResourceGroupName       = $ResourceGroupName
             Name                    = ('{0}-{1}'-f (Get-Item -LiteralPath $templateFilePath).BaseName, (Get-Date).ToUniversalTime().ToString('yyyyMMdd-HHmm'))
             TemplateFile            = $templateFilePath
             DeploymentDebugLogLevel = 'All'
@@ -72,14 +72,14 @@ else {
             Force                   = $true
             Verbose                 = $true
         }
-    
+
         if (Test-Path -LiteralPath $templateParametersFilePath -PathType Leaf) {
             $params.TemplateParameterFile = $templateParametersFilePath
         }
-    
+
         'Deployment name: ' | Write-Host -ForegroundColor Green -NoNewline
         $params.Name | Write-Host
-    
+
         try {
             New-AzResourceGroupDeployment @params
         }

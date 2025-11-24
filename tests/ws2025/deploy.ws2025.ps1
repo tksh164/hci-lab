@@ -2,7 +2,7 @@
 param (
     [string] $ResourceGroupName = 'hcilab-ws2025-{0}' -f [datetime]::Now.TOstring('yyMMddHHmmss'),
     [string] $ResourceGroupLocation = 'japaneast',
-    [string] $TemplateFile = '../template/template.json',
+    [string] $TemplateFile = '../../template/template.json',
     [string] $TemplateParametersFile = './parameters.ws2025.json',
     [HashTable] $ResourceGroupTag = @{ 'usage' = 'experimental' },
     [switch] $WhatIf,
@@ -64,7 +64,7 @@ else {
         $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 
         $params = @{
-            ResourceGroupName = $ResourceGroupName
+            ResourceGroupName       = $ResourceGroupName
             Name                    = ('{0}-{1}'-f (Get-Item -LiteralPath $templateFilePath).BaseName, (Get-Date).ToUniversalTime().ToString('yyyyMMdd-HHmm'))
             TemplateFile            = $templateFilePath
             DeploymentDebugLogLevel = 'All'
