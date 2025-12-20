@@ -1268,7 +1268,7 @@
                                             },
                                             {
                                                 "label": "Azure Local 2511",
-                                                "description": "前のバージョンです。",
+                                                "description": "以前のバージョンです。",
                                                 "value": {
                                                     "sku": "azloc24h2_2511",
                                                     "imageIndex": 1,
