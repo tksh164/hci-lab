@@ -186,30 +186,30 @@
             "lcmController": {
                 "version": "30.2510.0.1126",
                 "settings": {
-                    "AssemblyDeployPackage": "10.2511.0.7",
+                    "AssemblyDeployPackage": "10.2512.0.9",
                     "Payload": [
                         {
                             "identifier": "CloudDeployment_zip",
-                            "hash": "ED5CA64B4DFE71077554EE1BF5ECB14A15F449FECFE4231440A04A3954A6633D",
-                            "fileName": "CloudDeployment_10.2511.0.7.zip",
-                            "url": "https://azurestackreleases.download.prss.microsoft.com/dbazure/AzureLocal/CloudDeployment/10.2511.0.7/CloudDeployment_10.2511.0.7.zip"
+                            "hash": "08C1846F4BB82A9536E4F477AFB53EA1272B63A57704613DE464D8846A0F6ED7",
+                            "fileName": "CloudDeployment_10.2512.0.9.zip",
+                            "url": "https://azurestackreleases.download.prss.microsoft.com/dbazure/AzureLocal/CloudDeployment/10.2512.0.9/CloudDeployment_10.2512.0.9.zip"
                         },
                         {
                             "identifier": "VerifyCloudDeployment_ps1",
-                            "hash": "4A07F61D242D3A7B20BBFC56C2BEAC4D2AA1D46CFF6943632755BA809D7FD33F",
-                            "fileName": "Verify-CloudDeployment_10.2511.0.7.zip_Hash.ps1",
-                            "url": "https://azurestackreleases.download.prss.microsoft.com/dbazure/AzureLocal/CloudDeployment/10.2511.0.7/Verify-CloudDeployment_10.2511.0.7.zip_Hash.ps1"
+                            "hash": "F10C7A8A0A6941D5F1A777582AB0FF95AE962B04D6D5B2098599C9AFA5E4B4FA",
+                            "fileName": "Verify-CloudDeployment_10.2512.0.9.zip_Hash.ps1",
+                            "url": "https://azurestackreleases.download.prss.microsoft.com/dbazure/AzureLocal/CloudDeployment/10.2512.0.9/Verify-CloudDeployment_10.2512.0.9.zip_Hash.ps1"
                         },
                         {
                             "identifier": "BootstrapCloudDeploymentTool_ps1",
-                            "hash": "053BB68ACF8F2A74011F96258C1C20BE337E103767DF9B4B84D82252E010F3A0",
+                            "hash": "C9776F2A44FA04FD2C4E46B9B9EB4B3A723E29E4DB80708614BA8EC245DC8541",
                             "fileName": "BootstrapCloudDeploymentTool.ps1",
-                            "url": "https://azurestackreleases.download.prss.microsoft.com/dbazure/AzureLocal/CloudDeployment/10.2511.0.7/BootstrapCloudDeploymentTool.ps1"
+                            "url": "https://azurestackreleases.download.prss.microsoft.com/dbazure/AzureLocal/CloudDeployment/10.2512.0.9/BootstrapCloudDeploymentTool.ps1"
                         },
                         {
                             "identifier": "SolutionVersion",
                             "hash": "",
-                            "fileName": "12.2511.1002.5",
+                            "fileName": "12.2512.1002.16",
                             "url": ""
                         }
                     ]
