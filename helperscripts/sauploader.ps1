@@ -1,5 +1,5 @@
-#Requires -Modules @{ ModuleName = 'Az.Accounts'; ModuleVersion = '2.12.3' }
-#Requires -Modules @{ ModuleName = 'Az.Storage'; ModuleVersion = '5.7.0' }
+#Requires -Modules @{ ModuleName = 'Az.Accounts'; ModuleVersion = '5.3.1' }
+#Requires -Modules @{ ModuleName = 'Az.Storage'; ModuleVersion = '9.4.0' }
 
 [CmdletBinding()]
 param (
