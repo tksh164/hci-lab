@@ -26,6 +26,11 @@ Write-Host $azContext.Tenant.Id -ForegroundColor White
 Write-Host 'Account ID        : ' -NoNewline -ForegroundColor Green
 Write-Host $azContext.Account.Id -ForegroundColor White
 Write-Host ''
+Write-Host 'Template  : ' -NoNewline -ForegroundColor Green
+Write-Host $templateFilePath -ForegroundColor White
+Write-Host 'Parameter : ' -NoNewline -ForegroundColor Green
+Write-Host $templateParametersFilePath -ForegroundColor White
+Write-Host ''
 
 $response = Read-Host -Prompt 'Press Y to continue or other to cancel' -ErrorAction SilentlyContinue
 if ($response -ne 'Y') {
