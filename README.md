@@ -28,10 +28,6 @@ The HCI Lab provides a plain lab environment on Azure in reasonable preparation 
 
 5. The HCI cluster is ready for you. Let's access your HCI cluster via Windows Admin Center from **Windows Admin Center icon** on the desktop with **LAB\\Administrator** account and the password that you specified at deployment (the same password as the lab host Azure VM). Also, you can access your entire HCI lab environment from the other icons on the desktop.
 
-## 🗺️ HCI Lab tour
-
-Learn more about the HCI lab in the [HCI Lab tour](./docs/hci-lab-tour.md).
-
 ## 📚 Selectable lab machine operating systems
 
 ### Available
@@ -58,6 +54,11 @@ Learn more about the HCI lab in the [HCI Lab tour](./docs/hci-lab-tour.md).
 | Azure Stack HCI, version 22H2 | 20348.1607 | This version of Azure Stack HCI reached the end of support on May 31, 2025. |
 | Azure Stack HCI, version 21H2 | 20348.288 | This version of Azure Stack HCI reached the end of support on November 14, 2023. |
 | Azure Stack HCI, version 20H2 | 17784.1408 | This version of Azure Stack HCI reached the end of support on December 13, 2022. |
+
+## 📄 Documents
+
+- [HCI Lab tour](./docs/hci-lab-tour.md): Explains about the configuration of the HCI Lab environment.
+- [Deploy AKS on Windows Server 2022 with HCI Lab](./docs/hci-lab-tour.md): Step by step to deploy the AKS on Windows Server 2022 with HCI Lab.
 
 ## ⚖️ License
 
