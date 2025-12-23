@@ -45,7 +45,7 @@ The HCI lab environment consists of three roles of Hyper-V VMs on a single Azure
 
 - The log files of the custom scripts are stored under `C:\temp\hcilab-logs` in the lab host Azure VM. Those log files are helpful for troubleshooting when deployment fails.
 
-### Hyper-V VMs on Azure VM
+### Hyper-V VMs on the Azure VM
 
 - Deploy options
     - **Join to the AD DS domain:** Should you choose to **Not join** if you plan to [provisioning your HCI cluster from Azure portal](https://learn.microsoft.com/en-us/azure-stack/hci/deploy/deploy-via-portal).
