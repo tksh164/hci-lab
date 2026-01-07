@@ -112,3 +112,25 @@ Also, you can check input values and output values of each deployment on the tar
 **HCI Lab deployment dependencies:**
 
 ![](./media/hci-lab-deployment-flow.svg)
+
+## Frequently asked questions
+
+### Why the trust confirmation message showing when open "Deploy to Azure"?
+
+Because the custom deployment form for the HCI Lab template calls Azure Resource Manager API (ARM API) that "[Resource Skus - List](https://learn.microsoft.com/rest/api/compute/resource-skus/list)" to retrieve the maximum number of disks of your selected VM size ([Reference to the code](https://github.com/tksh164/hci-lab/blob/85b4debc4a755363af856a2a0ecab8bf4bca75d6/uiforms/uiform.json#L172-L183)). The reason of this design, the HCI Lab template deploys maximum number of disks to get best storage performance and low cost.
+
+Recommend to choose **Yes, I trust the authors** to use convenient deployment UI.
+
+![](./media/uiform-trust-confirmation.png)
+
+### Which Azure VM size is recommend?
+
+**Standard_E16s_v5** that is the default VM size is recommended for most lab use cases of tow nodes. The default VM size has the reasonable performance & cost balance, and available in many regions. Use bigger VM sizes if you want to use 3+ nodes.
+
+### How long an HCI Lab deployment taking?
+
+The deployment duration depends on your deployment options. Usually it takes 30 minutes to 90 minutes, or more.
+
+### How to stop the HCI Lab's Azure VM?
+
+You can **Save** the lab VMs from the **Hyper-V Manager** within your HCI Lab Azure VM before deallocate your HCI Lab Azure VM. Also you can start (resume) the saved lab VMs from the Hyper-V Manager when you resume your work in your lab.
