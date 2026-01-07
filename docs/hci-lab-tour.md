@@ -119,7 +119,7 @@ Also, you can check input values and output values of each deployment on the tar
 
 Because the custom deployment form for the HCI Lab template calls Azure Resource Manager API (ARM API) that "[Resource Skus - List](https://learn.microsoft.com/rest/api/compute/resource-skus/list)" to retrieve the maximum number of disks of your selected VM size ([Reference to the code](https://github.com/tksh164/hci-lab/blob/85b4debc4a755363af856a2a0ecab8bf4bca75d6/uiforms/uiform.json#L172-L183)). The reason of this design, the HCI Lab template deploys maximum number of disks to get best storage performance and low cost.
 
-Recommend to choose **Yes, I trust the authors** to use convenient deployment UI.
+Recommend to choose **Yes, I trust the authors** to use the user friendly deployment UI.
 
 ![](./media/uiform-trust-confirmation.png)
 
