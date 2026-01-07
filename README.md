@@ -31,6 +31,7 @@ The HCI Lab provides a plain lab environment on Azure in reasonable preparation 
 ## 📄 Documents
 
 - [HCI Lab tour](./docs/hci-lab-tour.md): Explains about the configuration of the HCI Lab environment.
+- [Frequently asked questions](./docs/hci-lab-tour.md#frequently-asked-questions): Frequently asked questions on the HCI Lab.
 - [Deploy AKS on Windows Server 2022 with HCI Lab](./docs/deploy-aks-on-ws2022-with-hcilab.md): Step by step to deploy the AKS on Windows Server 2022 with HCI Lab.
 
 ## 📚 Selectable lab machine operating systems
