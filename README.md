@@ -13,6 +13,8 @@ The HCI Lab provides a plain lab environment on Azure in reasonable preparation 
 
     The differences between "UI languages at deployment" are just the UI language difference in Azure portal when deployment. The template and the deployed lab environment are the same with either.
 
+    > **Note:** Recommend to choose **Yes, I trust the authors** to use the user friendly deployment UI. Read [FAQ](./docs/hci-lab-tour.md#why-the-trust-confirmation-message-showing-when-open-deploy-to-azure) for details.
+
     | UI language at deployment | Deploy to Azure |
     | ---- | ---- |
     | English | [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#view/Microsoft_Azure_CreateUIDef/CustomDeploymentBlade/uri/https%3A%2F%2Fraw.githubusercontent.com%2Ftksh164%2Fhci-lab%2Fmain%2Ftemplate%2Ftemplate.json/uiFormDefinitionUri/https%3A%2F%2Fraw.githubusercontent.com%2Ftksh164%2Fhci-lab%2Fmain%2Fuiforms%2Fuiform.json) |
