@@ -1262,8 +1262,7 @@
                                                 "description": "The latest generally available version.",
                                                 "value": {
                                                     "sku": "azloc24h2_2512",
-                                                    "imageIndex": 1,
-                                                    "isAzureLocal": true
+                                                    "imageIndex": 1
                                                 }
                                             },
                                             {
@@ -1271,8 +1270,7 @@
                                                 "description": "The previous version.",
                                                 "value": {
                                                     "sku": "azloc24h2_2511",
-                                                    "imageIndex": 1,
-                                                    "isAzureLocal": true
+                                                    "imageIndex": 1
                                                 }
                                             },
                                             {
@@ -1280,8 +1278,7 @@
                                                 "description": "The previous version.",
                                                 "value": {
                                                     "sku": "azloc24h2_2510",
-                                                    "imageIndex": 1,
-                                                    "isAzureLocal": true
+                                                    "imageIndex": 1
                                                 }
                                             },
                                             {
@@ -1289,8 +1286,7 @@
                                                 "description": "The previous version.",
                                                 "value": {
                                                     "sku": "azloc24h2_2509",
-                                                    "imageIndex": 1,
-                                                    "isAzureLocal": true
+                                                    "imageIndex": 1
                                                 }
                                             },
                                             {
@@ -1298,8 +1294,7 @@
                                                 "description": "The previous version.",
                                                 "value": {
                                                     "sku": "azloc24h2_2508",
-                                                    "imageIndex": 1,
-                                                    "isAzureLocal": true
+                                                    "imageIndex": 1
                                                 }
                                             },
                                             {
@@ -1307,8 +1302,7 @@
                                                 "description": "The previous version.",
                                                 "value": {
                                                     "sku": "azloc24h2_2507",
-                                                    "imageIndex": 1,
-                                                    "isAzureLocal": true
+                                                    "imageIndex": 1
                                                 }
                                             },
                                             {
@@ -1316,8 +1310,7 @@
                                                 "description": "<strong>Notice:</strong> This version reached the end of support.",
                                                 "value": {
                                                     "sku": "azloc24h2_2506",
-                                                    "imageIndex": 1,
-                                                    "isAzureLocal": true
+                                                    "imageIndex": 1
                                                 }
                                             },
                                             {
@@ -1325,8 +1318,7 @@
                                                 "description": "<strong>Notice:</strong> This version reached the end of support.",
                                                 "value": {
                                                     "sku": "azloc24h2_2505",
-                                                    "imageIndex": 1,
-                                                    "isAzureLocal": true
+                                                    "imageIndex": 1
                                                 }
                                             },
                                             {
@@ -1334,8 +1326,7 @@
                                                 "description": "<strong>Notice:</strong> This version reached the end of support.",
                                                 "value": {
                                                     "sku": "azloc24h2_2504",
-                                                    "imageIndex": 1,
-                                                    "isAzureLocal": true
+                                                    "imageIndex": 1
                                                 }
                                             },
                                             {
@@ -1343,8 +1334,7 @@
                                                 "description": "<strong>Notice:</strong> This version reached the end of support.",
                                                 "value": {
                                                     "sku": "ashci23h2",
-                                                    "imageIndex": 1,
-                                                    "isAzureLocal": true
+                                                    "imageIndex": 1
                                                 }
                                             },
                                             {
@@ -1352,8 +1342,7 @@
                                                 "description": "<strong>Notice:</strong> This version reached the end of support on May 31, 2025.",
                                                 "value": {
                                                     "sku": "ashci22h2",
-                                                    "imageIndex": 1,
-                                                    "isAzureLocal": false
+                                                    "imageIndex": 1
                                                 }
                                             },
                                             {
@@ -1361,8 +1350,7 @@
                                                 "description": "<strong>Notice:</strong> This version reached the end of support on November 14, 2023.",
                                                 "value": {
                                                     "sku": "ashci21h2",
-                                                    "imageIndex": 1,
-                                                    "isAzureLocal": false
+                                                    "imageIndex": 1
                                                 }
                                             },
                                             {
@@ -1370,8 +1358,7 @@
                                                 "description": "<strong>Notice:</strong> This version reached the end of support on December 13, 2022.",
                                                 "value": {
                                                     "sku": "ashci20h2",
-                                                    "imageIndex": 1,
-                                                    "isAzureLocal": false
+                                                    "imageIndex": 1
                                                 }
                                             }
                                         ]
@@ -1439,7 +1426,7 @@
                         {
                             "name": "azureLocalPrepSection",
                             "type": "Microsoft.Common.Section",
-                            "visible": "[steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.isAzureLocal]",
+                            "visible": true,
                             "label": "Preparation for Azure Local deployment",
                             "elements": [
                                 {
@@ -2299,9 +2286,9 @@
                 "hciNodeOsSku": "[steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.sku]",
                 "hciNodeOsImageIndex": "[steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.imageIndex]",
                 "hciNodeCount": "[steps('hciNodeStep').hciClusterNodesSection.hciNodeCount]",
-                "shouldHciNodeJoinToAddsDomain": false,
-                "isAzureLocalDeployment": "[steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.isAzureLocal]",
 
+                "shouldHciNodeJoinToAddsDomain": false,
+                "isAzureLocalDeployment": true,
                 "shouldCreateHciCluster": false,
                 "hciClusterName": "",
 
