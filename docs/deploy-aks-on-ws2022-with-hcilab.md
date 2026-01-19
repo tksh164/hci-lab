@@ -114,6 +114,9 @@ Script     1.2.16     AksHci {New-AksHciStorageContainer, Enable-AksH... machine
 Script     1.2.16     AksHci {New-AksHciStorageContainer, Enable-AksH... machine02
 ```
 
+References:
+- [Install the AksHci PowerShell module](https://learn.microsoft.com/azure/aks/aksarc/kubernetes-walkthrough-powershell#install-the-akshci-powershell-module)
+
 ### 5.2. Initialize HCI nodes
 
 Initialize HCI nodes. You can do this at once **from the HCI Lab host** using PowerShell Direct.
@@ -132,6 +135,10 @@ You will see the following messages once for each of your HCI nodes.
 WinRM service is already running on this machine.
 WinRM is already set up for remote management on this computer.
 ```
+
+References:
+- [Step 1: prepare your machine(s) for deployment](https://learn.microsoft.com/azure/aks/aksarc/kubernetes-walkthrough-powershell#step-1-prepare-your-machines-for-deployment)
+- [Initialize-AksHciNode](https://learn.microsoft.com/azure/aks/aksarc/reference/ps/initialize-akshcinode)
 
 ## 6. Create a new management cluster
 
@@ -183,6 +190,10 @@ K8snodeIPPoolStart : 10.0.0.11
 K8snodeIPPoolEnd   : 10.0.0.40
 ```
 
+References:
+- [Step 2: create a virtual network](https://learn.microsoft.com/azure/aks/aksarc/kubernetes-walkthrough-powershell#step-2-create-a-virtual-network)
+- [New-AksHciNetworkSetting](https://learn.microsoft.com/azure/aks/aksarc/reference/ps/new-akshcinetworksetting)
+
 ### 6.3. Set an AKS configuration
 
 Set the AKS configuration for your AKS deployment using [Set-AksHciConfig](https://learn.microsoft.com/azure/aks/hybrid/reference/ps/set-akshciconfig). The configuration will be saved to your volume.
@@ -209,6 +220,10 @@ $params = @{
 Set-AksHciConfig @params
 ```
 
+References:
+- [Step 3: configure your deployment](https://learn.microsoft.com/azure/aks/aksarc/kubernetes-walkthrough-powershell#step-3-configure-your-deployment)
+- [Set-AksHciConfig](https://learn.microsoft.com/azure/aks/aksarc/reference/ps/set-akshciconfig)
+
 ### 6.4. Register an Azure Arc-enabled Kubernetes resource for your management cluster
 
 You need to register your management cluster to Azure as an Azure Arc connected Kubernetes. In this step, set the registration information for the registration using [Set-AksHciRegistration](https://learn.microsoft.com/azure/aks/hybrid/reference/ps/set-akshciregistration).
@@ -226,6 +241,10 @@ $params = @{
 Set-AksHciRegistration @params
 ```
 
+References:
+- [Step 4: sign in to Azure and configure registration settings](https://learn.microsoft.com/azure/aks/aksarc/kubernetes-walkthrough-powershell#step-4-sign-in-to-azure-and-configure-registration-settings)
+- [Set-AksHciRegistration](https://learn.microsoft.com/azure/aks/aksarc/reference/ps/set-akshciregistration)
+
 ### 6.5. Deploy your management cluster
 
 Start deployment of your management cluster using [Install-AksHci](https://learn.microsoft.com/azure/aks/hybrid/reference/ps/install-akshci).
@@ -233,6 +252,10 @@ Start deployment of your management cluster using [Install-AksHci](https://learn
 ```powershell
 Install-AksHci -Verbose
 ```
+
+References:
+- [Step 5: start a new deployment](https://learn.microsoft.com/azure/aks/aksarc/kubernetes-walkthrough-powershell#step-5-start-a-new-deployment)
+- [Install-AksHci](https://learn.microsoft.com/azure/aks/aksarc/reference/ps/install-akshci)
 
 ### 6.6. Confirm your management cluster configuration
 
@@ -338,6 +361,9 @@ gateway                        10.0.0.1
 # *** snip ***
 ```
 
+References:
+- [Get-AksHciConfig](https://learn.microsoft.com/azure/aks/aksarc/reference/ps/get-akshciconfig)
+
 ## 7. Create a new workload cluster
 
 Create a new workload cluster. You can create multiple workload clusters and use them to run your workloads.
@@ -361,6 +387,10 @@ $params = @{
 New-AksHciCluster @params
 ```
 
+References:
+- [Step 6: create a Kubernetes cluster](https://learn.microsoft.com/azure/aks/aksarc/kubernetes-walkthrough-powershell#step-6-create-a-kubernetes-cluster)
+- [New-AksHciCluster](https://learn.microsoft.com/azure/aks/aksarc/reference/ps/new-akshcicluster)
+
 ## 8. (Optional) Connect your workload cluster to Arc-enabled Kubernetes
 
 You can connect your cluster to Arc-enabled Kubernetes optionally using [Enable-AksHciArcConnection](https://learn.microsoft.com/azure/aks/aksarc/reference/ps/enable-akshciarcconnection). The following example connects your Kubernetes cluster to Arc using the subscription and resource group details you passed in [Set-AksHciRegistration](https://learn.microsoft.com/azure/aks/hybrid/reference/ps/set-akshciregistration).
@@ -369,13 +399,15 @@ You can connect your cluster to Arc-enabled Kubernetes optionally using [Enable-
 Enable-AksHciArcConnection -Name 'akswc1'
 ```
 
+References:
+- [Step 7: connect your cluster to Arc-enabled Kubernetes](https://learn.microsoft.com/azure/aks/aksarc/kubernetes-walkthrough-powershell#step-7-connect-your-cluster-to-arc-enabled-kubernetes)
+- [Enable-AksHciArcConnection](https://learn.microsoft.com/azure/aks/aksarc/reference/ps/enable-akshciarcconnection)
+
 ## Common operations
 
-### List workload clusters
+### List your workload clusters
 
 <!-- TODO: Fill here out later. -->
-
-- [Get-AksHciCluster](https://learn.microsoft.com/azure/aks/aksarc/reference/ps/get-akshcicluster)
 
 ```powershell
 PS C:\> Get-AksHciCluster
@@ -413,41 +445,36 @@ ImageName             : Linux_k8s_1.0.24.11029
 Name                  : akswc2
 ```
 
-### Get a credential to connect to your workload cluster
+References:
+- [Get-AksHciCluster](https://learn.microsoft.com/azure/aks/aksarc/reference/ps/get-akshcicluster)
+
+### Get the version of your management cluster (AKS on Windows Server)
 
 <!-- TODO: Fill here out later. -->
 
-- [Get-AksHciCredential](https://learn.microsoft.com/azure/aks/aksarc/reference/ps/get-akshcicredential)
+```powershell
+PS C:\> Get-AksHciVersion
+1.2.2.11107
+```
+
+References:
+- [Get-AksHciVersion](https://learn.microsoft.com/azure/aks/aksarc/reference/ps/get-akshciversion)
+
+### Get a credential to connect to your workload cluster
+
+<!-- TODO: Fill here out later. -->
 
 ```powershell
 Get-AksHciCredential -Name 'akswc1'
 ```
 
-### Delete your workload cluster
+References:
+- [Access your clusters using kubectl](https://learn.microsoft.com/azure/aks/aksarc/kubernetes-walkthrough-powershell#access-your-clusters-using-kubectl)
+- [Get-AksHciCredential](https://learn.microsoft.com/azure/aks/aksarc/reference/ps/get-akshcicredential)
+
+### Connect to an AKS node in your AKS cluster via SSH
 
 <!-- TODO: Fill here out later. -->
-
-- [Remove-AksHciCluster](https://learn.microsoft.com/azure/aks/aksarc/reference/ps/remove-akshcicluster)
-
-```powershell
-Remove-AksHciCluster -Name 'akswc1'
-```
-
-### Delete your management cluster
-
-<!-- TODO: Fill here out later. -->
-
-- [Uninstall-AksHci](https://learn.microsoft.com/azure/aks/aksarc/reference/ps/uninstall-akshci)
-
-```powershell
-Uninstall-AksHci
-```
-
-### Connect to an AKS node in your AKS cluster
-
-<!-- TODO: Fill here out later. -->
-
-- [Get-AksHciConfig](https://learn.microsoft.com/azure/aks/aksarc/reference/ps/get-akshciconfig)
 
 ```powershell
 PS C:\> kubectl get node -o wide
@@ -461,5 +488,127 @@ moc-lml3wnueug3   Ready    <none>          5d20h   v1.28.5   10.0.0.14     <none
 $sshPrivateKeyPath = (Get-AksHciConfig).Moc.sshPrivateKey
 ssh.exe clouduser@10.0.0.13 -i $sshPrivateKeyPath
 ```
+
+References:
+- [Connect with SSH to Windows or Linux worker nodes for maintenance and troubleshooting](https://learn.microsoft.com/azure/aks/aksarc/ssh-connection)
+- [Get-AksHciConfig](https://learn.microsoft.com/azure/aks/aksarc/reference/ps/get-akshciconfig)
+
+### Delete your workload cluster
+
+<!-- TODO: Fill here out later. -->
+
+```powershell
+Remove-AksHciCluster -Name 'akswc1'
+```
+
+References:
+- [Delete a Kubernetes cluster](https://learn.microsoft.com/azure/aks/aksarc/kubernetes-walkthrough-powershell#delete-a-kubernetes-cluster)
+- [Remove-AksHciCluster](https://learn.microsoft.com/azure/aks/aksarc/reference/ps/remove-akshcicluster)
+
+### Delete your management cluster
+
+<!-- TODO: Fill here out later. -->
+
+```powershell
+Uninstall-AksHci
+```
+
+References:
+- [Uninstall-AksHci](https://learn.microsoft.com/azure/aks/aksarc/reference/ps/uninstall-akshci)
+
+### Update your management cluster
+
+`Update-AksHci` takes no arguments and always updates the management cluster to the latest version. You must initiate the management cluster update before your workload cluster update by `Update-AksHciCluster`.
+
+```powershell
+Update-AksHci
+```
+
+References:
+- [Upgrade the AKS host in AKS on Windows Server using PowerShell](https://learn.microsoft.com/azure/aks/aksarc/update-akshci-host-powershell)
+- [Update-AksHci](https://learn.microsoft.com/azure/aks/aksarc/reference/ps/update-akshci)
+
+### Update your workload cluster
+
+<!-- TODO: Fill here out later. -->
+
+```powershell
+PS C:\> Get-AksHciKubernetesVersion | ft
+
+OrchestratorType OrchestratorVersion OS      SKU         IsPreview
+---------------- ------------------- --      ---         ---------
+Kubernetes       v1.29.12            Linux   CBLMariner      False
+Kubernetes       v1.29.13            Linux   CBLMariner      False
+Kubernetes       v1.30.8             Linux   CBLMariner      False
+Kubernetes       v1.30.9             Linux   CBLMariner      False
+Kubernetes       v1.31.4             Linux   CBLMariner      False
+Kubernetes       v1.31.5             Linux   CBLMariner      False
+Kubernetes       v1.29.12            Windows Windows2019     False
+Kubernetes       v1.29.13            Windows Windows2019     False
+Kubernetes       v1.30.8             Windows Windows2019     False
+Kubernetes       v1.30.9             Windows Windows2019     False
+Kubernetes       v1.31.4             Windows Windows2019     False
+Kubernetes       v1.31.5             Windows Windows2019     False
+Kubernetes       v1.29.12            Windows Windows2022     False
+Kubernetes       v1.29.13            Windows Windows2022     False
+Kubernetes       v1.30.8             Windows Windows2022     False
+Kubernetes       v1.30.9             Windows Windows2022     False
+Kubernetes       v1.31.4             Windows Windows2022     False
+Kubernetes       v1.31.5             Windows Windows2022     False
+```
+
+```powershell
+PS C:\> Get-AksHciClusterUpdates -Name 'akswc1'
+
+details                                                     kubernetesversion operatingsystemversion
+-------                                                     ----------------- ----------------------
+This is a patch kubernetes upgrade. (i.e v1.1.X  to v1.1.Y) v1.29.12          @{mariner=June 2025; windows=June 2025}
+This is a patch kubernetes upgrade. (i.e v1.1.X  to v1.1.Y) v1.29.13          @{mariner=June 2025; windows=June 2025}
+This is a minor kubernetes upgrade. (i.e v1.X.1 to v1.Y.1)  v1.30.9           @{mariner=June 2025; windows=June 2025}
+This is a minor kubernetes upgrade. (i.e v1.X.1 to v1.Y.1)  v1.30.8           @{mariner=June 2025; windows=June 2025}
+```
+
+```powershell
+PS C:\> Update-AksHciCluster -Name 'akswc1' -KubernetesVersion 'v1.30.9'
+
+Confirm
+Are you sure you want to perform this action?
+Performing the operation "Update the managed Kubernetes cluster" on target "akswc1".
+[Y] Yes  [A] Yes to All  [N] No  [L] No to All  [S] Suspend  [?] Help (default is "Y"): a
+
+Name            Version Upgraded
+----            ------- --------
+moc-l3pidladah4 v1.30.9     True
+moc-l7pgwckgcjq v1.30.9     True
+moc-lfjh6n0m23w v1.30.9     True
+```
+
+References:
+- [Upgrade Kubernetes version of AKS clusters in AKS on Windows Server using PowerShell](https://learn.microsoft.com/azure/aks/aksarc/upgrade)
+- [Get-AksHciKubernetesVersion](https://learn.microsoft.com/azure/aks/aksarc/reference/ps/get-akshcikubernetesversion)
+- [Get-AksHciClusterUpdates](https://learn.microsoft.com/azure/aks/aksarc/reference/ps/get-akshciclusterupdates)
+- [Update-AksHciCluster](https://learn.microsoft.com/azure/aks/aksarc/reference/ps/update-akshcicluster)
+- [Upgrading kubeadm clusters](https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/)
+
+### Update certificates in your AKS on Windows Server
+
+<!-- TODO: Fill here out later. -->
+
+References:
+- [Update certificates in AKS on Windows Server](https://learn.microsoft.com/azure/aks/aksarc/update-certificates)
+- [Overview of certificate management in AKS on Windows Server](https://learn.microsoft.com/azure/aks/aksarc/certificates-overview)
+
+### Collect logs of your AKS on Windows Server
+
+<!-- TODO: Fill here out later. -->
+
+```powershell
+PS C:\> Get-AksHciLogs
+C:\ClusterStorage\HciVol\akshci\WorkingDir\1.2.2.11107\akshcilogs25jz4yy1.ki3.zip
+```
+
+References:
+- [Get logs](https://learn.microsoft.com/azure/aks/aksarc/kubernetes-walkthrough-powershell#get-logs)
+- [Get-AksHciLogs](https://learn.microsoft.com/azure/aks/aksarc/reference/ps/get-akshcilogs)
 
 <!-- ### Deploy an application to your workload cluster -->
