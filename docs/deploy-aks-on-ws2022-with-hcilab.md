@@ -532,9 +532,63 @@ References:
 
 <!-- TODO: Fill here out later. -->
 
+```powershell
+PS C:\> Get-AksHciKubernetesVersion | ft
+
+OrchestratorType OrchestratorVersion OS      SKU         IsPreview
+---------------- ------------------- --      ---         ---------
+Kubernetes       v1.29.12            Linux   CBLMariner      False
+Kubernetes       v1.29.13            Linux   CBLMariner      False
+Kubernetes       v1.30.8             Linux   CBLMariner      False
+Kubernetes       v1.30.9             Linux   CBLMariner      False
+Kubernetes       v1.31.4             Linux   CBLMariner      False
+Kubernetes       v1.31.5             Linux   CBLMariner      False
+Kubernetes       v1.29.12            Windows Windows2019     False
+Kubernetes       v1.29.13            Windows Windows2019     False
+Kubernetes       v1.30.8             Windows Windows2019     False
+Kubernetes       v1.30.9             Windows Windows2019     False
+Kubernetes       v1.31.4             Windows Windows2019     False
+Kubernetes       v1.31.5             Windows Windows2019     False
+Kubernetes       v1.29.12            Windows Windows2022     False
+Kubernetes       v1.29.13            Windows Windows2022     False
+Kubernetes       v1.30.8             Windows Windows2022     False
+Kubernetes       v1.30.9             Windows Windows2022     False
+Kubernetes       v1.31.4             Windows Windows2022     False
+Kubernetes       v1.31.5             Windows Windows2022     False
+```
+
+```powershell
+PS C:\> Get-AksHciClusterUpdates -Name 'akswc1'
+
+details                                                     kubernetesversion operatingsystemversion
+-------                                                     ----------------- ----------------------
+This is a patch kubernetes upgrade. (i.e v1.1.X  to v1.1.Y) v1.29.12          @{mariner=June 2025; windows=June 2025}
+This is a patch kubernetes upgrade. (i.e v1.1.X  to v1.1.Y) v1.29.13          @{mariner=June 2025; windows=June 2025}
+This is a minor kubernetes upgrade. (i.e v1.X.1 to v1.Y.1)  v1.30.9           @{mariner=June 2025; windows=June 2025}
+This is a minor kubernetes upgrade. (i.e v1.X.1 to v1.Y.1)  v1.30.8           @{mariner=June 2025; windows=June 2025}
+```
+
+```powershell
+PS C:\> Update-AksHciCluster -Name 'akswc1' -KubernetesVersion 'v1.30.9'
+
+Confirm
+Are you sure you want to perform this action?
+Performing the operation "Update the managed Kubernetes cluster" on target "akswc1".
+[Y] Yes  [A] Yes to All  [N] No  [L] No to All  [S] Suspend  [?] Help (default is "Y"): a
+
+Name            Version Upgraded
+----            ------- --------
+moc-l3pidladah4 v1.30.9     True
+moc-l7pgwckgcjq v1.30.9     True
+moc-lfjh6n0m23w v1.30.9     True
+```
+
 References:
 - [Upgrade Kubernetes version of AKS clusters in AKS on Windows Server using PowerShell](https://learn.microsoft.com/azure/aks/aksarc/upgrade)
+- [Get-AksHciKubernetesVersion](https://learn.microsoft.com/azure/aks/aksarc/reference/ps/get-akshcikubernetesversion)
+- [Get-AksHciClusterUpdates](https://learn.microsoft.com/azure/aks/aksarc/reference/ps/get-akshciclusterupdates)
 - [Update-AksHciCluster](https://learn.microsoft.com/azure/aks/aksarc/reference/ps/update-akshcicluster)
+- [Upgrading kubeadm clusters](https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/)
 
 ### Update certificates in your AKS on Windows Server
 
