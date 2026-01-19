@@ -361,6 +361,9 @@ gateway                        10.0.0.1
 # *** snip ***
 ```
 
+References:
+- [Get-AksHciConfig](https://learn.microsoft.com/azure/aks/aksarc/reference/ps/get-akshciconfig)
+
 ## 7. Create a new workload cluster
 
 Create a new workload cluster. You can create multiple workload clusters and use them to run your workloads.
@@ -546,7 +549,8 @@ References:
 <!-- TODO: Fill here out later. -->
 
 ```powershell
-Get-AksHciLogs
+PS C:\> Get-AksHciLogs
+C:\ClusterStorage\HciVol\akshci\WorkingDir\1.2.2.11107\akshcilogs25jz4yy1.ki3.zip
 ```
 
 References:
