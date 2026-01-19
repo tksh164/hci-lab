@@ -213,6 +213,8 @@ Set-AksHciConfig @params
 
 You need to register your management cluster to Azure as an Azure Arc connected Kubernetes. In this step, set the registration information for the registration using [Set-AksHciRegistration](https://learn.microsoft.com/azure/aks/hybrid/reference/ps/set-akshciregistration).
 
+To sign in, use a web browser to open the [device login page](https://microsoft.com/devicelogin) on any device and enter the code that Set-AksHciRegistration shown.
+
 ```powershell
 $params = @{
     TenantId                = 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
