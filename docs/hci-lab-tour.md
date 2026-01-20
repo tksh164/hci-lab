@@ -134,3 +134,5 @@ The deployment duration depends on your deployment options. Usually it takes 30 
 ### How to stop the HCI Lab's Azure VM?
 
 You can **Save** the lab VMs from the **Hyper-V Manager** within your HCI Lab Azure VM before deallocate your HCI Lab Azure VM. Also you can start (resume) the saved lab VMs from the Hyper-V Manager when you resume your work in your lab.
+
+![](./media/save-hyper-v-vms.png)
