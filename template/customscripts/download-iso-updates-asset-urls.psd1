@@ -154,7 +154,7 @@
         }
         'updates' = @(
             # OS
-            'https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/0d978f5d-65ac-4905-9e9c-39e85a4a2b15/public/windows11.0-kb5073379-x64_7ba99163baad454955b9f76b1a59bef54208d9e9.msu',
+            'https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/c5839286-b6eb-4291-8894-1e9cfc1ab83d/public/windows11.0-kb5077793-x64_f43b4cdc545d6ff0688569c97ba30a354e9a25b2.msu',
             # .NET Framework
             'https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/035cd7e9-5769-4168-80e4-d73bc6b746c8/public/windows11.0-kb5066131-x64-ndp481_b2ab1290d276d5cb9c9d03dce5ad2d6e2b66f615.msu'
         )
@@ -167,7 +167,7 @@
         'updates' = @(
             # OS
             'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2024/05/windows10.0-kb5037782-x64_a28aa2576fc6b120b127acfbb901d3546ba9db82.msu',  # For SSU of 2026-01
-            'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2026/01/windows10.0-kb5073457-x64_c194bd303ef4be76cd8ea256cf8e8c81682455f0.msu',
+            'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/updt/2026/01/windows10.0-kb5077800-x64_29640ba8667e5ab1aacee9e506dc42e831a0fda7.msu',
             # .NET Framework
             'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2025/09/windows10.0-kb5066139-x64-ndp48_7e3c6366021288b8cf1ccc245240ace711ef0eb0.msu',
             'https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2025/09/windows10.0-kb5066134-x64-ndp481_103b0d4cef1c6b42632f1cb043725ded0fce0ed3.msu'
