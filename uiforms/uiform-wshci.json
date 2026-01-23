@@ -3,12 +3,12 @@
     "view": {
         "kind": "Form",
         "properties": {
-            "title": "🧪 Windows Server HCI Lab",
+            "title": "Windows Server HCI Lab 🧪🔬",
             "steps": [
                 {
                     "name": "basics",
                     "label": "Basics",
-                    "description": "This template will deploy an Azure Local lab environment or an HCI lab environment on a single Azure virtual machine.",
+                    "description": "This template will deploy a lab environment for Windows Server HCI on a single Azure virtual machine.",
                     "elements": [
                         {
                             "name": "resourceScope",
@@ -27,7 +27,7 @@
                             "visible": true,
                             "multiLine": false,
                             "label": "Lab host VM name",
-                            "toolTip": "Specify your lab host virtual machine resource name. The name used as an Azure resource identifier for it, not used for the computer name of the guest operating system.",
+                            "toolTip": "Specify the virtual machine resource name that host your lab environment. The name used as an Azure resource identifier for it, not used for the computer name of the guest operating system.",
                             "placeholder": "e.g. labenv-vm1",
                             "defaultValue": "labenv-vm1",
                             "constraints": {
@@ -49,7 +49,7 @@
                             "type": "Microsoft.Compute.SizeSelector",
                             "visible": true,
                             "label": "Size",
-                            "toolTip": "Specify the size for your lab host virtual machine.",
+                            "toolTip": "Specify the size of the virtual machine that host your lab environment.",
                             "scope": {
                                 "subscriptionId": "[steps('basics').resourceScope.subscription.subscriptionId]",
                                 "location": "[steps('basics').resourceScope.location.name]"
@@ -166,7 +166,7 @@
                             "visible": true,
                             "options": {
                                 "style": "Info",
-                                "text": "128 GiB memory is the real minimum when you deploy any workloads on your Azure Local instance/HCI cluster. You may need more memory if you deploy hybrid services on your Azure Local instance/HCI cluster because this lab environment has multiple Hyper-V VMs such as HCI servers, an AD domain controller and a management server on a single Azure Virtual machine.<ul><li><a href='https://learn.microsoft.com/azure/virtual-machines/sizes'>Azure Virtual Machine sizes</a></li><li><a href='https://azure.microsoft.com/pricing/details/virtual-machines/windows'>Windows Virtual Machines pricing</a></li></ul>"
+                                "text": "128 GiB memory is the real minimum when you deploy any workloads on your HCI cluster. You may need more memory if you deploy hybrid services on your HCI cluster because this lab environment has multiple Hyper-V VMs such as HCI nodes, an AD domain controller and a workbox server on a single Azure Virtual machine.<ul><li><a href='https://learn.microsoft.com/azure/virtual-machines/sizes'>Azure Virtual Machine sizes</a></li><li><a href='https://azure.microsoft.com/pricing/details/virtual-machines/windows'>Windows Virtual Machines pricing</a></li></ul>"
                             }
                         },
                         {
@@ -286,7 +286,7 @@
                             "visible": true,
                             "options": {
                                 "style": "Info",
-                                "text": "Deployment will take <strong>about 30 to 90 minutes</strong> depending on your deployment options."
+                                "text": "The deployment will take <strong>about 30 to 90 minutes, or more</strong> depending on your deployment options."
                             }
                         }
                     ]
@@ -294,7 +294,7 @@
                 {
                     "name": "labHostStep",
                     "label": "Lab host",
-                    "description": "Configure details for your lab host. The lab host is an Azure virtual machine.",
+                    "description": "Configure details for the Azure virtual machine that host your lab environment.",
                     "elements": [
                         {
                             "name": "diskSection",
@@ -380,7 +380,7 @@
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "All lab assets and artifacts such as VMs, VHDs, ISOs are stored in a single data volume on the lab host. The data volume capacity cannot change after finish deployment."
+                                        "text": "All assets and artifacts for your lab environment such as VMs, VHDs, ISOs are stored on a single data volume on the Azure virtual machine that host your lab environment. The data volume is striped to get better performance and the capacity of the volume cannot change after finish deployment the lab environment."
                                     }
                                 },
                                 {
@@ -392,7 +392,7 @@
                                     "filter": false,
                                     "multiLine": true,
                                     "label": "Data volume capacity",
-                                    "toolTip": "Data volume capacity on your lab host virtual machine.",
+                                    "toolTip": "The data volume capacity on your lab environment.",
                                     "placeholder": "Select the data volume capacity...",
                                     "defaultDescription": "---",
                                     "filterPlaceholder": "Filter data volume capacities...",
@@ -496,7 +496,7 @@
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "Select apps to be installed on the lab host."
+                                        "text": "Select apps to be installed on the Azure virtual machine that host your lab environment during the deployment of the lab environment."
                                     }
                                 },
                                 {
@@ -533,7 +533,7 @@
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "Select auto-shutdown whether enable or not for your lab host.",
+                                        "text": "Select auto-shutdown whether enable or not for the Azure virtual machine that host your lab environment.",
                                         "link": {
                                             "label": "Learn more",
                                             "uri": "https://learn.microsoft.com/azure/virtual-machines/auto-shutdown-vm"
