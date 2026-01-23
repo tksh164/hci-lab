@@ -1386,7 +1386,7 @@
                 {
                     "name": "addsStep",
                     "label": "Active Directory",
-                    "description": "Configure Active Directory Domain Services details for your lab environment.",
+                    "description": "Configure details of Active Directory Domain Services in your lab environment. An ADDS domain controller will be created as a Hyper-V virtual machine during the lab environment deployment.",
                     "elements": [
                         {
                             "name": "addsSection",
@@ -1399,7 +1399,7 @@
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "Select the Active Directory Domain Services domain configuration that will be created as a part of your lab environment."
+                                        "text": "Specify a FQDN domain of Active Directory Domain Services for your lab environment. An ADDS domain controller will be configured with specified domain during the lab environment deployment."
                                     }
                                 },
                                 {
@@ -1408,7 +1408,7 @@
                                     "visible": true,
                                     "multiLine": false,
                                     "label": "AD domain FQDN",
-                                    "toolTip": "Specify the AD domain FQDN for the lab environment.",
+                                    "toolTip": "Specify the AD domain FQDN for your lab environment.",
                                     "placeholder": "e.g. lab.internal",
                                     "defaultValue": "lab.internal",
                                     "constraints": {
@@ -1430,11 +1430,11 @@
                             "label": "Preparation for Azure Local deployment",
                             "elements": [
                                 {
-                                    "name": "addsSectionText",
+                                    "name": "azureLocalPrepSectionText",
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "Azure Local deployments require preparation on Active Directory before you deploy it."
+                                        "text": "Most Azure Local deployments require some preparations to Active Directory before you start deploy Azure Local instances."
                                     }
                                 },
                                 {
@@ -1442,7 +1442,7 @@
                                     "type": "Microsoft.Common.CheckBox",
                                     "label": "Prepare Active Directory for Azure Local deployment",
                                     "visible": true,
-                                    "toolTip": "Check this if you want to prepare Active Directory for Azure Local deployment.",
+                                    "toolTip": "Check this if you want to do prepare Active Directory for Azure Local instances during your lab environment deployment.",
                                     "defaultValue": true,
                                     "constraints": {
                                         "required": false
@@ -1454,7 +1454,7 @@
                                     "visible": "[steps('addsStep').azureLocalPrepSection.shouldPrepareAddsForAzureLocal]",
                                     "multiLine": false,
                                     "label": "AD organization unit (OU) for Azure Local",
-                                    "toolTip": "The organization unit to place the Azure Local related objects.",
+                                    "toolTip": "Specify the organization unit to place the Azure Local related AD objects such as computer objects.",
                                     "placeholder": "e.g. OU=AzureLocal,DC=lab,DC=internal",
                                     "defaultValue": "OU=AzureLocal,DC=lab,DC=internal",
                                     "constraints": {
@@ -1465,15 +1465,22 @@
                                                 "message": "Invalid distinguished name (DN) format for an organization unit (OU). It should be specify like 'OU=AzureLocal,DC=lab,DC=internal'."
                                             }
                                         ]
-                                    }
+                                    },
+                                    "infoMessages": [
+                                        {
+                                            "visible": true,
+                                            "style": "Info",
+                                            "text": "You need update the OU's distinguished name too if you changed the AD domain FQDN in above because the OU's distinguished name has AD domain FQDN."
+                                        }
+                                    ]
                                 },
                                 {
                                     "name": "lcmUserName",
                                     "type": "Microsoft.Common.TextBox",
                                     "visible": "[steps('addsStep').azureLocalPrepSection.shouldPrepareAddsForAzureLocal]",
                                     "multiLine": false,
-                                    "label": "LCM user account name",
-                                    "toolTip": "The Lifecycle Manager (LCM) deployment user account nme.",
+                                    "label": "Lifecycle Manager (LCM) user account name",
+                                    "toolTip": "Specify the name of the Lifecycle Manager (LCM) user account.",
                                     "placeholder": "e.g. lcmuser",
                                     "defaultValue": "lcmuser",
                                     "constraints": {
@@ -1483,12 +1490,12 @@
                                         {
                                             "visible": true,
                                             "style": "Info",
-                                            "text": "This user account will be used as the deployment account during Azure Local instance deployment."
+                                            "text": "The LCM user account will be used as the deployment account during Azure Local instance deployment."
                                         },
                                         {
                                             "visible": true,
                                             "style": "Info",
-                                            "text": "The password for the LCM user account is set to the same password as the administrator account."
+                                            "text": "The password for the LCM user account is set to the same password as the administrator account that you specify in the previous page."
                                         }
                                     ]
                                 }
