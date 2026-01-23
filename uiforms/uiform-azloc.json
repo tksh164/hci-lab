@@ -1516,20 +1516,20 @@
                 {
                     "name": "peripheralServersStep",
                     "label": "Peripheral servers",
-                    "description": "Server management tools to manage Azure Local instances, HCI clusters, Active Directory and more are installed on the management server.",
+                    "description": "Configure details of peripheral servers in your lab environment. The peripheral servers include an Active Directory domain controller, a workbox server.",
                     "elements": [
                         {
                             "name": "generalConfigSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
-                            "label": "General configuration for peripheral servers",
+                            "label": "General configuration",
                             "elements": [
                                 {
-                                    "name": "generalSectionText",
+                                    "name": "generalConfigSectionText",
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "The general configurations will be apply all peripheral servers in your lab environment such as Active Directory Domain Controllers, a workbox server except the machines that consist Azure Local."
+                                        "text": "The general configurations will be apply all peripheral servers in your lab environment such as an Active Directory domain controller, a workbox server except the machines that consist Azure Local instances."
                                     }
                                 },
                                 {
@@ -1541,7 +1541,7 @@
                                     "filter": false,
                                     "multiLine": false,
                                     "label": "Culture",
-                                    "toolTip": "Specify the display language, locale and input method of the operating system of lab virtual machines.",
+                                    "toolTip": "Specify the display language, locale and input method of the operating systems for peripheral servers in your lab environment.",
                                     "placeholder": "Select the culture...",
                                     "defaultDescription": "---",
                                     "filterPlaceholder": "Filter cultures...",
@@ -1563,7 +1563,7 @@
                                         {
                                             "visible": true,
                                             "style": "Info",
-                                            "text": "Culture represents the UI language, locale and input method."
+                                            "text": "The culture represents the UI language, locale and input method."
                                         }
                                     ]
                                 },
@@ -1576,8 +1576,8 @@
                                     "filter": true,
                                     "multiLine": false,
                                     "label": "Time zone",
-                                    "toolTip": "Specify the time zone of the operating system of lab virtual machines.",
-                                    "placeholder": "",
+                                    "toolTip": "Specify the time zone of the operating systems for peripheral servers in your lab environment.",
+                                    "placeholder": "Select the time zone...",
                                     "defaultDescription": "---",
                                     "filterPlaceholder": "Filter time zones...",
                                     "defaultValue": "(UTC) Coordinated Universal Time",
@@ -2156,7 +2156,7 @@
                                     "type": "Microsoft.Common.OptionsGroup",
                                     "visible": true,
                                     "label": "Operating system's updates",
-                                    "toolTip": "Select whether or not to install the operating system's updates.",
+                                    "toolTip": "Select whether to install the latest operating system's updates to peripheral servers in your lab environment during the lab environment deployment.",
                                     "defaultValue": "Not install",
                                     "constraints": {
                                         "required": true,
@@ -2175,7 +2175,7 @@
                                         {
                                             "visible": true,
                                             "style": "Info",
-                                            "text": "The operating system's updates installation will increase the deployment time by about 15 minutes or more."
+                                            "text": "The operating system's updates installation will increase the deployment time of your lab environment by about 15 minutes or more."
                                         }
                                     ]
                                 }
@@ -2192,7 +2192,7 @@
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "XXXXXXXXXXXXXXX"
+                                        "text": "The workbox server has Remote Server Administration Tools (RSAT) for Active Directory, DNS, Failover Cluster, etc. for your lab environment by default. You can select additional tools to install on the workbox server."
                                     }
                                 },
                                 {
@@ -2200,7 +2200,7 @@
                                     "type": "Microsoft.Common.OptionsGroup",
                                     "visible": true,
                                     "label": "Configurator App for Azure Local",
-                                    "toolTip": "Configurator App for Azure Local is bootstrap and register the machines you plan to include in your Azure Local instance. <a href=\"https://learn.microsoft.com/azure/azure-local/deploy/deployment-arc-register-configurator-app\">Learn more</a>",
+                                    "toolTip": "The Configurator App for Azure Local is bootstrap and register the machines you plan to include in your Azure Local instance. <a href=\"https://learn.microsoft.com/azure/azure-local/deploy/deployment-arc-register-configurator-app\">Learn more</a>",
                                     "defaultValue": "Install",
                                     "constraints": {
                                         "required": true,
@@ -2221,7 +2221,7 @@
                                     "type": "Microsoft.Common.OptionsGroup",
                                     "visible": true,
                                     "label": "Windows Admin Center",
-                                    "toolTip": "Windows Admin Center is a remote management tool for Windows Server. <a href=\"https://learn.microsoft.com/windows-server/manage/windows-admin-center/overview\">Learn more</a>",
+                                    "toolTip": "The Windows Admin Center is a remote management tool for Windows Server. <a href=\"https://learn.microsoft.com/windows-server/manage/windows-admin-center/overview\">Learn more</a>",
                                     "defaultValue": "Not install",
                                     "constraints": {
                                         "required": true,
@@ -2231,16 +2231,14 @@
                                                 "value": false
                                             }
                                         ]
-                                    }
-                                },
-                                {
-                                    "name": "wacDisableInfo",
-                                    "type": "Microsoft.Common.InfoBox",
-                                    "visible": true,
-                                    "options": {
-                                        "style": "Info",
-                                        "text": "HCI Lab supports Windows Admin Center installation. But it is temporary disabled. You can install Windows Admin Center manually after HCI Lab deployment finished. <a href=\"https://learn.microsoft.com/en-us/windows-server/manage/windows-admin-center/deploy/install\">Learn more</a>"
-                                    }
+                                    },
+                                    "infoMessages": [
+                                        {
+                                            "visible": true,
+                                            "style": "Info",
+                                            "text": "Azure Local Lab supports Windows Admin Center installation. But it is temporary disabled. You can install Windows Admin Center manually after your lab deployment finished. <a href=\"https://learn.microsoft.com/windows-server/manage/windows-admin-center/deploy/install\">Learn more</a>"
+                                        }
+                                    ]
                                 }
                             ]
                         }
