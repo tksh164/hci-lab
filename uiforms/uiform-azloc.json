@@ -1222,18 +1222,18 @@
                     ]
                 },
                 {
-                    "name": "hciNodeStep",
+                    "name": "azureLocalStep",
                     "label": "Azure Local",
                     "description": "Configure details of machines that consist your Azure Local instance. The lab environment is built as a set of Hyper-V virtual machines within an Azure virtual machine using nested virtualization technology.",
                     "elements": [
                         {
-                            "name": "hciClusterNodesSection",
+                            "name": "machineConfigSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
                             "label": "Machine configuration",
                             "elements": [
                                 {
-                                    "name": "hciClusterNodesSectionText",
+                                    "name": "machineConfigSectionText",
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
@@ -1241,7 +1241,7 @@
                                     }
                                 },
                                 {
-                                    "name": "hciNodeOperatingSystem",
+                                    "name": "azLocMachineOperatingSystem",
                                     "type": "Microsoft.Common.DropDown",
                                     "visible": true,
                                     "multiselect": false,
@@ -1365,7 +1365,7 @@
                                     }
                                 },
                                 {
-                                    "name": "hciNodeCount",
+                                    "name": "azLocMachineCount",
                                     "type": "Microsoft.Common.Slider",
                                     "visible": true,
                                     "label": "Number of machines",
@@ -2306,9 +2306,9 @@
                 "autoshutdownTime": "[steps('labHostStep').autoshutdownSection.shutdownTime]",
                 "autoshutdownTimeZone": "[steps('labHostStep').autoshutdownSection.shutdownTimeZone]",
 
-                "hciNodeOsSku": "[steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.sku]",
-                "hciNodeOsImageIndex": "[steps('hciNodeStep').hciClusterNodesSection.hciNodeOperatingSystem.imageIndex]",
-                "hciNodeCount": "[steps('hciNodeStep').hciClusterNodesSection.hciNodeCount]",
+                "hciNodeOsSku": "[steps('azureLocalStep').machineConfigSection.azLocMachineOperatingSystem.sku]",
+                "hciNodeOsImageIndex": "[steps('azureLocalStep').machineConfigSection.azLocMachineOperatingSystem.imageIndex]",
+                "hciNodeCount": "[steps('azureLocalStep').machineConfigSection.azLocMachineCount]",
 
                 "shouldHciNodeJoinToAddsDomain": false,
                 "isAzureLocalDeployment": true,
