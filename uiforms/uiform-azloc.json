@@ -1439,13 +1439,23 @@
                                 },
                                 {
                                     "name": "shouldPrepareAddsForAzureLocal",
-                                    "type": "Microsoft.Common.CheckBox",
-                                    "label": "Prepare Active Directory for Azure Local deployment",
+                                    "type": "Microsoft.Common.OptionsGroup",
                                     "visible": true,
-                                    "toolTip": "Check this if you want to do prepare Active Directory for Azure Local instances during your lab environment deployment.",
-                                    "defaultValue": true,
+                                    "label": "Prepare Active Directory for Azure Local deployment",
+                                    "toolTip": "Select whether to prepare Active Directory for Azure Local instances during your lab environment deployment.",
+                                    "defaultValue": "Prepare Active Directory",
                                     "constraints": {
-                                        "required": false
+                                        "required": true,
+                                        "allowedValues": [
+                                            {
+                                                "label": "Prepare Active Directory",
+                                                "value": true
+                                            },
+                                            {
+                                                "label": "Not prepare Active Directory",
+                                                "value": false
+                                            }
+                                        ]
                                     }
                                 },
                                 {
