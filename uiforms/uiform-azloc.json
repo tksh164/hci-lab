@@ -2247,31 +2247,39 @@
                 {
                     "name": "advancedOptionsStep",
                     "label": "Advanced options",
-                    "description": "This page provides custom deployment settings. You can use the custom settings if you are familiar with the HCI Lab.",
+                    "description": "This page provides advanced options.",
                     "elements": [
                         {
-                            "name": "shouldChangeAdvancedSettings",
-                            "type": "Microsoft.Common.CheckBox",
-                            "label": "Use custom deployment settings",
+                            "name": "customDeploymentSection",
+                            "type": "Microsoft.Common.Section",
                             "visible": true,
-                            "toolTip": "Check this if you want to use custom settings.",
-                            "defaultValue": false,
-                            "constraints": {
-                                "required": false
-                            }
-                        },
-                        {
-                            "name": "repoBaseUri",
-                            "type": "Microsoft.Common.TextBox",
-                            "visible": "[steps('advancedOptionsStep').shouldChangeAdvancedSettings]",
-                            "multiLine": false,
-                            "label": "Base URI for artifacts",
-                            "toolTip": "The base URI for artifacts.",
-                            "placeholder": "",
-                            "defaultValue": "",
-                            "constraints": {
-                                "required": false
-                            }
+                            "label": "Custom deployment",
+                            "elements": [
+                                {
+                                    "name": "shouldUseCustomDeployment",
+                                    "type": "Microsoft.Common.CheckBox",
+                                    "label": "Enable custom deployment",
+                                    "visible": true,
+                                    "toolTip": "Check this if you want to do custom deployment.",
+                                    "defaultValue": false,
+                                    "constraints": {
+                                        "required": false
+                                    }
+                                },
+                                {
+                                    "name": "repoBaseUri",
+                                    "type": "Microsoft.Common.TextBox",
+                                    "visible": "[steps('advancedOptionsStep').customDeploymentSection.shouldUseCustomDeployment]",
+                                    "multiLine": false,
+                                    "label": "Base URI for artifacts",
+                                    "toolTip": "The base URI for artifacts.",
+                                    "placeholder": "",
+                                    "defaultValue": "",
+                                    "constraints": {
+                                        "required": false
+                                    }
+                                }
+                            ]
                         }
                     ]
                 }
@@ -2317,7 +2325,7 @@
                 "labVmOsTimeZone": "[steps('peripheralServersStep').generalConfigSection.labVmTimeZone]",
                 "shouldInstallUpdatesToLabVm": "[steps('peripheralServersStep').generalConfigSection.shouldInstallUpdatesToLabVm]",
 
-                "repoBaseUri": "[steps('advancedOptionsStep').repoBaseUri]"
+                "repoBaseUri": "[steps('advancedOptionsStep').customDeploymentSection.repoBaseUri]"
             }
         }
     }
