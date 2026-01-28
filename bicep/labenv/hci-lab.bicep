@@ -292,6 +292,7 @@ param shouldInstallUpdatesToLabVm bool = false
 
 @description('''The operating system for the HCI node virtual machines.''')
 @allowed([
+  'azloc24h2_2601' // Azure Local 24H2 2601
   'azloc24h2_2512' // Azure Local 24H2 2512
   'azloc24h2_2511' // Azure Local 24H2 2511
   'azloc24h2_2510' // Azure Local 24H2 2510
@@ -308,7 +309,7 @@ param shouldInstallUpdatesToLabVm bool = false
   'ws2025'         // Windows Server 2025
   'ws2022'         // Windows Server 2022
 ])
-param hciNodeOsSku string = 'azloc24h2_2512'
+param hciNodeOsSku string = 'azloc24h2_2601'
 
 @description('''The image index of the operating system for the HCI node virtual machines.''')
 @allowed([
