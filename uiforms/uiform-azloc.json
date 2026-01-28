@@ -1258,8 +1258,16 @@
                                         "required": true,
                                         "allowedValues": [
                                             {
-                                                "label": "Azure Local 2512",
+                                                "label": "Azure Local 2601",
                                                 "description": "The latest generally available version.",
+                                                "value": {
+                                                    "sku": "azloc24h2_2512",
+                                                    "imageIndex": 1
+                                                }
+                                            },
+                                            {
+                                                "label": "Azure Local 2512",
+                                                "description": "The previous version.",
                                                 "value": {
                                                     "sku": "azloc24h2_2512",
                                                     "imageIndex": 1
@@ -1302,6 +1310,14 @@
                                                 "description": "The previous version.",
                                                 "value": {
                                                     "sku": "azloc24h2_2507",
+                                                    "imageIndex": 1
+                                                }
+                                            },
+                                            {
+                                                "label": "Azure Local 2507 [End of support]",
+                                                "description": "<strong>Notice:</strong> This version reached the end of support.",
+                                                "value": {
+                                                    "sku": "azloc24h2_2506",
                                                     "imageIndex": 1
                                                 }
                                             },
