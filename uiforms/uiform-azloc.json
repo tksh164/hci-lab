@@ -166,7 +166,7 @@
                             "visible": true,
                             "options": {
                                 "style": "Info",
-                                "text": "128 GiB memory is the real minimum when you deploy any workloads on your Azure Local instance. You may need more memory if you deploy hybrid services on your Azure Local instance because this lab environment has multiple Hyper-V VMs such as machines of an Azure Local instance, an AD domain controller and a workbox server on a single Azure Virtual machine.<ul><li><a href='https://learn.microsoft.com/azure/virtual-machines/sizes'>Azure Virtual Machine sizes</a></li><li><a href='https://azure.microsoft.com/pricing/details/virtual-machines/windows'>Windows Virtual Machines pricing</a></li></ul>"
+                                "text": "128 GiB memory is the real minimum when you deploy any workloads on your Azure Local instance. You may need more memory if you deploy hybrid services on your Azure Local instance because this lab environment has multiple Hyper-V VMs such as machines of an Azure Local instance, an AD domain controller and a workbox machine on a single Azure Virtual machine.<ul><li><a href='https://learn.microsoft.com/azure/virtual-machines/sizes'>Azure Virtual Machine sizes</a></li><li><a href='https://azure.microsoft.com/pricing/details/virtual-machines/windows'>Windows Virtual Machines pricing</a></li></ul>"
                             }
                         },
                         {
@@ -1524,7 +1524,7 @@
                 {
                     "name": "peripheralServersStep",
                     "label": "Peripheral servers",
-                    "description": "Configure details of peripheral servers in your lab environment. The peripheral servers include an Active Directory domain controller, a workbox server.",
+                    "description": "Configure details of peripheral servers in your lab environment. The peripheral servers include an Active Directory domain controller, a workbox machine.",
                     "elements": [
                         {
                             "name": "generalConfigSection",
@@ -1537,7 +1537,7 @@
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "The general configurations will be apply all peripheral servers in your lab environment such as an Active Directory domain controller, a workbox server except the machines that consist Azure Local instances."
+                                        "text": "The general configurations will be apply all peripheral servers in your lab environment such as an Active Directory domain controller, a workbox machine except the machines that consist Azure Local instances."
                                     }
                                 },
                                 {
@@ -2193,14 +2193,14 @@
                             "name": "workboxSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
-                            "label": "Tools on the workbox server",
+                            "label": "Tools on the workbox machine",
                             "elements": [
                                 {
                                     "name": "workboxSectionText",
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "The workbox server has Remote Server Administration Tools (RSAT) for Active Directory, DNS, Failover Cluster, etc. for your lab environment by default. You can select additional tools to install on the workbox server."
+                                        "text": "The workbox machine has Remote Server Administration Tools (RSAT) for Active Directory, DNS, Failover Cluster, etc. for your lab environment by default. You can select additional tools to install on the workbox machine."
                                     }
                                 },
                                 {
