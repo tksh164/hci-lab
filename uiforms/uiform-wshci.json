@@ -166,7 +166,7 @@
                             "visible": true,
                             "options": {
                                 "style": "Info",
-                                "text": "128 GiB memory is the real minimum when you deploy any workloads on your HCI cluster. You may need more memory if you deploy hybrid services on your HCI cluster because this lab environment has multiple Hyper-V VMs such as HCI nodes, an AD domain controller and a workbox server on a single Azure Virtual machine.<ul><li><a href='https://learn.microsoft.com/azure/virtual-machines/sizes'>Azure Virtual Machine sizes</a></li><li><a href='https://azure.microsoft.com/pricing/details/virtual-machines/windows'>Windows Virtual Machines pricing</a></li></ul>"
+                                "text": "128 GiB memory is the real minimum when you deploy any workloads on your HCI cluster. You may need more memory if you deploy hybrid services on your HCI cluster because this lab environment has multiple Hyper-V VMs such as HCI nodes, an AD domain controller and a workbox machine on a single Azure Virtual machine.<ul><li><a href='https://learn.microsoft.com/azure/virtual-machines/sizes'>Azure Virtual Machine sizes</a></li><li><a href='https://azure.microsoft.com/pricing/details/virtual-machines/windows'>Windows Virtual Machines pricing</a></li></ul>"
                             }
                         },
                         {
@@ -1440,21 +1440,21 @@
                 },
                 {
                     "name": "workboxServersStep",
-                    "label": "Workbox server",
-                    "description": "Configure details of the workbox server. The workbox server has Remote Server Administration Tools (RSAT) for Active Directory, DNS, Failover Cluster, etc. for your lab environment by default.",
+                    "label": "Workbox machine",
+                    "description": "Configure details of the workbox machine. The workbox machine has Remote Server Administration Tools (RSAT) for Active Directory, DNS, Failover Cluster, etc. for your lab environment by default.",
                     "elements": [
                         {
                             "name": "workboxSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
-                            "label": "Tools on the workbox server",
+                            "label": "Tools on the workbox machine",
                             "elements": [
                                 {
                                     "name": "workboxSectionText",
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "You can select additional tools to install on the workbox server."
+                                        "text": "You can select additional tools to install on the workbox machine."
                                     }
                                 },
                                 {
@@ -1488,7 +1488,7 @@
                 {
                     "name": "generalConfigStep",
                     "label": "General configuration",
-                    "description": "The general configuration will be apply all servers in your lab environment such as HCI nodes, an Active Directory Domain Controller, a workbox server.",
+                    "description": "The general configurations will be apply all servers in your lab environment such as HCI nodes, an Active Directory domain controller, a workbox machine.",
                     "elements": [
                         {
                             "name": "labVmCulture",
