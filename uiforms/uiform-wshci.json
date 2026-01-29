@@ -1499,7 +1499,7 @@
                             "filter": false,
                             "multiLine": false,
                             "label": "Culture",
-                            "toolTip": "Specify the display language, locale and input method of the operating system of lab virtual machines.",
+                            "toolTip": "Specify the display language, locale and input method of the operating systems for all servers in your lab environment.",
                             "placeholder": "Select the culture...",
                             "defaultDescription": "---",
                             "filterPlaceholder": "Filter cultures...",
@@ -1521,7 +1521,7 @@
                                 {
                                     "visible": true,
                                     "style": "Info",
-                                    "text": "Culture represents the UI language, locale and input method."
+                                    "text": "The culture represents the UI language, locale and input method."
                                 }
                             ]
                         },
@@ -1534,7 +1534,7 @@
                             "filter": true,
                             "multiLine": false,
                             "label": "Time zone",
-                            "toolTip": "Specify the time zone of the operating system of lab virtual machines.",
+                            "toolTip": "Specify the time zone of the operating systems for all servers in your lab environment.",
                             "placeholder": "",
                             "defaultDescription": "---",
                             "filterPlaceholder": "Filter time zones...",
@@ -2114,7 +2114,7 @@
                             "type": "Microsoft.Common.OptionsGroup",
                             "visible": true,
                             "label": "Operating system's updates",
-                            "toolTip": "Select whether or not to install the operating system's updates.",
+                            "toolTip": "Select whether to install the latest operating system's updates to all servers in your lab environment during the lab environment deployment.",
                             "defaultValue": "Not install",
                             "constraints": {
                                 "required": true,
@@ -2133,7 +2133,7 @@
                                 {
                                     "visible": true,
                                     "style": "Info",
-                                    "text": "The operating system's updates installation will increase the deployment time by about 15 minutes or more."
+                                    "text": "The operating system's updates installation will increase the deployment time of your lab environment by about 15 minutes or more."
                                 }
                             ]
                         }
