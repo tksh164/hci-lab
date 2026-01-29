@@ -1441,7 +1441,7 @@
                 {
                     "name": "workboxServersStep",
                     "label": "Workbox server",
-                    "description": "Server management tools to manage Azure Local instances, HCI clusters, Active Directory and more are installed on the management server.",
+                    "description": "Configure details of the workbox server. The workbox server has Remote Server Administration Tools (RSAT) for Active Directory, DNS, Failover Cluster, etc. for your lab environment by default.",
                     "elements": [
                         {
                             "name": "workboxSection",
@@ -1454,7 +1454,7 @@
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "XXXXXXXXXXXXXXX"
+                                        "text": "You can select additional tools to install on the workbox server."
                                     }
                                 },
                                 {
@@ -1462,7 +1462,7 @@
                                     "type": "Microsoft.Common.OptionsGroup",
                                     "visible": true,
                                     "label": "Windows Admin Center",
-                                    "toolTip": "Windows Admin Center is a remote management tool for Windows Server. <a href=\"https://learn.microsoft.com/windows-server/manage/windows-admin-center/overview\">Learn more</a>",
+                                    "toolTip": "The Windows Admin Center is a remote management tool for Windows Server. <a href=\"https://learn.microsoft.com/windows-server/manage/windows-admin-center/overview\">Learn more</a>",
                                     "defaultValue": "Not install",
                                     "constraints": {
                                         "required": true,
@@ -1472,16 +1472,14 @@
                                                 "value": false
                                             }
                                         ]
-                                    }
-                                },
-                                {
-                                    "name": "wacDisableInfo",
-                                    "type": "Microsoft.Common.InfoBox",
-                                    "visible": true,
-                                    "options": {
-                                        "style": "Info",
-                                        "text": "HCI Lab supports Windows Admin Center installation. But it is temporary disabled. You can install Windows Admin Center manually after HCI Lab deployment finished. <a href=\"https://learn.microsoft.com/en-us/windows-server/manage/windows-admin-center/deploy/install\">Learn more</a>"
-                                    }
+                                    },
+                                    "infoMessages": [
+                                        {
+                                            "visible": true,
+                                            "style": "Info",
+                                            "text": "HCI Lab supports Windows Admin Center installation. But it is temporary disabled. You can install Windows Admin Center manually after your lab deployment finished. <a href=\"https://learn.microsoft.com/windows-server/manage/windows-admin-center/deploy/install\">Learn more</a>"
+                                        }
+                                    ]
                                 }
                             ]
                         }
