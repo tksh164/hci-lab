@@ -1399,7 +1399,7 @@
                 {
                     "name": "addsStep",
                     "label": "Active Directory",
-                    "description": "Configure Active Directory Domain Services details for your lab environment.",
+                    "description": "Configure details of machines that consist your Azure Local instance. The lab environment is built as a set of Hyper-V virtual machines within an Azure virtual machine using nested virtualization technology.",
                     "elements": [
                         {
                             "name": "addsSection",
@@ -1412,7 +1412,7 @@
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "Select the Active Directory Domain Services domain configuration that will be created as a part of your lab environment."
+                                        "text": "Specify the FQDN domain of Active Directory Domain Services for your lab environment. An ADDS domain controller will be configured with specified domain during the lab environment deployment."
                                     }
                                 },
                                 {
@@ -1421,7 +1421,7 @@
                                     "visible": true,
                                     "multiLine": false,
                                     "label": "AD domain FQDN",
-                                    "toolTip": "Specify the AD domain FQDN for the lab environment.",
+                                    "toolTip": "Specify the AD domain FQDN for your lab environment.",
                                     "placeholder": "e.g. lab.internal",
                                     "defaultValue": "lab.internal",
                                     "constraints": {
