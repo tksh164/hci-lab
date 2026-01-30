@@ -9,26 +9,26 @@ The HCI Lab provides a plain lab environment on Azure in reasonable preparation 
 
 ## 🚀 Quickstart
 
-1. Open Azure portal from the following **Deploy to Azure** to deploy your HCI lab environment. To keep this page, open it as a new tab (Ctrl + Click).
+1. Open Azure portal from the following **Deploy to Azure** to deploy your lab environment. To keep this page, open it as a new tab (Ctrl + Click).
 
-    The differences between "UI languages at deployment" are just the UI language difference in Azure portal when deployment. The template and the deployed lab environment are the same with either.
+    > **Note:** The only difference between languages is the UI language displayed when you deploy your lab environment in Azure portal. The language is not effect to the lab environment you deployed.
 
     > **Note:** Recommend to choose **Yes, I trust the authors** to use the user friendly deployment UI. Read [FAQ](./docs/hci-lab-tour.md#why-the-trust-confirmation-message-showing-when-open-deploy-to-azure) for details.
 
-    | UI language at deployment | Deploy to Azure |
-    | ---- | ---- |
-    | English | [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#view/Microsoft_Azure_CreateUIDef/CustomDeploymentBlade/uri/https%3A%2F%2Fraw.githubusercontent.com%2Ftksh164%2Fhci-lab%2Fmain%2Ftemplate%2Ftemplate.json/uiFormDefinitionUri/https%3A%2F%2Fraw.githubusercontent.com%2Ftksh164%2Fhci-lab%2Fmain%2Fuiforms%2Fuiform.json) |
-    | Japanese (日本語) | [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#view/Microsoft_Azure_CreateUIDef/CustomDeploymentBlade/uri/https%3A%2F%2Fraw.githubusercontent.com%2Ftksh164%2Fhci-lab%2Fmain%2Ftemplate%2Ftemplate.json/uiFormDefinitionUri/https%3A%2F%2Fraw.githubusercontent.com%2Ftksh164%2Fhci-lab%2Fmain%2Fuiforms%2Fuiform-jajp.json) |
+    | Lab environment | English | Japanese (日本語) |
+    | ---- | ---- | ---- |
+    | Azure Local Lab | [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#view/Microsoft_Azure_CreateUIDef/CustomDeploymentBlade/uri/https%3A%2F%2Fraw.githubusercontent.com%2Ftksh164%2Fhci-lab%2Fmain%2Ftemplate%2Ftemplate.json/uiFormDefinitionUri/https%3A%2F%2Fraw.githubusercontent.com%2Ftksh164%2Fhci-lab%2Fmain%2Fuiforms%2Fuiform-azloc-enus.json) | [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#view/Microsoft_Azure_CreateUIDef/CustomDeploymentBlade/uri/https%3A%2F%2Fraw.githubusercontent.com%2Ftksh164%2Fhci-lab%2Fmain%2Ftemplate%2Ftemplate.json/uiFormDefinitionUri/https%3A%2F%2Fraw.githubusercontent.com%2Ftksh164%2Fhci-lab%2Fmain%2Fuiforms%2Fuiform-jajp.json) |
+    | Windows Server HCI Lab | [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#view/Microsoft_Azure_CreateUIDef/CustomDeploymentBlade/uri/https%3A%2F%2Fraw.githubusercontent.com%2Ftksh164%2Fhci-lab%2Fmain%2Ftemplate%2Ftemplate.json/uiFormDefinitionUri/https%3A%2F%2Fraw.githubusercontent.com%2Ftksh164%2Fhci-lab%2Fmain%2Fuiforms%2Fuiform-wshci-enus.json) | [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#view/Microsoft_Azure_CreateUIDef/CustomDeploymentBlade/uri/https%3A%2F%2Fraw.githubusercontent.com%2Ftksh164%2Fhci-lab%2Fmain%2Ftemplate%2Ftemplate.json/uiFormDefinitionUri/https%3A%2F%2Fraw.githubusercontent.com%2Ftksh164%2Fhci-lab%2Fmain%2Fuiforms%2Fuiform-jajp.json) |
 
 2. Fill out required fields in the **Basics** tab on Azure portal. Other fields in the rest tabs can leave with default values. **Click Review + create** to start deployment.
 
-    > If the deployment failed, try deploying again that will resolving the issue in most cases. If not, please create an issue, it will help HCI Lab quality improvement.
+    > If the deployment failed, try deploying again that will resolving the issue in most cases. If not, please create an issue, it will help lab quality improvement.
 
 3. After completing the deployment, you need to allow Remote Desktop access to your lab host Azure VM from your local machine. It can be by [enabling JIT VM access](https://learn.microsoft.com/azure/defender-for-cloud/just-in-time-access-usage) or [adding an inbound security rule in the Network Security Group](https://learn.microsoft.com/azure/virtual-network/tutorial-filter-network-traffic#create-security-rules). The recommended way is using JIT VM access.
 
 4. Connect to your lab host Azure VM using your favorite Remote Desktop client. To connect, use the credentials that you specified at deployment.
 
-5. The HCI cluster is ready for you. Let's access your HCI cluster via Windows Admin Center from **Windows Admin Center icon** on the desktop with **LAB\\Administrator** account and the password that you specified at deployment (the same password as the lab host Azure VM). Also, you can access your entire HCI lab environment from the other icons on the desktop.
+5. Your lab environment is ready for you. Let's access your VMs in your lab environment from Hyper-V Manager icon on the desktop. You can access VMs with the administrator account that you specified during deployment. The [lab tour](./docs/hci-lab-tour.md) will help you to familiar to your lab environment.
 
 ## 📄 Documents
 
