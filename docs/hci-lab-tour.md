@@ -1,8 +1,8 @@
-# HCI Lab tour
+# Lab tour
 
 ## Virtual machines
 
-The HCI lab environment consists of three roles of Hyper-V VMs on a single Azure VM.
+The lab environment consists of three roles of Hyper-V VMs on a single Azure VM.
 
 | Computer/VM name | Description | VM kind | AD domain joined | Operating system | Notes |
 | ---- | ---- | ---- | ---- | ---- | --- |
