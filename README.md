@@ -22,7 +22,7 @@ The HCI Lab provides a plain lab environment on Azure in reasonable preparation 
 
 2. Fill out required fields in the **Basics** tab on Azure portal. Other fields in the rest tabs can leave with default values. **Click Review + create** to start deployment.
 
-    > If the deployment failed, try deploying again that will resolving the issue in most cases. If not, please create an issue, it will help lab quality improvement.
+    > **Tips:** If the deployment failed, try deploying again that will resolving the issue in most cases. If not, please create an issue, it will help lab quality improvement.
 
 3. After completing the deployment, you need to allow Remote Desktop access to your lab host Azure VM from your local machine. It can be by [enabling JIT VM access](https://learn.microsoft.com/azure/defender-for-cloud/just-in-time-access-usage) or [adding an inbound security rule in the Network Security Group](https://learn.microsoft.com/azure/virtual-network/tutorial-filter-network-traffic#create-security-rules). The recommended way is using JIT VM access.
 
