@@ -1,9 +1,9 @@
-# HCI Lab
+# Azure Local Lab
 
-The HCI Lab provides a plain lab environment on Azure in reasonable preparation time and cost.
+The Azure Local Lab provides a plain lab environment on Azure in reasonable preparation time and cost.
 
-- A lab environment on a single Azure virtual machine for Azure Local or Windows Server 2025/2022 HCI.
-- The lab environment will be deployed in about 30 to 120 minutes.
+- A lab environment on a single Azure virtual machine for Azure Local / Windows Server 2025 HCI / Windows Server 2022 HCI.
+- The lab environment will be deployed in about 30 to 120 minutes most cases.
 - It is just a plain environment, so you can try many workloads and features to start from the clean environment by yourself. Also, you can customize it to your own needs easily.
 - You can choose an [operating system](#-selectable-lab-machine-operating-systems) to use deploy your lab environment.
 
@@ -22,7 +22,7 @@ The HCI Lab provides a plain lab environment on Azure in reasonable preparation 
 
 2. Fill out required fields in the **Basics** tab on Azure portal. Other fields in the rest tabs can leave with default values. **Click Review + create** to start deployment.
 
-    > If the deployment failed, try deploying again that will resolving the issue in most cases. If not, please create an issue, it will help lab quality improvement.
+    > **Tips:** If the deployment failed, try deploying again that will resolving the issue in most cases. If not, please create an issue, it will help lab quality improvement.
 
 3. After completing the deployment, you need to allow Remote Desktop access to your lab host Azure VM from your local machine. It can be by [enabling JIT VM access](https://learn.microsoft.com/azure/defender-for-cloud/just-in-time-access-usage) or [adding an inbound security rule in the Network Security Group](https://learn.microsoft.com/azure/virtual-network/tutorial-filter-network-traffic#create-security-rules). The recommended way is using JIT VM access.
 
@@ -32,7 +32,7 @@ The HCI Lab provides a plain lab environment on Azure in reasonable preparation 
 
 ## 📄 Documents
 
-- [HCI Lab tour](./docs/hci-lab-tour.md): Explains about the configuration of the HCI Lab environment.
+- [Lab tour](./docs/hci-lab-tour.md): Explains about the configuration of the HCI Lab environment.
 - [Frequently asked questions](./docs/hci-lab-tour.md#frequently-asked-questions): Frequently asked questions on the HCI Lab.
 - [Deploy AKS on Windows Server 2022 with HCI Lab](./docs/deploy-aks-on-ws2022-with-hcilab.md): Step by step to deploy the AKS on Windows Server 2022 with HCI Lab.
 
