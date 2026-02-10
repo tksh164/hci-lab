@@ -26,20 +26,20 @@
                             "type": "Microsoft.Common.TextBox",
                             "visible": true,
                             "multiLine": false,
-                            "label": "Lab host VM name",
+                            "label": "ラボ ホスト VM 名",
                             "toolTip": "Specify the virtual machine resource name that host your lab environment. The name used as an Azure resource identifier for it, not used for the computer name of the guest operating system.",
-                            "placeholder": "e.g. labenv-vm1",
+                            "placeholder": "例: labenv-vm1",
                             "defaultValue": "labenv-vm1",
                             "constraints": {
                                 "required": true,
                                 "validations": [
                                     {
                                         "regex": "^(?!\\-.+$)(?!.+\\-$)[a-zA-Z0-9\\-]+$",
-                                        "message": "Virtual machine name can contain all alphanumeric characters and '-', also, not begin with '-' and not end with '-'."
+                                        "message": "仮想マシン名に含められるのはすべての英数字と '-' です。加えて、'-' で開始したり、'-' で終了することはできません。"
                                     },
                                     {
                                         "regex": "^.{1,64}$",
-                                        "message": "Virtual machine name must be between 1 and 64 characters long."
+                                        "message": "仮想マシン名は 1 ～ 64 文字にする必要があります。"
                                     }
                                 ]
                             }
