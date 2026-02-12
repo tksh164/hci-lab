@@ -15,7 +15,7 @@
                             "type": "Microsoft.Common.ResourceScope",
                             "location": {
                                 "label": "Region",
-                                "toolTip": "Specify the region to deploy your lab environment.",
+                                "toolTip": "ラボ環境を展開するリージョンを指定します。",
                                 "resourceTypes": [
                                     "Microsoft.Resources/resourceGroups"
                                 ]
@@ -27,7 +27,7 @@
                             "visible": true,
                             "multiLine": false,
                             "label": "ラボ ホスト VM 名",
-                            "toolTip": "ラボ環境をホストする仮想マシンリソース名を指定してください。この名前は、Azureリソース識別子として使用されるものであり、ゲストオペレーティングシステムのコンピュータ名として使用されるものではありません。",
+                            "toolTip": "ラボ環境をホストする仮想マシンリソース名を指定します。この名前は、Azureリソース識別子として使用されるものであり、ゲストオペレーティングシステムのコンピュータ名として使用されるものではありません。",
                             "placeholder": "例: labenv-vm1",
                             "defaultValue": "labenv-vm1",
                             "constraints": {
