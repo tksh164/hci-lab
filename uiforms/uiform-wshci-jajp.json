@@ -49,7 +49,7 @@
                             "type": "Microsoft.Compute.SizeSelector",
                             "visible": true,
                             "label": "サイズ",
-                            "toolTip": "Specify the size of the virtual machine that host your lab environment.",
+                            "toolTip": "ラボ環境をホストする仮想マシンのサイズを指定します。",
                             "scope": {
                                 "subscriptionId": "[steps('basics').resourceScope.subscription.subscriptionId]",
                                 "location": "[steps('basics').resourceScope.location.name]"
