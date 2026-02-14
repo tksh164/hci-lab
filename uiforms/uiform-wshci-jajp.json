@@ -293,7 +293,7 @@
                 },
                 {
                     "name": "labHostStep",
-                    "label": "Lab host",
+                    "label": "ラボ ホスト",
                     "description": "Configure details for the Azure virtual machine that host your lab environment.",
                     "elements": [
                         {
