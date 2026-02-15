@@ -8,7 +8,7 @@
                 {
                     "name": "basics",
                     "label": "Basics",
-                    "description": "This template will deploy a lab environment for Windows Server HCI on a single Azure virtual machine.",
+                    "description": "このテンプレートは、単一の Azure 仮想マシン上に Windows Server HCI のラボ環境を展開します。",
                     "elements": [
                         {
                             "name": "resourceScope",
