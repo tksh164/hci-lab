@@ -185,7 +185,7 @@
                             "name": "adminAccountSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
-                            "label": "Administrator account",
+                            "label": "管理者アカウント",
                             "elements": [
                                 {
                                     "name": "adminAccountSectionText",
@@ -199,7 +199,7 @@
                                     "name": "adminUserName",
                                     "type": "Microsoft.Compute.UserNameTextBox",
                                     "visible": true,
-                                    "label": "Username",
+                                    "label": "ユーザー名",
                                     "toolTip": "Specify the administrator username.",
                                     "osPlatform": "Windows",
                                     "constraints": {
@@ -211,11 +211,11 @@
                                     "type": "Microsoft.Compute.CredentialsCombo",
                                     "visible": true,
                                     "label": {
-                                        "password": "Password",
-                                        "confirmPassword": "Confirm password"
+                                        "password": "パスワード",
+                                        "confirmPassword": "パスワードの確認"
                                     },
                                     "toolTip": {
-                                        "password": "Specify the administrator password."
+                                        "password": "管理者パスワードを指定します。"
                                     },
                                     "osPlatform": "Windows",
                                     "constraints": {
