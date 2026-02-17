@@ -231,16 +231,16 @@
                             "name": "azureHybridBenefitSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
-                            "label": "Azure Hybrid Benefit",
+                            "label": "Azure ハイブリッド特典",
                             "elements": [
                                 {
                                     "name": "azureHybridBenefitSectionText",
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "Save up to 49% with a license you already own using Azure Hybrid Benefit.",
+                                        "text": "Azure ハイブリッド特典を使用すれば、既に所有しているライセンスで最大 49% 節約できます。",
                                         "link": {
-                                            "label": "Learn more",
+                                            "label": "詳細情報",
                                             "uri": "https://go.microsoft.com/fwlink/?linkid=2257944"
                                         }
                                     }
@@ -248,7 +248,7 @@
                                 {
                                     "name": "isUseExistingWindowsServerLicense",
                                     "type": "Microsoft.Common.CheckBox",
-                                    "label": "Would you like to use an existing Windows Server license?",
+                                    "label": "既存の Windows Server ライセンスを使用しますか?",
                                     "visible": true,
                                     "defaultValue": false,
                                     "constraints": {
@@ -258,12 +258,12 @@
                                 {
                                     "name": "hasEligibleWindowsServerLicense",
                                     "type": "Microsoft.Common.CheckBox",
-                                    "label": "I confirm I have an eligible Windows Server license with Software Assurance or Windows Server subscription to apply this Azure Hybrid Benefit.",
+                                    "label": "この Azure ハイブリッド特典の適用対象となる、ソフトウェア アシュアランス付きの Windows Server ライセンスまたは Windows Server サブスクリプションを所有しています。",
                                     "visible": "[steps('basics').azureHybridBenefitSection.isUseExistingWindowsServerLicense]",
                                     "defaultValue": false,
                                     "constraints": {
                                         "required": true,
-                                        "validationMessage": "Please confirm."
+                                        "validationMessage": "確認してください。"
                                     }
                                 },
                                 {
@@ -273,7 +273,7 @@
                                     "options": {
                                         "text": "",
                                         "link": {
-                                            "label": "Review Azure hybrid benefit compliance",
+                                            "label": "Azure ハイブリッド特典のコンプライアンスを確認します",
                                             "uri": "http://go.microsoft.com/fwlink/?LinkId=859786"
                                         }
                                     }
