@@ -286,7 +286,7 @@
                             "visible": true,
                             "options": {
                                 "style": "Info",
-                                "text": "The deployment will take <strong>about 30 to 90 minutes, or more</strong> depending on your deployment options."
+                                "text": "デプロイには、選択したデプロイ オプションに応じて、<strong>約 30 分～ 90 分、またはそれ以上</strong>かかります。"
                             }
                         }
                     ]
