@@ -300,7 +300,7 @@
                             "name": "diskSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
-                            "label": "Disks",
+                            "label": "ディスク",
                             "elements": [
                                 {
                                     "name": "osDiskType",
@@ -310,7 +310,7 @@
                                     "selectAll": false,
                                     "filter": false,
                                     "multiLine": true,
-                                    "label": "OS disk type",
+                                    "label": "OS ディスクの種類",
                                     "toolTip": "You can select Azure managed disks type based on your workload or scenario.",
                                     "placeholder": "Select the OS disk type...",
                                     "defaultDescription": "---",
@@ -345,7 +345,7 @@
                                     "selectAll": false,
                                     "filter": false,
                                     "multiLine": true,
-                                    "label": "Data disk type",
+                                    "label": "データ ディスクの種類",
                                     "toolTip": "You can select Azure managed disks type based on your workload or scenario.",
                                     "placeholder": "Select the data disk type...",
                                     "defaultDescription": "---",
@@ -373,7 +373,7 @@
                             "name": "dataVolumeSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
-                            "label": "Data volume",
+                            "label": "データ ボリューム",
                             "elements": [
                                 {
                                     "name": "dataVolumeSectionText",
@@ -391,7 +391,7 @@
                                     "selectAll": false,
                                     "filter": false,
                                     "multiLine": true,
-                                    "label": "Data volume capacity",
+                                    "label": "データ ボリュームの容量",
                                     "toolTip": "The data volume capacity on your lab environment.",
                                     "placeholder": "Select the data volume capacity...",
                                     "defaultDescription": "---",
