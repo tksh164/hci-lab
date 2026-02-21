@@ -192,7 +192,7 @@
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "Specify the administrator account credentials. The credentials are used for the local administrator account and the domain administrator account in your lab environment."
+                                        "text": "管理者アカウントの認証情報を指定します。この認証情報は、ラボ環境内のローカル管理者アカウントおよびドメイン管理者アカウントに使用されます。"
                                     }
                                 },
                                 {
@@ -200,7 +200,7 @@
                                     "type": "Microsoft.Compute.UserNameTextBox",
                                     "visible": true,
                                     "label": "ユーザー名",
-                                    "toolTip": "Specify the administrator username.",
+                                    "toolTip": "管理者ユーザー名を指定します。",
                                     "osPlatform": "Windows",
                                     "constraints": {
                                         "required": true
@@ -294,7 +294,7 @@
                 {
                     "name": "labHostStep",
                     "label": "ラボ ホスト",
-                    "description": "Configure details for the Azure virtual machine that host your lab environment.",
+                    "description": "ラボ環境をホストする Azure 仮想マシンの詳細を設定します。",
                     "elements": [
                         {
                             "name": "diskSection",
@@ -311,7 +311,7 @@
                                     "filter": false,
                                     "multiLine": true,
                                     "label": "OS ディスクの種類",
-                                    "toolTip": "You can select Azure managed disks type based on your workload or scenario.",
+                                    "toolTip": "ワークロードやシナリオに基づいて、Azure マネージド ディスクの種類を選択します。",
                                     "placeholder": "OS ディスクの種類を選択...",
                                     "defaultDescription": "---",
                                     "filterPlaceholder": "OS ディスクの種類をフィルター...",
@@ -322,17 +322,17 @@
                                             {
                                                 "label": "Premium SSD (LRS)",
                                                 "value": "Premium_LRS",
-                                                "description": "Best for production and performance sensitive workloads. Locally-redundant storage (data is replicated within a single datacenter)."
+                                                "description": "実稼働およびパフォーマンスが要求されるワークロードに最適です。ローカル冗長ストレージ (データは単一のデータセンター内でレプリケートされます)。"
                                             },
                                             {
                                                 "label": "Standard SSD (LRS)",
                                                 "value": "StandardSSD_LRS",
-                                                "description": "Best for web servers, lightly used enterprise applications and dev/test. Locally-redundant storage (data is replicated within a single datacenter)."
+                                                "description": "Web サーバー、使用頻度の低いエンタープライズ アプリケーション、Dev/Test に最適です。ローカル冗長ストレージ (データは単一のデータセンター内でレプリケートされます)。"
                                             },
                                             {
                                                 "label": "Standard HDD (LRS)",
                                                 "value": "Standard_LRS",
-                                                "description": "Best for backup, non-critical, and infrequent access. Locally-redundant storage (data is replicated within a single datacenter)."
+                                                "description": "バックアップ用、重要でない、頻度の低いアクセスに最適です。ローカル冗長ストレージ (データは単一のデータセンター内でレプリケートされます)。"
                                             }
                                         ]
                                     }
@@ -346,7 +346,7 @@
                                     "filter": false,
                                     "multiLine": true,
                                     "label": "データ ディスクの種類",
-                                    "toolTip": "You can select Azure managed disks type based on your workload or scenario.",
+                                    "toolTip": "ワークロードやシナリオに基づいて、Azure マネージド ディスクの種類を選択します。",
                                     "placeholder": "データ ディスクの種類を選択...",
                                     "defaultDescription": "---",
                                     "filterPlaceholder": "データ ディスクの種類をフィルター...",
@@ -357,12 +357,12 @@
                                             {
                                                 "label": "Premium SSD (LRS)",
                                                 "value": "Premium_LRS",
-                                                "description": "Best for production and performance sensitive workloads. Locally-redundant storage (data is replicated within a single datacenter)."
+                                                "description": "実稼働およびパフォーマンスが要求されるワークロードに最適です。ローカル冗長ストレージ (データは単一のデータセンター内でレプリケートされます)。"
                                             },
                                             {
                                                 "label": "Standard SSD (LRS)",
                                                 "value": "StandardSSD_LRS",
-                                                "description": "Best for web servers, lightly used enterprise applications and dev/test. Locally-redundant storage (data is replicated within a single datacenter)."
+                                                "description": "Web サーバー、使用頻度の低いエンタープライズ アプリケーション、Dev/Test に最適です。ローカル冗長ストレージ (データは単一のデータセンター内でレプリケートされます)。"
                                             }
                                         ]
                                     }
@@ -392,7 +392,7 @@
                                     "filter": false,
                                     "multiLine": true,
                                     "label": "データ ボリュームの容量",
-                                    "toolTip": "The data volume capacity on your lab environment.",
+                                    "toolTip": "ラボ環境のデータ ボリュームの容量です。",
                                     "placeholder": "データ ボリュームの容量を選択...",
                                     "defaultDescription": "---",
                                     "filterPlaceholder": "データ ボリュームの容量をフィルター...",
