@@ -42,7 +42,7 @@ The Azure Local Lab provides a plain lab environment on Azure in reasonable prep
 
 | Operating system | OS build | Description |
 | ---- | ---- | ---- |
-| Azure Local 2601 (24H2) | 26100.32230 | The latest generally available version of Azure Local. |
+| Azure Local 2602 (24H2) | 26100.32370 | The latest generally available version of Azure Local. |
 | Windows Server 2025 Datacenter Evaluation (Desktop Experience) | 26100.1742 | Windows Server 2025 Datacenter with the standard graphical user interface. |
 | Windows Server 2022 Datacenter Evaluation (Desktop Experience) | 20348.587 | Windows Server 2022 Datacenter with the standard graphical user interface. |
 
@@ -50,6 +50,7 @@ The Azure Local Lab provides a plain lab environment on Azure in reasonable prep
 
 | Operating system | OS build | Description |
 | ---- | ---- | ---- |
+| Azure Local 2601 (24H2) | 26100.32230 | The previous version of Azure Local. |
 | Azure Local 2512 (24H2) | 26100.7462 | The previous version of Azure Local. |
 | Azure Local 2511 (24H2) | 26100.7171 | The previous version of Azure Local. |
 | Azure Local 2510 (24H2) | 26100.6899 | The previous version of Azure Local. |

@@ -6,6 +6,7 @@ namespace HciLab
     public static class OSSku
     {
         // Operating system symbols.
+        public const string AzureLocal24H2_2602 = "azloc24h2_2602";
         public const string AzureLocal24H2_2601 = "azloc24h2_2601";
         public const string AzureLocal24H2_2512 = "azloc24h2_2512";
         public const string AzureLocal24H2_2511 = "azloc24h2_2511";
@@ -29,6 +30,7 @@ namespace HciLab
             get
             {
                 return new string[] {
+                    AzureLocal24H2_2602,
                     AzureLocal24H2_2601,
                     AzureLocal24H2_2512,
                     AzureLocal24H2_2511,
