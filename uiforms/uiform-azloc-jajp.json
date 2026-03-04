@@ -166,7 +166,7 @@
                             "visible": true,
                             "options": {
                                 "style": "Info",
-                                "text": "128 GiB memory is the real minimum when you deploy any workloads on your Azure Local instance. You may need more memory if you deploy hybrid services on your Azure Local instance because this lab environment has multiple Hyper-V VMs such as machines of an Azure Local instance, an AD domain controller and a workbox machine on a single Azure Virtual machine.<ul><li><a href='https://learn.microsoft.com/azure/virtual-machines/sizes'>Azure Virtual Machine sizes</a></li><li><a href='https://azure.microsoft.com/pricing/details/virtual-machines/windows'>Windows Virtual Machines pricing</a></li></ul>"
+                                "text": "Azure Local インスタンスにワークロードを展開する場合、128 GiB メモリが実質的な最小要件です。Azure Local インスタンスにハイブリッド サービスを展開する場合は、より多くのメモリが必要になる可能性があります。このラボ環境では、単一の Azure 仮想マシン上に Azure Local インスタンスのマシン、AD ドメイン コントローラー、ワークボックス マシンなど、複数の Hyper-V 仮想マシンが存在するためです。<ul><li><a href='https://learn.microsoft.com/azure/virtual-machines/sizes'>Azure の仮想マシンのサイズ</a></li><li><a href='https://azure.microsoft.com/pricing/details/virtual-machines/windows'>Windows Virtual Machines の料金</a></li></ul>"
                             }
                         },
                         {
@@ -380,7 +380,7 @@
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "All assets and artifacts for your lab environment such as VMs, VHDs, ISOs are stored on a single data volume on the Azure virtual machine that host your lab environment. The data volume is striped to get better performance and the capacity of the volume cannot change after finish deployment the lab environment."
+                                        "text": "ラボ環境用のすべてのアセットおよび成果物 (VM、VHD、ISO など) は、ラボ環境をホストする Azure 仮想マシン上の単一データ ボリュームに保存されます。データ ボリュームはパフォーマンス向上のためにストライピングされており、ラボ環境のデプロイ完了後はボリュームの容量を変更できません。"
                                     }
                                 },
                                 {
@@ -455,9 +455,9 @@
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "Bastion Developer is a free, lightweight offering of the Azure Bastion service. It is ideal for Dev/Test users who want to securely connect to their VMs, but don't need additional Bastion features or host scaling.",
+                                        "text": "Bastion Developer は、Azure Bastion サービスの無償の軽量版です。VM にセキュアに接続したく、Bastion の追加機能やホストのスケーリングは不要という開発やテスト目的のユーザに最適です。",
                                         "link": {
-                                            "label": "Learn more",
+                                            "label": "詳細情報",
                                             "uri": "https://learn.microsoft.com/azure/bastion/quickstart-developer"
                                         }
                                     }
@@ -467,17 +467,17 @@
                                     "type": "Microsoft.Common.OptionsGroup",
                                     "visible": true,
                                     "label": "Azure Bastion Developer",
-                                    "toolTip": "Bastion Developer is a free, lightweight offering of the Azure Bastion service.",
-                                    "defaultValue": "Enable",
+                                    "toolTip": "Bastion Developer は、Azure Bastion サービスの無償の軽量版です。",
+                                    "defaultValue": "有効にする",
                                     "constraints": {
                                         "required": true,
                                         "allowedValues": [
                                             {
-                                                "label": "Enable",
+                                                "label": "有効にする",
                                                 "value": true
                                             },
                                             {
-                                                "label": "Disable",
+                                                "label": "無効にする",
                                                 "value": false
                                             }
                                         ]
@@ -496,7 +496,7 @@
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "Select apps to be installed on the Azure virtual machine that host your lab environment during the deployment of the lab environment."
+                                        "text": "ラボ環境の展開中に、ラボ環境をホストする Azure 仮想マシンにインストールするアプリを選択します。"
                                     }
                                 },
                                 {
@@ -504,17 +504,17 @@
                                     "type": "Microsoft.Common.OptionsGroup",
                                     "visible": true,
                                     "label": "Visual Studio Code",
-                                    "toolTip": "Visual Studio Code is a lightweight but powerful source code editor which runs on your desktop. <a href='https://code.visualstudio.com'>more</a>",
-                                    "defaultValue": "Not install",
+                                    "toolTip": "Visual Studio Codeは、デスクトップ上で動作する軽量かつ強力なソース コード エディターです。<a href='https://code.visualstudio.com'>詳細情報</a>",
+                                    "defaultValue": "インストールしない",
                                     "constraints": {
                                         "required": true,
                                         "allowedValues": [
                                             {
-                                                "label": "Install",
+                                                "label": "インストールする",
                                                 "value": true
                                             },
                                             {
-                                                "label": "Not install",
+                                                "label": "インストールしない",
                                                 "value": false
                                             }
                                         ]
@@ -526,16 +526,16 @@
                             "name": "autoshutdownSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
-                            "label": "Auto-shutdown",
+                            "label": "自動シャットダウン",
                             "elements": [
                                 {
                                     "name": "autoshutdownSectionText",
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "Select auto-shutdown whether enable or not for the Azure virtual machine that host your lab environment.",
+                                        "text": "ラボ環境をホストする Azure 仮想マシンに対して、自動シャットダウンを有効にするか無効にするかを選択します。",
                                         "link": {
-                                            "label": "Learn more",
+                                            "label": "詳細情報",
                                             "uri": "https://learn.microsoft.com/azure/virtual-machines/auto-shutdown-vm"
                                         }
                                     }
@@ -544,18 +544,18 @@
                                     "name": "shouldEnabledAutoshutdown",
                                     "type": "Microsoft.Common.OptionsGroup",
                                     "visible": true,
-                                    "label": "Auto-shutdown",
-                                    "toolTip": "Configures your virtual machine to automatically shutdown daily.",
-                                    "defaultValue": "Disable",
+                                    "label": "自動シャットダウン",
+                                    "toolTip": "仮想マシンを自動的に毎日シャットダウンするよう構成します。",
+                                    "defaultValue": "無効にする",
                                     "constraints": {
                                         "required": true,
                                         "allowedValues": [
                                             {
-                                                "label": "Enable",
+                                                "label": "有効にする",
                                                 "value": true
                                             },
                                             {
-                                                "label": "Disable",
+                                                "label": "無効にする",
                                                 "value": false
                                             }
                                         ]
@@ -569,11 +569,11 @@
                                     "selectAll": false,
                                     "filter": true,
                                     "multiLine": false,
-                                    "label": "Shutdown time",
-                                    "toolTip": "Configures the time when the virtual machine shuts down daily.",
+                                    "label": "シャットダウン時刻",
+                                    "toolTip": "仮想マシンを毎日シャットダウンする時刻を構成します。",
                                     "placeholder": "",
                                     "defaultDescription": "---",
-                                    "filterPlaceholder": "Filter shutdown time...",
+                                    "filterPlaceholder": "シャットダウン時刻をフィルター...",
                                     "defaultValue": "10:00 PM (22:00)",
                                     "constraints": {
                                         "required": true,
@@ -781,11 +781,11 @@
                                     "selectAll": false,
                                     "filter": true,
                                     "multiLine": false,
-                                    "label": "Time zone",
-                                    "toolTip": "Configure the time zone in which the auto-shutdown time is.",
+                                    "label": "タイム ゾーン",
+                                    "toolTip": "自動シャットダウン時刻のタイム ゾーンを構成します。",
                                     "placeholder": "",
                                     "defaultDescription": "---",
-                                    "filterPlaceholder": "Filter time zones...",
+                                    "filterPlaceholder": "タイム ゾーンをフィルター...",
                                     "defaultValue": "(UTC) Coordinated Universal Time",
                                     "constraints": {
                                         "required": true,
