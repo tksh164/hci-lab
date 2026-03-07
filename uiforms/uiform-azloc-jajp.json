@@ -1394,20 +1394,20 @@
                 {
                     "name": "addsStep",
                     "label": "Active Directory",
-                    "description": "Configure details of Active Directory Domain Services in your lab environment. An ADDS domain controller will be created as a Hyper-V virtual machine during the lab environment deployment.",
+                    "description": "ラボ環境における Active Directory ドメイン サービス(ADDS) の詳細を設定します。ラボ環境の展開中に、ADDS ドメイン コントローラーが Hyper-V 仮想マシンとして作成されます。",
                     "elements": [
                         {
                             "name": "addsSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
-                            "label": "Active Directory domain",
+                            "label": "Active Directory ドメイン",
                             "elements": [
                                 {
                                     "name": "addsSectionText",
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "Specify the FQDN domain of Active Directory Domain Services for your lab environment. An ADDS domain controller will be configured with specified domain during the lab environment deployment."
+                                        "text": "ラボ環境用の Active Directory ドメイン サービスの完全修飾ドメイン名 (FQDN) を指定します。ラボ環境の展開中に、指定されたドメインで ADDS ドメイン コントローラーが構成されます。"
                                     }
                                 },
                                 {
@@ -1415,16 +1415,16 @@
                                     "type": "Microsoft.Common.TextBox",
                                     "visible": true,
                                     "multiLine": false,
-                                    "label": "AD domain FQDN",
-                                    "toolTip": "Specify the AD domain FQDN for your lab environment.",
-                                    "placeholder": "e.g. lab.internal",
+                                    "label": "AD ドメイン FQDN",
+                                    "toolTip": "ラボ環境の AD ドメインの完全修飾ドメイン名 (FQDN) を指定します。",
+                                    "placeholder": "例: lab.internal",
                                     "defaultValue": "lab.internal",
                                     "constraints": {
                                         "required": true,
                                         "validations": [
                                             {
                                                 "regex": "^(?!-)[A-Za-z0-9-]+([\\-\\.]{1}[a-z0-9]+)*\\.[A-Za-z]+$",
-                                                "message": "Invalid AD domain FQDN."
+                                                "message": "無効な AD ドメイン FQDN です。"
                                             }
                                         ]
                                     }
@@ -1435,32 +1435,32 @@
                             "name": "azureLocalPrepSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
-                            "label": "Preparation for Azure Local deployment",
+                            "label": "Azure Local をデプロイするための準備",
                             "elements": [
                                 {
                                     "name": "azureLocalPrepSectionText",
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "Most Azure Local deployments require some preparations to Active Directory before you start deploy Azure Local instances."
+                                        "text": "ほとんどの Azure Local デプロイでは、Azure Local のデプロイを開始する前に Active Directory に対する何らかの準備が必要です。"
                                     }
                                 },
                                 {
                                     "name": "shouldPrepareAddsForAzureLocal",
                                     "type": "Microsoft.Common.OptionsGroup",
                                     "visible": true,
-                                    "label": "Prepare Active Directory for Azure Local deployment",
-                                    "toolTip": "Select whether to prepare Active Directory for Azure Local instances during your lab environment deployment.",
-                                    "defaultValue": "Prepare Active Directory",
+                                    "label": "Azure Local デプロイのための Active Directory の準備",
+                                    "toolTip": "ラボ環境の展開中に Azure Local インスタンスのために Active Directory の準備をするかどうかを選択します。",
+                                    "defaultValue": "Active Directory の準備をする",
                                     "constraints": {
                                         "required": true,
                                         "allowedValues": [
                                             {
-                                                "label": "Prepare Active Directory",
+                                                "label": "Active Directory の準備をする",
                                                 "value": true
                                             },
                                             {
-                                                "label": "Not prepare Active Directory",
+                                                "label": "Active Directory の準備をしない",
                                                 "value": false
                                             }
                                         ]
@@ -1471,16 +1471,16 @@
                                     "type": "Microsoft.Common.TextBox",
                                     "visible": "[steps('addsStep').azureLocalPrepSection.shouldPrepareAddsForAzureLocal]",
                                     "multiLine": false,
-                                    "label": "AD organization unit (OU) for Azure Local",
-                                    "toolTip": "Specify the organization unit to place the Azure Local related AD objects such as computer objects.",
-                                    "placeholder": "e.g. OU=AzureLocal,DC=lab,DC=internal",
+                                    "label": "Azure Local 用の AD 組織単位 (OU)",
+                                    "toolTip": "コンピューター オブジェクトなどの Azure Local 関連の AD オブジェクトを配置する組織単位 (OU) を指定します。",
+                                    "placeholder": "例: OU=AzureLocal,DC=lab,DC=internal",
                                     "defaultValue": "OU=AzureLocal,DC=lab,DC=internal",
                                     "constraints": {
                                         "required": true,
                                         "validations": [
                                             {
                                                 "regex": "^(OU=[^,]+,)+(DC=[^,]+,)*DC=[^,]+$",
-                                                "message": "Invalid distinguished name (DN) format for an organization unit (OU). It should be specify like 'OU=AzureLocal,DC=lab,DC=internal'."
+                                                "message": "組織単位 (OU) の識別名 (DN) 形式が無効です。次のように指定する必要があります: 'OU=AzureLocal,DC=lab,DC=internal'."
                                             }
                                         ]
                                     },
@@ -1488,7 +1488,7 @@
                                         {
                                             "visible": true,
                                             "style": "Info",
-                                            "text": "You need update the OU's distinguished name too if you changed the AD domain FQDN in above because the OU's distinguished name has AD domain FQDN."
+                                            "text": "上の入力項目で AD ドメインの完全修飾ドメイン名 (FQDN) を変更した場合、OU の識別名にも AD ドメインの FQDN が含まれているため、OU の識別名も更新する必要があります。"
                                         }
                                     ]
                                 },
@@ -1497,9 +1497,9 @@
                                     "type": "Microsoft.Common.TextBox",
                                     "visible": "[steps('addsStep').azureLocalPrepSection.shouldPrepareAddsForAzureLocal]",
                                     "multiLine": false,
-                                    "label": "Lifecycle Manager (LCM) user account name",
-                                    "toolTip": "Specify the name of the Lifecycle Manager (LCM) user account.",
-                                    "placeholder": "e.g. lcmuser",
+                                    "label": "Lifecycle Manager (LCM) ユーザー アカウント名",
+                                    "toolTip": "Lifecycle Manager (LCM) ユーザー アカウントの名前を指定します。",
+                                    "placeholder": "例: lcmuser",
                                     "defaultValue": "lcmuser",
                                     "constraints": {
                                         "required": true
@@ -1508,12 +1508,12 @@
                                         {
                                             "visible": true,
                                             "style": "Info",
-                                            "text": "The LCM user account will be used as the deployment account during Azure Local instance deployment."
+                                            "text": "LCM ユーザー アカウントは、Azure Local インスタンスのデプロイ時に、デプロイ アカウントとして使用されます。"
                                         },
                                         {
                                             "visible": true,
                                             "style": "Info",
-                                            "text": "The password for the LCM user account is set to the same password as the administrator account that you specify in the previous page."
+                                            "text": "LCM ユーザー アカウントのパスワードは、前のページで指定した管理者アカウントと同じパスワードに設定されます。"
                                         }
                                     ]
                                 }
