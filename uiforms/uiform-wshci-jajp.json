@@ -2141,21 +2141,21 @@
                 },
                 {
                     "name": "advancedOptionsStep",
-                    "label": "Advanced options",
-                    "description": "This page provides advanced options.",
+                    "label": "高度なオプション",
+                    "description": "このページでは高度なオプションを設定できます。",
                     "elements": [
                         {
                             "name": "customDeploymentSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
-                            "label": "Custom deployment",
+                            "label": "カスタム デプロイ",
                             "elements": [
                                 {
                                     "name": "shouldUseCustomDeployment",
                                     "type": "Microsoft.Common.CheckBox",
-                                    "label": "Enable custom deployment",
+                                    "label": "カスタム デプロイを有効にする",
                                     "visible": true,
-                                    "toolTip": "Check this if you want to do custom deployment.",
+                                    "toolTip": "カスタム デプロイをする場合は、チェックを付けます。",
                                     "defaultValue": false,
                                     "constraints": {
                                         "required": false
@@ -2166,8 +2166,8 @@
                                     "type": "Microsoft.Common.TextBox",
                                     "visible": "[steps('advancedOptionsStep').customDeploymentSection.shouldUseCustomDeployment]",
                                     "multiLine": false,
-                                    "label": "Base URI for artifacts",
-                                    "toolTip": "The base URI for artifacts.",
+                                    "label": "アーティファクトのベース URL",
+                                    "toolTip": "アーティファクトのベース URL です。",
                                     "placeholder": "",
                                     "defaultValue": "",
                                     "constraints": {
