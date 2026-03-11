@@ -1523,21 +1523,21 @@
                 },
                 {
                     "name": "peripheralServersStep",
-                    "label": "Peripheral servers",
-                    "description": "Configure details of peripheral servers in your lab environment. The peripheral servers include an Active Directory domain controller, a workbox machine.",
+                    "label": "周辺サーバー",
+                    "description": "ラボ環境における周辺サーバーの詳細を設定します。周辺サーバーには、Active Directory ドメイン コントローラーとワークボックス マシンが含まれます。",
                     "elements": [
                         {
                             "name": "generalConfigSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
-                            "label": "General configuration",
+                            "label": "全般的な設定",
                             "elements": [
                                 {
                                     "name": "generalConfigSectionText",
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "The general configurations will be apply all peripheral servers in your lab environment such as an Active Directory domain controller, a workbox machine except the machines that consist Azure Local instances."
+                                        "text": "一般的な構成は、Active Directory ドメイン コントローラーやワークボックス マシンなど、ラボ環境内のすべての周辺サーバーに適用されます。ただし、Azure Local インスタンスを構成するマシンは除きます。"
                                     }
                                 },
                                 {
@@ -1548,21 +1548,21 @@
                                     "selectAll": false,
                                     "filter": false,
                                     "multiLine": false,
-                                    "label": "Culture",
-                                    "toolTip": "Specify the display language, locale and input method of the operating systems for peripheral servers in your lab environment.",
-                                    "placeholder": "Select the culture...",
+                                    "label": "カルチャ",
+                                    "toolTip": "ラボ環境内の周辺サーバーのオペレーティング システムの表示言語、ロケール、入力方法を指定します。",
+                                    "placeholder": "カルチャを選択...",
                                     "defaultDescription": "---",
-                                    "filterPlaceholder": "Filter cultures...",
-                                    "defaultValue": "English (en-US)",
+                                    "filterPlaceholder": "カルチャをフィルター...",
+                                    "defaultValue": "英語 (en-US)",
                                     "constraints": {
                                         "required": true,
                                         "allowedValues": [
                                             {
-                                                "label": "English (en-US)",
+                                                "label": "英語 (en-US)",
                                                 "value": "en-us"
                                             },
                                             {
-                                                "label": "Japanese (ja-JP)",
+                                                "label": "日本語 (ja-JP)",
                                                 "value": "ja-jp"
                                             }
                                         ]
@@ -1571,7 +1571,7 @@
                                         {
                                             "visible": true,
                                             "style": "Info",
-                                            "text": "The culture represents the UI language, locale and input method."
+                                            "text": "カルチャは、UI 言語、ロケール、入力方法を表します。"
                                         }
                                     ]
                                 },
@@ -1583,11 +1583,11 @@
                                     "selectAll": false,
                                     "filter": true,
                                     "multiLine": false,
-                                    "label": "Time zone",
-                                    "toolTip": "Specify the time zone of the operating systems for peripheral servers in your lab environment.",
-                                    "placeholder": "Select the time zone...",
+                                    "label": "タイム ゾーン",
+                                    "toolTip": "ラボ環境内の周辺サーバーのオペレーティング システムのタイム ゾーンを指定します。",
+                                    "placeholder": "タイム ゾーンを選択...",
                                     "defaultDescription": "---",
-                                    "filterPlaceholder": "Filter time zones...",
+                                    "filterPlaceholder": "タイム ゾーンをフィルター...",
                                     "defaultValue": "(UTC) Coordinated Universal Time",
                                     "constraints": {
                                         "required": true,
@@ -2163,18 +2163,18 @@
                                     "name": "shouldInstallUpdatesToLabVm",
                                     "type": "Microsoft.Common.OptionsGroup",
                                     "visible": true,
-                                    "label": "Operating system's updates",
-                                    "toolTip": "Select whether to install the latest operating system's updates to peripheral servers in your lab environment during the lab environment deployment.",
-                                    "defaultValue": "Not install",
+                                    "label": "オペレーティング システムの更新プログラム",
+                                    "toolTip": "ラボ環境の展開中に、ラボ環境内の周辺サーバーに最新のオペレーティング システムの更新プログラムをインストールするかどうかを選択します。",
+                                    "defaultValue": "インストールしない",
                                     "constraints": {
                                         "required": true,
                                         "allowedValues": [
                                             {
-                                                "label": "Install",
+                                                "label": "インストールする",
                                                 "value": true
                                             },
                                             {
-                                                "label": "Not install",
+                                                "label": "インストールしない",
                                                 "value": false
                                             }
                                         ]
@@ -2183,7 +2183,7 @@
                                         {
                                             "visible": true,
                                             "style": "Info",
-                                            "text": "The operating system's updates installation will increase the deployment time of your lab environment by about 15 minutes or more."
+                                            "text": "オペレーティング システムの更新プログラムのインストールにより、ラボ環境の展開時間が約 15 分以上増加します。"
                                         }
                                     ]
                                 }
@@ -2193,14 +2193,14 @@
                             "name": "workboxSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
-                            "label": "Tools on the workbox machine",
+                            "label": "ワークボックス マシン上のツール",
                             "elements": [
                                 {
                                     "name": "workboxSectionText",
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "The workbox machine has Remote Server Administration Tools (RSAT) for Active Directory, DNS, Failover Cluster, etc. for your lab environment by default. You can select additional tools to install on the workbox machine."
+                                        "text": "ワークボックス マシンには、既定で Active Directory、DNS、フェールオーバー クラスターなどのリモート サーバー管理ツール (RSAT) がラボ環境用にインストールされています。ワークボックス マシンに追加でインストールするツールを選択できます。"
                                     }
                                 },
                                 {
@@ -2208,17 +2208,17 @@
                                     "type": "Microsoft.Common.OptionsGroup",
                                     "visible": true,
                                     "label": "Configurator App for Azure Local",
-                                    "toolTip": "The Configurator App for Azure Local is bootstrap and register the machines you plan to include in your Azure Local instance. <a href=\"https://learn.microsoft.com/azure/azure-local/deploy/deployment-arc-register-configurator-app\">Learn more</a>",
-                                    "defaultValue": "Install",
+                                    "toolTip": "Configurator App for Azure Local は、Azure Local インスタンスに含める予定のマシンを初期設定し、登録します。<a href=\"https://learn.microsoft.com/azure/azure-local/deploy/deployment-arc-register-configurator-app\">詳細情報</a>",
+                                    "defaultValue": "インストールする",
                                     "constraints": {
                                         "required": true,
                                         "allowedValues": [
                                             {
-                                                "label": "Install",
+                                                "label": "インストールする",
                                                 "value": true
                                             },
                                             {
-                                                "label": "Not install",
+                                                "label": "インストールしない",
                                                 "value": false
                                             }
                                         ]
@@ -2229,13 +2229,13 @@
                                     "type": "Microsoft.Common.OptionsGroup",
                                     "visible": true,
                                     "label": "Windows Admin Center",
-                                    "toolTip": "The Windows Admin Center is a remote management tool for Windows Server. <a href=\"https://learn.microsoft.com/windows-server/manage/windows-admin-center/overview\">Learn more</a>",
-                                    "defaultValue": "Not install",
+                                    "toolTip": "Windows Admin Center は、Windows Server 用のリモート管理ツールです。<a href=\"https://learn.microsoft.com/windows-server/manage/windows-admin-center/overview\">詳細情報</a>",
+                                    "defaultValue": "インストールしない",
                                     "constraints": {
                                         "required": true,
                                         "allowedValues": [
                                             {
-                                                "label": "Not install",
+                                                "label": "インストールしない",
                                                 "value": false
                                             }
                                         ]
@@ -2244,7 +2244,7 @@
                                         {
                                             "visible": true,
                                             "style": "Info",
-                                            "text": "Azure Local Lab supports Windows Admin Center installation. But it is temporary disabled. You can install Windows Admin Center manually after your lab deployment finished. <a href=\"https://learn.microsoft.com/windows-server/manage/windows-admin-center/deploy/install\">Learn more</a>"
+                                            "text": "Azure Local Lab は Windows Admin Center のインストールをサポートしています。ただし、現在は一時的に無効化されています。ラボのデプロイメント完了後、手動で Windows Admin Center をインストールできます。<a href=\"https://learn.microsoft.com/windows-server/manage/windows-admin-center/deploy/install\">詳細情報</a>"
                                         }
                                     ]
                                 }
