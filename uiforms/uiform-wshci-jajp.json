@@ -1223,21 +1223,21 @@
                 },
                 {
                     "name": "hciClusterStep",
-                    "label": "HCI cluster",
-                    "description": "Configure details for the HCI cluster in your lab environment.",
+                    "label": "HCI クラスター",
+                    "description": "ラボ環境の HCI クラスターの詳細を設定します。",
                     "elements": [
                         {
                             "name": "hciClusterNodesSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
-                            "label": "Member server",
+                            "label": "メンバー サーバー",
                             "elements": [
                                 {
                                     "name": "hciClusterNodesSectionText",
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "Configure details of servers that consist the HCI cluster in your lab environment. The lab environment is built as a set of Hyper-V virtual machines within an Azure virtual machine using nested virtualization technology."
+                                        "text": "HCI クラスターを構成するサーバーの詳細を設定します。ラボ環境は、ネストされた仮想化技術を使用して Azure 仮想マシン内に Hyper-V 仮想マシンのセットとして構築されます。"
                                     }
                                 },
                                 {
@@ -1248,18 +1248,18 @@
                                     "selectAll": false,
                                     "filter": true,
                                     "multiLine": true,
-                                    "label": "Operating system",
-                                    "toolTip": "Select the operating system for the member servers in your lab environment.",
-                                    "placeholder": "Select the member server's operating system...",
+                                    "label": "オペレーティング システム",
+                                    "toolTip": "ラボ環境のメンバー サーバーに使用するオペレーティング システムを選択します。",
+                                    "placeholder": "メンバー サーバーのオペレーティング システムを選択...",
                                     "defaultDescription": "---",
-                                    "filterPlaceholder": "Filter member server's operating systems...",
+                                    "filterPlaceholder": "メンバー サーバーのオペレーティング システムをフィルター...",
                                     "defaultValue": "Windows Server 2025 Datacenter Evaluation (Desktop Experience)",
                                     "constraints": {
                                         "required": true,
                                         "allowedValues": [
                                             {
                                                 "label": "Windows Server 2025 Datacenter Evaluation (Desktop Experience)",
-                                                "description": "Windows Server 2025 Datacenter with the standard graphical user interface.",
+                                                "description": "標準グラフィカル ユーザー インターフェイスを備えた Windows Server 2025 Datacenter です。",
                                                 "value": {
                                                     "sku": "ws2025",
                                                     "imageIndex": 4
@@ -1267,7 +1267,7 @@
                                             },
                                             {
                                                 "label": "Windows Server 2022 Datacenter Evaluation (Desktop Experience)",
-                                                "description": "Windows Server 2022 Datacenter with the standard graphical user interface.",
+                                                "description": "標準グラフィカル ユーザー インターフェイスを備えた Windows Server 2022 Datacenter です。",
                                                 "value": {
                                                     "sku": "ws2022",
                                                     "imageIndex": 4
@@ -1280,9 +1280,9 @@
                                     "name": "hciNodeCount",
                                     "type": "Microsoft.Common.Slider",
                                     "visible": true,
-                                    "label": "Number of servers",
-                                    "subLabel": "servers",
-                                    "toolTip": "Specify the member server count to deploy in your lab environment.",
+                                    "label": "メンバー サーバーの台数",
+                                    "subLabel": "台",
+                                    "toolTip": "ラボ環境に展開するメンバー サーバーの台数を指定します。",
                                     "showStepMarkers": true,
                                     "constraints": {
                                         "required": true
@@ -1304,25 +1304,25 @@
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "Select whether or not to join the member servers to the Active Directory domain during your lab environment deployment."
+                                        "text": "ラボ環境の展開中に、メンバー サーバーを Active Directory ドメインに参加させるかどうかを選択します。"
                                     }
                                 },
                                 {
                                     "name": "shouldJoinToAddsDomain",
                                     "type": "Microsoft.Common.OptionsGroup",
                                     "visible": true,
-                                    "label": "Join to the AD domain",
-                                    "toolTip": "Select whether or not to join the member servers to the AD domain.",
-                                    "defaultValue": "Join",
+                                    "label": "AD ドメインへの参加",
+                                    "toolTip": "メンバー サーバーを AD ドメインに参加させるかどうかを選択します。",
+                                    "defaultValue": "参加させる",
                                     "constraints": {
                                         "required": true,
                                         "allowedValues": [
                                             {
-                                                "label": "Join",
+                                                "label": "参加させる",
                                                 "value": true
                                             },
                                             {
-                                                "label": "Not join",
+                                                "label": "参加させない",
                                                 "value": false
                                             }
                                         ]
@@ -1334,32 +1334,32 @@
                             "name": "hciClusterSection",
                             "type": "Microsoft.Common.Section",
                             "visible": "[steps('hciClusterStep').addsSection.shouldJoinToAddsDomain]",
-                            "label": "HCI cluster",
+                            "label": "HCI クラスター",
                             "elements": [
                                 {
                                     "name": "hciClusterSectionText",
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "Specify the configuration of the HCI cluster in your lab environment."
+                                        "text": "ラボ環境の HCI クラスターの構成を指定します。"
                                     }
                                 },
                                 {
                                     "name": "shouldCreateHciCluster",
                                     "type": "Microsoft.Common.OptionsGroup",
                                     "visible": true,
-                                    "label": "Create the HCI cluster",
-                                    "toolTip": "Specify whether or not the HCI cluster will be create during the lab deployment.",
-                                    "defaultValue": "Create",
+                                    "label": "HCI クラスターの作成",
+                                    "toolTip": "ラボ環境展開時に HCI クラスターを作成するかどうかを指定します。",
+                                    "defaultValue": "作成する",
                                     "constraints": {
                                         "required": true,
                                         "allowedValues": [
                                             {
-                                                "label": "Create",
+                                                "label": "作成する",
                                                 "value": true
                                             },
                                             {
-                                                "label": "Not create",
+                                                "label": "作成しない",
                                                 "value": false
                                             }
                                         ]
@@ -1370,17 +1370,17 @@
                                     "type": "Microsoft.Common.TextBox",
                                     "visible": "[steps('hciClusterStep').hciClusterSection.shouldCreateHciCluster]",
                                     "multiLine": false,
-                                    "label": "Cluster name",
+                                    "label": "クラスター名",
                                     "subLabel": "[concat('.', steps('addsStep').addsSection.domainName)]",
-                                    "toolTip": "Specify the cluster name for the HCI cluster in your lab environment. It's the cluster name object (CNO) name.",
-                                    "placeholder": "e.g. hciclus",
+                                    "toolTip": "ラボ環境内の HCI クラスターのクラスター名を指定します。これはクラスター名オブジェクト (CNO) の名前です。",
+                                    "placeholder": "例: hciclus",
                                     "defaultValue": "hciclus",
                                     "constraints": {
                                         "required": true,
                                         "validations": [
                                             {
                                                 "regex": "^[A-Za-z0-9-]+$",
-                                                "message": "Invalid cluster name."
+                                                "message": "無効なクラスター名です。"
                                             }
                                         ]
                                     },
@@ -1388,7 +1388,7 @@
                                         {
                                             "visible": true,
                                             "style": "Info",
-                                            "text": "You can change the Active Directory domain on the next page."
+                                            "text": "次のページで Active Directory ドメイン名を変更できます。"
                                         }
                                     ]
                                 }
