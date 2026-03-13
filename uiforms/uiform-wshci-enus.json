@@ -1399,7 +1399,7 @@
                 {
                     "name": "addsStep",
                     "label": "Active Directory",
-                    "description": "Configure details of machines that consist your Azure Local instance. The lab environment is built as a set of Hyper-V virtual machines within an Azure virtual machine using nested virtualization technology.",
+                    "description": "Configure details of Active Directory in your lab environment.",
                     "elements": [
                         {
                             "name": "addsSection",
