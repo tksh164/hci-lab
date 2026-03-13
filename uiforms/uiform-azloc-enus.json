@@ -1457,7 +1457,7 @@
                                     "name": "shouldPrepareAddsForAzureLocal",
                                     "type": "Microsoft.Common.OptionsGroup",
                                     "visible": true,
-                                    "label": "Prepare Active Directory for Azure Local deployment",
+                                    "label": "Active Directory preparation for Azure Local deployment",
                                     "toolTip": "Select whether to prepare Active Directory for Azure Local instances during your lab environment deployment.",
                                     "defaultValue": "Prepare Active Directory",
                                     "constraints": {
@@ -2287,8 +2287,8 @@
                                     "type": "Microsoft.Common.TextBox",
                                     "visible": "[steps('advancedOptionsStep').customDeploymentSection.shouldUseCustomDeployment]",
                                     "multiLine": false,
-                                    "label": "Base URI for artifacts",
-                                    "toolTip": "The base URI for artifacts.",
+                                    "label": "Base URL for artifacts",
+                                    "toolTip": "The base URL for artifacts.",
                                     "placeholder": "",
                                     "defaultValue": "",
                                     "constraints": {
