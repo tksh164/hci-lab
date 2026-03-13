@@ -1439,22 +1439,22 @@
                     ]
                 },
                 {
-                    "name": "workboxServersStep",
-                    "label": "Workbox machine",
-                    "description": "Configure details of the workbox machine. The workbox machine has Remote Server Administration Tools (RSAT) for Active Directory, DNS, Failover Cluster, etc. for your lab environment by default.",
+                    "name": "workboxStep",
+                    "label": "ワークボックス マシン",
+                    "description": "ワークボックスマシンの詳細を設定します。ワークボックス マシンには、既定で Active Directory、DNS、フェールオーバー クラスターなどのリモート サーバー管理ツール (RSAT) がラボ環境用にインストールされています。",
                     "elements": [
                         {
                             "name": "workboxSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
-                            "label": "Tools on the workbox machine",
+                            "label": "ワークボックス マシン上のツール",
                             "elements": [
                                 {
                                     "name": "workboxSectionText",
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "You can select additional tools to install on the workbox machine."
+                                        "text": "ワークボックス マシンにインストールする追加ツールを選択できます。"
                                     }
                                 },
                                 {
@@ -1462,13 +1462,13 @@
                                     "type": "Microsoft.Common.OptionsGroup",
                                     "visible": true,
                                     "label": "Windows Admin Center",
-                                    "toolTip": "The Windows Admin Center is a remote management tool for Windows Server. <a href=\"https://learn.microsoft.com/windows-server/manage/windows-admin-center/overview\">Learn more</a>",
-                                    "defaultValue": "Not install",
+                                    "toolTip": "Windows Admin Center は、Windows Server 用のリモート管理ツールです。<a href=\"https://learn.microsoft.com/windows-server/manage/windows-admin-center/overview\">詳細情報</a>",
+                                    "defaultValue": "インストールしない",
                                     "constraints": {
                                         "required": true,
                                         "allowedValues": [
                                             {
-                                                "label": "Not install",
+                                                "label": "インストールしない",
                                                 "value": false
                                             }
                                         ]
@@ -1477,7 +1477,7 @@
                                         {
                                             "visible": true,
                                             "style": "Info",
-                                            "text": "HCI Lab supports Windows Admin Center installation. But it is temporary disabled. You can install Windows Admin Center manually after your lab deployment finished. <a href=\"https://learn.microsoft.com/windows-server/manage/windows-admin-center/deploy/install\">Learn more</a>"
+                                            "text": "HCI Lab は Windows Admin Center のインストールをサポートしています。ただし、現在は一時的に無効化されています。ラボ環境のデプロイメント完了後、手動で Windows Admin Center をインストールできます。<a href=\"https://learn.microsoft.com/windows-server/manage/windows-admin-center/deploy/install\">詳細情報</a>"
                                         }
                                     ]
                                 }
