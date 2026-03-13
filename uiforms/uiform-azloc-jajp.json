@@ -1224,7 +1224,7 @@
                 {
                     "name": "azureLocalStep",
                     "label": "Azure Local",
-                    "description": "Azure Local インスタンスを構成するマシンの詳細を設定します。ラボ環境は、ネストされた仮想化技術を使用して Azure 仮想マシン内に構築された Hyper-V 仮想マシンのセットとして構築されています。",
+                    "description": "Azure Local インスタンスを構成するマシンの詳細を設定します。ラボ環境は、ネストされた仮想化技術を使用して Azure 仮想マシン内に構築された Hyper-V 仮想マシンのセットとして構築されます。",
                     "elements": [
                         {
                             "name": "machineConfigSection",
@@ -1377,7 +1377,7 @@
                                     "type": "Microsoft.Common.Slider",
                                     "visible": true,
                                     "label": "マシンの台数",
-                                    "subLabel": "マシン",
+                                    "subLabel": "台",
                                     "toolTip": "ラボ環境に展開するマシンの台数を指定します。",
                                     "showStepMarkers": true,
                                     "constraints": {
