@@ -1487,8 +1487,8 @@
                 },
                 {
                     "name": "generalConfigStep",
-                    "label": "General configuration",
-                    "description": "The general configurations will be apply all servers in your lab environment such as HCI nodes, an Active Directory domain controller, a workbox machine.",
+                    "label": "全般的な設定",
+                    "description": "全般的な構成は、HCI ノード、Active Directory ドメイン コントローラー、ワークボックス マシンなど、ラボ環境内のすべてのサーバーに適用されます。",
                     "elements": [
                         {
                             "name": "labVmCulture",
@@ -1498,21 +1498,21 @@
                             "selectAll": false,
                             "filter": false,
                             "multiLine": false,
-                            "label": "Culture",
-                            "toolTip": "Specify the display language, locale and input method of the operating systems for all servers in your lab environment.",
-                            "placeholder": "Select the culture...",
+                            "label": "カルチャ",
+                            "toolTip": "ラボ環境内のすべてのサーバーのオペレーティング システムの表示言語、ロケール、入力方法を指定します。",
+                            "placeholder": "カルチャを選択...",
                             "defaultDescription": "---",
-                            "filterPlaceholder": "Filter cultures...",
-                            "defaultValue": "English (en-US)",
+                            "filterPlaceholder": "カルチャをフィルター...",
+                            "defaultValue": "英語 (en-US)",
                             "constraints": {
                                 "required": true,
                                 "allowedValues": [
                                     {
-                                        "label": "English (en-US)",
+                                        "label": "英語 (en-US)",
                                         "value": "en-us"
                                     },
                                     {
-                                        "label": "Japanese (ja-JP)",
+                                        "label": "日本語 (ja-JP)",
                                         "value": "ja-jp"
                                     }
                                 ]
@@ -1521,7 +1521,7 @@
                                 {
                                     "visible": true,
                                     "style": "Info",
-                                    "text": "The culture represents the UI language, locale and input method."
+                                    "text": "カルチャは、UI 言語、ロケール、入力方法を表します。"
                                 }
                             ]
                         },
@@ -1533,11 +1533,11 @@
                             "selectAll": false,
                             "filter": true,
                             "multiLine": false,
-                            "label": "Time zone",
-                            "toolTip": "Specify the time zone of the operating systems for all servers in your lab environment.",
-                            "placeholder": "",
+                            "label": "タイム ゾーン",
+                            "toolTip": "ラボ環境内のすべてのサーバーのオペレーティング システムのタイム ゾーンを指定します。",
+                            "placeholder": "タイム ゾーンを選択...",
                             "defaultDescription": "---",
-                            "filterPlaceholder": "Filter time zones...",
+                            "filterPlaceholder": "タイム ゾーンをフィルター...",
                             "defaultValue": "(UTC) Coordinated Universal Time",
                             "constraints": {
                                 "required": true,
@@ -2113,18 +2113,18 @@
                             "name": "shouldInstallUpdatesToLabVm",
                             "type": "Microsoft.Common.OptionsGroup",
                             "visible": true,
-                            "label": "Operating system's updates",
-                            "toolTip": "Select whether to install the latest operating system's updates to all servers in your lab environment during the lab environment deployment.",
-                            "defaultValue": "Not install",
+                            "label": "オペレーティング システムの更新プログラム",
+                            "toolTip": "ラボ環境の展開中に、ラボ環境内のすべてのサーバーに最新のオペレーティング システムの更新プログラムをインストールするかどうかを選択します。",
+                            "defaultValue": "インストールしない",
                             "constraints": {
                                 "required": true,
                                 "allowedValues": [
                                     {
-                                        "label": "Install",
+                                        "label": "インストールする",
                                         "value": true
                                     },
                                     {
-                                        "label": "Not install",
+                                        "label": "インストールしない",
                                         "value": false
                                     }
                                 ]
@@ -2133,7 +2133,7 @@
                                 {
                                     "visible": true,
                                     "style": "Info",
-                                    "text": "The operating system's updates installation will increase the deployment time of your lab environment by about 15 minutes or more."
+                                    "text": "オペレーティング システムの更新プログラムのインストールにより、ラボ環境の展開時間が約 15 分以上増加します。"
                                 }
                             ]
                         }
