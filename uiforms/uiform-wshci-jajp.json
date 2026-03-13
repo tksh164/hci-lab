@@ -1399,20 +1399,20 @@
                 {
                     "name": "addsStep",
                     "label": "Active Directory",
-                    "description": "Configure details of machines that consist your Azure Local instance. The lab environment is built as a set of Hyper-V virtual machines within an Azure virtual machine using nested virtualization technology.",
+                    "description": "ラボ環境の Active Directory の設定詳細を構成します。",
                     "elements": [
                         {
                             "name": "addsSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
-                            "label": "Active Directory domain",
+                            "label": "Active Directory ドメイン",
                             "elements": [
                                 {
                                     "name": "addsSectionText",
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "Specify the FQDN domain of Active Directory Domain Services for your lab environment. An ADDS domain controller will be configured with specified domain during the lab environment deployment."
+                                        "text": "ラボ環境の Active Directory Domain Services (ADDS) の FQDN ドメインを指定します。ラボ環境の展開中に、指定されたドメインを使用して ADDS ドメイン コントローラーが構成されます。"
                                     }
                                 },
                                 {
@@ -1420,16 +1420,16 @@
                                     "type": "Microsoft.Common.TextBox",
                                     "visible": true,
                                     "multiLine": false,
-                                    "label": "AD domain FQDN",
-                                    "toolTip": "Specify the AD domain FQDN for your lab environment.",
-                                    "placeholder": "e.g. lab.internal",
+                                    "label": "AD ドメイン FQDN",
+                                    "toolTip": "ラボ環境の AD ドメイン FQDN を指定します。",
+                                    "placeholder": "例: lab.internal",
                                     "defaultValue": "lab.internal",
                                     "constraints": {
                                         "required": true,
                                         "validations": [
                                             {
                                                 "regex": "^(?!-)[A-Za-z0-9-]+([\\-\\.]{1}[a-z0-9]+)*\\.[A-Za-z]+$",
-                                                "message": "Invalid AD domain FQDN."
+                                                "message": "無効な AD ドメイン FQDN です。"
                                             }
                                         ]
                                     }
