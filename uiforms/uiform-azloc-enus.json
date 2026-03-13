@@ -2252,7 +2252,7 @@
                                         {
                                             "visible": true,
                                             "style": "Info",
-                                            "text": "Azure Local Lab supports Windows Admin Center installation. But it is temporary disabled. You can install Windows Admin Center manually after your lab deployment finished. <a href=\"https://learn.microsoft.com/windows-server/manage/windows-admin-center/deploy/install\">Learn more</a>"
+                                            "text": "Azure Local Lab supports Windows Admin Center installation. But it is temporary disabled. You can install Windows Admin Center manually after your lab environment deployment finished. <a href=\"https://learn.microsoft.com/windows-server/manage/windows-admin-center/deploy/install\">Learn more</a>"
                                         }
                                     ]
                                 }

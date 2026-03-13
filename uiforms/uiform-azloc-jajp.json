@@ -2244,7 +2244,7 @@
                                         {
                                             "visible": true,
                                             "style": "Info",
-                                            "text": "Azure Local Lab は Windows Admin Center のインストールをサポートしています。ただし、現在は一時的に無効化されています。ラボのデプロイメント完了後、手動で Windows Admin Center をインストールできます。<a href=\"https://learn.microsoft.com/windows-server/manage/windows-admin-center/deploy/install\">詳細情報</a>"
+                                            "text": "Azure Local Lab は Windows Admin Center のインストールをサポートしています。ただし、現在は一時的に無効化されています。ラボ環境のデプロイメント完了後、手動で Windows Admin Center をインストールできます。<a href=\"https://learn.microsoft.com/windows-server/manage/windows-admin-center/deploy/install\">詳細情報</a>"
                                         }
                                     ]
                                 }

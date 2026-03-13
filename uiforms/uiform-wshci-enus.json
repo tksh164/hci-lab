@@ -1439,7 +1439,7 @@
                     ]
                 },
                 {
-                    "name": "workboxServersStep",
+                    "name": "workboxStep",
                     "label": "Workbox machine",
                     "description": "Configure details of the workbox machine. The workbox machine has Remote Server Administration Tools (RSAT) for Active Directory, DNS, Failover Cluster, etc. for your lab environment by default.",
                     "elements": [
@@ -1477,7 +1477,7 @@
                                         {
                                             "visible": true,
                                             "style": "Info",
-                                            "text": "HCI Lab supports Windows Admin Center installation. But it is temporary disabled. You can install Windows Admin Center manually after your lab deployment finished. <a href=\"https://learn.microsoft.com/windows-server/manage/windows-admin-center/deploy/install\">Learn more</a>"
+                                            "text": "HCI Lab supports Windows Admin Center installation. But it is temporary disabled. You can install Windows Admin Center manually after your lab environment deployment finished. <a href=\"https://learn.microsoft.com/windows-server/manage/windows-admin-center/deploy/install\">Learn more</a>"
                                         }
                                     ]
                                 }
