@@ -1388,7 +1388,7 @@
                                         {
                                             "visible": true,
                                             "style": "Info",
-                                            "text": "You can change the Active Directory domain on the next page."
+                                            "text": "You can change the Active Directory domain name on the next page."
                                         }
                                     ]
                                 }
