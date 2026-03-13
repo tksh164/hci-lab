@@ -1535,7 +1535,7 @@
                             "multiLine": false,
                             "label": "Time zone",
                             "toolTip": "Specify the time zone of the operating systems for all servers in your lab environment.",
-                            "placeholder": "",
+                            "placeholder": "Select the time zone...",
                             "defaultDescription": "---",
                             "filterPlaceholder": "Filter time zones...",
                             "defaultValue": "(UTC) Coordinated Universal Time",
