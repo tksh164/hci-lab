@@ -31,11 +31,11 @@
 #
 # Windows Server 2025 - OS build: 26100 - 24H2
 # OS: https://support.microsoft.com/topic/10f58da7-e57b-4a9d-9c16-9f1dcd72d7d7
-# .NET: https://support.microsoft.com/topic/71f4180b-3364-4d0e-8032-e8aca043b0fe
+# .NET: https://support.microsoft.com/topic/c5b26beb-fca7-4619-aaf2-1e8441f3448e
 #
 # Windows Server 2022 - OS build: 20348 - 21H2
 # OS: https://support.microsoft.com/topic/e1caa597-00c5-4ab9-9f3e-8212fe80b2ee
-# .NET: https://support.microsoft.com/topic/56635939-4249-4eaa-ac39-394fcaec6a94
+# .NET: https://support.microsoft.com/topic/3840e994-45bc-4966-8002-78ffe2329574
 
 @{
     'azloc24h2_2602' = @{
