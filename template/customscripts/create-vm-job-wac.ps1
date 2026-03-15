@@ -547,7 +547,11 @@ try {
         Get-Module -Name 'PowerShellGet' -ListAvailable | Out-String -Width 200 | Write-ScriptLog
     }
     'Install the PowerShellGet module within the VM completed.' | Write-ScriptLog
-    
+
+    # Disable the Time synchronization in the Integration Services.
+    # Use AD DC as the NTP server for member servers are a common practice.
+    Disable-VMIntegrationService -VMName $labConfig.wac.vmName -Name 'Time Synchronization' -Passthru | Out-String | Write-ScriptLog
+
     'Join the VM to the AD domain.' | Write-ScriptLog
     $params = @{
         VMName                = $labConfig.wac.vmName

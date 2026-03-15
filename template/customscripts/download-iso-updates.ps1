@@ -64,7 +64,21 @@ function Invoke-FastFileDownload
 
     $params = @{
         FilePath     = $ToolFilePath
-        ArgumentList = '--max-connection-per-server=5 --split=5 --max-tries={0} --retry-wait={1} --timeout=60 --user-agent=Wget --file-allocation=none --log="" --dir={2} --out={3} {4}' -f $MaxRetryCount, $RetryIntervalSeconds, $DownloadFolder, $FileNameToSave, $SourceUri
+        ArgumentList = @(
+            '--max-connection-per-server=5',
+            '--split=5',
+            '--disk-cache=10240M',
+            '--file-allocation=none',
+            ('--max-tries={0}' -f $MaxRetryCount),
+            ('--retry-wait={0}' -f $RetryIntervalSeconds),
+            '--timeout=60',
+            '--user-agent=Wget',
+            '--summary-interval=0',
+            '--log=""',
+            ('--dir="{0}"' -f $DownloadFolder),
+            ('--out="{0}"' -f $FileNameToSave),
+            $SourceUri
+        ) -join ' '
         PassThru     = $true
         Wait         = $true
         NoNewWindow  = $true

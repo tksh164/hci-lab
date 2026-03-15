@@ -844,6 +844,14 @@ try {
     Remove-FileWithinVM @params
     'Delete the module files within the VM completed.' | Write-ScriptLog
 
+    # Disable the Time synchronization in the Integration Services.
+    # - Use AD DC as the NTP server for member servers are a common practice.
+    # - The Azure Local instance deployment validator will check the NTP settings and connectivity to the NTP server.
+    #   The check will fail if the source is "VM IC Time Synchronization Provider".
+    if ($labConfig.hciNode.shouldJoinToAddsDomain -or $labConfig.hciNode.isAzureLocalDeployment) {
+        Disable-VMIntegrationService -VMName $nodeConfig.VMName -Name 'Time Synchronization' -Passthru | Out-String | Write-ScriptLog
+    }
+
     if ($labConfig.hciNode.shouldJoinToAddsDomain) {
         'Join the VM to the AD domain.'  | Write-ScriptLog
         $params = @{
