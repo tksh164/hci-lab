@@ -229,7 +229,9 @@ try {
     # Windows Firewall settings for Azure Local deployment
     # Azure Local deployment validator will check the ICMP echo request (ping) connectivity from the Azure Local instance's member machine to the gateway in the management network.
     # The validation process will fail if the gateway does not respond to the ICMP echo request (ping) from the member machine.
+    'Enable the ICMP4 Echo Request firewall rule.' | Write-ScriptLog
     Enable-NetFirewallRule -Name 'CoreNet-Diag-ICMP4-EchoRequest-In'
+    'Enable the ICMP4 Echo Request firewall rule completed.' | Write-ScriptLog
 
     # Tweaks for Windows
 
