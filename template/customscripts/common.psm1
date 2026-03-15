@@ -376,12 +376,12 @@ function Invoke-FileDownload
         [string] $FileNameToSave,
 
         [Parameter(Mandatory = $false)]
-        [ValidateRange(0, 3600)]
-        [int] $RetryIntervalSeconds = 30,
+        [ValidateRange(0, 1000)]
+        [int] $MaxRetryCount = 5,
 
         [Parameter(Mandatory = $false)]
-        [ValidateRange(0, 1000)]
-        [int] $MaxRetryCount = 10
+        [ValidateRange(0, 3600)]
+        [int] $RetryIntervalSeconds = 10
     )
 
     $destinationFilePath = [IO.Path]::Combine($DownloadFolder, $FileNameToSave)
@@ -391,7 +391,7 @@ function Invoke-FileDownload
             'Download the file to "{0}" from "{1}".' -f $destinationFilePath, $SourceUri | Write-ScriptLog
             $params = @{
                 FilePath     = 'C:\Windows\System32\curl.exe'
-                ArgumentList = '--location --silent --fail --output {0} {1}' -f $destinationFilePath, $SourceUri
+                ArgumentList = '--location --silent --fail --continue-at - --output {0} {1}' -f $destinationFilePath, $SourceUri
                 PassThru     = $true
                 Wait         = $true
                 NoNewWindow  = $true
