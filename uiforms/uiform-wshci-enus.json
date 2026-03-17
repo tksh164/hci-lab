@@ -1388,7 +1388,7 @@
                                         {
                                             "visible": true,
                                             "style": "Info",
-                                            "text": "You can change the Active Directory domain on the next page."
+                                            "text": "You can change the Active Directory domain name on the next page."
                                         }
                                     ]
                                 }
@@ -1399,7 +1399,7 @@
                 {
                     "name": "addsStep",
                     "label": "Active Directory",
-                    "description": "Configure details of machines that consist your Azure Local instance. The lab environment is built as a set of Hyper-V virtual machines within an Azure virtual machine using nested virtualization technology.",
+                    "description": "Configure details of Active Directory in your lab environment.",
                     "elements": [
                         {
                             "name": "addsSection",
@@ -1439,7 +1439,7 @@
                     ]
                 },
                 {
-                    "name": "workboxServersStep",
+                    "name": "workboxStep",
                     "label": "Workbox machine",
                     "description": "Configure details of the workbox machine. The workbox machine has Remote Server Administration Tools (RSAT) for Active Directory, DNS, Failover Cluster, etc. for your lab environment by default.",
                     "elements": [
@@ -1477,7 +1477,7 @@
                                         {
                                             "visible": true,
                                             "style": "Info",
-                                            "text": "HCI Lab supports Windows Admin Center installation. But it is temporary disabled. You can install Windows Admin Center manually after your lab deployment finished. <a href=\"https://learn.microsoft.com/windows-server/manage/windows-admin-center/deploy/install\">Learn more</a>"
+                                            "text": "HCI Lab supports Windows Admin Center installation. But it is temporary disabled. You can install Windows Admin Center manually after your lab environment deployment finished. <a href=\"https://learn.microsoft.com/windows-server/manage/windows-admin-center/deploy/install\">Learn more</a>"
                                         }
                                     ]
                                 }
@@ -1535,7 +1535,7 @@
                             "multiLine": false,
                             "label": "Time zone",
                             "toolTip": "Specify the time zone of the operating systems for all servers in your lab environment.",
-                            "placeholder": "",
+                            "placeholder": "Select the time zone...",
                             "defaultDescription": "---",
                             "filterPlaceholder": "Filter time zones...",
                             "defaultValue": "(UTC) Coordinated Universal Time",

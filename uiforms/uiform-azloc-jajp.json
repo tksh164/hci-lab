@@ -3,19 +3,19 @@
     "view": {
         "kind": "Form",
         "properties": {
-            "title": "Azure Local Lab 🧪🔬",
+            "title": "Azure Local ラボ 🧪🔬",
             "steps": [
                 {
                     "name": "basics",
                     "label": "Basics",
-                    "description": "This template will deploy a lab environment for Azure Local on a single Azure virtual machine.",
+                    "description": "このテンプレートは、単一の Azure 仮想マシン上に Azure Local のラボ環境を展開します。",
                     "elements": [
                         {
                             "name": "resourceScope",
                             "type": "Microsoft.Common.ResourceScope",
                             "location": {
                                 "label": "Region",
-                                "toolTip": "Specify the region to deploy your lab environment.",
+                                "toolTip": "ラボ環境を展開するリージョンを指定します。",
                                 "resourceTypes": [
                                     "Microsoft.Resources/resourceGroups"
                                 ]
@@ -26,20 +26,20 @@
                             "type": "Microsoft.Common.TextBox",
                             "visible": true,
                             "multiLine": false,
-                            "label": "Lab host VM name",
-                            "toolTip": "Specify the virtual machine resource name that host your lab environment. The name used as an Azure resource identifier for it, not used for the computer name of the guest operating system.",
-                            "placeholder": "e.g. labenv-vm1",
+                            "label": "ラボ ホスト VM 名",
+                            "toolTip": "ラボ環境をホストする仮想マシンリソース名を指定します。この名前は、Azureリソース識別子として使用されるものであり、ゲストオペレーティングシステムのコンピュータ名として使用されるものではありません。",
+                            "placeholder": "例: labenv-vm1",
                             "defaultValue": "labenv-vm1",
                             "constraints": {
                                 "required": true,
                                 "validations": [
                                     {
                                         "regex": "^(?!\\-.+$)(?!.+\\-$)[a-zA-Z0-9\\-]+$",
-                                        "message": "Virtual machine name can contain all alphanumeric characters and '-', also, not begin with '-' and not end with '-'."
+                                        "message": "仮想マシン名に含められるのはすべての英数字と '-' です。加えて、'-' で開始したり、'-' で終了することはできません。"
                                     },
                                     {
                                         "regex": "^.{1,64}$",
-                                        "message": "Virtual machine name must be between 1 and 64 characters long."
+                                        "message": "仮想マシン名は 1 ～ 64 文字にする必要があります。"
                                     }
                                 ]
                             }
@@ -48,8 +48,8 @@
                             "name": "vmSize",
                             "type": "Microsoft.Compute.SizeSelector",
                             "visible": true,
-                            "label": "Size",
-                            "toolTip": "Specify the size of the virtual machine that host your lab environment.",
+                            "label": "サイズ",
+                            "toolTip": "ラボ環境をホストする仮想マシンのサイズを指定します。",
                             "scope": {
                                 "subscriptionId": "[steps('basics').resourceScope.subscription.subscriptionId]",
                                 "location": "[steps('basics').resourceScope.location.name]"
@@ -166,7 +166,7 @@
                             "visible": true,
                             "options": {
                                 "style": "Info",
-                                "text": "128 GiB memory is the real minimum when you deploy any workloads on your Azure Local instance. You may need more memory if you deploy hybrid services on your Azure Local instance because this lab environment has multiple Hyper-V VMs such as machines of an Azure Local instance, an AD domain controller and a workbox machine on a single Azure Virtual machine.<ul><li><a href='https://learn.microsoft.com/azure/virtual-machines/sizes'>Azure Virtual Machine sizes</a></li><li><a href='https://azure.microsoft.com/pricing/details/virtual-machines/windows'>Windows Virtual Machines pricing</a></li></ul>"
+                                "text": "Azure Local インスタンスにワークロードを展開する場合、128 GiB メモリが実質的な最小要件です。Azure Local インスタンスにハイブリッド サービスを展開する場合は、より多くのメモリが必要になる可能性があります。このラボ環境では、単一の Azure 仮想マシン上に Azure Local インスタンスのマシン、AD ドメイン コントローラー、ワークボックス マシンなど、複数の Hyper-V 仮想マシンが存在するためです。<ul><li><a href='https://learn.microsoft.com/azure/virtual-machines/sizes'>Azure の仮想マシンのサイズ</a></li><li><a href='https://azure.microsoft.com/pricing/details/virtual-machines/windows'>Windows Virtual Machines の料金</a></li></ul>"
                             }
                         },
                         {
@@ -185,22 +185,22 @@
                             "name": "adminAccountSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
-                            "label": "Administrator account",
+                            "label": "管理者アカウント",
                             "elements": [
                                 {
                                     "name": "adminAccountSectionText",
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "Specify the administrator account credentials. The credentials are used for the local administrator account and the domain administrator account in your lab environment."
+                                        "text": "管理者アカウントの認証情報を指定します。この認証情報は、ラボ環境内のローカル管理者アカウントおよびドメイン管理者アカウントに使用されます。"
                                     }
                                 },
                                 {
                                     "name": "adminUserName",
                                     "type": "Microsoft.Compute.UserNameTextBox",
                                     "visible": true,
-                                    "label": "Username",
-                                    "toolTip": "Specify the administrator username.",
+                                    "label": "ユーザー名",
+                                    "toolTip": "管理者ユーザー名を指定します。",
                                     "osPlatform": "Windows",
                                     "constraints": {
                                         "required": true
@@ -211,11 +211,11 @@
                                     "type": "Microsoft.Compute.CredentialsCombo",
                                     "visible": true,
                                     "label": {
-                                        "password": "Password",
-                                        "confirmPassword": "Confirm password"
+                                        "password": "パスワード",
+                                        "confirmPassword": "パスワードの確認"
                                     },
                                     "toolTip": {
-                                        "password": "Specify the administrator password."
+                                        "password": "管理者パスワードを指定します。"
                                     },
                                     "osPlatform": "Windows",
                                     "constraints": {
@@ -231,16 +231,16 @@
                             "name": "azureHybridBenefitSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
-                            "label": "Azure Hybrid Benefit",
+                            "label": "Azure ハイブリッド特典",
                             "elements": [
                                 {
                                     "name": "azureHybridBenefitSectionText",
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "Save up to 49% with a license you already own using Azure Hybrid Benefit.",
+                                        "text": "Azure ハイブリッド特典を使用すれば、既に所有しているライセンスで最大 49% 節約できます。",
                                         "link": {
-                                            "label": "Learn more",
+                                            "label": "詳細情報",
                                             "uri": "https://go.microsoft.com/fwlink/?linkid=2257944"
                                         }
                                     }
@@ -248,7 +248,7 @@
                                 {
                                     "name": "isUseExistingWindowsServerLicense",
                                     "type": "Microsoft.Common.CheckBox",
-                                    "label": "Would you like to use an existing Windows Server license?",
+                                    "label": "既存の Windows Server ライセンスを使用しますか?",
                                     "visible": true,
                                     "defaultValue": false,
                                     "constraints": {
@@ -258,12 +258,12 @@
                                 {
                                     "name": "hasEligibleWindowsServerLicense",
                                     "type": "Microsoft.Common.CheckBox",
-                                    "label": "I confirm I have an eligible Windows Server license with Software Assurance or Windows Server subscription to apply this Azure Hybrid Benefit.",
+                                    "label": "この Azure ハイブリッド特典の適用対象となる、ソフトウェア アシュアランス付きの Windows Server ライセンスまたは Windows Server サブスクリプションを所有しています。",
                                     "visible": "[steps('basics').azureHybridBenefitSection.isUseExistingWindowsServerLicense]",
                                     "defaultValue": false,
                                     "constraints": {
                                         "required": true,
-                                        "validationMessage": "Please confirm."
+                                        "validationMessage": "確認してください。"
                                     }
                                 },
                                 {
@@ -273,7 +273,7 @@
                                     "options": {
                                         "text": "",
                                         "link": {
-                                            "label": "Review Azure hybrid benefit compliance",
+                                            "label": "Azure ハイブリッド特典のコンプライアンスを確認します",
                                             "uri": "http://go.microsoft.com/fwlink/?LinkId=859786"
                                         }
                                     }
@@ -286,21 +286,21 @@
                             "visible": true,
                             "options": {
                                 "style": "Info",
-                                "text": "The deployment will take <strong>about 30 to 90 minutes, or more</strong> depending on your deployment options."
+                                "text": "デプロイには、選択したデプロイ オプションに応じて、<strong>約 30 分～ 90 分、またはそれ以上</strong>かかります。"
                             }
                         }
                     ]
                 },
                 {
                     "name": "labHostStep",
-                    "label": "Lab host",
-                    "description": "Configure details for the Azure virtual machine that host your lab environment.",
+                    "label": "ラボ ホスト",
+                    "description": "ラボ環境をホストする Azure 仮想マシンの詳細を設定します。",
                     "elements": [
                         {
                             "name": "diskSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
-                            "label": "Disks",
+                            "label": "ディスク",
                             "elements": [
                                 {
                                     "name": "osDiskType",
@@ -310,11 +310,11 @@
                                     "selectAll": false,
                                     "filter": false,
                                     "multiLine": true,
-                                    "label": "OS disk type",
-                                    "toolTip": "You can select Azure managed disks type based on your workload or scenario.",
-                                    "placeholder": "Select the OS disk type...",
+                                    "label": "OS ディスクの種類",
+                                    "toolTip": "ワークロードやシナリオに基づいて、Azure マネージド ディスクの種類を選択します。",
+                                    "placeholder": "OS ディスクの種類を選択...",
                                     "defaultDescription": "---",
-                                    "filterPlaceholder": "Filter OS disk types...",
+                                    "filterPlaceholder": "OS ディスクの種類をフィルター...",
                                     "defaultValue": "Standard SSD (LRS)",
                                     "constraints": {
                                         "required": true,
@@ -322,17 +322,17 @@
                                             {
                                                 "label": "Premium SSD (LRS)",
                                                 "value": "Premium_LRS",
-                                                "description": "Best for production and performance sensitive workloads. Locally-redundant storage (data is replicated within a single datacenter)."
+                                                "description": "実稼働およびパフォーマンスが要求されるワークロードに最適です。ローカル冗長ストレージ (データは単一のデータセンター内でレプリケートされます)。"
                                             },
                                             {
                                                 "label": "Standard SSD (LRS)",
                                                 "value": "StandardSSD_LRS",
-                                                "description": "Best for web servers, lightly used enterprise applications and dev/test. Locally-redundant storage (data is replicated within a single datacenter)."
+                                                "description": "Web サーバー、使用頻度の低いエンタープライズ アプリケーション、Dev/Test に最適です。ローカル冗長ストレージ (データは単一のデータセンター内でレプリケートされます)。"
                                             },
                                             {
                                                 "label": "Standard HDD (LRS)",
                                                 "value": "Standard_LRS",
-                                                "description": "Best for backup, non-critical, and infrequent access. Locally-redundant storage (data is replicated within a single datacenter)."
+                                                "description": "バックアップ用、重要でない、頻度の低いアクセスに最適です。ローカル冗長ストレージ (データは単一のデータセンター内でレプリケートされます)。"
                                             }
                                         ]
                                     }
@@ -345,11 +345,11 @@
                                     "selectAll": false,
                                     "filter": false,
                                     "multiLine": true,
-                                    "label": "Data disk type",
-                                    "toolTip": "You can select Azure managed disks type based on your workload or scenario.",
-                                    "placeholder": "Select the data disk type...",
+                                    "label": "データ ディスクの種類",
+                                    "toolTip": "ワークロードやシナリオに基づいて、Azure マネージド ディスクの種類を選択します。",
+                                    "placeholder": "データ ディスクの種類を選択...",
                                     "defaultDescription": "---",
-                                    "filterPlaceholder": "Filter data disk types...",
+                                    "filterPlaceholder": "データ ディスクの種類をフィルター...",
                                     "defaultValue": "Standard SSD (LRS)",
                                     "constraints": {
                                         "required": true,
@@ -357,12 +357,12 @@
                                             {
                                                 "label": "Premium SSD (LRS)",
                                                 "value": "Premium_LRS",
-                                                "description": "Best for production and performance sensitive workloads. Locally-redundant storage (data is replicated within a single datacenter)."
+                                                "description": "実稼働およびパフォーマンスが要求されるワークロードに最適です。ローカル冗長ストレージ (データは単一のデータセンター内でレプリケートされます)。"
                                             },
                                             {
                                                 "label": "Standard SSD (LRS)",
                                                 "value": "StandardSSD_LRS",
-                                                "description": "Best for web servers, lightly used enterprise applications and dev/test. Locally-redundant storage (data is replicated within a single datacenter)."
+                                                "description": "Web サーバー、使用頻度の低いエンタープライズ アプリケーション、Dev/Test に最適です。ローカル冗長ストレージ (データは単一のデータセンター内でレプリケートされます)。"
                                             }
                                         ]
                                     }
@@ -373,14 +373,14 @@
                             "name": "dataVolumeSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
-                            "label": "Data volume",
+                            "label": "データ ボリューム",
                             "elements": [
                                 {
                                     "name": "dataVolumeSectionText",
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "All assets and artifacts for your lab environment such as VMs, VHDs, ISOs are stored on a single data volume on the Azure virtual machine that host your lab environment. The data volume is striped to get better performance and the capacity of the volume cannot change after finish deployment the lab environment."
+                                        "text": "ラボ環境用のすべてのアセットおよび成果物 (VM、VHD、ISO など) は、ラボ環境をホストする Azure 仮想マシン上の単一データ ボリュームに保存されます。データ ボリュームはパフォーマンス向上のためにストライピングされており、ラボ環境のデプロイ完了後はボリュームの容量を変更できません。"
                                     }
                                 },
                                 {
@@ -391,11 +391,11 @@
                                     "selectAll": false,
                                     "filter": false,
                                     "multiLine": true,
-                                    "label": "Data volume capacity",
-                                    "toolTip": "The data volume capacity on your lab environment.",
-                                    "placeholder": "Select the data volume capacity...",
+                                    "label": "データ ボリュームの容量",
+                                    "toolTip": "ラボ環境のデータ ボリュームの容量です。",
+                                    "placeholder": "データ ボリュームの容量を選択...",
                                     "defaultDescription": "---",
-                                    "filterPlaceholder": "Filter data volume capacities...",
+                                    "filterPlaceholder": "データ ボリュームの容量をフィルター...",
                                     "defaultValue": "[format('{0} GiB', mul(64, first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount))))]",
                                     "constraints": {
                                         "required": true,
@@ -455,9 +455,9 @@
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "Bastion Developer is a free, lightweight offering of the Azure Bastion service. It is ideal for Dev/Test users who want to securely connect to their VMs, but don't need additional Bastion features or host scaling.",
+                                        "text": "Bastion Developer は、Azure Bastion サービスの無償の軽量版です。VM にセキュアに接続したく、Bastion の追加機能やホストのスケーリングは不要という開発やテスト目的のユーザに最適です。",
                                         "link": {
-                                            "label": "Learn more",
+                                            "label": "詳細情報",
                                             "uri": "https://learn.microsoft.com/azure/bastion/quickstart-developer"
                                         }
                                     }
@@ -467,17 +467,17 @@
                                     "type": "Microsoft.Common.OptionsGroup",
                                     "visible": true,
                                     "label": "Azure Bastion Developer",
-                                    "toolTip": "Bastion Developer is a free, lightweight offering of the Azure Bastion service.",
-                                    "defaultValue": "Enable",
+                                    "toolTip": "Bastion Developer は、Azure Bastion サービスの無償の軽量版です。",
+                                    "defaultValue": "有効にする",
                                     "constraints": {
                                         "required": true,
                                         "allowedValues": [
                                             {
-                                                "label": "Enable",
+                                                "label": "有効にする",
                                                 "value": true
                                             },
                                             {
-                                                "label": "Disable",
+                                                "label": "無効にする",
                                                 "value": false
                                             }
                                         ]
@@ -496,7 +496,7 @@
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "Select apps to be installed on the Azure virtual machine that host your lab environment during the deployment of the lab environment."
+                                        "text": "ラボ環境の展開中に、ラボ環境をホストする Azure 仮想マシンにインストールするアプリを選択します。"
                                     }
                                 },
                                 {
@@ -504,17 +504,17 @@
                                     "type": "Microsoft.Common.OptionsGroup",
                                     "visible": true,
                                     "label": "Visual Studio Code",
-                                    "toolTip": "Visual Studio Code is a lightweight but powerful source code editor which runs on your desktop. <a href='https://code.visualstudio.com'>more</a>",
-                                    "defaultValue": "Not install",
+                                    "toolTip": "Visual Studio Codeは、デスクトップ上で動作する軽量かつ強力なソース コード エディターです。<a href='https://code.visualstudio.com'>詳細情報</a>",
+                                    "defaultValue": "インストールしない",
                                     "constraints": {
                                         "required": true,
                                         "allowedValues": [
                                             {
-                                                "label": "Install",
+                                                "label": "インストールする",
                                                 "value": true
                                             },
                                             {
-                                                "label": "Not install",
+                                                "label": "インストールしない",
                                                 "value": false
                                             }
                                         ]
@@ -526,16 +526,16 @@
                             "name": "autoshutdownSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
-                            "label": "Auto-shutdown",
+                            "label": "自動シャットダウン",
                             "elements": [
                                 {
                                     "name": "autoshutdownSectionText",
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "Select auto-shutdown whether enable or not for the Azure virtual machine that host your lab environment.",
+                                        "text": "ラボ環境をホストする Azure 仮想マシンに対して、自動シャットダウンを有効にするか無効にするかを選択します。",
                                         "link": {
-                                            "label": "Learn more",
+                                            "label": "詳細情報",
                                             "uri": "https://learn.microsoft.com/azure/virtual-machines/auto-shutdown-vm"
                                         }
                                     }
@@ -544,18 +544,18 @@
                                     "name": "shouldEnabledAutoshutdown",
                                     "type": "Microsoft.Common.OptionsGroup",
                                     "visible": true,
-                                    "label": "Auto-shutdown",
-                                    "toolTip": "Configures your virtual machine to automatically shutdown daily.",
-                                    "defaultValue": "Disable",
+                                    "label": "自動シャットダウン",
+                                    "toolTip": "仮想マシンを自動的に毎日シャットダウンするよう構成します。",
+                                    "defaultValue": "無効にする",
                                     "constraints": {
                                         "required": true,
                                         "allowedValues": [
                                             {
-                                                "label": "Enable",
+                                                "label": "有効にする",
                                                 "value": true
                                             },
                                             {
-                                                "label": "Disable",
+                                                "label": "無効にする",
                                                 "value": false
                                             }
                                         ]
@@ -569,11 +569,11 @@
                                     "selectAll": false,
                                     "filter": true,
                                     "multiLine": false,
-                                    "label": "Shutdown time",
-                                    "toolTip": "Configures the time when the virtual machine shuts down daily.",
+                                    "label": "シャットダウン時刻",
+                                    "toolTip": "仮想マシンを毎日シャットダウンする時刻を構成します。",
                                     "placeholder": "",
                                     "defaultDescription": "---",
-                                    "filterPlaceholder": "Filter shutdown time...",
+                                    "filterPlaceholder": "シャットダウン時刻をフィルター...",
                                     "defaultValue": "10:00 PM (22:00)",
                                     "constraints": {
                                         "required": true,
@@ -781,11 +781,11 @@
                                     "selectAll": false,
                                     "filter": true,
                                     "multiLine": false,
-                                    "label": "Time zone",
-                                    "toolTip": "Configure the time zone in which the auto-shutdown time is.",
+                                    "label": "タイム ゾーン",
+                                    "toolTip": "自動シャットダウン時刻のタイム ゾーンを構成します。",
                                     "placeholder": "",
                                     "defaultDescription": "---",
-                                    "filterPlaceholder": "Filter time zones...",
+                                    "filterPlaceholder": "タイム ゾーンをフィルター...",
                                     "defaultValue": "(UTC) Coordinated Universal Time",
                                     "constraints": {
                                         "required": true,
@@ -1224,20 +1224,20 @@
                 {
                     "name": "azureLocalStep",
                     "label": "Azure Local",
-                    "description": "Configure details of machines that consist your Azure Local instance. The lab environment is built as a set of Hyper-V virtual machines within an Azure virtual machine using nested virtualization technology.",
+                    "description": "Azure Local インスタンスを構成するマシンの詳細を設定します。ラボ環境は、ネストされた仮想化技術を使用して Azure 仮想マシン内に構築された Hyper-V 仮想マシンのセットとして構築されます。",
                     "elements": [
                         {
                             "name": "machineConfigSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
-                            "label": "Machine configuration",
+                            "label": "マシン構成",
                             "elements": [
                                 {
                                     "name": "machineConfigSectionText",
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "Select configuration of machines that consist your Azure Local instance."
+                                        "text": "Azure Local インスタンスを構成するマシンの構成を選択します。"
                                     }
                                 },
                                 {
@@ -1248,26 +1248,18 @@
                                     "selectAll": false,
                                     "filter": true,
                                     "multiLine": true,
-                                    "label": "Operating system",
-                                    "toolTip": "Select the operating system for the machines in your lab environment.",
-                                    "placeholder": "Select the machines' operating system...",
+                                    "label": "オペレーティング システム",
+                                    "toolTip": "ラボ環境のマシンに使用するオペレーティング システムを選択します。",
+                                    "placeholder": "マシンのオペレーティング システムを選択...",
                                     "defaultDescription": "---",
-                                    "filterPlaceholder": "Filter machines' operating systems...",
-                                    "defaultValue": "Azure Local 2602",
+                                    "filterPlaceholder": "マシンのオペレーティング システムをフィルター...",
+                                    "defaultValue": "Azure Local 2601",
                                     "constraints": {
                                         "required": true,
                                         "allowedValues": [
                                             {
-                                                "label": "Azure Local 2602",
-                                                "description": "The latest generally available version.",
-                                                "value": {
-                                                    "sku": "azloc24h2_2602",
-                                                    "imageIndex": 1
-                                                }
-                                            },
-                                            {
                                                 "label": "Azure Local 2601",
-                                                "description": "The previous version.",
+                                                "description": "最新の一般提供バージョンです。",
                                                 "value": {
                                                     "sku": "azloc24h2_2601",
                                                     "imageIndex": 1
@@ -1275,7 +1267,7 @@
                                             },
                                             {
                                                 "label": "Azure Local 2512",
-                                                "description": "The previous version.",
+                                                "description": "以前のバージョンです。",
                                                 "value": {
                                                     "sku": "azloc24h2_2512",
                                                     "imageIndex": 1
@@ -1283,7 +1275,7 @@
                                             },
                                             {
                                                 "label": "Azure Local 2511",
-                                                "description": "The previous version.",
+                                                "description": "以前のバージョンです。",
                                                 "value": {
                                                     "sku": "azloc24h2_2511",
                                                     "imageIndex": 1
@@ -1291,7 +1283,7 @@
                                             },
                                             {
                                                 "label": "Azure Local 2510",
-                                                "description": "The previous version.",
+                                                "description": "以前のバージョンです。",
                                                 "value": {
                                                     "sku": "azloc24h2_2510",
                                                     "imageIndex": 1
@@ -1299,79 +1291,79 @@
                                             },
                                             {
                                                 "label": "Azure Local 2509",
-                                                "description": "The previous version.",
+                                                "description": "以前のバージョンです。",
                                                 "value": {
                                                     "sku": "azloc24h2_2509",
                                                     "imageIndex": 1
                                                 }
                                             },
                                             {
-                                                "label": "Azure Local 2508 [End of support]",
-                                                "description": "<strong>Notice:</strong> This version reached the end of support.",
+                                                "label": "Azure Local 2508",
+                                                "description": "以前のバージョンです。",
                                                 "value": {
                                                     "sku": "azloc24h2_2508",
                                                     "imageIndex": 1
                                                 }
                                             },
                                             {
-                                                "label": "Azure Local 2507 [End of support]",
-                                                "description": "<strong>Notice:</strong> This version reached the end of support.",
+                                                "label": "Azure Local 2507 [サポート終了]",
+                                                "description": "<strong>注意:</strong> このバージョンのサポート期間は終了しました。",
                                                 "value": {
                                                     "sku": "azloc24h2_2507",
                                                     "imageIndex": 1
                                                 }
                                             },
                                             {
-                                                "label": "Azure Local 2506 [End of support]",
-                                                "description": "<strong>Notice:</strong> This version reached the end of support.",
+                                                "label": "Azure Local 2506 [サポート終了]",
+                                                "description": "<strong>注意:</strong> このバージョンのサポート期間は終了しました。",
                                                 "value": {
                                                     "sku": "azloc24h2_2506",
                                                     "imageIndex": 1
                                                 }
                                             },
                                             {
-                                                "label": "Azure Local 2505 [End of support]",
-                                                "description": "<strong>Notice:</strong> This version reached the end of support.",
+                                                "label": "Azure Local 2505 [サポート終了]",
+                                                "description": "<strong>注意:</strong> このバージョンのサポート期間は終了しました。",
                                                 "value": {
                                                     "sku": "azloc24h2_2505",
                                                     "imageIndex": 1
                                                 }
                                             },
                                             {
-                                                "label": "Azure Local 2504 [End of support]",
-                                                "description": "<strong>Notice:</strong> This version reached the end of support.",
+                                                "label": "Azure Local 2504 [サポート終了]",
+                                                "description": "<strong>注意:</strong> このバージョンのサポート期間は終了しました。",
                                                 "value": {
                                                     "sku": "azloc24h2_2504",
                                                     "imageIndex": 1
                                                 }
                                             },
                                             {
-                                                "label": "Azure Local 2503 [End of support]",
-                                                "description": "<strong>Notice:</strong> This version reached the end of support.",
+                                                "label": "Azure Local 2503 [サポート終了]",
+                                                "description": "<strong>注意:</strong> このバージョンのサポート期間は終了しました。",
                                                 "value": {
                                                     "sku": "ashci23h2",
                                                     "imageIndex": 1
                                                 }
                                             },
                                             {
-                                                "label": "Azure Stack HCI, version 22H2 [End of support]",
-                                                "description": "<strong>Notice:</strong> This version reached the end of support on May 31, 2025.",
+                                                "label": "Azure Stack HCI, version 22H2 [サポート終了]",
+                                                "description": "<strong>注意:</strong> このバージョンは 2025 年 5 月 31 日にサポート終了しました。",
                                                 "value": {
                                                     "sku": "ashci22h2",
                                                     "imageIndex": 1
                                                 }
                                             },
                                             {
-                                                "label": "Azure Stack HCI, version 21H2 [End of support]",
-                                                "description": "<strong>Notice:</strong> This version reached the end of support on November 14, 2023.",
+                                                "label": "Azure Stack HCI, version 21H2 [サポート終了]",
+                                                "description": "<strong>注意:</strong> このバージョンは 2023 年 11 月 14 日にサポート終了しました。",
                                                 "value": {
                                                     "sku": "ashci21h2",
                                                     "imageIndex": 1
                                                 }
                                             },
                                             {
-                                                "label": "Azure Stack HCI, version 20H2 [End of support]",
-                                                "description": "<strong>Notice:</strong> This version reached the end of support on December 13, 2022.",
+                                                "label": "Azure Stack HCI, version 20H2 [サポート終了]",
+                                                "description": "<strong>注意:</strong> このバージョンは 2022 年 12 月 13 日にサポート終了しました。",
                                                 "value": {
                                                     "sku": "ashci20h2",
                                                     "imageIndex": 1
@@ -1384,9 +1376,9 @@
                                     "name": "azLocMachineCount",
                                     "type": "Microsoft.Common.Slider",
                                     "visible": true,
-                                    "label": "Number of machines",
-                                    "subLabel": "machines",
-                                    "toolTip": "Specify the machine count to deploy in your lab environment.",
+                                    "label": "マシンの台数",
+                                    "subLabel": "台",
+                                    "toolTip": "ラボ環境に展開するマシンの台数を指定します。",
                                     "showStepMarkers": true,
                                     "constraints": {
                                         "required": true
@@ -1402,20 +1394,20 @@
                 {
                     "name": "addsStep",
                     "label": "Active Directory",
-                    "description": "Configure details of Active Directory Domain Services in your lab environment. An ADDS domain controller will be created as a Hyper-V virtual machine during the lab environment deployment.",
+                    "description": "ラボ環境における Active Directory ドメイン サービス(ADDS) の詳細を設定します。ラボ環境の展開中に、ADDS ドメイン コントローラーが Hyper-V 仮想マシンとして作成されます。",
                     "elements": [
                         {
                             "name": "addsSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
-                            "label": "Active Directory domain",
+                            "label": "Active Directory ドメイン",
                             "elements": [
                                 {
                                     "name": "addsSectionText",
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "Specify the FQDN domain of Active Directory Domain Services for your lab environment. An ADDS domain controller will be configured with specified domain during the lab environment deployment."
+                                        "text": "ラボ環境用の Active Directory ドメイン サービスの完全修飾ドメイン名 (FQDN) を指定します。ラボ環境の展開中に、指定されたドメインで ADDS ドメイン コントローラーが構成されます。"
                                     }
                                 },
                                 {
@@ -1423,16 +1415,16 @@
                                     "type": "Microsoft.Common.TextBox",
                                     "visible": true,
                                     "multiLine": false,
-                                    "label": "AD domain FQDN",
-                                    "toolTip": "Specify the AD domain FQDN for your lab environment.",
-                                    "placeholder": "e.g. lab.internal",
+                                    "label": "AD ドメイン FQDN",
+                                    "toolTip": "ラボ環境の AD ドメインの完全修飾ドメイン名 (FQDN) を指定します。",
+                                    "placeholder": "例: lab.internal",
                                     "defaultValue": "lab.internal",
                                     "constraints": {
                                         "required": true,
                                         "validations": [
                                             {
                                                 "regex": "^(?!-)[A-Za-z0-9-]+([\\-\\.]{1}[a-z0-9]+)*\\.[A-Za-z]+$",
-                                                "message": "Invalid AD domain FQDN."
+                                                "message": "無効な AD ドメイン FQDN です。"
                                             }
                                         ]
                                     }
@@ -1443,32 +1435,32 @@
                             "name": "azureLocalPrepSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
-                            "label": "Preparation for Azure Local deployment",
+                            "label": "Azure Local をデプロイするための準備",
                             "elements": [
                                 {
                                     "name": "azureLocalPrepSectionText",
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "Most Azure Local deployments require some preparations to Active Directory before you start deploy Azure Local instances."
+                                        "text": "ほとんどの Azure Local デプロイでは、Azure Local のデプロイを開始する前に Active Directory に対する何らかの準備が必要です。"
                                     }
                                 },
                                 {
                                     "name": "shouldPrepareAddsForAzureLocal",
                                     "type": "Microsoft.Common.OptionsGroup",
                                     "visible": true,
-                                    "label": "Active Directory preparation for Azure Local deployment",
-                                    "toolTip": "Select whether to prepare Active Directory for Azure Local instances during your lab environment deployment.",
-                                    "defaultValue": "Prepare Active Directory",
+                                    "label": "Azure Local デプロイのための Active Directory の準備",
+                                    "toolTip": "ラボ環境の展開中に Azure Local インスタンスのために Active Directory の準備をするかどうかを選択します。",
+                                    "defaultValue": "Active Directory の準備をする",
                                     "constraints": {
                                         "required": true,
                                         "allowedValues": [
                                             {
-                                                "label": "Prepare Active Directory",
+                                                "label": "Active Directory の準備をする",
                                                 "value": true
                                             },
                                             {
-                                                "label": "Not prepare Active Directory",
+                                                "label": "Active Directory の準備をしない",
                                                 "value": false
                                             }
                                         ]
@@ -1479,16 +1471,16 @@
                                     "type": "Microsoft.Common.TextBox",
                                     "visible": "[steps('addsStep').azureLocalPrepSection.shouldPrepareAddsForAzureLocal]",
                                     "multiLine": false,
-                                    "label": "AD organization unit (OU) for Azure Local",
-                                    "toolTip": "Specify the organization unit to place the Azure Local related AD objects such as computer objects.",
-                                    "placeholder": "e.g. OU=AzureLocal,DC=lab,DC=internal",
+                                    "label": "Azure Local 用の AD 組織単位 (OU)",
+                                    "toolTip": "コンピューター オブジェクトなどの Azure Local 関連の AD オブジェクトを配置する組織単位 (OU) を指定します。",
+                                    "placeholder": "例: OU=AzureLocal,DC=lab,DC=internal",
                                     "defaultValue": "OU=AzureLocal,DC=lab,DC=internal",
                                     "constraints": {
                                         "required": true,
                                         "validations": [
                                             {
                                                 "regex": "^(OU=[^,]+,)+(DC=[^,]+,)*DC=[^,]+$",
-                                                "message": "Invalid distinguished name (DN) format for an organization unit (OU). It should be specify like 'OU=AzureLocal,DC=lab,DC=internal'."
+                                                "message": "組織単位 (OU) の識別名 (DN) 形式が無効です。次のように指定する必要があります: 'OU=AzureLocal,DC=lab,DC=internal'."
                                             }
                                         ]
                                     },
@@ -1496,7 +1488,7 @@
                                         {
                                             "visible": true,
                                             "style": "Info",
-                                            "text": "You need update the OU's distinguished name too if you changed the AD domain FQDN in above because the OU's distinguished name has AD domain FQDN."
+                                            "text": "上の入力項目で AD ドメインの完全修飾ドメイン名 (FQDN) を変更した場合、OU の識別名にも AD ドメインの FQDN が含まれているため、OU の識別名も更新する必要があります。"
                                         }
                                     ]
                                 },
@@ -1505,9 +1497,9 @@
                                     "type": "Microsoft.Common.TextBox",
                                     "visible": "[steps('addsStep').azureLocalPrepSection.shouldPrepareAddsForAzureLocal]",
                                     "multiLine": false,
-                                    "label": "Lifecycle Manager (LCM) user account name",
-                                    "toolTip": "Specify the name of the Lifecycle Manager (LCM) user account.",
-                                    "placeholder": "e.g. lcmuser",
+                                    "label": "Lifecycle Manager (LCM) ユーザー アカウント名",
+                                    "toolTip": "Lifecycle Manager (LCM) ユーザー アカウントの名前を指定します。",
+                                    "placeholder": "例: lcmuser",
                                     "defaultValue": "lcmuser",
                                     "constraints": {
                                         "required": true
@@ -1516,12 +1508,12 @@
                                         {
                                             "visible": true,
                                             "style": "Info",
-                                            "text": "The LCM user account will be used as the deployment account during Azure Local instance deployment."
+                                            "text": "LCM ユーザー アカウントは、Azure Local インスタンスのデプロイ時に、デプロイ アカウントとして使用されます。"
                                         },
                                         {
                                             "visible": true,
                                             "style": "Info",
-                                            "text": "The password for the LCM user account is set to the same password as the administrator account that you specify in the previous page."
+                                            "text": "LCM ユーザー アカウントのパスワードは、前のページで指定した管理者アカウントと同じパスワードに設定されます。"
                                         }
                                     ]
                                 }
@@ -1531,21 +1523,21 @@
                 },
                 {
                     "name": "peripheralServersStep",
-                    "label": "Peripheral servers",
-                    "description": "Configure details of peripheral servers in your lab environment. The peripheral servers include an Active Directory domain controller, a workbox machine.",
+                    "label": "周辺サーバー",
+                    "description": "ラボ環境における周辺サーバーの詳細を設定します。周辺サーバーには、Active Directory ドメイン コントローラーとワークボックス マシンが含まれます。",
                     "elements": [
                         {
                             "name": "generalConfigSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
-                            "label": "General configuration",
+                            "label": "全般的な設定",
                             "elements": [
                                 {
                                     "name": "generalConfigSectionText",
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "The general configurations will be apply all peripheral servers in your lab environment such as an Active Directory domain controller, a workbox machine except the machines that consist Azure Local instances."
+                                        "text": "一般的な構成は、Active Directory ドメイン コントローラーやワークボックス マシンなど、ラボ環境内のすべての周辺サーバーに適用されます。ただし、Azure Local インスタンスを構成するマシンは除きます。"
                                     }
                                 },
                                 {
@@ -1556,21 +1548,21 @@
                                     "selectAll": false,
                                     "filter": false,
                                     "multiLine": false,
-                                    "label": "Culture",
-                                    "toolTip": "Specify the display language, locale and input method of the operating systems for peripheral servers in your lab environment.",
-                                    "placeholder": "Select the culture...",
+                                    "label": "カルチャ",
+                                    "toolTip": "ラボ環境内の周辺サーバーのオペレーティング システムの表示言語、ロケール、入力方法を指定します。",
+                                    "placeholder": "カルチャを選択...",
                                     "defaultDescription": "---",
-                                    "filterPlaceholder": "Filter cultures...",
-                                    "defaultValue": "English (en-US)",
+                                    "filterPlaceholder": "カルチャをフィルター...",
+                                    "defaultValue": "英語 (en-US)",
                                     "constraints": {
                                         "required": true,
                                         "allowedValues": [
                                             {
-                                                "label": "English (en-US)",
+                                                "label": "英語 (en-US)",
                                                 "value": "en-us"
                                             },
                                             {
-                                                "label": "Japanese (ja-JP)",
+                                                "label": "日本語 (ja-JP)",
                                                 "value": "ja-jp"
                                             }
                                         ]
@@ -1579,7 +1571,7 @@
                                         {
                                             "visible": true,
                                             "style": "Info",
-                                            "text": "The culture represents the UI language, locale and input method."
+                                            "text": "カルチャは、UI 言語、ロケール、入力方法を表します。"
                                         }
                                     ]
                                 },
@@ -1591,11 +1583,11 @@
                                     "selectAll": false,
                                     "filter": true,
                                     "multiLine": false,
-                                    "label": "Time zone",
-                                    "toolTip": "Specify the time zone of the operating systems for peripheral servers in your lab environment.",
-                                    "placeholder": "Select the time zone...",
+                                    "label": "タイム ゾーン",
+                                    "toolTip": "ラボ環境内の周辺サーバーのオペレーティング システムのタイム ゾーンを指定します。",
+                                    "placeholder": "タイム ゾーンを選択...",
                                     "defaultDescription": "---",
-                                    "filterPlaceholder": "Filter time zones...",
+                                    "filterPlaceholder": "タイム ゾーンをフィルター...",
                                     "defaultValue": "(UTC) Coordinated Universal Time",
                                     "constraints": {
                                         "required": true,
@@ -2171,18 +2163,18 @@
                                     "name": "shouldInstallUpdatesToLabVm",
                                     "type": "Microsoft.Common.OptionsGroup",
                                     "visible": true,
-                                    "label": "Operating system's updates",
-                                    "toolTip": "Select whether to install the latest operating system's updates to peripheral servers in your lab environment during the lab environment deployment.",
-                                    "defaultValue": "Not install",
+                                    "label": "オペレーティング システムの更新プログラム",
+                                    "toolTip": "ラボ環境の展開中に、ラボ環境内の周辺サーバーに最新のオペレーティング システムの更新プログラムをインストールするかどうかを選択します。",
+                                    "defaultValue": "インストールしない",
                                     "constraints": {
                                         "required": true,
                                         "allowedValues": [
                                             {
-                                                "label": "Install",
+                                                "label": "インストールする",
                                                 "value": true
                                             },
                                             {
-                                                "label": "Not install",
+                                                "label": "インストールしない",
                                                 "value": false
                                             }
                                         ]
@@ -2191,7 +2183,7 @@
                                         {
                                             "visible": true,
                                             "style": "Info",
-                                            "text": "The operating system's updates installation will increase the deployment time of your lab environment by about 15 minutes or more."
+                                            "text": "オペレーティング システムの更新プログラムのインストールにより、ラボ環境の展開時間が約 15 分以上増加します。"
                                         }
                                     ]
                                 }
@@ -2201,14 +2193,14 @@
                             "name": "workboxSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
-                            "label": "Tools on the workbox machine",
+                            "label": "ワークボックス マシン上のツール",
                             "elements": [
                                 {
                                     "name": "workboxSectionText",
                                     "type": "Microsoft.Common.TextBlock",
                                     "visible": true,
                                     "options": {
-                                        "text": "The workbox machine has Remote Server Administration Tools (RSAT) for Active Directory, DNS, Failover Cluster, etc. for your lab environment by default. You can select additional tools to install on the workbox machine."
+                                        "text": "ワークボックス マシンには、既定で Active Directory、DNS、フェールオーバー クラスターなどのリモート サーバー管理ツール (RSAT) がラボ環境用にインストールされています。ワークボックス マシンに追加でインストールするツールを選択できます。"
                                     }
                                 },
                                 {
@@ -2216,17 +2208,17 @@
                                     "type": "Microsoft.Common.OptionsGroup",
                                     "visible": true,
                                     "label": "Configurator App for Azure Local",
-                                    "toolTip": "The Configurator App for Azure Local is bootstrap and register the machines you plan to include in your Azure Local instance. <a href=\"https://learn.microsoft.com/azure/azure-local/deploy/deployment-arc-register-configurator-app\">Learn more</a>",
-                                    "defaultValue": "Install",
+                                    "toolTip": "Configurator App for Azure Local は、Azure Local インスタンスに含める予定のマシンを初期設定し、登録します。<a href=\"https://learn.microsoft.com/azure/azure-local/deploy/deployment-arc-register-configurator-app\">詳細情報</a>",
+                                    "defaultValue": "インストールする",
                                     "constraints": {
                                         "required": true,
                                         "allowedValues": [
                                             {
-                                                "label": "Install",
+                                                "label": "インストールする",
                                                 "value": true
                                             },
                                             {
-                                                "label": "Not install",
+                                                "label": "インストールしない",
                                                 "value": false
                                             }
                                         ]
@@ -2237,13 +2229,13 @@
                                     "type": "Microsoft.Common.OptionsGroup",
                                     "visible": true,
                                     "label": "Windows Admin Center",
-                                    "toolTip": "The Windows Admin Center is a remote management tool for Windows Server. <a href=\"https://learn.microsoft.com/windows-server/manage/windows-admin-center/overview\">Learn more</a>",
-                                    "defaultValue": "Not install",
+                                    "toolTip": "Windows Admin Center は、Windows Server 用のリモート管理ツールです。<a href=\"https://learn.microsoft.com/windows-server/manage/windows-admin-center/overview\">詳細情報</a>",
+                                    "defaultValue": "インストールしない",
                                     "constraints": {
                                         "required": true,
                                         "allowedValues": [
                                             {
-                                                "label": "Not install",
+                                                "label": "インストールしない",
                                                 "value": false
                                             }
                                         ]
@@ -2252,7 +2244,7 @@
                                         {
                                             "visible": true,
                                             "style": "Info",
-                                            "text": "Azure Local Lab supports Windows Admin Center installation. But it is temporary disabled. You can install Windows Admin Center manually after your lab environment deployment finished. <a href=\"https://learn.microsoft.com/windows-server/manage/windows-admin-center/deploy/install\">Learn more</a>"
+                                            "text": "Azure Local Lab は Windows Admin Center のインストールをサポートしています。ただし、現在は一時的に無効化されています。ラボ環境のデプロイメント完了後、手動で Windows Admin Center をインストールできます。<a href=\"https://learn.microsoft.com/windows-server/manage/windows-admin-center/deploy/install\">詳細情報</a>"
                                         }
                                     ]
                                 }
@@ -2262,21 +2254,21 @@
                 },
                 {
                     "name": "advancedOptionsStep",
-                    "label": "Advanced options",
-                    "description": "This page provides advanced options.",
+                    "label": "高度なオプション",
+                    "description": "このページでは高度なオプションを設定できます。",
                     "elements": [
                         {
                             "name": "customDeploymentSection",
                             "type": "Microsoft.Common.Section",
                             "visible": true,
-                            "label": "Custom deployment",
+                            "label": "カスタム デプロイ",
                             "elements": [
                                 {
                                     "name": "shouldUseCustomDeployment",
                                     "type": "Microsoft.Common.CheckBox",
-                                    "label": "Enable custom deployment",
+                                    "label": "カスタム デプロイを有効にする",
                                     "visible": true,
-                                    "toolTip": "Check this if you want to do custom deployment.",
+                                    "toolTip": "カスタム デプロイをする場合は、チェックを付けます。",
                                     "defaultValue": false,
                                     "constraints": {
                                         "required": false
@@ -2287,8 +2279,8 @@
                                     "type": "Microsoft.Common.TextBox",
                                     "visible": "[steps('advancedOptionsStep').customDeploymentSection.shouldUseCustomDeployment]",
                                     "multiLine": false,
-                                    "label": "Base URL for artifacts",
-                                    "toolTip": "The base URL for artifacts.",
+                                    "label": "アーティファクトのベース URL",
+                                    "toolTip": "アーティファクトのベース URL です。",
                                     "placeholder": "",
                                     "defaultValue": "",
                                     "constraints": {
