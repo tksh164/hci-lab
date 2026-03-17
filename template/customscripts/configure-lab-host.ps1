@@ -6,6 +6,33 @@ $WarningPreference = [Management.Automation.ActionPreference]::Continue
 $VerbosePreference = [Management.Automation.ActionPreference]::Continue
 $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
+function Send-Telemetry
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [bool] $IsAzureLocalDeployment
+    )
+
+    try {
+        $url = if ($IsAzureLocalDeployment) {
+            'https://github.com/tksh164/hci-lab/releases/download/telemetry/azloc'
+        }
+        else {
+            'https://github.com/tksh164/hci-lab/releases/download/telemetry/wshci'
+        }
+        $response = Invoke-WebRequest -UseBasicParsing -Method Get -Uri $url -ErrorAction Stop
+        $statusCode = $response.StatusCode
+    }
+    catch {
+        $ex = $_
+        $statusCode = $ex.Exception.Response.StatusCode.value__
+    }
+
+    'Download URL as telemetry: {0}' -f $url | Write-ScriptLog
+    'Download result as telemetry: {0}' -f $statusCode | Write-ScriptLog
+}
+
 function Invoke-VSCodeInstallation
 {
     [CmdletBinding()]
@@ -65,6 +92,9 @@ try {
 
     'Lab deployment config:' | Write-ScriptLog
     $labConfig | ConvertTo-Json -Depth 16 | Write-Host
+
+    # Telemetry via GtiHub release download
+    Send-Telemetry -IsAzureLocalDeployment $labConfig.hciNode.isAzureLocalDeployment
 
     # Volume
 
