@@ -38,6 +38,12 @@
 # .NET: https://support.microsoft.com/topic/3840e994-45bc-4966-8002-78ffe2329574
 
 @{
+    'azloc24h2_2603' = @{
+        'iso' = @{
+            'en-us' = 'https://azurestackreleases.download.prss.microsoft.com/dbazure/AzureLocal/ComposedImage/12.2603.0.3012/AzureLocal24H2.26100.1742.LCM.12.2603.0.3012.x64.en-us.iso'
+        }
+        'updates' = @()
+    }
     'azloc24h2_2602' = @{
         'iso' = @{
             'en-us' = 'https://azurestackreleases.download.prss.microsoft.com/dbazure/AzureLocal/WindowsPlatform/12.2602.0.3018/AzureLocal24H2.26100.1742.LCM.12.2602.0.3018.x64.en-us.iso'
