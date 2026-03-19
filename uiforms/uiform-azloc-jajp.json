@@ -1253,13 +1253,29 @@
                                     "placeholder": "マシンのオペレーティング システムを選択...",
                                     "defaultDescription": "---",
                                     "filterPlaceholder": "マシンのオペレーティング システムをフィルター...",
-                                    "defaultValue": "Azure Local 2601",
+                                    "defaultValue": "Azure Local 2603",
                                     "constraints": {
                                         "required": true,
                                         "allowedValues": [
                                             {
-                                                "label": "Azure Local 2601",
+                                                "label": "Azure Local 2603",
                                                 "description": "最新の一般提供バージョンです。",
+                                                "value": {
+                                                    "sku": "azloc24h2_2603",
+                                                    "imageIndex": 1
+                                                }
+                                            },
+                                            {
+                                                "label": "Azure Local 2602",
+                                                "description": "以前のバージョンです。",
+                                                "value": {
+                                                    "sku": "azloc24h2_2602",
+                                                    "imageIndex": 1
+                                                }
+                                            },
+                                            {
+                                                "label": "Azure Local 2601",
+                                                "description": "以前のバージョンです。",
                                                 "value": {
                                                     "sku": "azloc24h2_2601",
                                                     "imageIndex": 1
@@ -1290,16 +1306,16 @@
                                                 }
                                             },
                                             {
-                                                "label": "Azure Local 2509",
-                                                "description": "以前のバージョンです。",
+                                                "label": "Azure Local 2509 [サポート終了]",
+                                                "description": "<strong>注意:</strong> このバージョンのサポート期間は終了しました。",
                                                 "value": {
                                                     "sku": "azloc24h2_2509",
                                                     "imageIndex": 1
                                                 }
                                             },
                                             {
-                                                "label": "Azure Local 2508",
-                                                "description": "以前のバージョンです。",
+                                                "label": "Azure Local 2508 [サポート終了]",
+                                                "description": "<strong>注意:</strong> このバージョンのサポート期間は終了しました。",
                                                 "value": {
                                                     "sku": "azloc24h2_2508",
                                                     "imageIndex": 1
