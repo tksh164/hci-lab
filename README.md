@@ -55,10 +55,10 @@ The Azure Local Lab provides a plain lab environment on Azure in reasonable prep
 | Azure Local 2512 (24H2) | 26100.7462 | The previous version of Azure Local. |
 | Azure Local 2511 (24H2) | 26100.7171 | The previous version of Azure Local. |
 | Azure Local 2510 (24H2) | 26100.6899 | The previous version of Azure Local. |
-| Azure Local 2509 (24H2) | 26100.6584 | The previous version of Azure Local. |
-| Azure Local 2508 (24H2) | 26100.4946 | The previous version of Azure Local. |
-| Azure Local 2507 (24H2) | 26100.4652 | The previous version of Azure Local. |
-| Azure Local 2506 (24H2) | 26100.4349 | The previous version of Azure Local. |
+| Azure Local 2509 (24H2) | 26100.6584 | This version of Azure Local reached the end of support. |
+| Azure Local 2508 (24H2) | 26100.4946 | This version of Azure Local reached the end of support. |
+| Azure Local 2507 (24H2) | 26100.4652 | This version of Azure Local reached the end of support. |
+| Azure Local 2506 (24H2) | 26100.4349 | This version of Azure Local reached the end of support. |
 | Azure Local 2505 (24H2) | 26100.4061 | This version of Azure Local reached the end of support. |
 | Azure Local 2504 (24H2) | 26100.3775 | This version of Azure Local reached the end of support. |
 | Azure Local 2503 (23H2)<br>Azure Stack HCI, version 23H2 | 25398.1486 | This version of Azure Local (formerly Azure Stack HCI) reached the end of support. |
