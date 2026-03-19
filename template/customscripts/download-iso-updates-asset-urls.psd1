@@ -1,41 +1,36 @@
 # Azure Local 24H2 - OS build: 26100
-#
-# OS: https://learn.microsoft.com/azure/azure-local/release-information-23h2
+#   OS: https://learn.microsoft.com/azure/azure-local/release-information-23h2
 
 # Azure Stack HCI 23H2 - OS build: 25398
-#
-# OS: https://learn.microsoft.com/azure/azure-local/release-information-23h2?view=azloc-2503
-# OS (legacy): https://support.microsoft.com/topic/018b9b10-a75b-4ad7-b9d1-7755f81e5b0b
-# .NET: https://support.microsoft.com/topic/789dbbae-ea0f-4a31-9500-dff68e9995d5
+#   OS: https://learn.microsoft.com/azure/azure-local/release-information-23h2?view=azloc-2503
+#   OS (legacy): https://support.microsoft.com/topic/018b9b10-a75b-4ad7-b9d1-7755f81e5b0b
+#   .NET: https://support.microsoft.com/topic/789dbbae-ea0f-4a31-9500-dff68e9995d5
 
 # Azure Stack HCI 22H2 - OS build: 20349
-#
-# OS: https://support.microsoft.com/topic/fea63106-a0a9-4b6c-bb72-a07985c98a56
-# .NET: https://support.microsoft.com/topic/63a78b8a-8447-4d16-a1e9-38a63493398b
-# Relese info: https://learn.microsoft.com/azure-stack/hci/release-information
+#   OS: https://support.microsoft.com/topic/fea63106-a0a9-4b6c-bb72-a07985c98a56
+#   .NET: https://support.microsoft.com/topic/63a78b8a-8447-4d16-a1e9-38a63493398b
+#   Relese info: https://learn.microsoft.com/azure-stack/hci/release-information
 
 # Azure Stack HCI 21H2 - OS build: 20348
-# End of service: 2023-11-14
-#
-# OS: https://support.microsoft.com/topic/5c5e6adf-e006-4a29-be22-f6faeff90173
-# .NET: https://support.microsoft.com/topic/78075158-2c2f-4315-ba95-c5ee0e2ee871
-#
+#   End of service: 2023-11-14
+#   OS: https://support.microsoft.com/topic/5c5e6adf-e006-4a29-be22-f6faeff90173
+#   .NET: https://support.microsoft.com/topic/78075158-2c2f-4315-ba95-c5ee0e2ee871
+
 # Azure Stack HCI 20H2 - OS build: 17784
-# End of service: 2022-12-13
-#
-# OS: https://support.microsoft.com/topic/64c79b7f-d536-015d-b8dd-575f01090efd
-# .NET: n/a
+#   End of service: 2022-12-13
+#   OS: https://support.microsoft.com/topic/64c79b7f-d536-015d-b8dd-575f01090efd
+#   .NET: n/a
 
 # Windows Server release information
-# OS: https://learn.microsoft.com/windows/release-health/windows-server-release-info
-#
+#   OS: https://learn.microsoft.com/windows/release-health/windows-server-release-info
+
 # Windows Server 2025 - OS build: 26100 - 24H2
-# OS: https://support.microsoft.com/topic/10f58da7-e57b-4a9d-9c16-9f1dcd72d7d7
-# .NET: https://support.microsoft.com/topic/c5b26beb-fca7-4619-aaf2-1e8441f3448e
-#
+#   OS: https://support.microsoft.com/topic/10f58da7-e57b-4a9d-9c16-9f1dcd72d7d7
+#   .NET: https://support.microsoft.com/topic/c5b26beb-fca7-4619-aaf2-1e8441f3448e
+
 # Windows Server 2022 - OS build: 20348 - 21H2
-# OS: https://support.microsoft.com/topic/e1caa597-00c5-4ab9-9f3e-8212fe80b2ee
-# .NET: https://support.microsoft.com/topic/3840e994-45bc-4966-8002-78ffe2329574
+#   OS: https://support.microsoft.com/topic/e1caa597-00c5-4ab9-9f3e-8212fe80b2ee
+#   .NET: https://support.microsoft.com/topic/3840e994-45bc-4966-8002-78ffe2329574
 
 @{
     'azloc24h2_2603' = @{
