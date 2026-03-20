@@ -36,17 +36,18 @@ The Azure Local Lab provides a plain lab environment on Azure in reasonable prep
 - [Frequently asked questions](./docs/hci-lab-tour.md#frequently-asked-questions): Frequently asked questions on the HCI Lab.
 - [Deploy AKS on Windows Server 2022 with HCI Lab](./docs/deploy-aks-on-ws2022-with-hcilab.md): Step by step to deploy the AKS on Windows Server 2022 with HCI Lab.
 
-## 📚 Selectable lab machine operating systems
+## 📚 Selectable operating systems for lab machines
 
-### Available
+The following operating systems are selectable for lab machines.
 
 | Operating system | OS build | Description |
 | ---- | ---- | ---- |
 | Azure Local 2603 (24H2) | 26100.32522 | The latest generally available version of Azure Local. |
 | Windows Server 2025 Datacenter Evaluation (Desktop Experience) | 26100.1742 | Windows Server 2025 Datacenter with the standard graphical user interface. |
-| Windows Server 2022 Datacenter Evaluation (Desktop Experience) | 20348.587 | Windows Server 2022 Datacenter with the standard graphical user interface. |
 
-### Selectable, but not tested
+<details>
+<summary>📚 Selectable other operating systems for lab machines</summary>
+<p>The following operating systems are still available for selection, but they have not been tested.</p>
 
 | Operating system | OS build | Description |
 | ---- | ---- | ---- |
@@ -65,6 +66,9 @@ The Azure Local Lab provides a plain lab environment on Azure in reasonable prep
 | Azure Stack HCI, version 22H2 | 20348.1607 | This version of Azure Stack HCI reached the end of support on May 31, 2025. |
 | Azure Stack HCI, version 21H2 | 20348.288 | This version of Azure Stack HCI reached the end of support on November 14, 2023. |
 | Azure Stack HCI, version 20H2 | 17784.1408 | This version of Azure Stack HCI reached the end of support on December 13, 2022. |
+| Windows Server 2022 Datacenter Evaluation (Desktop Experience) | 20348.587 | Windows Server 2022 Datacenter with the standard graphical user interface. |
+
+</details>
 
 ## ⚖️ License
 
