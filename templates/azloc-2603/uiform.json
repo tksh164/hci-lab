@@ -1,0 +1,353 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2021-09-09/uiFormDefinition.schema.json",
+    "view": {
+        "kind": "Form",
+        "properties": {
+            "title": "Azure Local",
+            "steps": [
+                {
+                    "name": "basics",
+                    "label": "Basics",
+                    "elements": [
+                        {
+                            "name": "resourceScope",
+                            "type": "Microsoft.Common.ResourceScope"
+                        },
+                        {
+                            "name": "azureLocalInstanceName",
+                            "type": "Microsoft.Common.TextBox",
+                            "visible": true,
+                            "label": "Instance name",
+                            "toolTip": "TODO",
+                            "placeholder": "e.g. azloc1",
+                            "defaultValue": "azloc1",
+                            "constraints": {
+                                "required": true,
+                                "regex": "^[a-z0-9A-Z]{1,30}$",
+                                "validationMessage": "Only alphanumeric characters are allowed, and the value must be 1-30 characters long."
+                            }
+                        },
+                        {
+                            "name": "arcMachineSection",
+                            "type": "Microsoft.Common.Section",
+                            "visible": true,
+                            "label": "Select machines",
+                            "elements": [
+                                {
+                                    "name": "getHybridMachineArgQuery",
+                                    "type": "Microsoft.Solutions.ArmApiControl",
+                                    "condition": "[not(empty(steps('basics').resourceScope.resourceGroup.name))]",
+                                    "request": {
+                                        "method": "POST",
+                                        "path": "/providers/Microsoft.ResourceGraph/resources?api-version=2024-04-01",
+                                        "body": {
+                                            "subscriptions": [
+                                                "[last(split(steps('basics').resourceScope.subscription.id, '/'))]"
+                                            ],
+                                            "options": {
+                                                "enablePaging": true,
+                                                "resultFormat": "ObjectArray"
+                                            },
+                                            "query": "[format('resources | where type =~ \"Microsoft.HybridCompute/machines\" and resourceGroup =~ \"{0}\" and location =~ \"{1}\" and properties.osSku =~ \"Azure Stack HCI\" and isnull(properties.parentClusterResourceId) | project id, name, resourceGroup, computerName = properties.displayName, osName = properties.osName, osSku = properties.osSku, osVersion = properties.osVersion, model = properties.detectedProperties.model, solutionVersion = properties.detectedProperties[\"azurelocal.solutionversion\"]', steps('basics').resourceScope.resourceGroup.name, steps('basics').resourceScope.location.name)]"
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "hybridMachineList",
+                                    "type": "Microsoft.Common.DropDown",
+                                    "visible": true,
+                                    "multiselect": true,
+                                    "selectAll": false,
+                                    "filter": true,
+                                    "multiLine": true,
+                                    "label": "Azure Local machines",
+                                    "toolTip": "TODO",
+                                    "placeholder": "Select Azure Local machines...",
+                                    "defaultDescription": "---",
+                                    "filterPlaceholder": "Filter Azure Local machines...",
+                                    "constraints": {
+                                        "required": true,
+                                        "allowedValues": "[map(steps('basics').arcMachineSection.getHybridMachineArgQuery.data, (item) => parse(format('{\"label\":\"<strong>{0}</strong>\", \"value\":\"{1}\", \"description\":\"Resource group: {2}<br>Operating system: {3} ({4})<br>Solution version: {5}<br>Model: {6}\"}', item.name, item.id, item.resourceGroup, item.osSku, item.osVersion, item.solutionVersion, item.model)))]"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "getServicePrincipalGraphApi",
+                            "type": "Microsoft.Solutions.GraphApiControl",
+                            "request": {
+                                "method": "GET",
+                                "path": "/v1.0/servicePrincipals?$filter=displayName+eq+%27Microsoft.AzureStackHCI+Resource+Provider%27&$select=id,displayName",
+                                "transforms": {
+                                    "list": "value | [0].{ objectId:id, displayName:displayName }"
+                                }
+                            }
+                        },
+                        {
+                            "name": "servicePrincipalSection",
+                            "type": "Microsoft.Common.Section",
+                            "visible": true,
+                            "label": "Service principal",
+                            "elements": [
+                                {
+                                    "name": "specialServicePrincipalInfoBox",
+                                    "type": "Microsoft.Common.InfoBox",
+                                    "visible": true,
+                                    "options": {
+                                        "style": "Info",
+                                        "text": "[concat('The object ID of the ', steps('basics').getServicePrincipalGraphApi.transformed.list.displayName, ' is ', steps('basics').getServicePrincipalGraphApi.transformed.list.objectId)]"
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "configuration",
+                    "label": "Configuration",
+                    "elements": [
+                        {
+                            "name": "customLocationSection",
+                            "type": "Microsoft.Common.Section",
+                            "visible": true,
+                            "label": "Custom location",
+                            "elements": [
+                                {
+                                    "name": "customLocationName",
+                                    "type": "Microsoft.Common.TextBox",
+                                    "visible": true,
+                                    "label": "Custom location name",
+                                    "toolTip": "TODO",
+                                    "placeholder": "TODO",
+                                    "defaultValue": "TODO",
+                                    "constraints": {
+                                        "required": true,
+                                        "regex": "^[a-z0-9A-Z]{1,30}$",
+                                        "validationMessage": "Only alphanumeric characters are allowed, and the value must be 1-30 characters long."
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "addsSection",
+                            "type": "Microsoft.Common.Section",
+                            "visible": true,
+                            "label": "Active Directory",
+                            "elements": [
+                                {
+                                    "name": "adDomainFqdn",
+                                    "type": "Microsoft.Common.TextBox",
+                                    "visible": true,
+                                    "label": "Active Directory Domain FQDN",
+                                    "toolTip": "TODO",
+                                    "placeholder": "e.g. lab.internal",
+                                    "defaultValue": "lab.internal",
+                                    "constraints": {
+                                        "required": true,
+                                        "regex": "^[a-z0-9A-Z]{1,30}$",
+                                        "validationMessage": "Only alphanumeric characters are allowed, and the value must be 1-30 characters long."
+                                    }
+                                },
+                                {
+                                    "name": "adOrgUnitPath",
+                                    "type": "Microsoft.Common.TextBox",
+                                    "visible": true,
+                                    "label": "Active Directory organizational unit",
+                                    "toolTip": "TODO",
+                                    "placeholder": "e.g. OU=AzureLocal,DC=lab,DC=internal",
+                                    "defaultValue": "OU=AzureLocal,DC=lab,DC=internal",
+                                    "constraints": {
+                                        "required": true,
+                                        "regex": "^[a-z0-9A-Z]{1,30}$",
+                                        "validationMessage": "Only alphanumeric characters are allowed, and the value must be 1-30 characters long."
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "lcmUserSection",
+                            "type": "Microsoft.Common.Section",
+                            "visible": true,
+                            "label": "LCM user",
+                            "elements": [
+                                {
+                                    "name": "lcmUserName",
+                                    "type": "Microsoft.Compute.UserNameTextBox",
+                                    "visible": true,
+                                    "label": "LCM user name",
+                                    "toolTip": "",
+                                    "osPlatform": "Windows",
+                                    "defaultValue": "",
+                                    "constraints": {
+                                        "required": true,
+                                        "regex": "^[a-z0-9A-Z]{1,30}$",
+                                        "validationMessage": "Only alphanumeric characters are allowed, and the value must be 1-30 characters long."
+                                    }
+                                },
+                                {
+                                    "name": "lcmUserPassword",
+                                    "type": "Microsoft.Common.PasswordBox",
+                                    "visible": true,
+                                    "label": {
+                                        "password": "Password",
+                                        "confirmPassword": "Confirm password"
+                                    },
+                                    "toolTip": "",
+                                    "constraints": {
+                                        "required": true,
+                                        "regex": "^[a-zA-Z0-9]{8,}$",
+                                        "validationMessage": "Password must be at least 8 characters long, contain only numbers and letters"
+                                    },
+                                    "options": {
+                                        "hideConfirmation": false
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "localAdminSection",
+                            "type": "Microsoft.Common.Section",
+                            "visible": true,
+                            "label": "Local administrator",
+                            "elements": [
+                                {
+                                    "name": "localAdminUserName",
+                                    "type": "Microsoft.Compute.UserNameTextBox",
+                                    "visible": true,
+                                    "label": "User name",
+                                    "toolTip": "",
+                                    "osPlatform": "Windows",
+                                    "defaultValue": "",
+                                    "constraints": {
+                                        "required": true,
+                                        "regex": "^[a-z0-9A-Z]{1,30}$",
+                                        "validationMessage": "Only alphanumeric characters are allowed, and the value must be 1-30 characters long."
+                                    }
+                                },
+                                {
+                                    "name": "localAdminPassword",
+                                    "type": "Microsoft.Common.PasswordBox",
+                                    "visible": true,
+                                    "label": {
+                                        "password": "Password",
+                                        "confirmPassword": "Confirm password"
+                                    },
+                                    "toolTip": "",
+                                    "constraints": {
+                                        "required": true,
+                                        "regex": "^[a-zA-Z0-9]{8,}$",
+                                        "validationMessage": "Password must be at least 8 characters long, contain only numbers and letters"
+                                    },
+                                    "options": {
+                                        "hideConfirmation": false
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "networking",
+                    "label": "Networking",
+                    "elements": [
+                        {
+                            "name": "startingIPAddress",
+                            "type": "Microsoft.Common.TextBox",
+                            "visible": true,
+                            "label": "Starting IP address",
+                            "toolTip": "TODO",
+                            "placeholder": "TODO",
+                            "defaultValue": "TODO",
+                            "constraints": {
+                                "required": true,
+                                "regex": "^[a-z0-9A-Z]{1,30}$",
+                                "validationMessage": "Only alphanumeric characters are allowed, and the value must be 1-30 characters long."
+                            }
+                        },
+                        {
+                            "name": "endingIPAddress",
+                            "type": "Microsoft.Common.TextBox",
+                            "visible": true,
+                            "label": "Ending IP address",
+                            "toolTip": "TODO",
+                            "placeholder": "TODO",
+                            "defaultValue": "TODO",
+                            "constraints": {
+                                "required": true,
+                                "regex": "^[a-z0-9A-Z]{1,30}$",
+                                "validationMessage": "Only alphanumeric characters are allowed, and the value must be 1-30 characters long."
+                            }
+                        },
+                        {
+                            "name": "subnetMask",
+                            "type": "Microsoft.Common.TextBox",
+                            "visible": true,
+                            "label": "Subnet mask",
+                            "toolTip": "TODO",
+                            "placeholder": "TODO",
+                            "defaultValue": "TODO",
+                            "constraints": {
+                                "required": true,
+                                "regex": "^[a-z0-9A-Z]{1,30}$",
+                                "validationMessage": "Only alphanumeric characters are allowed, and the value must be 1-30 characters long."
+                            }
+                        },
+                        {
+                            "name": "defaultGateway",
+                            "type": "Microsoft.Common.TextBox",
+                            "visible": true,
+                            "label": "Default gateway",
+                            "toolTip": "TODO",
+                            "placeholder": "TODO",
+                            "defaultValue": "TODO",
+                            "constraints": {
+                                "required": true,
+                                "regex": "^[a-z0-9A-Z]{1,30}$",
+                                "validationMessage": "Only alphanumeric characters are allowed, and the value must be 1-30 characters long."
+                            }
+                        },
+                        {
+                            "name": "dnsServers",
+                            "type": "Microsoft.Common.TextBox",
+                            "visible": true,
+                            "label": "DNS servers",
+                            "toolTip": "TODO",
+                            "placeholder": "TODO",
+                            "defaultValue": "TODO",
+                            "constraints": {
+                                "required": true,
+                                "regex": "^[a-z0-9A-Z]{1,30}$",
+                                "validationMessage": "Only alphanumeric characters are allowed, and the value must be 1-30 characters long."
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        "outputs": {
+            "kind": "ResourceGroup",
+            "location": "[steps('basics').resourceScope.location.name]",
+            "resourceGroupId": "[steps('basics').resourceScope.resourceGroup.id]",
+            "parameters": {
+                "hciResourceProviderServicePrincipalObjectId": "",
+                "hciClusterName": "",
+                "arcMachineResourceIds": "",
+                "managementAdapterNames": "",
+                "computeAdapterNames": "",
+                "storageAdapterNames": "",
+                "startingIPAddress": "",
+                "endingIPAddress": "",
+                "subnetMask": "",
+                "defaultGateway": "",
+                "dnsServers": "",
+                "customLocationName": "",
+                "addsDomainFqdn": "",
+                "addsOrgUnitPath": "",
+                "lcmUserName": "",
+                "lcmUserPassword": "",
+                "localAdminUserName": "",
+                "localAdminPassword": ""
+            }
+        }
+    }
+}
