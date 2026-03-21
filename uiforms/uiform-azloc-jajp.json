@@ -14,7 +14,7 @@
                             "name": "resourceScope",
                             "type": "Microsoft.Common.ResourceScope",
                             "location": {
-                                "label": "Region",
+                                "label": "リージョン",
                                 "toolTip": "ラボ環境を展開するリージョンを指定します。",
                                 "resourceTypes": [
                                     "Microsoft.Resources/resourceGroups"
@@ -403,32 +403,32 @@
                                             {
                                                 "label": "[format('{0} GiB', mul(32, first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount))))]",
                                                 "value": 32,
-                                                "description": "[format('32 GiB x {0} disks.', first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount)))]"
+                                                "description": "[format('32 GiB x {0} ディスク。', first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount)))]"
                                             },
                                             {
                                                 "label": "[format('{0} GiB', mul(64, first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount))))]",
                                                 "value": 64,
-                                                "description": "[format('64 GiB x {0} disks.', first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount)))]"
+                                                "description": "[format('64 GiB x {0} ディスク。', first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount)))]"
                                             },
                                             {
                                                 "label": "[format('{0} GiB', mul(128, first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount))))]",
                                                 "value": 128,
-                                                "description": "[format('128 GiB x {0} disks.', first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount)))]"
+                                                "description": "[format('128 GiB x {0} ディスク。', first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount)))]"
                                             },
                                             {
                                                 "label": "[format('{0} GiB', mul(256, first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount))))]",
                                                 "value": 256,
-                                                "description": "[format('256 GiB x {0} disks.', first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount)))]"
+                                                "description": "[format('256 GiB x {0} ディスク。', first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount)))]"
                                             },
                                             {
                                                 "label": "[format('{0} GiB', mul(512, first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount))))]",
                                                 "value": 512,
-                                                "description": "[format('512 GiB x {0} disks.', first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount)))]"
+                                                "description": "[format('512 GiB x {0} ディスク。', first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount)))]"
                                             },
                                             {
                                                 "label": "[format('{0} GiB', mul(1024, first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount))))]",
                                                 "value": 1024,
-                                                "description": "[format('1024 GiB x {0} disks.', first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount)))]"
+                                                "description": "[format('1024 GiB x {0} ディスク。', first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount)))]"
                                             }
                                         ]
                                     }
@@ -439,7 +439,7 @@
                                     "visible": true,
                                     "options": {
                                         "style": "Info",
-                                        "text": "[format('The selected VM size <strong>{0}</strong> supports <strong>{1}</strong> disks.', replace(steps('basics').vmSize, '_', ' '), first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount)))]"
+                                        "text": "[format('選択した VM サイズ <strong>{0}</strong> は <strong>{1}</strong> 個のディスクをサポートしています。', replace(steps('basics').vmSize, '_', ' '), first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount)))]"
                                     }
                                 }
                             ]
