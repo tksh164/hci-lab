@@ -222,12 +222,12 @@ function New-DownloadMaterialSpecList {
 
         # OS ISO
         $materialInfoList += [PSCustomObject] @{
-            # Common
+            # Common properties
             Type             = 'iso'
             Url              = $MaterialMetadata.os.$sku.iso.$language.url
             OutputFolderPath = $LabConfig.labHost.folderPath.temp
             FileName         = $MaterialMetadata.os.$sku.iso.$language.fileName
-            # Additional
+            # Additional properties
             Sku              = $sku
             Language         = $language
         }
@@ -236,12 +236,12 @@ function New-DownloadMaterialSpecList {
         if ($LabConfig.guestOS.shouldInstallUpdates) {
             foreach ($url in $MaterialMetadata.os.$sku.updates) {
                 $materialInfoList += [PSCustomObject] @{
-                    # Common
+                    # Common properties
                     Type             = 'update'
                     Url              = $url
                     OutputFolderPath = Join-Path -Path $LabConfig.labHost.folderPath.temp -ChildPath (Join-Path -Path 'updates' -ChildPath $sku)
                     FileName         = $null
-                    # Additional
+                    # Additional properties
                     Sku              = $sku
                     Language         = $language
                 }
@@ -253,12 +253,12 @@ function New-DownloadMaterialSpecList {
     $toolsToInstall = $LabConfig.labHost.toolsToInstall -split ';'
     if ($toolsToInstall -contains 'vscode') {
         $materialInfoList += [PSCustomObject] @{
-            # Common
+            # Common properties
             Type             = 'file'
             Url              = $MaterialMetadata.vsCode.url
             OutputFolderPath = $LabConfig.labHost.folderPath.temp
             FileName         = $MaterialMetadata.vsCode.fileName
-            # Additional
+            # Additional properties
             InventoryKey     = 'vsCode'
         }
     }
@@ -266,12 +266,12 @@ function New-DownloadMaterialSpecList {
     # Configurator App for Azure Local
     if ($LabConfig.wac.shouldInstallConfigAppForAzureLocal) {
         $materialInfoList += [PSCustomObject] @{
-            # Common
+            # Common properties
             Type             = 'file'
             Url              = $MaterialMetadata.AzureLocalConfiguratorApp.url
             OutputFolderPath = $LabConfig.labHost.folderPath.temp
             FileName         = $MaterialMetadata.AzureLocalConfiguratorApp.fileName
-            # Additional
+            # Additional properties
             InventoryKey     = 'AzureLocalConfiguratorApp'
         }
     }
@@ -371,12 +371,14 @@ try {
         LabConfig        = $labConfig
         MaterialMetadata = $materialMetadata
         OSSpec           = @(
+            # Cluster node machine's OS spec.
             [PSCustomObject] @{
                 Sku      = $labConfig.hciNode.operatingSystem.sku
                 Language = $labConfig.guestOS.culture
             },
+            # AD DC, workbox machine's OS spec.
             [PSCustomObject] @{
-                Sku      = [HciLab.OSSku]::WindowsServer2025  # For AD DC, workbox.
+                Sku      = [HciLab.OSSku]::WindowsServer2025
                 Language = $labConfig.guestOS.culture
             }
         ) 
