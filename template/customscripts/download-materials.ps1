@@ -299,7 +299,7 @@ function New-InventoryFileContent {
             if ($inventory.Keys -notcontains $spec.Sku) { $inventory.$($spec.Sku) = @{} }
             if ($inventory.$($spec.Sku).Keys -notcontains $spec.Language) { $inventory.$($spec.Sku).$($spec.Language) = @{} }
 
-            $inventory.$($spec.Sku).$($spec.Language).isoPath = $isoFilePath
+            $inventory.$($spec.Sku).$($spec.Language).isoFilePath = $isoFilePath
         }
 
         # Append OS updates entries.
@@ -310,7 +310,7 @@ function New-InventoryFileContent {
 
             if ($inventory.Keys -notcontains $spec.Sku) { $inventory.$($spec.Sku) = @{} }
 
-            $inventory.$($spec.Sku).updates = $spec.OutputFolderPath
+            $inventory.$($spec.Sku).updatesFolderPath = $spec.OutputFolderPath
         }
 
         # Append individual file entries.
