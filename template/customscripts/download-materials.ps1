@@ -32,6 +32,36 @@ function Out-FileUtf8NoBom {
     [System.IO.File]::WriteAllText($FilePath, $Content, $utf8Encoding)
 }
 
+function Select-UniquePSObject {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [PSCustomObject[]] $InputObject,
+
+        [Parameter(Mandatory = $true)]
+        [string[]] $KeyPropertyName
+    )
+
+    process {
+        $hashSet = [System.Collections.Generic.HashSet[string]]::new()
+        $uniqueObjects = foreach ($obj in $InputObject) {
+            $key = ($KeyPropertyName | ForEach-Object { $obj.$_ }) -join '|'
+            if ($hashSet.Add($key)) { $obj }
+        }
+        return $uniqueObjects
+    }
+}
+
+function Get-MaterialInventoryFilePath {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject] $LabConfig
+    )
+
+    return Join-Path -Path $LabConfig.labHost.folderPath.temp -ChildPath 'inventory.json'
+}
+
 function Deploy-Aria2 {
     [CmdletBinding()]
     param (
@@ -73,7 +103,7 @@ function New-Aria2InputFileContent {
         [PSCustomObject[]] $DownloadMaterialSpec
     )
 
-    $builder = New-Object -TypeName 'System.Text.StringBuilder'
+    $builder = [System.Text.StringBuilder]::new()
 
     foreach ($spec in $DownloadMaterialSpec) {
         [void] $builder.AppendLine($spec.Url)
@@ -114,7 +144,7 @@ function Invoke-Aria2Download {
         '--max-connection-per-server=2',
         '--split=5',
         '--min-split-size=150M',
-        '--lowest-speed-limit=15M',
+        #'--lowest-speed-limit=15M',
         ('--max-tries={0}' -f $MaxRetryCount),
         ('--retry-wait={0}' -f $RetryIntervalSeconds),
         '--timeout=60',
@@ -129,7 +159,7 @@ function Invoke-Aria2Download {
         ('--input-file="{0}"' -f $InputFilePath)
     ) -join ' '
 
-    $startInfo = New-Object -TypeName 'System.Diagnostics.ProcessStartInfo'
+    $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
     $startInfo.FileName = $CommandFilePath
     $startInfo.Arguments = $commandArgs
     $startInfo.UseShellExecute = $false
@@ -137,11 +167,11 @@ function Invoke-Aria2Download {
     $startInfo.RedirectStandardError = $true
 
     $isCompleted = $false
-    $maxAttempts = 10
+    $maxAttempts = 30
     for ($attempt = 0; $attempt -lt $maxAttempts; $attempt++) {
         'Attempt {0} of {1}...' -f ($attempt + 1), $maxAttempts | Write-ScriptLog
 
-        $process = New-Object -TypeName 'System.Diagnostics.Process'
+        $process = [System.Diagnostics.Process]::new()
         $process.StartInfo = $startInfo
         $process.Start() | Out-Null
 
@@ -180,32 +210,26 @@ function New-DownloadMaterialSpecList {
     )
 
     # Identify the OS ISO kinds to download.
-    $delimiter = '!'
-    $uniqueOSSpecs = @()
-    $uniqueOSSpecs += $OSSpec | ForEach-Object {
-        $_.sku + $delimiter + $_.culture
-    } | Select-Object -Unique
-    'Download OS kinds: {0}' -f ($uniqueOSSpecs -join ', ') | Write-ScriptLog
-
-    if (-not $LabConfig.guestOS.shouldInstallUpdates) {
-        'Skip the OS updates download due to shouldInstallUpdates not set.' | Write-ScriptLog
-    }
+    $uniqueOSSpecs = $OSSpec | Select-UniquePSObject -KeyPropertyName @('Sku', 'Language')
+    'Download OS specs:' | Write-ScriptLog
+    $uniqueOSSpecs | Format-Table -Property * | Out-String -Width 200 | Write-ScriptLog
 
     # Make the list of materials to download.
     $materialInfoList = @()
     foreach ($osSpec in $uniqueOSSpecs) {
-        ($sku, $culture) = $osSpec -split $delimiter
+        $sku = $osSpec.Sku
+        $language = $osSpec.Language
 
         # OS ISO
         $materialInfoList += [PSCustomObject] @{
             # Common
             Type             = 'iso'
-            Url              = $MaterialMetadata.os.$sku.iso.$culture.url
+            Url              = $MaterialMetadata.os.$sku.iso.$language.url
             OutputFolderPath = $LabConfig.labHost.folderPath.temp
-            FileName         = $MaterialMetadata.os.$sku.iso.$culture.fileName
+            FileName         = $MaterialMetadata.os.$sku.iso.$language.fileName
             # Additional
             Sku              = $sku
-            Culture          = $culture
+            Language         = $language
         }
 
         # Updates
@@ -219,7 +243,7 @@ function New-DownloadMaterialSpecList {
                     FileName         = $null
                     # Additional
                     Sku              = $sku
-                    Culture          = $culture
+                    Language         = $language
                 }
             }
         }
@@ -265,30 +289,40 @@ function New-InventoryFileContent {
     $inventory = @{}
 
     foreach ($spec in $DownloadMaterialSpec) {
+        # Append OS related entries.
         if ($spec.Type -eq 'iso') {
             $isoFilePath = Join-Path -Path $spec.OutputFolderPath -ChildPath $spec.FileName
             if (-not (Test-Path -PathType Leaf -LiteralPath $isoFilePath)) {
                 throw 'The ISO file path "{0}" does not exist.' -f $isoFilePath
             }
-            $inventory.$($spec.Sku) = @{
-                $spec.Culture = $isoFilePath
-            }
+
+            if (-not $inventory.Keys.Contains($spec.Sku)) { $inventory.$($spec.Sku) = @{} }
+            if (-not $inventory.$($spec.Sku).Keys.Contains($spec.Language)) { $inventory.$($spec.Sku).$($spec.Language) = @{} }
+
+            $inventory.$($spec.Sku).$($spec.Language).isoPath = $isoFilePath
         }
+
+        # Append OS updates entries.
+        if ($spec.Type -eq 'update') {
+            if (-not (Test-Path -PathType Container -LiteralPath $spec.OutputFolderPath)) {
+                throw 'The folder path "{0}" does not exist.' -f $spec.OutputFolderPath
+            }
+
+            if (-not $inventory.Keys.Contains($spec.Sku)) { $inventory.$($spec.Sku) = @{} }
+
+            $inventory.$($spec.Sku).updates = $spec.OutputFolderPath
+        }
+
+        # Append individual file entries.
         elseif ($spec.Type -eq 'file') {
             $filePath = Join-Path -Path $spec.OutputFolderPath -ChildPath $spec.FileName
             if (-not (Test-Path -PathType Leaf -LiteralPath $filePath)) {
                 throw 'The file path "{0}" does not exist.' -f $filePath
             }
-            $inventory.$($spec.InventoryKey) = $filePath
-        }
-    }
 
-    foreach ($spec in $DownloadMaterialSpec) {
-        if ($spec.Type -eq 'update') {
-            if (-not (Test-Path -PathType Container -LiteralPath $spec.OutputFolderPath)) {
-                throw 'The folder path "{0}" does not exist.' -f $spec.OutputFolderPath
-            }
-            $inventory.$($spec.Sku).updates = $spec.OutputFolderPath
+            if (-not $inventory.Keys.Contains($spec.InventoryKey)) { $inventory.$($spec.InventoryKey) = @{} }
+
+            $inventory.$($spec.InventoryKey).filePath = $filePath
         }
     }
 
@@ -317,9 +351,9 @@ try {
 
     'Retrieve the material metadata.' | Write-ScriptLog
     $materialMetadata = ConvertFrom-Jsonc -FilePath (Join-Path -Path $PSScriptRoot -ChildPath 'materials.json')
-    'Retrieve the material metadata completed.' | Write-ScriptLog
+    'Retrieve the material metadata has been completed.' | Write-ScriptLog
 
-    'Deploy the fast donwload tool.' | Write-ScriptLog
+    'Deploy the fast download tool.' | Write-ScriptLog
     $params = @{
         SourceUrl             = $materialMetadata.aria2.url
         DestinationFolderPath = $labConfig.labHost.folderPath.temp
@@ -327,51 +361,55 @@ try {
     }
     $toolExeFilePath = Deploy-Aria2 @params
     'Tool file path: "{0}"' -f $toolExeFilePath | Write-ScriptLog
-    'Deploy the fast donwload tool completed.' | Write-ScriptLog
+    'Deploy the fast download tool has been completed.' | Write-ScriptLog
 
-    'Make and save the fast download tool''s input file.' | Write-ScriptLog
+    'Identify the materials that need to be downloaded.' | Write-ScriptLog
+    if (-not $labConfig.guestOS.shouldInstallUpdates) {
+        'Skip the OS updates download due to shouldInstallUpdates not set.' | Write-ScriptLog
+    }
     $params = @{
         LabConfig        = $labConfig
         MaterialMetadata = $materialMetadata
         OSSpec           = @(
-            @{
-                sku     = $labConfig.hciNode.operatingSystem.sku
-                culture = $labConfig.guestOS.culture
+            [PSCustomObject] @{
+                Sku      = $labConfig.hciNode.operatingSystem.sku
+                Language = $labConfig.guestOS.culture
             },
-            @{
-                sku     = [HciLab.OSSku]::WindowsServer2025  # For AD DC, workbox.
-                culture = $labConfig.guestOS.culture
+            [PSCustomObject] @{
+                Sku      = [HciLab.OSSku]::WindowsServer2025  # For AD DC, workbox.
+                Language = $labConfig.guestOS.culture
             }
         ) 
     }
     $downloadMaterialSpec = New-DownloadMaterialSpecList @params
-
     'Download materials:' | Write-ScriptLog
     $downloadMaterialSpec | Format-List -Property * | Out-String -Width 300 | Write-ScriptLog
+    'Identify the materials that need to be download has been completed.' | Write-ScriptLog
 
     'Create the download folders if it does not exist.' | Write-ScriptLog
     New-Item -ItemType Directory -Path $downloadMaterialSpec.OutputFolderPath -Force | Out-String -Width 200 | Write-ScriptLog
-    'Create the download folders completed.' | Write-ScriptLog
+    'Create the download folders has been completed.' | Write-ScriptLog
 
     # NOTE: In PowerShell 5.1, Out-File & Set-Content does not support UTF-8 encoding without BOM.
     # Set the encoding to UTF8 will add BOM to the beginning of the file.
     # Area2 will does not work correctly if the input file beginning with BOM.
+    'Create the fast download tool''s input file.' | Write-ScriptLog
     $inputFilePath = Join-Path -Path $labConfig.labHost.folderPath.temp -ChildPath 'aria2-input.txt'
     New-Aria2InputFileContent -DownloadMaterialSpec $downloadMaterialSpec | Out-FileUtf8NoBom -FilePath $inputFilePath
     'Input file path: "{0}"' -f $inputFilePath | Write-ScriptLog
-    'Make and save the fast download tool''s input file completed.' | Write-ScriptLog
+    'Create the fast download tool''s input file has been completed.' | Write-ScriptLog
 
-    'Download materials.' | Write-ScriptLog
+    'Download the materials.' | Write-ScriptLog
     Invoke-Aria2Download -CommandFilePath $toolExeFilePath -InputFilePath $inputFilePath
-    'Download materials completed.' | Write-ScriptLog
+    'Download the materials has been completed.' | Write-ScriptLog
 
-    'Make the inventory file.' | Write-ScriptLog
-    $inventoryFilePath = Join-Path -Path $labConfig.labHost.folderPath.temp -ChildPath 'inventory.json'
+    'Create the inventory file.' | Write-ScriptLog
+    $inventoryFilePath = Get-MaterialInventoryFilePath -LabConfig $labConfig
     New-InventoryFileContent -DownloadMaterialSpec $downloadMaterialSpec | Out-FileUtf8NoBom -FilePath $inventoryFilePath
     'Inventory file path: "{0}"' -f $inventoryFilePath | Write-ScriptLog
-    'Make the inventory file completed.' | Write-ScriptLog
+    'Create the inventory file has been completed.' | Write-ScriptLog
 
-    'This script has been successfully completed.' | Write-ScriptLog
+    'This script has been completed all tasks.' | Write-ScriptLog
 }
 catch {
     $exceptionMessage = New-ExceptionMessage -ErrorRecord $_
