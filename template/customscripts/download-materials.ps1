@@ -296,8 +296,8 @@ function New-InventoryFileContent {
                 throw 'The ISO file path "{0}" does not exist.' -f $isoFilePath
             }
 
-            if (-not $inventory.Keys.Contains($spec.Sku)) { $inventory.$($spec.Sku) = @{} }
-            if (-not $inventory.$($spec.Sku).Keys.Contains($spec.Language)) { $inventory.$($spec.Sku).$($spec.Language) = @{} }
+            if ($inventory.Keys -notcontains $spec.Sku) { $inventory.$($spec.Sku) = @{} }
+            if ($inventory.$($spec.Sku).Keys -notcontains $spec.Language) { $inventory.$($spec.Sku).$($spec.Language) = @{} }
 
             $inventory.$($spec.Sku).$($spec.Language).isoPath = $isoFilePath
         }
@@ -308,7 +308,7 @@ function New-InventoryFileContent {
                 throw 'The folder path "{0}" does not exist.' -f $spec.OutputFolderPath
             }
 
-            if (-not $inventory.Keys.Contains($spec.Sku)) { $inventory.$($spec.Sku) = @{} }
+            if ($inventory.Keys -notcontains $spec.Sku) { $inventory.$($spec.Sku) = @{} }
 
             $inventory.$($spec.Sku).updates = $spec.OutputFolderPath
         }
@@ -320,7 +320,7 @@ function New-InventoryFileContent {
                 throw 'The file path "{0}" does not exist.' -f $filePath
             }
 
-            if (-not $inventory.Keys.Contains($spec.InventoryKey)) { $inventory.$($spec.InventoryKey) = @{} }
+            if ($inventory.Keys -notcontains $spec.InventoryKey) { $inventory.$($spec.InventoryKey) = @{} }
 
             $inventory.$($spec.InventoryKey).filePath = $filePath
         }
