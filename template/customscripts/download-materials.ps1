@@ -141,7 +141,7 @@ function Invoke-Aria2Download {
         '--continue',
         '--always-resume=true',
         '--max-concurrent-downloads=10',
-        '--max-connection-per-server=2',
+        '--max-connection-per-server=6',
         '--split=5',
         '--min-split-size=150M',
         #'--lowest-speed-limit=15M',
