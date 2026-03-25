@@ -40,7 +40,7 @@
                     "url": "https://azurestackreleases.download.prss.microsoft.com/dbazure/AzureLocal/ComposedImage/12.2603.0.3012/AzureLocal24H2.26100.1742.LCM.12.2603.0.3012.x64.en-us.iso",
                     "hash": "AD7B805C94110F8D8CA4D7E672E93DB4FAF44F2D",
                     "hashAlgorithm": "SHA1",
-                    "fileSizeInBytes": 0,
+                    "fileSizeInBytes": 6812176384,
                     "fileName": "azloc24h2_2603_en-us.iso"
                 }
             },
@@ -287,14 +287,14 @@
                     "url": "https://software-static.download.prss.microsoft.com/dbazure/998969d5-f34g-4e03-ac9d-1f9786c66749/26100.32230.260111-0550.lt_release_svc_refresh_SERVER_EVAL_x64FRE_en-us.iso",
                     "hash": "D3A3A45831120DE6607DCF993E109F743B11F1FF",
                     "hashAlgorithm": "SHA1",
-                    "fileSizeInBytes": 0,
+                    "fileSizeInBytes": 8152356864,
                     "fileName": "ws2025_en-us.iso"
                 },
                 "ja-jp": {
                     "url": "https://software-static.download.prss.microsoft.com/dbazure/998969d5-f34g-4e03-ac9d-1f9786c66749/26100.32230.260111-0550.lt_release_svc_refresh_SERVER_EVAL_x64FRE_ja-jp.iso",
                     "hash": "5E31C55F43BDCBF0AD5875C339F0E6FBC96FD14A",
                     "hashAlgorithm": "SHA1",
-                    "fileSizeInBytes": 0,
+                    "fileSizeInBytes": 8313868288,
                     "fileName": "ws2025_ja-jp.iso"
                 }
             },
@@ -311,14 +311,14 @@
                     "url": "https://software-static.download.prss.microsoft.com/sg/download/888969d5-f34g-4e03-ac9d-1f9786c66749/SERVER_EVAL_x64FRE_en-us.iso",
                     "hash": "70AB5AF6264C2F967DCCAFC16FD9A46B6F0B07A7",
                     "hashAlgorithm": "SHA1",
-                    "fileSizeInBytes": 0,
+                    "fileSizeInBytes": 5044094976,
                     "fileName": "ws2022_en-us.iso"
                 },
                 "ja-jp": {
                     "url": "https://software-static.download.prss.microsoft.com/sg/download/888969d5-f34g-4e03-ac9d-1f9786c66749/SERVER_EVAL_x64FRE_ja-jp.iso",
                     "hash": "B1EF2FE04B4B984E508F4AC97C65F2595AE7D369",
                     "hashAlgorithm": "SHA1",
-                    "fileSizeInBytes": 0,
+                    "fileSizeInBytes": 5205041152,
                     "fileName": "ws2022_ja-jp.iso"
                 }
             },
