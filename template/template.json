@@ -587,15 +587,15 @@
                 ],
                 "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\configure-lab-host.ps1"
             },
-            "downloadIsoUpdates": {
+            "downloadMaterials": {
                 "deploymentName": "download-materials",
                 "apiVersion": "[variables('deploymentApiVersion')]",
                 "fileUris": [
-                    "[uri(variables('customScriptBaseUri'), 'download-iso-updates.ps1')]",
-                    "[uri(variables('customScriptBaseUri'), 'download-iso-updates-asset-urls.psd1')]",
+                    "[uri(variables('customScriptBaseUri'), 'download-materials.ps1')]",
+                    "[uri(variables('customScriptBaseUri'), 'materials.json')]",
                     "[uri(variables('customScriptBaseUri'), 'common.psm1')]"
                 ],
-                "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\download-iso-updates.ps1"
+                "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\download-materials.ps1"
             },
             "createBaseVhd": {
                 "deploymentName": "create-base-vhd",
@@ -1056,11 +1056,11 @@
             }
         },
 
-        // Download ISO files and updates.
+        // Download materials.
         {
-            "name": "[variables('customScript').downloadIsoUpdates.deploymentName]",
+            "name": "[variables('customScript').downloadMaterials.deploymentName]",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "[variables('customScript').downloadIsoUpdates.apiVersion]",
+            "apiVersion": "[variables('customScript').downloadMaterials.apiVersion]",
             "dependsOn": [
                 "[resourceId('Microsoft.Resources/deployments', variables('customScript').configureHostVm.deploymentName)]"
             ],
@@ -1081,10 +1081,10 @@
                         "value": "[variables('customScriptExtensionName')]"
                     },
                     "fileUris": {
-                        "value": "[variables('customScript').downloadIsoUpdates.fileUris]"
+                        "value": "[variables('customScript').downloadMaterials.fileUris]"
                     },
                     "commandToExecute": {
-                        "value": "[variables('customScript').downloadIsoUpdates.commandToExecute]"
+                        "value": "[variables('customScript').downloadMaterials.commandToExecute]"
                     }
                 }
             }
@@ -1096,7 +1096,7 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[variables('customScript').createBaseVhd.apiVersion]",
             "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', variables('customScript').downloadIsoUpdates.deploymentName)]"
+                "[resourceId('Microsoft.Resources/deployments', variables('customScript').downloadMaterials.deploymentName)]"
             ],
             "properties": {
                 "mode": "Incremental",
