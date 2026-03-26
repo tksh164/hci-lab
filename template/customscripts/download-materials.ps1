@@ -6,18 +6,6 @@ $WarningPreference = [Management.Automation.ActionPreference]::Continue
 $VerbosePreference = [Management.Automation.ActionPreference]::Continue
 $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
-function ConvertFrom-Jsonc {
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory = $true)]
-        [ValidateScript({ Test-Path -PathType Leaf -LiteralPath $_ })]
-        [string] $FilePath
-    )
-
-    # Remove single-line and multi-line comments before ConvertFrom-Json.
-    return (Get-Content -LiteralPath $FilePath -Raw) -replace '(?m)(?<=^([^"]|"[^"]*")*)//.*','' -replace '(?ms)/\*.*?\*/','' | ConvertFrom-Json
-}
-
 function Out-FileUtf8NoBom {
     [CmdletBinding()]
     param (
@@ -114,7 +102,8 @@ function Invoke-Aria2Download {
         '--max-connection-per-server=5',
         '--split=5',
         '--min-split-size=150M',
-        '--lowest-speed-limit=15M',
+        # '--lowest-speed-limit=15M',
+        '--lowest-speed-limit=5M',
         ('--max-tries={0}' -f $MaxRetryCount),
         ('--retry-wait={0}' -f $RetryIntervalSeconds),
         '--timeout=60',
@@ -158,7 +147,7 @@ function Invoke-Aria2Download {
             break
         }
 
-        Start-Sleep -Seconds 10
+        Start-Sleep -Seconds 5
     }
 
     if (-not $isCompleted) {
