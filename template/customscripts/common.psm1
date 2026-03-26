@@ -64,6 +64,45 @@ namespace HciLab
 }
 '@
 
+function ConvertFrom-Jsonc {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateScript({ Test-Path -PathType Leaf -LiteralPath $_ })]
+        [string] $FilePath
+    )
+
+    # Remove single-line and multi-line comments before ConvertFrom-Json.
+    return (Get-Content -LiteralPath $FilePath -Raw) -replace '(?m)(?<=^([^"]|"[^"]*")*)//.*','' -replace '(?ms)/\*.*?\*/','' | ConvertFrom-Json
+}
+
+function Select-UniquePSObject {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [PSCustomObject[]] $InputObject,
+
+        [Parameter(Mandatory = $true)]
+        [string[]] $KeyPropertyName
+    )
+
+    begin {
+        $hashSet = [System.Collections.Generic.HashSet[string]]::new()
+        $uniqueObjects = @()
+    }
+
+    process {
+        $uniqueObjects += foreach ($obj in $InputObject) {
+            $key = ($KeyPropertyName | ForEach-Object { $obj.$_ }) -join '|'
+            if ($hashSet.Add($key)) { $obj }
+        }
+    }
+
+    end {
+        return $uniqueObjects
+    }
+}
+
 function New-ExceptionMessage
 {
     param (
@@ -225,26 +264,6 @@ function Get-LabDeploymentConfig
     }
     $encodedUserData = Invoke-RestMethod @params
     return [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($encodedUserData)) | ConvertFrom-Json
-}
-
-function Select-UniquePSObject {
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
-        [PSCustomObject[]] $InputObject,
-
-        [Parameter(Mandatory = $true)]
-        [string[]] $KeyPropertyName
-    )
-
-    process {
-        $hashSet = [System.Collections.Generic.HashSet[string]]::new()
-        $uniqueObjects = foreach ($obj in $InputObject) {
-            $key = ($KeyPropertyName | ForEach-Object { $obj.$_ }) -join '|'
-            if ($hashSet.Add($key)) { $obj }
-        }
-        return $uniqueObjects
-    }
 }
 
 function Get-MaterialInventoryFilePath {
@@ -1532,13 +1551,14 @@ function New-WacConnectionFileContent
 }
 
 $exportFunctions = @(
+    'ConvertFrom-Jsonc',
+    'Select-UniquePSObject',
     'New-ExceptionMessage',
     'Start-ScriptLogging',
     'Stop-ScriptLogging',
     'Set-ScriptLogDefaultContext',
     'Write-ScriptLog',
     'Get-LabDeploymentConfig',
-    'Select-UniquePSObject',
     'Get-MaterialInventoryFilePath',
     'Get-Secret',
     'Get-InstanceMetadata',
