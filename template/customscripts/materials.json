@@ -52,7 +52,7 @@
                     "url": "https://azurestackreleases.download.prss.microsoft.com/dbazure/AzureLocal/WindowsPlatform/12.2602.0.3018/AzureLocal24H2.26100.1742.LCM.12.2602.0.3018.x64.en-us.iso",
                     "hash": "62F3E298643ABEA02C2B54F9588E498E7E5E3F89",
                     "hashAlgorithm": "SHA1",
-                    "fileSizeInBytes": 0,
+                    "fileSizeInBytes": 6626500608,
                     "fileName": "azloc24h2_2602_en-us.iso"
                 }
             },
@@ -64,7 +64,7 @@
                     "url": "https://azurestackreleases.download.prss.microsoft.com/dbazure/AzureLocal/WindowsPlatform/12.2601.0.3137/AzureLocal24H2.26100.1742.LCM.12.2601.0.3137.x64.en-us.iso",
                     "hash": "C601BB8EDDF6A35B055BEA71871EEEAC812C0E83",
                     "hashAlgorithm": "SHA1",
-                    "fileSizeInBytes": 0,
+                    "fileSizeInBytes": 6620729344,
                     "fileName": "azloc24h2_2601_en-us.iso"
                 }
             },
@@ -76,7 +76,7 @@
                     "url": "https://azurestackreleases.download.prss.microsoft.com/dbazure/AzureLocal/WindowsPlatform/12.2512.0.3021/AzureLocal24H2.26100.1742.LCM.12.2512.0.3021.x64.en-us.iso",
                     "hash": "A1E3428B22644359A7FFE976392BAB0B12632D7B",
                     "hashAlgorithm": "SHA1",
-                    "fileSizeInBytes": 0,
+                    "fileSizeInBytes": 6478802944,
                     "fileName": "azloc24h2_2512_en-us.iso"
                 }
             },
