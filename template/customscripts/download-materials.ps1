@@ -32,36 +32,6 @@ function Out-FileUtf8NoBom {
     [System.IO.File]::WriteAllText($FilePath, $Content, $utf8Encoding)
 }
 
-function Select-UniquePSObject {
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
-        [PSCustomObject[]] $InputObject,
-
-        [Parameter(Mandatory = $true)]
-        [string[]] $KeyPropertyName
-    )
-
-    process {
-        $hashSet = [System.Collections.Generic.HashSet[string]]::new()
-        $uniqueObjects = foreach ($obj in $InputObject) {
-            $key = ($KeyPropertyName | ForEach-Object { $obj.$_ }) -join '|'
-            if ($hashSet.Add($key)) { $obj }
-        }
-        return $uniqueObjects
-    }
-}
-
-function Get-MaterialInventoryFilePath {
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory = $true)]
-        [PSCustomObject] $LabConfig
-    )
-
-    return Join-Path -Path $LabConfig.labHost.folderPath.temp -ChildPath 'inventory.json'
-}
-
 function Deploy-Aria2 {
     [CmdletBinding()]
     param (
@@ -212,7 +182,7 @@ function New-DownloadMaterialSpecList {
     # Identify the OS ISO kinds to download.
     $uniqueOSSpecs = $OSSpec | Select-UniquePSObject -KeyPropertyName @('Sku', 'Language')
     'Download OS specs:' | Write-ScriptLog
-    $uniqueOSSpecs | Format-Table -Property * | Out-String -Width 200 | Write-ScriptLog
+    $uniqueOSSpecs | Format-Table -Property '*' | Out-String -Width 200 | Write-ScriptLog
 
     # Make the list of materials to download.
     $materialInfoList = @()

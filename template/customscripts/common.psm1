@@ -227,6 +227,36 @@ function Get-LabDeploymentConfig
     return [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($encodedUserData)) | ConvertFrom-Json
 }
 
+function Select-UniquePSObject {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [PSCustomObject[]] $InputObject,
+
+        [Parameter(Mandatory = $true)]
+        [string[]] $KeyPropertyName
+    )
+
+    process {
+        $hashSet = [System.Collections.Generic.HashSet[string]]::new()
+        $uniqueObjects = foreach ($obj in $InputObject) {
+            $key = ($KeyPropertyName | ForEach-Object { $obj.$_ }) -join '|'
+            if ($hashSet.Add($key)) { $obj }
+        }
+        return $uniqueObjects
+    }
+}
+
+function Get-MaterialInventoryFilePath {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject] $LabConfig
+    )
+
+    return Join-Path -Path $LabConfig.labHost.folderPath.temp -ChildPath 'inventory.json'
+}
+
 function Get-Secret
 {
     [CmdletBinding()]
@@ -1508,6 +1538,8 @@ $exportFunctions = @(
     'Set-ScriptLogDefaultContext',
     'Write-ScriptLog',
     'Get-LabDeploymentConfig',
+    'Select-UniquePSObject',
+    'Get-MaterialInventoryFilePath',
     'Get-Secret',
     'Get-InstanceMetadata',
     'Invoke-FileDownload',
