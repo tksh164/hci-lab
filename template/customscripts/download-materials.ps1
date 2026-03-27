@@ -289,24 +289,13 @@ function New-InventoryFileContent {
 }
 
 try {
-    # Start the stopwatch to record the total time spent on this script.
+    # Mandatory pre-processing.
     $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
-
-    # Import the common module.
     Import-Module -Name ([IO.Path]::Combine($PSScriptRoot, 'common.psm1')) -Force
-
-    # Retrieve the lab deployment configuration.
     $labConfig = Get-LabDeploymentConfig
-
-    # Start logging.
     Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log
-
-    # Log the script file path.
     'Script path: "{0}"' -f $PSCommandPath | Write-ScriptLog
-
-    # Log the lab deployment configuration.
-    'Lab deployment config:' | Write-ScriptLog
-    $labConfig | ConvertTo-Json -Depth 16 | Out-String -Width 200 | Write-ScriptLog
+    'Lab deployment config: {0}' -f ($labConfig | ConvertTo-Json -Depth 16) | Write-ScriptLog
 
     'Retrieve the material metadata.' | Write-ScriptLog
     $materialMetadata = ConvertFrom-Jsonc -FilePath (Join-Path -Path $PSScriptRoot -ChildPath 'materials.json')
@@ -378,10 +367,8 @@ catch {
     throw $exceptionMessage
 }
 finally {
-    # Stop the stopwatch and log the duration.
+    # Mandatory post-processing.
     $stopWatch.Stop()
     'Script duration: {0}' -f $stopWatch.Elapsed.toString('hh\:mm\:ss') | Write-ScriptLog
-
-    # Stop logging.
     Stop-ScriptLogging
 }
