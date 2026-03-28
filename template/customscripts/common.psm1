@@ -103,8 +103,7 @@ function Select-UniquePSObject {
     }
 }
 
-function New-ExceptionMessage
-{
+function New-ExceptionMessage {
     param (
         [Parameter(Mandatory = $true)]
         [System.Management.Automation.ErrorRecord] $ErrorRecord,
@@ -164,8 +163,7 @@ function New-ExceptionMessage
     return $builder.ToString()
 }
 
-function Start-ScriptLogging
-{
+function Start-ScriptLogging {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -192,8 +190,7 @@ function Stop-ScriptLogging {
     Stop-Transcript
 }
 
-function New-LogFileName
-{
+function New-LogFileName {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $false)]
@@ -206,8 +203,7 @@ function New-LogFileName
 # The script log default context.
 $script:scriptLogDefaultConext = ''
 
-function Set-ScriptLogDefaultContext
-{
+function Set-ScriptLogDefaultContext {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -217,8 +213,7 @@ function Set-ScriptLogDefaultContext
     $script:scriptLogDefaultConext = $LogContext
 }
 
-function Write-ScriptLog
-{
+function Write-ScriptLog {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true, Position = 1, ValueFromPipeline = $true)]
@@ -244,12 +239,10 @@ function Write-ScriptLog
     else {
         '[{0}]' -f $computerName
     }
-    $logRecord = '{0} {1,-7} {2} {3}' -f $timestamp, $Level.ToUpper(), $context, $Message
-    Write-Host -Object $logRecord -ForegroundColor Cyan
+    '{0} {1,-7} {2} {3}' -f $timestamp, $Level.ToUpper(), $context, $Message | Write-Host -ForegroundColor Cyan
 }
 
-function Get-LabDeploymentConfig
-{
+function Get-LabDeploymentConfig {
     [CmdletBinding()]
     param ()
 
@@ -327,8 +320,7 @@ function Get-Secret {
     throw 'Could not get a secret value from the Key Vault.'
 }
 
-function Get-AccessTokenUsingManagedId
-{
+function Get-AccessTokenUsingManagedId {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -366,8 +358,7 @@ function Get-AccessTokenUsingManagedId
     throw 'Could not get an access token from the Azure Instance Metadata Service endpoint.'
 }
 
-function Get-InstanceMetadata
-{
+function Get-InstanceMetadata {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $false)]
@@ -410,8 +401,7 @@ function Get-InstanceMetadata
     throw 'Could not get an instance medata from the Azure Instance Metadata Service endpoint.'
 }
 
-function Invoke-FileDownload
-{
+function Invoke-FileDownload {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -475,8 +465,7 @@ function Invoke-FileDownload
     throw 'The download from "{0}" did not succeed in the acceptable retry count ({1}).' -f $SourceUri, $MaxRetryCount
 }
 
-function New-RegistryKey
-{
+function New-RegistryKey {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -494,8 +483,7 @@ function New-RegistryKey
     }
 }
 
-function Format-IsoFileName
-{
+function Format-IsoFileName {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -514,8 +502,7 @@ function Format-IsoFileName
     return '{0}_{1}.iso' -f $OperatingSystem, $Culture
 }
 
-function Format-BaseVhdFileName
-{
+function Format-BaseVhdFileName {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -532,8 +519,7 @@ function Format-BaseVhdFileName
     return '{0}_{1}_{2}.vhdx' -f $OperatingSystem, $ImageIndex, $Culture
 }
 
-function Format-HciNodeName
-{
+function Format-HciNodeName {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -615,8 +601,7 @@ function New-UnattendAnswerFileContent
 '@ -f $encodedAdminPassword, $ComputerName, $TimeZone, $Culture
 }
 
-function Wait-VhdDismountCompletion
-{
+function Wait-VhdDismountCompletion {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -639,8 +624,7 @@ function Wait-VhdDismountCompletion
     }
 }
 
-function Set-UnattendAnswerFileToVhd
-{
+function Set-UnattendAnswerFileToVhd {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -691,8 +675,7 @@ function Set-UnattendAnswerFileToVhd
     Remove-Item $scratchDirectory -Force
 }
 
-function CreateWaitHandleForSerialization
-{
+function CreateWaitHandleForSerialization {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -710,8 +693,7 @@ function CreateWaitHandleForSerialization
     return New-Object @params
 }
 
-function Install-WindowsFeatureToVhd
-{
+function Install-WindowsFeatureToVhd {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -794,8 +776,7 @@ function Install-WindowsFeatureToVhd
     throw 'The Install-WindowsFeature cmdlet execution for "{0}" was not succeeded in the acceptable time ({1}).' -f $VhdPath, $RetryTimeout.ToString()
 }
 
-function Start-VMSurely
-{
+function Start-VMSurely {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -852,8 +833,7 @@ function Start-VMSurely
     throw $exceptionMessage
 }
 
-function Stop-VMSurely
-{
+function Stop-VMSurely {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -937,8 +917,7 @@ function Stop-VMSurely
     throw $exceptionMessage
 }
 
-function Wait-PowerShellDirectReady
-{
+function Wait-PowerShellDirectReady {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -989,8 +968,7 @@ function Wait-PowerShellDirectReady
 $script:addsDcDeploymentCompletionSyncEventName = 'Local\hcilab-adds-dc-deployment-completion'
 $script:addsDcDeploymentCompletionWaitHandle = $null
 
-function Block-AddsDomainOperation
-{
+function Block-AddsDomainOperation {
     [CmdletBinding()]
     param ()
 
@@ -1006,8 +984,7 @@ function Block-AddsDomainOperation
     $script:addsDcDeploymentCompletionWaitHandle = New-Object @params
 }
 
-function Unblock-AddsDomainOperation
-{
+function Unblock-AddsDomainOperation {
     [CmdletBinding()]
     param ()
 
@@ -1023,8 +1000,7 @@ function Unblock-AddsDomainOperation
     }
 }
 
-function Wait-AddsDcDeploymentCompletion
-{
+function Wait-AddsDcDeploymentCompletion {
     [CmdletBinding()]
     param ()
 
@@ -1044,8 +1020,7 @@ function Wait-AddsDcDeploymentCompletion
     }
 }
 
-function Wait-DomainControllerServiceReady
-{
+function Wait-DomainControllerServiceReady {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -1141,8 +1116,7 @@ function Wait-DomainControllerServiceReady
     throw 'The AD DS domain controller "{0}" was not ready in the acceptable time ({1}).' -f $AddsDcVMName, $RetryTimeout.ToString()
 }
 
-function New-LogonCredential
-{
+function New-LogonCredential {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -1166,8 +1140,7 @@ function New-LogonCredential
     return New-Object @params
 }
 
-function Add-VMToADDomain
-{
+function Add-VMToADDomain {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -1227,8 +1200,7 @@ function Add-VMToADDomain
     throw 'Domain join the "{0}" VM to the AD domain "{1}" was not complete in the acceptable time ({2}).' -f $VMName, $DomainFqdn, $RetryTimeout.ToString()
 }
 
-function New-PSDirectSession
-{
+function New-PSDirectSession {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -1258,8 +1230,7 @@ function New-PSDirectSession
     throw $exceptionMessage
 }
 
-function Remove-PSDirectSession
-{
+function Remove-PSDirectSession {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -1271,8 +1242,7 @@ function Remove-PSDirectSession
     'Delete a PowerShell Direct session to {0} succeeded.' -f $Session.Name | Write-ScriptLog
 }
 
-function Invoke-PSDirectSessionGroundwork
-{
+function Invoke-PSDirectSessionGroundwork {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -1305,8 +1275,7 @@ function Invoke-PSDirectSessionGroundwork
     }
 }
 
-function Copy-FileIntoVM
-{
+function Copy-FileIntoVM {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -1345,8 +1314,7 @@ function Copy-FileIntoVM
     }
 }
 
-function Remove-FileWithinVM
-{
+function Remove-FileWithinVM {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -1410,8 +1378,7 @@ function Remove-FileWithinVM
     throw $exceptionMessage
 }
 
-function Invoke-CommandWithinVM
-{
+function Invoke-CommandWithinVM {
     param (
         [Parameter(Mandatory = $true)]
         [string] $VMName,
@@ -1466,8 +1433,7 @@ function Invoke-CommandWithinVM
     throw $exceptionMessage
 }
 
-function New-ShortcutFile
-{
+function New-ShortcutFile {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -1497,8 +1463,7 @@ function New-ShortcutFile
     'Create a shortcut file "{0}" completed.' -f $ShortcutFilePath | Write-ScriptLog
 }
 
-function New-WacConnectionFileEntry
-{
+function New-WacConnectionFileEntry {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -1526,8 +1491,7 @@ function New-WacConnectionFileEntry
     return [PSCustomObject] $entry
 }
 
-function New-WacConnectionFileContent
-{
+function New-WacConnectionFileContent {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
