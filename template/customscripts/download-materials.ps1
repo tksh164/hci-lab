@@ -278,7 +278,7 @@ function New-InventoryJson {
 try {
     # Mandatory pre-processing.
     $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
-    Import-Module -Name ([IO.Path]::Combine($PSScriptRoot, 'common.psm1')) -Force
+    Import-Module -Name ([System.IO.Path]::Combine($PSScriptRoot, 'common.psm1')) -Force
     $labConfig = Get-LabDeploymentConfig
     Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log
     'Script path: "{0}"' -f $PSCommandPath | Write-ScriptLog
