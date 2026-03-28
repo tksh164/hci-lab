@@ -69,7 +69,7 @@ function Add-DriveLetterToPartition {
     $isDriveLetterAssigned = $false
     $ATTEMPT_LIMIT = 20
     $workingPartition = $Partition
-    for ($attempts = 0; $attempts -lt $ATTEMPT_LIMIT; $attempts++) {
+    for ($attempt = 0; $attempt -lt $ATTEMPT_LIMIT; $attempt++) {
         $workingPartition | Add-PartitionAccessPath -AssignDriveLetter
         $workingPartition = $workingPartition | Get-Partition
         if($workingPartition.DriveLetter -ne 0) {
@@ -78,7 +78,7 @@ function Add-DriveLetterToPartition {
         }
 
         'Could not assigna a drive letter. Try again.' | Write-ScriptLog
-        $attempts++
+        $attempt++
         Start-Sleep -Seconds 5
     }
 

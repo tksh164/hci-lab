@@ -297,8 +297,8 @@ function Get-Secret {
 
     'Get a secret value of the "{0}" from the "{1}".' -f $SecretName, $KeyVaultName | Write-ScriptLog
 
-    $attemptLimit = 10
-    for ($attempts = 0; $attempts -lt $attemptLimit; $attempts++) {
+    $ATTEMPT_LIMIT = 10
+    for ($attempt = 0; $attempt -lt $ATTEMPT_LIMIT; $attempt++) {
         try {
             # Get a token for Key Vault using VM's managed identity via Azure Instance Metadata Service.
             $accessToken = Get-AccessTokenUsingManagedId -Resource 'https%3A%2F%2Fvault.azure.net'
@@ -1148,8 +1148,8 @@ function New-PSDirectSession {
         [PSCredential] $Credential
     )
 
-    $attemptLimit = 5
-    for ($attempts = 0; $attempts -lt $attemptLimit; $attempts++) {
+    $ATTEMPT_LIMIT = 5
+    for ($attempt = 0; $attempt -lt $ATTEMPT_LIMIT; $attempt++) {
         try {
             'Create a new PowerShell Direct session to "{0}" with "{1}".' -f $VMName, $Credential.UserName | Write-ScriptLog
             $pss = New-PSSession -VMName $VMName -Credential $Credential -Name ('"{0}" with "{1}"' -f $VMName, $Credential.UserName)
@@ -1268,8 +1268,8 @@ function Remove-FileWithinVM {
         [string[]] $ImportModuleInVM = @()
     )
 
-    $attemptLimit = 5
-    for ($attempts = 0; $attempts -lt $attemptLimit; $attempts++) {
+    $ATTEMPT_LIMIT = 5
+    for ($attempt = 0; $attempt -lt $ATTEMPT_LIMIT; $attempt++) {
         try {
             $pss = New-PSDirectSession -VMName $VMName -Credential $Credential
             Invoke-PSDirectSessionGroundwork -Session $pss -ImportModuleInVM $ImportModuleInVM
@@ -1338,7 +1338,7 @@ function Invoke-CommandWithinVM {
     )
 
     $attemptLimit = if ($WithRetry) { 5 } else { 1 }
-    for ($attempts = 0; $attempts -lt $attemptLimit; $attempts++) {
+    for ($attempt = 0; $attempt -lt $attemptLimit; $attempt++) {
         try {
             $pss = New-PSDirectSession -VMName $VMName -Credential $Credential
             Invoke-PSDirectSessionGroundwork -Session $pss -ImportModuleInVM $ImportModuleInVM
