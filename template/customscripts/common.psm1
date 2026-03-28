@@ -372,49 +372,6 @@ function Get-AccessTokenUsingManagedId {
     throw 'Could not get an access token from the Azure Instance Metadata Service endpoint.'
 }
 
-function Get-InstanceMetadata {
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory = $false)]
-        [ValidateScript({ $_.StartsWith('/') })]
-        [string] $FilterPath = '',
-
-        [Parameter(Mandatory = $false)]
-        [switch] $LeafNode
-    )
-
-    $queryFormat = if ($LeafNode) { 'text' } else { 'json' }
-
-    $retryLimit = 10
-    for ($retryCount = 0; $retryCount -lt $retryLimit; $retryCount++) {
-        try {
-            $params = @{
-                Method  = 'Get'
-                Uri     = 'http://169.254.169.254/metadata/instance' + $FilterPath + '?api-version=2021-02-01&format=' + $queryFormat
-                Headers = @{
-                    Metadata = 'true'
-                }
-                UseBasicParsing = $true
-            }
-            return Invoke-RestMethod @params
-        }
-        catch {
-            # Common error codes when using IMDS to retrieve load balancer information
-            # https://learn.microsoft.com/en-us/azure/load-balancer/troubleshoot-load-balancer-imds
-            $httpStatusCode = [int]($_.Exception.Response.StatusCode)
-            if ($httpStatusCode -eq 429) {
-                ('/metadata/instance: TooManyRequests: {0}' -f $_.ErrorDetails.Message) | Write-ScriptLog -Level Warning
-                Start-Sleep -Seconds 1
-            }
-            else {
-                throw $_
-            }
-        }
-    }
-
-    throw 'Could not get an instance medata from the Azure Instance Metadata Service endpoint.'
-}
-
 function Invoke-FileDownload {
     [CmdletBinding()]
     param (
@@ -495,25 +452,6 @@ function New-RegistryKey {
         New-Item -ItemType Directory -Path $ParentPath -Name $KeyName | Out-String -Width 200 | Write-ScriptLog
         'Create a new registry key "{0}" under "{1}" completed.' -f $KeyName, $ParentPath | Write-ScriptLog
     }
-}
-
-function Format-IsoFileName {
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory = $true)]
-        [string] $OperatingSystem,
-
-        [Parameter(Mandatory = $true)]
-        [string] $Culture,
-
-        [Parameter(Mandatory = $false)]
-        [string] $Suffix
-    )
-
-    if ($PSBoundParameters.Keys.Contains('Suffix')) {
-        return '{0}_{1}_{2}.iso' -f $OperatingSystem, $Culture, $Suffix
-    }
-    return '{0}_{1}.iso' -f $OperatingSystem, $Culture
 }
 
 function Format-BaseVhdFileName {
@@ -1539,10 +1477,8 @@ $exportFunctions = @(
     'Get-LabDeploymentConfig',
     'Get-MaterialInventoryFilePath',
     'Get-Secret',
-    'Get-InstanceMetadata',
     'Invoke-FileDownload',
     'New-RegistryKey',
-    'Format-IsoFileName',
     'Format-BaseVhdFileName',
     'Format-HciNodeName',
     'New-UnattendAnswerFileContent',
