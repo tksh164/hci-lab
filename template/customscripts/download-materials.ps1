@@ -245,6 +245,7 @@ function New-InventoryFileContent {
             if ($inventory.$($spec.Sku).Keys -notcontains $spec.Language) { $inventory.$($spec.Sku).$($spec.Language) = @{} }
 
             $inventory.$($spec.Sku).$($spec.Language).isoFilePath = $isoFilePath
+            $inventory.$($spec.Sku).$($spec.Language).vhdFilePath = ''  # Placeholder, will be updated in the base VHD creation step.
         }
 
         # Append OS updates entries.
