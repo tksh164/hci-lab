@@ -163,6 +163,16 @@ function New-ExceptionMessage {
     return $builder.ToString()
 }
 
+function New-LogFileName {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $false)]
+        [string] $FileName
+    )
+
+    return '{0:yyyyMMdd-HHmmss}_{1}_{2}.log' -f [DateTime]::Now, $env:ComputerName, $FileName
+}
+
 function Start-ScriptLogging {
     [CmdletBinding()]
     param (
@@ -188,16 +198,6 @@ function Stop-ScriptLogging {
     param ()
 
     Stop-Transcript
-}
-
-function New-LogFileName {
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory = $false)]
-        [string] $FileName
-    )
-
-    return '{0:yyyyMMdd-HHmmss}_{1}_{2}.log' -f [DateTime]::Now, $env:ComputerName, $FileName
 }
 
 # The script log default context.
@@ -1516,6 +1516,7 @@ $exportFunctions = @(
     'ConvertFrom-Jsonc',
     'Select-UniquePSObject',
     'New-ExceptionMessage',
+    'New-LogFileName',
     'Start-ScriptLogging',
     'Stop-ScriptLogging',
     'Set-ScriptLogDefaultContext',
