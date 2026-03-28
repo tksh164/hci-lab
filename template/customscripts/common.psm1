@@ -136,7 +136,7 @@ function New-ExceptionMessage {
     }
 
     $ex = $ErrorRecord.Exception
-    $builder = New-Object -TypeName 'System.Text.StringBuilder'
+    $builder = [System.Text.StringBuilder]::new()
     [void] $builder.AppendLine('')
     [void] $builder.AppendLine($fenceChar * $horizontalLineLength)
     [void] $builder.AppendLine($headerText)
@@ -634,15 +634,11 @@ function CreateWaitHandleForSerialization {
         [string] $SyncEventName
     )
 
-    $params = @{
-        TypeName     = 'System.Threading.EventWaitHandle'
-        ArgumentList = @(
-            $true,
-            [System.Threading.EventResetMode]::AutoReset,
-            $SyncEventName
-        )
-    }
-    return New-Object @params
+    return [System.Threading.EventWaitHandle]::new(
+        $true,
+        [System.Threading.EventResetMode]::AutoReset,
+        $SyncEventName
+    )
 }
 
 function Install-WindowsFeatureToVhd {
@@ -925,15 +921,11 @@ function Block-AddsDomainOperation {
     param ()
 
     'Block the AD DS domain operations until the AD DS domain controller VM deployment is completed.' | Write-ScriptLog
-    $params = @{
-        TypeName     = 'System.Threading.EventWaitHandle'
-        ArgumentList = @(
-            $false,
-            [System.Threading.EventResetMode]::ManualReset,
-            $script:addsDcDeploymentCompletionSyncEventName
-        )
-    }
-    $script:addsDcDeploymentCompletionWaitHandle = New-Object @params
+    $script:addsDcDeploymentCompletionWaitHandle = [System.Threading.EventWaitHandle]::new(
+        $false,
+        [System.Threading.EventResetMode]::ManualReset,
+        $script:addsDcDeploymentCompletionSyncEventName
+    )
 }
 
 function Unblock-AddsDomainOperation {
@@ -1075,21 +1067,15 @@ function New-LogonCredential {
         [AllowEmptyString()]
         [string] $DomainFqdn,
 
-        [Parameter(Mandatory = $true)]
-        [securestring] $Password,
-
         [Parameter(Mandatory = $false)]
-        [string] $UserName = 'Administrator'
+        [string] $UserName = 'Administrator',
+
+        [Parameter(Mandatory = $true)]
+        [securestring] $Password
     )
 
-    $params = @{
-        TypeName     = 'System.Management.Automation.PSCredential'
-        ArgumentList = @(
-            if ($DomainFqdn -eq '') { $UserName } else { '{0}\{1}' -f $DomainFqdn, $UserName },
-            $Password
-        )
-    }
-    return New-Object @params
+    $userName = if ($DomainFqdn -eq '') { $UserName } else { '{0}\{1}' -f $DomainFqdn, $UserName }
+    return [System.Management.Automation.PSCredential]::new($userName, $Password)
 }
 
 function Add-VMToADDomain {
@@ -1450,7 +1436,7 @@ function New-ShortcutFile {
 #         [PSCustomObject[]] $ConnectionEntry
 #     )
 
-#     $builder = New-Object -TypeName 'System.Text.StringBuilder'
+#     $builder = [System.Text.StringBuilder]::new()
 #     [void] $builder.AppendLine('"name","type","tags","groupId"')
 #     foreach ($entry in $ConnectionEntry) {
 #         $values = @(
