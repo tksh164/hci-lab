@@ -84,7 +84,7 @@ function New-BaseVhdFilePath {
 try {
     # Mandatory pre-processing.
     $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
-    Import-Module -Name ([IO.Path]::Combine($PSScriptRoot, 'common.psm1')) -Force
+    Import-Module -Name ([System.IO.Path]::Combine($PSScriptRoot, 'common.psm1')) -Force
     $labConfig = Get-LabDeploymentConfig
     Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log
     'Script path: "{0}"' -f $PSCommandPath | Write-ScriptLog
@@ -160,15 +160,17 @@ try {
         $jobLogFileName = [System.IO.Path]::GetFileNameWithoutExtension($jobScriptFilePath) + '_' + $jobName
 
         [PSCustomObject]@{
-            JobName                 = $jobName
-            JobScriptFilePath       = $jobScriptFilePath
-            ImportModulePaths       = $importModulePaths
-            WimFilePath             = $wimFilePathLookupHash.$(Get-WimFilePathLookupKey -Sku $spec.Sku -Language $spec.Language)
-            ImageIndex              = $spec.ImageIndex
-            UpdatePackageFolderPath = if ($materialInventory.$($spec.Sku).updatesFolderPath) { $materialInventory.$($spec.Sku).updatesFolderPath } else { '' }
-            VhdFilePath             = $spec.VhdFilePath
-            LogFileName             = $jobLogFileName
-            LogContext              = $jobName
+            JobName           = $jobName
+            JobScriptFilePath = $jobScriptFilePath
+            ImportModulePaths = $importModulePaths
+            LogFileName       = $jobLogFileName
+            LogContext        = $jobName
+            JobParamsJson     = (@{
+                WimFilePath             = $wimFilePathLookupHash.$(Get-WimFilePathLookupKey -Sku $spec.Sku -Language $spec.Language)
+                ImageIndex              = $spec.ImageIndex
+                UpdatePackageFolderPath = if ($materialInventory.$($spec.Sku).updatesFolderPath) { $materialInventory.$($spec.Sku).updatesFolderPath } else { '' }
+                VhdFilePath             = $spec.VhdFilePath                
+            } | ConvertTo-Json -Compress -Depth 5)
         }
     }
     'The job specs: {0}' -f ($jobSpecs | Format-List -Property '*' | Out-String -Width 200) | Write-ScriptLog
@@ -181,14 +183,8 @@ try {
             ImportModulePath = $spec.ImportModulePaths
             LogFileName      = $spec.LogFileName
             LogContext       = $spec.LogContext
-            JobParamsJson    = (@{
-                WimFilePath             = $spec.WimFilePath
-                ImageIndex              = $spec.ImageIndex
-                UpdatePackageFolderPath = $spec.UpdatePackageFolderPath
-                VhdFilePath             = $spec.VhdFilePath
-            } | ConvertTo-Json -Depth 5)
+            JobParamsJson    = $spec.JobParamsJson
         }
-
         Start-Job -Name $spec.JobName -LiteralPath $spec.JobScriptFilePath -InputObject ([PSCustomObject] $jobParams)
         'The job "{0}" has started.' -f $spec.JobName | Write-ScriptLog
     }
