@@ -173,7 +173,7 @@ function Start-ScriptLogging
 
         # The log file name suffix. The default value is the file name without extension of the caller script.
         [Parameter(Mandatory = $false)]
-        [string] $FileName = [IO.Path]::GetFileNameWithoutExtension($MyInvocation.ScriptName)
+        [string] $FileName = [System.IO.Path]::GetFileNameWithoutExtension($MyInvocation.ScriptName)
     )
 
     if (-not (Test-Path -PathType Container -LiteralPath $OutputDirectory)) {
@@ -181,12 +181,11 @@ function Start-ScriptLogging
     }
 
     $transcriptFileName = New-LogFileName -FileName $FileName
-    $transcriptFilePath = [IO.Path]::Combine($OutputDirectory, $transcriptFileName)
+    $transcriptFilePath = [System.IO.Path]::Combine($OutputDirectory, $transcriptFileName)
     Start-Transcript -LiteralPath $transcriptFilePath -Append -IncludeInvocationHeader
 }
 
-function Stop-ScriptLogging
-{
+function Stop-ScriptLogging {
     [CmdletBinding()]
     param ()
 
@@ -273,11 +272,10 @@ function Get-MaterialInventoryFilePath {
         [PSCustomObject] $LabConfig
     )
 
-    return Join-Path -Path $LabConfig.labHost.folderPath.temp -ChildPath 'inventory.json'
+    return [System.IO.Path]::Combine($LabConfig.labHost.folderPath.temp, 'inventory.json')
 }
 
-function Get-Secret
-{
+function Get-Secret {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]

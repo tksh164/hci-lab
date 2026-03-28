@@ -43,7 +43,7 @@ function Deploy-Aria2 {
     $zipFile = Invoke-FileDownload @params
 
     # Extract the tool from the zip file.
-    $expandDestinationFolderPath = Join-Path -Path $DestinationFolderPath -ChildPath ([System.IO.Path]::GetFileNameWithoutExtension($zipFile.FullName))
+    $expandDestinationFolderPath = [System.IO.Path]::Combine($DestinationFolderPath, [System.IO.Path]::GetFileNameWithoutExtension($zipFile.FullName))
     Expand-Archive -Path $zipFile.FullName -DestinationPath $expandDestinationFolderPath -Force
 
     # Return the full path of the tool's executable file.
@@ -51,7 +51,7 @@ function Deploy-Aria2 {
     if ($relativeExeFilePath -eq $null) {
         throw 'aria2c.exe does not found in the expanded folder "{0}".' -f $expandDestinationFolderPath
     }
-    return Join-Path -Path $expandDestinationFolderPath -ChildPath $relativeExeFilePath
+    return [System.IO.Path]::Combine($expandDestinationFolderPath, $relativeExeFilePath)
 }
 
 function New-Aria2InputFileContent {
@@ -198,7 +198,7 @@ function New-DownloadMaterialSpecList {
                     # Common properties
                     Type             = 'update'
                     Url              = $url
-                    OutputFolderPath = Join-Path -Path $LabConfig.labHost.folderPath.temp -ChildPath (Join-Path -Path 'updates' -ChildPath $sku)
+                    OutputFolderPath = [System.IO.Path]::Combine($LabConfig.labHost.folderPath.temp, 'updates', $sku)
                     FileName         = $null
                     # Additional properties
                     Sku              = $sku
@@ -250,7 +250,7 @@ function New-InventoryFileContent {
     foreach ($spec in $DownloadMaterialSpec) {
         # Append OS related entries.
         if ($spec.Type -eq 'iso') {
-            $isoFilePath = Join-Path -Path $spec.OutputFolderPath -ChildPath $spec.FileName
+            $isoFilePath = [System.IO.Path]::Combine($spec.OutputFolderPath, $spec.FileName)
             if (-not (Test-Path -PathType Leaf -LiteralPath $isoFilePath)) {
                 throw 'The ISO file path "{0}" does not exist.' -f $isoFilePath
             }
@@ -274,7 +274,7 @@ function New-InventoryFileContent {
 
         # Append individual file entries.
         elseif ($spec.Type -eq 'file') {
-            $filePath = Join-Path -Path $spec.OutputFolderPath -ChildPath $spec.FileName
+            $filePath = [System.IO.Path]::Combine($spec.OutputFolderPath, $spec.FileName)
             if (-not (Test-Path -PathType Leaf -LiteralPath $filePath)) {
                 throw 'The file path "{0}" does not exist.' -f $filePath
             }
@@ -298,7 +298,7 @@ try {
     'Lab deployment config: {0}' -f ($labConfig | ConvertTo-Json -Depth 16) | Write-ScriptLog
 
     'Retrieve the material metadata.' | Write-ScriptLog
-    $materialMetadata = ConvertFrom-Jsonc -FilePath (Join-Path -Path $PSScriptRoot -ChildPath 'materials.json')
+    $materialMetadata = ConvertFrom-Jsonc -FilePath ([System.IO.Path]::Combine($PSScriptRoot, 'materials.json'))
     'Retrieve the material metadata has been completed.' | Write-ScriptLog
 
     'Deploy the fast download tool.' | Write-ScriptLog
@@ -344,7 +344,7 @@ try {
     # Set the encoding to UTF8 will add BOM to the beginning of the file.
     # Area2 will does not work correctly if the input file beginning with BOM.
     'Create the fast download tool''s input file.' | Write-ScriptLog
-    $inputFilePath = Join-Path -Path $labConfig.labHost.folderPath.temp -ChildPath 'aria2-input.txt'
+    $inputFilePath = [System.IO.Path]::Combine($labConfig.labHost.folderPath.temp, 'aria2-input.txt')
     New-Aria2InputFileContent -DownloadMaterialSpec $downloadMaterialSpec | Out-FileUtf8NoBom -FilePath $inputFilePath
     'Input file path: "{0}"' -f $inputFilePath | Write-ScriptLog
     'Create the fast download tool''s input file has been completed.' | Write-ScriptLog
