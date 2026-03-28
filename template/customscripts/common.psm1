@@ -76,6 +76,20 @@ function ConvertFrom-Jsonc {
     return (Get-Content -LiteralPath $FilePath -Raw) -replace '(?m)(?<=^([^"]|"[^"]*")*)//.*','' -replace '(?ms)/\*.*?\*/','' | ConvertFrom-Json
 }
 
+function Out-FileUtf8NoBom {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [string] $Content,
+
+        [Parameter(Mandatory = $true)]
+        [string] $FilePath
+    )
+
+    $utf8Encoding = [System.Text.UTF8Encoding]::new($false, $true)  # No BOM, throw on invalid bytes.
+    [System.IO.File]::WriteAllText($FilePath, $Content, $utf8Encoding)
+}
+
 function Select-UniquePSObject {
     [CmdletBinding()]
     param (
@@ -1514,6 +1528,7 @@ function New-WacConnectionFileContent {
 
 $exportFunctions = @(
     'ConvertFrom-Jsonc',
+    'Out-FileUtf8NoBom',
     'Select-UniquePSObject',
     'New-ExceptionMessage',
     'New-LogFileName',

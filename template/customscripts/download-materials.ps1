@@ -6,20 +6,6 @@ $WarningPreference = [Management.Automation.ActionPreference]::Continue
 $VerbosePreference = [Management.Automation.ActionPreference]::Continue
 $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
-function Out-FileUtf8NoBom {
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
-        [string] $Content,
-
-        [Parameter(Mandatory = $true)]
-        [string] $FilePath
-    )
-
-    $utf8Encoding = [System.Text.UTF8Encoding]::new($false, $true)  # No BOM, throw on invalid bytes.
-    [System.IO.File]::WriteAllText($FilePath, $Content, $utf8Encoding)
-}
-
 function Deploy-Aria2 {
     [CmdletBinding()]
     param (
