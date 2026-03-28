@@ -224,7 +224,7 @@ function New-DownloadMaterialSpecList {
     return $materialInfoList
 }
 
-function New-InventoryFileContent {
+function New-InventoryJson {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -342,7 +342,7 @@ try {
 
     'Create the inventory file.' | Write-ScriptLog
     $inventoryFilePath = Get-MaterialInventoryFilePath -LabConfig $labConfig
-    New-InventoryFileContent -DownloadMaterialSpec $downloadMaterialSpec | Out-FileUtf8NoBom -FilePath $inventoryFilePath
+    New-InventoryJson -DownloadMaterialSpec $downloadMaterialSpec | Out-FileUtf8NoBom -FilePath $inventoryFilePath
     'Inventory file path: "{0}"' -f $inventoryFilePath | Write-ScriptLog
     'Create the inventory file has been completed.' | Write-ScriptLog
 
