@@ -126,9 +126,9 @@ function Invoke-Aria2Download {
     $startInfo.RedirectStandardError = $true
 
     $isCompleted = $false
-    $maxAttempts = 30
-    for ($attempt = 0; $attempt -lt $maxAttempts; $attempt++) {
-        'Attempt {0} of {1}...' -f ($attempt + 1), $maxAttempts | Write-ScriptLog
+    $ATTEMPT_LIMIT = 30
+    for ($attempt = 0; $attempt -lt $ATTEMPT_LIMIT; $attempt++) {
+        'Attempt {0} of {1}...' -f ($attempt + 1), $ATTEMPT_LIMIT | Write-ScriptLog
 
         $process = [System.Diagnostics.Process]::new()
         $process.StartInfo = $startInfo
