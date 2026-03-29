@@ -117,6 +117,35 @@ function Select-UniquePSObject {
     }
 }
 
+function Add-NestedHashtableValue {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [Hashtable] $Hashtable,
+
+        [Parameter(Mandatory = $true)]
+        [string[]] $KeySequence,
+
+        [Parameter(Mandatory = $true)]
+        [object] $LeafValue
+    )
+
+    $ht = $Hashtable
+    for ($i = 0; $i -lt $KeySequence.Length; $i++) {
+        $key = $KeySequence[$i]
+
+        if ($i -eq ($KeySequence.Length - 1)) {
+            $ht.($key) = $LeafValue
+        }
+        else {
+            if ($ht.Keys -notcontains $key) {
+                $ht.($key) = @{}
+            }
+        }
+        $ht = $ht.($key)
+    }
+}
+
 function New-ExceptionMessage {
     param (
         [Parameter(Mandatory = $true)]
@@ -1454,6 +1483,7 @@ $exportFunctions = @(
     'ConvertFrom-Jsonc',
     'Out-FileUtf8NoBom',
     'Select-UniquePSObject',
+    'Add-NestedHashtableValue',
     'New-ExceptionMessage',
     'New-LogFileName',
     'Start-ScriptLogging',

@@ -232,7 +232,6 @@ function New-InventoryJson {
     )
 
     $inventory = @{}
-
     foreach ($spec in $DownloadMaterialSpec) {
         # Append OS related entries.
         if ($spec.Type -eq 'iso') {
@@ -240,12 +239,7 @@ function New-InventoryJson {
             if (-not (Test-Path -PathType Leaf -LiteralPath $isoFilePath)) {
                 throw 'The ISO file path "{0}" does not exist.' -f $isoFilePath
             }
-
-            if ($inventory.Keys -notcontains $spec.Sku) { $inventory.$($spec.Sku) = @{} }
-            if ($inventory.$($spec.Sku).Keys -notcontains $spec.Language) { $inventory.$($spec.Sku).$($spec.Language) = @{} }
-
-            $inventory.$($spec.Sku).$($spec.Language).isoFilePath = $isoFilePath
-            $inventory.$($spec.Sku).$($spec.Language).vhdFilePath = ''  # Placeholder, will be updated in the base VHD creation step.
+            $inventory | Add-NestedHashtableValue -KeySequence @('Iso', $spec.Sku, $spec.Language, 'Path') -LeafValue $isoFilePath
         }
 
         # Append OS updates entries.
@@ -253,10 +247,7 @@ function New-InventoryJson {
             if (-not (Test-Path -PathType Container -LiteralPath $spec.OutputFolderPath)) {
                 throw 'The folder path "{0}" does not exist.' -f $spec.OutputFolderPath
             }
-
-            if ($inventory.Keys -notcontains $spec.Sku) { $inventory.$($spec.Sku) = @{} }
-
-            $inventory.$($spec.Sku).updatesFolderPath = $spec.OutputFolderPath
+            $inventory | Add-NestedHashtableValue -KeySequence @('Update', $spec.Sku, 'Path') -LeafValue $spec.OutputFolderPath
         }
 
         # Append individual file entries.
@@ -265,10 +256,7 @@ function New-InventoryJson {
             if (-not (Test-Path -PathType Leaf -LiteralPath $filePath)) {
                 throw 'The file path "{0}" does not exist.' -f $filePath
             }
-
-            if ($inventory.Keys -notcontains $spec.InventoryKey) { $inventory.$($spec.InventoryKey) = @{} }
-
-            $inventory.$($spec.InventoryKey).filePath = $filePath
+            $inventory | Add-NestedHashtableValue -KeySequence @('File', $spec.InventoryKey, 'Path') -LeafValue $filePath
         }
     }
 
