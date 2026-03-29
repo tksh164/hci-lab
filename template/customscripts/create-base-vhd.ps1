@@ -71,14 +71,37 @@ function New-BaseVhdFilePath {
         [string] $Sku,
 
         [Parameter(Mandatory = $true)]
-        [int] $ImageIndex,
+        [string] $Language,
 
         [Parameter(Mandatory = $true)]
-        [string] $Language
+        [int] $ImageIndex
+   )
+
+    $vhdFileName = '{0}_{1}_{2}.vhdx' -f $Sku, $Language, $ImageIndex
+    return [System.IO.Path]::Combine($VhdFolderPath, $vhdFileName)
+}
+
+function New-InventoryJsonWithVhd {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject] $ExistingMaterialInventory,
+
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject[]] $VhdSpecs
     )
 
-    $vhdFileName = '{0}_{1}_{2}.vhdx' -f $Sku, $ImageIndex, $Language
-    return [System.IO.Path]::Combine($VhdFolderPath, $vhdFileName)
+    # Convert PSCustomObject to hashtable, only top-level properties.
+    # ConvertTo-Json can be convert hashtable and PSCustomObject even it's mixed.
+    $newMaterialInventory = @{}
+    foreach ($prop in $ExistingMaterialInventory.PSObject.Properties) {
+        $newMaterialInventory.($prop.Name) = $prop.Value
+    }
+
+    foreach ($spec in $VhdSpecs) {
+        $newMaterialInventory | Add-NestedHashtableValue -KeySequence @('Vhd', $spec.Sku, $spec.Language, ([string] $spec.ImageIndex), 'Path') -LeafValue $spec.VhdFilePath
+    }
+    return ([PSCustomObject] $newMaterialInventory) | ConvertTo-Json -Depth 10
 }
 
 try {
@@ -104,20 +127,20 @@ try {
         # For AD DS DC
         [PSCustomObject] @{
             Sku        = [HciLab.OSSku]::WindowsServer2025
-            ImageIndex = [int]([HciLab.OSImageIndex]::WSDatacenterServerCore)
             Language   = $labConfig.guestOS.culture
+            ImageIndex = [int]([HciLab.OSImageIndex]::WSDatacenterServerCore)
         },
         # For workbox
         [PSCustomObject] @{
             Sku        = [HciLab.OSSku]::WindowsServer2025
-            ImageIndex = [int]([HciLab.OSImageIndex]::WSDatacenterDesktopExperience)
             Language   = $labConfig.guestOS.culture
+            ImageIndex = [int]([HciLab.OSImageIndex]::WSDatacenterDesktopExperience)
         },
         # For HCI nodes
         [PSCustomObject] @{
             Sku        = $labConfig.hciNode.operatingSystem.sku
-            ImageIndex = $labConfig.hciNode.operatingSystem.imageIndex
             Language   = $labConfig.guestOS.culture
+            ImageIndex = $labConfig.hciNode.operatingSystem.imageIndex
         }
     )
 
@@ -125,9 +148,9 @@ try {
     $vhdSpecs = $vhdSpecsForVms | Select-UniquePSObject -KeyPropertyName @('Sku', 'ImageIndex', 'Language') | ForEach-Object -Process {
         [PSCustomObject] @{
             Sku         = $_.Sku
-            ImageIndex  = $_.ImageIndex
             Language    = $_.Language
-            VhdFilePath = New-BaseVhdFilePath -VhdFolderPath $labConfig.labHost.folderPath.vhd -Sku $_.Sku -ImageIndex $_.ImageIndex -Language $_.Language
+            ImageIndex  = $_.ImageIndex
+            VhdFilePath = New-BaseVhdFilePath -VhdFolderPath $labConfig.labHost.folderPath.vhd -Sku $_.Sku -Language $_.Language -ImageIndex $_.ImageIndex
         }
     }
     'The base VHD specs: {0}' -f ($vhdSpecs | Format-List -Property '*' | Out-String -Width 200) | Write-ScriptLog
@@ -135,7 +158,7 @@ try {
     # The ISO file specs to be mounted to create the base VHDs.
     $isoSpecs = $vhdSpecs | Select-UniquePSObject -KeyPropertyName @('Sku', 'Language') | ForEach-Object -Process {
         [PSCustomObject] @{
-            IsoFilePath = $materialInventory.$($_.Sku).$($_.Language).isoFilePath
+            IsoFilePath = $materialInventory.Iso.($_.Sku).($_.Language).Path
             Sku         = $_.Sku
             Language    = $_.Language
         }
@@ -156,7 +179,7 @@ try {
     $importModulePaths = @( (Get-Module -Name 'common').Path )
     $jobSpecs = @()
     $jobSpecs += foreach ($spec in $vhdSpecs) {
-        $jobName = '{0}_{1}_{2}' -f $spec.Sku, $spec.ImageIndex, $spec.Language
+        $jobName = '{0}_{1}_{2}' -f $spec.Sku, $spec.Language, $spec.ImageIndex
         $jobLogFileName = [System.IO.Path]::GetFileNameWithoutExtension($jobScriptFilePath) + '_' + $jobName
 
         [PSCustomObject]@{
@@ -166,9 +189,9 @@ try {
             LogFileName       = $jobLogFileName
             LogContext        = $jobName
             JobParamsJson     = (@{
-                WimFilePath             = $wimFilePathLookupHash.$(Get-WimFilePathLookupKey -Sku $spec.Sku -Language $spec.Language)
+                WimFilePath             = $wimFilePathLookupHash.(Get-WimFilePathLookupKey -Sku $spec.Sku -Language $spec.Language)
                 ImageIndex              = $spec.ImageIndex
-                UpdatePackageFolderPath = if ($materialInventory.$($spec.Sku).updatesFolderPath) { $materialInventory.$($spec.Sku).updatesFolderPath } else { '' }
+                UpdatePackageFolderPath = if ($materialInventory.Update.($spec.Sku).Path) { $materialInventory.Update.($spec.Sku).Path } else { '' }
                 VhdFilePath             = $spec.VhdFilePath                
             } | ConvertTo-Json -Compress -Depth 5)
         }
@@ -196,10 +219,7 @@ try {
     $jobs | Receive-Job -Wait
 
     'Update the VHD file paths in the inventory file.' | Write-ScriptLog
-    foreach ($spec in $vhdSpecs) {
-        $materialInventory.$($spec.Sku).$($spec.Language).vhdFilePath = $spec.VhdFilePath
-    }
-    $materialInventory | ConvertTo-Json -Depth 5 | Out-FileUtf8NoBom -FilePath $inventoryFilePath
+    New-InventoryJsonWithVhd -ExistingMaterialInventory $materialInventory -VhdSpecs $vhdSpecs | Out-FileUtf8NoBom -FilePath $inventoryFilePath
     'Update the VHD file paths in the inventory file has been completed.' | Write-ScriptLog
 
     'This script has been completed all tasks.' | Write-ScriptLog
