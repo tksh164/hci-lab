@@ -1,10 +1,16 @@
 [CmdletBinding()]
 param (
     [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-    [string[]] $PSModuleNameToImport,
+    [string[]] $ImportModulePath,
 
     [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-    [string] $LogFileName
+    [string] $LogFileName,
+
+    [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+    [string] $LogContext,
+
+    [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+    [string] $JobParamsJson
 )
 
 $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
@@ -16,50 +22,50 @@ $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 # Windows Admin Center
 #
 
-function Invoke-WindowsAdminCenterInstallerDownload
-{
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory = $true)]
-        [ValidateScript({ Test-Path -PathType Container -LiteralPath $_ })]
-        [string] $DownloadFolderPath
-    )
+# function Invoke-WindowsAdminCenterInstallerDownload
+# {
+#     [CmdletBinding()]
+#     param (
+#         [Parameter(Mandatory = $true)]
+#         [ValidateScript({ Test-Path -PathType Container -LiteralPath $_ })]
+#         [string] $DownloadFolderPath
+#     )
 
-    $params = @{
-        SourceUri      = 'https://aka.ms/WACDownload'
-        DownloadFolder = $DownloadFolderPath
-        FileNameToSave = 'WindowsAdminCenter.msi'
-    }
-    $wacInstallerFile = Invoke-FileDownload @params
-    return $wacInstallerFile
-}
+#     $params = @{
+#         SourceUri      = 'https://aka.ms/WACDownload'
+#         DownloadFolder = $DownloadFolderPath
+#         FileNameToSave = 'WindowsAdminCenter.msi'
+#     }
+#     $wacInstallerFile = Invoke-FileDownload @params
+#     return $wacInstallerFile
+# }
 
-function New-CertificateForWindowsAdminCenter
-{
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory = $true)]
-        [string] $VMName
-    )
+# function New-CertificateForWindowsAdminCenter
+# {
+#     [CmdletBinding()]
+#     param (
+#         [Parameter(Mandatory = $true)]
+#         [string] $VMName
+#     )
 
-    $params = @{
-        CertStoreLocation = 'Cert:\LocalMachine\My'
-        Subject           = 'CN=Windows Admin Center for HCI lab'
-        FriendlyName      = 'Windows Admin Center for HCI lab'
-        Type              = 'SSLServerAuthentication'
-        HashAlgorithm     = 'sha512'
-        KeyExportPolicy   = 'ExportableEncrypted'
-        NotBefore         = (Get-Date)::Now
-        NotAfter          = (Get-Date).AddDays(180)  # The same days with Windows Server evaluation period.
-        KeyUsage          = 'DigitalSignature', 'KeyEncipherment', 'DataEncipherment'
-        TextExtension     = @(
-            '2.5.29.37={text}1.3.6.1.5.5.7.3.1',  # Server Authentication
-            ('2.5.29.17={{text}}DNS={0}' -f $VMName)
-        )
-    }
-    $wacCret = New-SelfSignedCertificate @params | Move-Item -Destination 'Cert:\LocalMachine\Root' -PassThru
-    return $wacCret
-}
+#     $params = @{
+#         CertStoreLocation = 'Cert:\LocalMachine\My'
+#         Subject           = 'CN=Windows Admin Center for HCI lab'
+#         FriendlyName      = 'Windows Admin Center for HCI lab'
+#         Type              = 'SSLServerAuthentication'
+#         HashAlgorithm     = 'sha512'
+#         KeyExportPolicy   = 'ExportableEncrypted'
+#         NotBefore         = (Get-Date)::Now
+#         NotAfter          = (Get-Date).AddDays(180)  # The same days with Windows Server evaluation period.
+#         KeyUsage          = 'DigitalSignature', 'KeyEncipherment', 'DataEncipherment'
+#         TextExtension     = @(
+#             '2.5.29.37={text}1.3.6.1.5.5.7.3.1',  # Server Authentication
+#             ('2.5.29.17={{text}}DNS={0}' -f $VMName)
+#         )
+#     }
+#     $wacCret = New-SelfSignedCertificate @params | Move-Item -Destination 'Cert:\LocalMachine\Root' -PassThru
+#     return $wacCret
+# }
 
 #
 # Active Directory preparation for Azure Local
@@ -113,25 +119,6 @@ function New-ADObjectsForAzureLocal
 # Configurator App for Azure Local
 #
 
-function Invoke-ConfigAppForAzureLocalSetupFileDownload
-{
-    [OutputType([string])]
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory = $true)]
-        [ValidateScript({ Test-Path -PathType Container -LiteralPath $_ })]
-        [string] $DownloadFolderPath
-    )
-
-    $params = @{
-        SourceUri      = 'https://aka.ms/ConfiguratorAppForHCI'
-        DownloadFolder = $DownloadFolderPath
-        FileNameToSave = 'Configurator-App-for-Azure-Local-Setup.exe'
-    }
-    $configAppSetupFile = Invoke-FileDownload @params
-    return $configAppSetupFile
-}
-
 function Install-ConfiguratorAppForAzureLocal
 {
     [OutputType([void])]
@@ -141,13 +128,11 @@ function Install-ConfiguratorAppForAzureLocal
         [PSCustomObject] $LabConfig,
 
         [Parameter(Mandatory = $true)]
-        [hashtable] $InvokeWithinVMParams
-    )
+        [hashtable] $InvokeWithinVMParams,
 
-    'Download the Configurator App for Azure Local setup file.' | Write-ScriptLog
-    $configAppSetupFile = Invoke-ConfigAppForAzureLocalSetupFileDownload -DownloadFolderPath $LabConfig.labHost.folderPath.temp
-    $configAppSetupFile | Out-String | Write-ScriptLog
-    'Download the Configurator App for Azure Local setup file completed.' | Write-ScriptLog
+        [Parameter(Mandatory = $true)]
+        [string] $ConfigAppSetupFilePath
+    )
 
     'Create a work folder within the VM.' | Write-ScriptLog
     $workFolderPathInVM = 'C:\HciLabWork'
@@ -163,9 +148,9 @@ function Install-ConfiguratorAppForAzureLocal
 
     'Copy the Configurator App setup file into the VM.' | Write-ScriptLog
     $params = @{
-        VMName              = $LabConfig.wac.vmName
+        VMName              = $vmName
         Credential          = $domainAdminCredential
-        SourceFilePath      = $configAppSetupFile.FullName
+        SourceFilePath      = $ConfigAppSetupFilePath
         DestinationPathInVM = $workFolderPathInVM
     }
     $configAppSetupFilePathInVM = Copy-FileIntoVM @params
@@ -200,38 +185,40 @@ function Install-ConfiguratorAppForAzureLocal
     'Execute the Configurator App setup within the VM completed.' | Write-ScriptLog
 }
 
-#
-# Main process
-#
-
 try {
+    # Mandatory pre-processing.
     $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
-
-    Import-Module -Name $PSModuleNameToImport -Force
-    
+    Import-Module -Name $ImportModulePath -Force
     $labConfig = Get-LabDeploymentConfig
     Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log -FileName $LogFileName
-    Set-ScriptLogDefaultContext -LogContext $labConfig.wac.vmName
+    Set-ScriptLogDefaultContext -LogContext $LogContext
+    'Lab deployment config: {0}' -f ($labConfig | ConvertTo-Json -Depth 16) | Write-ScriptLog
 
-    'Script file: {0}' -f $PSScriptRoot | Write-ScriptLog
-    'Lab deployment config:' | Write-ScriptLog
-    $labConfig | ConvertTo-Json -Depth 16 | Out-String | Write-ScriptLog
+    # Log the job parameters.
+    'Job parameters:' | Write-ScriptLog
+    foreach ($key in $PSBoundParameters.Keys) {
+        if ($PSBoundParameters[$key].GetType().FullName -eq 'System.String[]') {
+            '- {0}: {1}' -f $key, ($PSBoundParameters[$key] -join ',') | Write-ScriptLog
+        }
+        else {
+            '- {0}: {1}' -f $key, $PSBoundParameters[$key] | Write-ScriptLog
+        }
+    }
+
+    # Retrieve the job parameters from the JSON string.
+    $jobParams = $JobParamsJson | ConvertFrom-Json
 
     #
     # Hyper-V VM creation
     #
 
+    $vmName = $labConfig.wac.vmName
+
     'Create the OS disk for the VM.' | Write-ScriptLog
     $params = @{
-        OperatingSystem = [HciLab.OSSku]::WindowsServer2025
-        ImageIndex      = [HciLab.OSImageIndex]::WSDatacenterDesktopExperience  # Datacenter with Desktop Experience
-        Culture         = $labConfig.guestOS.culture
-    }
-    $parentVhdFileName = Format-BaseVhdFileName @params
-    $params = @{
-        Path                    = [IO.Path]::Combine($labConfig.labHost.folderPath.vm, $labConfig.wac.vmName, 'osdisk.vhdx')
+        Path                    = [System.IO.Path]::Combine($labConfig.labHost.folderPath.vm, $vmName, 'osdisk.vhdx')
         Differencing            = $true
-        ParentPath              = [IO.Path]::Combine($labConfig.labHost.folderPath.vhd, $parentVhdFileName)
+        ParentPath              = $jobParams.BaseVhdFilePath
         BlockSizeBytes          = 32MB
         PhysicalSectorSizeBytes = 4KB
     }
@@ -240,7 +227,7 @@ try {
 
     'Create the VM.' | Write-ScriptLog
     $params = @{
-        Name       = $labConfig.wac.vmName
+        Name       = $vmName
         Path       = $labConfig.labHost.folderPath.vm
         VHDPath    = $vmOSDiskVhd.Path
         Generation = 2
@@ -249,18 +236,18 @@ try {
     'Create the VM completed.' | Write-ScriptLog
 
     'Change the VM''s automatic stop action.' | Write-ScriptLog
-    Set-VM -Name $labConfig.wac.vmName -AutomaticStopAction ShutDown
+    Set-VM -Name $vmName -AutomaticStopAction ShutDown
     'Change the VM''s automatic stop action completed' | Write-ScriptLog
 
     'Configure the VM''s processor.' | Write-ScriptLog
     $vmProcessorCount = 6
     if ((Get-VMHost).LogicalProcessorCount -lt $vmProcessorCount) { $vmProcessorCount = (Get-VMHost).LogicalProcessorCount }
-    Set-VMProcessor -VMName $labConfig.wac.vmName -Count $vmProcessorCount
+    Set-VMProcessor -VMName $vmName -Count $vmProcessorCount
     'Configure the VM''s processor completed.' | Write-ScriptLog
 
     'Configure the VM''s memory.' | Write-ScriptLog
     $params = @{
-        VMName               = $labConfig.wac.vmName
+        VMName               = $vmName
         StartupBytes         = 1GB
         DynamicMemoryEnabled = $true
         MinimumBytes         = 512MB
@@ -271,7 +258,7 @@ try {
 
     'Enable the VM''s vTPM.' | Write-ScriptLog
     $params = @{
-        VMName               = $labConfig.wac.vmName
+        VMName               = $vmName
         NewLocalKeyProtector = $true
         Passthru             = $true
         ErrorAction          = [Management.Automation.ActionPreference]::Stop
@@ -295,12 +282,12 @@ try {
     'Enable the VM''s vTPM completed.' | Write-ScriptLog
 
     'Configure the VM''s network adapters.' | Write-ScriptLog
-    Get-VMNetworkAdapter -VMName $labConfig.wac.vmName | Remove-VMNetworkAdapter
+    Get-VMNetworkAdapter -VMName $vmName | Remove-VMNetworkAdapter
 
     # Management
     'Configure the {0} network adapter.' -f $labConfig.wac.netAdapters.management.name | Write-ScriptLog
     $paramsForAdd = @{
-        VMName       = $labConfig.wac.vmName
+        VMName       = $vmName
         Name         = $labConfig.wac.netAdapters.management.name
         SwitchName   = $labConfig.labHost.vSwitch.nat.name
         DeviceNaming = [Microsoft.HyperV.PowerShell.OnOffState]::On
@@ -319,7 +306,7 @@ try {
     'Generate the unattend answer XML.' | Write-ScriptLog
     $adminPassword = Get-Secret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName.adminPassword
     $params = @{
-        ComputerName = $labConfig.wac.vmName
+        ComputerName = $vmName
         Password     = $adminPassword
         Culture      = $labConfig.guestOS.culture
         TimeZone     = $labConfig.guestOS.timeZone
@@ -356,7 +343,7 @@ try {
     Install-WindowsFeatureToVhd @params
     'Install the roles and features to the "{0}" completed.' -f $vmOSDiskVhd.Path | Write-ScriptLog
 
-    Start-VMSurely -VMName $labConfig.wac.vmName
+    Start-VMSurely -VMName $vmName
 
     #
     # Guest OS configuration
@@ -364,12 +351,12 @@ try {
 
     'Wait for the VM to be ready.' | Write-ScriptLog
     $localAdminCredential = New-LogonCredential -DomainFqdn '.' -Password $adminPassword
-    Wait-PowerShellDirectReady -VMName $labConfig.wac.vmName -Credential $localAdminCredential
+    Wait-PowerShellDirectReady -VMName $vmName -Credential $localAdminCredential
     'The VM is ready.' | Write-ScriptLog
 
     'Copy the module files into the VM.' | Write-ScriptLog
     $params = @{
-        VMName              = $labConfig.wac.vmName
+        VMName              = $vmName
         Credential          = $localAdminCredential
         SourceFilePath      = (Get-Module -Name 'common').Path
         DestinationPathInVM = 'C:\Windows\Temp'
@@ -379,7 +366,7 @@ try {
 
     # The common parameters for Invoke-CommandWithinVM with the local Administrator credentials.
     $invokeAsLocalAdminParams = @{
-        VMName           = $labConfig.wac.vmName
+        VMName           = $vmName
         Credential       = $localAdminCredential
         ImportModuleInVM = $moduleFilePathsWithinVM
     }
@@ -550,11 +537,11 @@ try {
 
     # Disable the Time synchronization in the Integration Services.
     # Use AD DC as the NTP server for member servers are a common practice.
-    Disable-VMIntegrationService -VMName $labConfig.wac.vmName -Name 'Time Synchronization' -Passthru | Out-String | Write-ScriptLog
+    Disable-VMIntegrationService -VMName $vmName -Name 'Time Synchronization' -Passthru | Out-String | Write-ScriptLog
 
     'Join the VM to the AD domain.' | Write-ScriptLog
     $params = @{
-        VMName                = $labConfig.wac.vmName
+        VMName                = $vmName
         LocalAdminCredential  = $localAdminCredential
         DomainFqdn            = $labConfig.addsDomain.fqdn
         DomainAdminCredential = $domainAdminCredential
@@ -563,16 +550,16 @@ try {
     'Join the VM to the AD domain completed.' | Write-ScriptLog
 
     # Reboot the VM.
-    Stop-VMSurely -VMName $labConfig.wac.vmName
-    Start-VMSurely -VMName $labConfig.wac.vmName
+    Stop-VMSurely -VMName $vmName
+    Start-VMSurely -VMName $vmName
 
     'Wait for the VM to be ready.' | Write-ScriptLog
-    Wait-PowerShellDirectReady -VMName $labConfig.wac.vmName -Credential $domainAdminCredential
+    Wait-PowerShellDirectReady -VMName $vmName -Credential $domainAdminCredential
     'The VM is ready.' | Write-ScriptLog
 
     # The common parameters for Invoke-CommandWithinVM with the domain Administrator credentials.
     $invokeAsDomainAdminParams = @{
-        VMName           = $labConfig.wac.vmName
+        VMName           = $vmName
         Credential       = $domainAdminCredential
         ImportModuleInVM = $moduleFilePathsWithinVM
     }
@@ -594,7 +581,7 @@ try {
 
     if ($labConfig.wac.shouldInstallConfigAppForAzureLocal) {
         'Install the Configurator App for Azure Local within the VM.' | Write-ScriptLog
-        Install-ConfiguratorAppForAzureLocal -LabConfig $labConfig -InvokeWithinVMParams $invokeAsDomainAdminParams
+        Install-ConfiguratorAppForAzureLocal -LabConfig $labConfig -InvokeWithinVMParams $invokeAsDomainAdminParams -ConfigAppSetupFilePath $jobParams.ConfigAppSetupFilePath
         'Install the Configurator App for Azure Local within the VM completed.' | Write-ScriptLog
     }
     else {
@@ -609,7 +596,7 @@ try {
     'Donwload the Windows Admin Center installer completed.' | Write-ScriptLog
 
     'Create a new SSL server authentication certificate for Windows Admin Center.' | Write-ScriptLog
-    $wacCret = New-CertificateForWindowsAdminCenter -VMName $labConfig.wac.vmName
+    $wacCret = New-CertificateForWindowsAdminCenter -VMName $vmName
     'Create a new SSL server authentication certificate for Windows Admin Center completed.' | Write-ScriptLog
 
     'Export the Windows Admin Center certificate.' | Write-ScriptLog
@@ -795,7 +782,7 @@ try {
         # Create a connection entry list to import to Windows Admin Center.
         $connectionEntries = @(
             (New-WacConnectionFileEntry -Name ('{0}.{1}' -f $LabConfig.addsDC.vmName, $LabConfig.addsDomain.fqdn) -Type 'msft.sme.connection-type.server'),  # Entry for the AD DS DC.
-            (New-WacConnectionFileEntry -Name ('{0}.{1}' -f $LabConfig.wac.vmName, $LabConfig.addsDomain.fqdn) -Type 'msft.sme.connection-type.server')  # Entry for the management server (WAC).
+            (New-WacConnectionFileEntry -Name ('{0}.{1}' -f $vmName, $LabConfig.addsDomain.fqdn) -Type 'msft.sme.connection-type.server')  # Entry for the management server (WAC).
         )
 
         # Entry for the HCI nodes.
@@ -846,7 +833,7 @@ try {
     Remove-FileWithinVM @params
     'Delete the module files within the VM completed.' | Write-ScriptLog
 
-    'The WAC VM creation has been successfully completed.' | Write-ScriptLog
+    'This script has been completed all tasks.' | Write-ScriptLog
 }
 catch {
     $exceptionMessage = New-ExceptionMessage -ErrorRecord $_
@@ -854,8 +841,8 @@ catch {
     throw $exceptionMessage
 }
 finally {
-    'The WAC VM creation has been finished.' | Write-ScriptLog
+    # Mandatory post-processing.
     $stopWatch.Stop()
-    'Duration of this script ran: {0}' -f $stopWatch.Elapsed.toString('hh\:mm\:ss') | Write-ScriptLog
+    'Script duration: {0}' -f $stopWatch.Elapsed.toString('hh\:mm\:ss') | Write-ScriptLog
     Stop-ScriptLogging
 }

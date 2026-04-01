@@ -1,13 +1,16 @@
 [CmdletBinding()]
 param (
     [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-    [uint32] $NodeIndex,
+    [string[]] $ImportModulePath,
 
     [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-    [string[]] $PSModuleNameToImport,
+    [string] $LogFileName,
 
     [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-    [string] $LogFileName
+    [string] $LogContext,
+
+    [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+    [string] $JobParamsJson
 )
 
 $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
@@ -236,39 +239,35 @@ function Wait-AzureLocalScheduledTaskCompletion
 }
 
 try {
+    # Mandatory pre-processing.
     $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
-
-    Import-Module -Name $PSModuleNameToImport -Force
-
+    Import-Module -Name $ImportModulePath -Force
     $labConfig = Get-LabDeploymentConfig
     Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log -FileName $LogFileName
+    Set-ScriptLogDefaultContext -LogContext $LogContext
+    'Lab deployment config: {0}' -f ($labConfig | ConvertTo-Json -Depth 16) | Write-ScriptLog
 
-    $nodeVMName = Format-HciNodeName -Format $labConfig.hciNode.vmName -Offset $labConfig.hciNode.vmNameOffset -Index $NodeIndex
-    Set-ScriptLogDefaultContext -LogContext $nodeVMName
-
-    'Script file: {0}' -f $PSScriptRoot | Write-ScriptLog
-    'Lab deployment config:' | Write-ScriptLog
-    $labConfig | ConvertTo-Json -Depth 16 | Out-String | Write-ScriptLog
-
-    $params = @{
-        OperatingSystem = $labConfig.hciNode.operatingSystem.sku
-        ImageIndex      = $labConfig.hciNode.operatingSystem.imageIndex
-        Culture         = $labConfig.guestOS.culture
+    # Log the job parameters.
+    'Job parameters:' | Write-ScriptLog
+    foreach ($key in $PSBoundParameters.Keys) {
+        if ($PSBoundParameters[$key].GetType().FullName -eq 'System.String[]') {
+            '- {0}: {1}' -f $key, ($PSBoundParameters[$key] -join ',') | Write-ScriptLog
+        }
+        else {
+            '- {0}: {1}' -f $key, $PSBoundParameters[$key] | Write-ScriptLog
+        }
     }
-    $parentVhdPath = [IO.Path]::Combine($labConfig.labHost.folderPath.vhd, (Format-BaseVhdFileName @params))
 
-    $params = @{
-        NodeCount        = $labConfig.hciNode.nodeCount
-        AddsDcVMRamBytes = $labConfig.addsDC.maximumRamBytes
-        WacVMRamBytes    = $labConfig.wac.maximumRamBytes
-    }
-    $ramBytes = Get-HciNodeRamSize @params
+    # Retrieve the job parameters from the JSON string.
+    $jobParams = $JobParamsJson | ConvertFrom-Json
 
-    'Create a VM configuration for the HCI node VM.' | Write-ScriptLog
+    #$labConfigSubnet = $labConfig.hciNode
+
+    #$vmConfig
     $nodeConfig = [PSCustomObject] @{
-        VMName            = $nodeVMName
-        ParentVhdPath     = $parentVhdPath
-        RamBytes          = $ramBytes
+        VMName            = Format-HciNodeName -Format $labConfig.hciNode.vmName -Offset $labConfig.hciNode.vmNameOffset -Index $jobParams.NodeIndex
+        ParentVhdPath     = $jobParams.BaseVhdFilePath
+        RamBytes          = Get-HciNodeRamSize -NodeCount $labConfig.hciNode.nodeCount -AddsDcVMRamBytes $labConfig.addsDC.maximumRamBytes -WacVMRamBytes $labConfig.wac.maximumRamBytes
         OperatingSystem   = $labConfig.hciNode.operatingSystem.sku
         ImageIndex        = $labConfig.hciNode.operatingSystem.imageIndex
         AdminPassword     = Get-Secret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName.adminPassword
@@ -277,7 +276,7 @@ try {
             Management = [PSCustomObject] @{
                 Name               = $labConfig.hciNode.netAdapters.management.name
                 VSwitchName        = $labConfig.labHost.vSwitch.nat.name
-                IPAddress          = $labConfig.hciNode.netAdapters.management.ipAddress -f ($labConfig.hciNode.ipAddressOffset + $NodeIndex)
+                IPAddress          = $labConfig.hciNode.netAdapters.management.ipAddress -f ($labConfig.hciNode.ipAddressOffset + $jobParams.NodeIndex)
                 PrefixLength       = $labConfig.hciNode.netAdapters.management.prefixLength
                 DefaultGateway     = $labConfig.hciNode.netAdapters.management.defaultGateway
                 DnsServerAddresses = $labConfig.hciNode.netAdapters.management.dnsServerAddresses
@@ -285,27 +284,26 @@ try {
             Compute = [PSCustomObject] @{
                 Name         = $labConfig.hciNode.netAdapters.compute.name
                 VSwitchName  = $labConfig.labHost.vSwitch.nat.name
-                IPAddress    = $labConfig.hciNode.netAdapters.compute.ipAddress -f ($labConfig.hciNode.ipAddressOffset + $NodeIndex)
+                IPAddress    = $labConfig.hciNode.netAdapters.compute.ipAddress -f ($labConfig.hciNode.ipAddressOffset + $jobParams.NodeIndex)
                 PrefixLength = $labConfig.hciNode.netAdapters.compute.prefixLength
             }
             Storage1 = [PSCustomObject] @{
                 Name         = $labConfig.hciNode.netAdapters.storage1.name
                 VSwitchName  = $labConfig.labHost.vSwitch.nat.name
-                IPAddress    = $labConfig.hciNode.netAdapters.storage1.ipAddress -f ($labConfig.hciNode.ipAddressOffset + $NodeIndex)
+                IPAddress    = $labConfig.hciNode.netAdapters.storage1.ipAddress -f ($labConfig.hciNode.ipAddressOffset + $jobParams.NodeIndex)
                 PrefixLength = $labConfig.hciNode.netAdapters.storage1.prefixLength
                 VlanId       = $labConfig.hciNode.netAdapters.storage1.vlanId
             }
             Storage2 = [PSCustomObject] @{
                 Name         = $labConfig.hciNode.netAdapters.storage2.name
                 VSwitchName  = $labConfig.labHost.vSwitch.nat.name
-                IPAddress    = $labConfig.hciNode.netAdapters.storage2.ipAddress -f ($labConfig.hciNode.ipAddressOffset + $NodeIndex)
+                IPAddress    = $labConfig.hciNode.netAdapters.storage2.ipAddress -f ($labConfig.hciNode.ipAddressOffset + $jobParams.NodeIndex)
                 PrefixLength = $labConfig.hciNode.netAdapters.storage2.prefixLength
                 VlanId       = $labConfig.hciNode.netAdapters.storage2.vlanId
             }
         }
     }
-    $nodeConfig | ConvertTo-Json -Depth 16 | Out-String | Write-ScriptLog
-    'Create a VM configuration for the HCI node VM completed.' | Write-ScriptLog
+    'Hyper-V VM config: {0}' -f ($nodeConfig | ConvertTo-Json -Depth 16) | Write-ScriptLog
 
     #
     # Hyper-V VM creation
@@ -881,14 +879,16 @@ try {
     Wait-PowerShellDirectReady @params
     'The VM is ready.' | Write-ScriptLog
 
-    'The HCI node VM creation has been successfully completed.' | Write-ScriptLog
+    'This script has been completed all tasks.' | Write-ScriptLog
 }
 catch {
-    New-ExceptionMessage -ErrorRecord $_ | Write-ScriptLog -Level Error
+    $exceptionMessage = New-ExceptionMessage -ErrorRecord $_
+    $exceptionMessage | Write-ScriptLog -Level Error
     throw $exceptionMessage
 }
 finally {
+    # Mandatory post-processing.
     $stopWatch.Stop()
-    'Duration of this script ran: {0}' -f $stopWatch.Elapsed.toString('hh\:mm\:ss') | Write-ScriptLog
+    'Script duration: {0}' -f $stopWatch.Elapsed.toString('hh\:mm\:ss') | Write-ScriptLog
     Stop-ScriptLogging
 }
