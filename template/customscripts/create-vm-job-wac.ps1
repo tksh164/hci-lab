@@ -93,7 +93,7 @@ function New-ADObjectsForAzureLocal
     Invoke-CommandWithinVM @InvokeWithinVMParams -ScriptBlock {
         Install-Module -Name 'AsHciADArtifactsPreCreationTool' -Repository 'PSGallery' -Scope 'AllUsers' -Force -Verbose
     }
-    'Install the "AsHciADArtifactsPreCreationTool" module within the VM completed.' | Write-ScriptLog
+    'Install the "AsHciADArtifactsPreCreationTool" module within the VM has been completed.' | Write-ScriptLog
 
     'Invoke the Active Directory preparation tool within the VM.' | Write-ScriptLog
     $lcmUserCredential = New-LogonCredential -DomainFqdn '' -UserName $LcmUserName -Password $adminPassword
@@ -112,7 +112,7 @@ function New-ADObjectsForAzureLocal
 
         New-HciAdObjectsPreCreation -AzureStackLCMUserCredential $LcmUserCredential -AsHciOUName $OrgUnitDistinguishedName -Verbose
     }
-    'Invoke the Active Directory preparation tool within the VM completed.' | Write-ScriptLog
+    'Invoke the Active Directory preparation tool within the VM has been completed.' | Write-ScriptLog
 }
 
 #
@@ -144,7 +144,7 @@ function Install-ConfiguratorAppForAzureLocal
 
         New-Item -ItemType Directory -Path $FolderPath -Force | Out-String | Write-ScriptLog
     }
-    'Create a work folder within the VM completed.' | Write-ScriptLog
+    'Create a work folder within the VM has been completed.' | Write-ScriptLog
 
     'Copy the Configurator App setup file into the VM.' | Write-ScriptLog
     $params = @{
@@ -154,7 +154,7 @@ function Install-ConfiguratorAppForAzureLocal
         DestinationPathInVM = $workFolderPathInVM
     }
     $configAppSetupFilePathInVM = Copy-FileIntoVM @params
-    'Copy the Configurator App setup file into the VM completed.' | Write-ScriptLog
+    'Copy the Configurator App setup file into the VM has been completed.' | Write-ScriptLog
 
     'Execute the Configurator App setup within the VM.' | Write-ScriptLog
     Invoke-CommandWithinVM @InvokeWithinVMParams -WithRetry -ScriptBlockParamList $configAppSetupFilePathInVM -ScriptBlock {
@@ -182,7 +182,7 @@ function Install-ConfiguratorAppForAzureLocal
             throw 'The Configurator App installation failed with exit code {0}.' -f $result.ExitCode
         }
     }
-    'Execute the Configurator App setup within the VM completed.' | Write-ScriptLog
+    'Execute the Configurator App setup within the VM has been completed.' | Write-ScriptLog
 }
 
 try {
@@ -223,7 +223,7 @@ try {
         PhysicalSectorSizeBytes = 4KB
     }
     $vmOSDiskVhd = New-VHD  @params
-    'Create the OS disk for the VM completed.' | Write-ScriptLog
+    'Create the OS disk for the VM has been completed.' | Write-ScriptLog
 
     'Create the VM.' | Write-ScriptLog
     $params = @{
@@ -233,17 +233,17 @@ try {
         Generation = 2
     }
     New-VM @params | Out-String | Write-ScriptLog
-    'Create the VM completed.' | Write-ScriptLog
+    'Create the VM has been completed.' | Write-ScriptLog
 
     'Change the VM''s automatic stop action.' | Write-ScriptLog
     Set-VM -Name $vmName -AutomaticStopAction ShutDown
-    'Change the VM''s automatic stop action completed' | Write-ScriptLog
+    'Change the VM''s automatic stop action has been completed' | Write-ScriptLog
 
     'Configure the VM''s processor.' | Write-ScriptLog
     $vmProcessorCount = 6
     if ((Get-VMHost).LogicalProcessorCount -lt $vmProcessorCount) { $vmProcessorCount = (Get-VMHost).LogicalProcessorCount }
     Set-VMProcessor -VMName $vmName -Count $vmProcessorCount
-    'Configure the VM''s processor completed.' | Write-ScriptLog
+    'Configure the VM''s processor has been completed.' | Write-ScriptLog
 
     'Configure the VM''s memory.' | Write-ScriptLog
     $params = @{
@@ -254,7 +254,7 @@ try {
         MaximumBytes         = $labConfig.wac.maximumRamBytes
     }
     Set-VMMemory @params
-    'Configure the VM''s memory completed.' | Write-ScriptLog
+    'Configure the VM''s memory has been completed.' | Write-ScriptLog
 
     'Enable the VM''s vTPM.' | Write-ScriptLog
     $params = @{
@@ -279,7 +279,7 @@ try {
         # Rescue only once by retry.
         Set-VMKeyProtector @params | Enable-VMTPM
     }
-    'Enable the VM''s vTPM completed.' | Write-ScriptLog
+    'Enable the VM''s vTPM has been completed.' | Write-ScriptLog
 
     'Configure the VM''s network adapters.' | Write-ScriptLog
     Get-VMNetworkAdapter -VMName $vmName | Remove-VMNetworkAdapter
@@ -301,7 +301,7 @@ try {
     Add-VMNetworkAdapter @paramsForAdd |
     Set-VMNetworkAdapter @paramsForSet |
     Set-VMNetworkAdapterVlan -Trunk -NativeVlanId 0 -AllowedVlanIdList '1-4094'
-    'Configure the {0} network adapter completed.' -f $labConfig.wac.netAdapters.management.name | Write-ScriptLog
+    'Configure the {0} network adapter has been completed.' -f $labConfig.wac.netAdapters.management.name | Write-ScriptLog
 
     'Generate the unattend answer XML.' | Write-ScriptLog
     $adminPassword = Get-Secret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName.adminPassword
@@ -312,7 +312,7 @@ try {
         TimeZone     = $labConfig.guestOS.timeZone
     }
     $unattendAnswerFileContent = New-UnattendAnswerFileContent @params
-    'Generate the unattend answer XML completed.' | Write-ScriptLog
+    'Generate the unattend answer XML has been completed.' | Write-ScriptLog
 
     'Inject the unattend answer file to the "{0}".' -f $vmOSDiskVhd.Path | Write-ScriptLog
     $params = @{
@@ -321,7 +321,7 @@ try {
         LogFolder                 = $labConfig.labHost.folderPath.log
     }
     Set-UnattendAnswerFileToVhd @params
-    'Inject the unattend answer file to the "{0}" completed.' -f $vmOSDiskVhd.Path | Write-ScriptLog
+    'Inject the unattend answer file to the "{0}" has been completed.' -f $vmOSDiskVhd.Path | Write-ScriptLog
 
     'Install the roles and features to the "{0}".' -f $vmOSDiskVhd.Path | Write-ScriptLog
     $params = @{
@@ -341,7 +341,7 @@ try {
         LogFolder   = $labConfig.labHost.folderPath.log
     }
     Install-WindowsFeatureToVhd @params
-    'Install the roles and features to the "{0}" completed.' -f $vmOSDiskVhd.Path | Write-ScriptLog
+    'Install the roles and features to the "{0}" has been completed.' -f $vmOSDiskVhd.Path | Write-ScriptLog
 
     Start-VMSurely -VMName $vmName
 
@@ -362,7 +362,7 @@ try {
         DestinationPathInVM = 'C:\Windows\Temp'
     }
     $moduleFilePathsWithinVM = Copy-FileIntoVM @params
-    'Copy the module files into the VM completed.' | Write-ScriptLog
+    'Copy the module files into the VM has been completed.' | Write-ScriptLog
 
     # The common parameters for Invoke-CommandWithinVM with the local Administrator credentials.
     $invokeAsLocalAdminParams = @{
@@ -376,26 +376,26 @@ try {
         'Disable diagnostics data send screen.' | Write-ScriptLog
         New-RegistryKey -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows' -KeyName 'OOBE'
         Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\OOBE' -Name 'DisablePrivacyExperience' -Value 1
-        'Disable diagnostics data send screen completed.' | Write-ScriptLog
+        'Disable diagnostics data send screen has been completed.' | Write-ScriptLog
 
         'Stop Server Manager launch at logon.' | Write-ScriptLog
         Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotOpenServerManagerAtLogon' -Value 1
-        'Stop Server Manager launch at logon completed.' | Write-ScriptLog
+        'Stop Server Manager launch at logon has been completed.' | Write-ScriptLog
 
         'Stop Windows Admin Center popup at Server Manager launch.' | Write-ScriptLog
         Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotPopWACConsoleAtSMLaunch' -Value 1
-        'Stop Windows Admin Center popup at Server Manager launch completed.' | Write-ScriptLog
+        'Stop Windows Admin Center popup at Server Manager launch has been completed.' | Write-ScriptLog
 
         'Hide the Network Location wizard. All networks will be Public.' | Write-ScriptLog
         New-RegistryKey -ParentPath 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -KeyName 'NewNetworkWindowOff'
-        'Hide the Network Location wizard completed.' | Write-ScriptLog
+        'Hide the Network Location wizard has been completed.' | Write-ScriptLog
 
         'Hide the first run experience of Microsoft Edge.' | Write-ScriptLog
         New-RegistryKey -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft' -KeyName 'Edge'
         Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Edge' -Name 'HideFirstRunExperience' -Value 1
-        'Hide the first run experience of Microsoft Edge completed.' | Write-ScriptLog
+        'Hide the first run experience of Microsoft Edge has been completed.' | Write-ScriptLog
     }
-    'Configure registry values within the VM completed.' | Write-ScriptLog
+    'Configure registry values within the VM has been completed.' | Write-ScriptLog
 
     'Rename the network adapters.' | Write-ScriptLog
     Invoke-CommandWithinVM @invokeAsLocalAdminParams -WithRetry -ScriptBlock {
@@ -403,7 +403,7 @@ try {
             Rename-NetAdapter -Name $_.Name -NewName $_.DisplayValue
         }
     }
-    'Rename the network adapters completed.' | Write-ScriptLog
+    'Rename the network adapters has been completed.' | Write-ScriptLog
 
     # Management
     $netAdapterConfig = $labConfig.wac.netAdapters.management
@@ -445,7 +445,7 @@ try {
         Set-DnsClientServerAddress @paramsForSetDnsClientServerAddress |
         Out-Null
     }
-    'Configure the IP & DNS on the "{0}" network adapter completed.' -f $netAdapterConfig.name | Write-ScriptLog
+    'Configure the IP & DNS on the "{0}" network adapter has been completed.' -f $netAdapterConfig.name | Write-ScriptLog
 
     'Log the network settings within the VM.' | Write-ScriptLog
     Invoke-CommandWithinVM @invokeAsLocalAdminParams -WithRetry -ScriptBlock {
@@ -484,7 +484,7 @@ try {
             @{ Label = 'DNSServers'; Expression = { $_.ServerAddresses } }
         ) | Out-String -Width 200 | Write-ScriptLog
     }
-    'Log the network settings within the VM completed.' | Write-ScriptLog
+    'Log the network settings within the VM has been completed.' | Write-ScriptLog
 
     'Create a new shortcut on the desktop for connecting to the first HCI node using Remote Desktop connection.' | Write-ScriptLog
     Invoke-CommandWithinVM @invokeAsLocalAdminParams -ScriptBlockParamList $labConfig.hciNode -ScriptBlock {
@@ -502,12 +502,12 @@ try {
         }
         New-ShortcutFile @params
     }
-    'Create a new shortcut on the desktop for connecting to the first HCI node using Remote Desktop connection completed.' | Write-ScriptLog
+    'Create a new shortcut on the desktop for connecting to the first HCI node using Remote Desktop connection has been completed.' | Write-ScriptLog
 
     # We need to wait for the domain controller VM deployment completion before update the NuGet package provider and the PowerShellGet module.
     'Wait for the domain controller VM deployment completion.' | Write-ScriptLog
     Wait-AddsDcDeploymentCompletion
-    'The domain controller VM deployment completed.' | Write-ScriptLog
+    'The domain controller VM deployment has been completed.' | Write-ScriptLog
 
     'Wait for the domain controller with DNS capability to be ready.' | Write-ScriptLog
     $domainAdminCredential = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $adminPassword
@@ -525,7 +525,7 @@ try {
         Install-PackageProvider -Name 'NuGet' -Scope 'AllUsers' -Force -Verbose | Out-String -Width 200 | Write-ScriptLog
         Get-PackageProvider -Name 'NuGet' -ListAvailable -Force | Out-String -Width 200 | Write-ScriptLog
     }
-    'Install the NuGet package provider within the VM completed.' | Write-ScriptLog
+    'Install the NuGet package provider within the VM has been completed.' | Write-ScriptLog
 
     # NOTE: The PowerShellGet module installation needs internet connection and name resolution.
     'Install the PowerShellGet module within the VM.' | Write-ScriptLog
@@ -533,7 +533,7 @@ try {
         Install-Module -Name 'PowerShellGet' -Repository 'PSGallery' -Scope 'AllUsers' -Force -Verbose
         Get-Module -Name 'PowerShellGet' -ListAvailable | Out-String -Width 200 | Write-ScriptLog
     }
-    'Install the PowerShellGet module within the VM completed.' | Write-ScriptLog
+    'Install the PowerShellGet module within the VM has been completed.' | Write-ScriptLog
 
     # Disable the Time synchronization in the Integration Services.
     # Use AD DC as the NTP server for member servers are a common practice.
@@ -547,7 +547,7 @@ try {
         DomainAdminCredential = $domainAdminCredential
     }
     Add-VMToADDomain @params
-    'Join the VM to the AD domain completed.' | Write-ScriptLog
+    'Join the VM to the AD domain has been completed.' | Write-ScriptLog
 
     # Reboot the VM.
     Stop-VMSurely -VMName $vmName
@@ -573,7 +573,7 @@ try {
             LcmUserName          = $labConfig.addsDC.lcmUserName
         }
         New-ADObjectsForAzureLocal @params
-        'Create Active Directory objects for Azure Local completed.' | Write-ScriptLog
+        'Create Active Directory objects for Azure Local has been completed.' | Write-ScriptLog
     }
     else {
         'Skip the Active Directory preparation for Azure Local.' | Write-ScriptLog
@@ -582,7 +582,7 @@ try {
     if ($labConfig.wac.shouldInstallConfigAppForAzureLocal) {
         'Install the Configurator App for Azure Local within the VM.' | Write-ScriptLog
         Install-ConfiguratorAppForAzureLocal -LabConfig $labConfig -InvokeWithinVMParams $invokeAsDomainAdminParams -ConfigAppSetupFilePath $jobParams.ConfigAppSetupFilePath
-        'Install the Configurator App for Azure Local within the VM completed.' | Write-ScriptLog
+        'Install the Configurator App for Azure Local within the VM has been completed.' | Write-ScriptLog
     }
     else {
         'Skip the Configurator App for Azure Local installation.' | Write-ScriptLog
@@ -593,26 +593,26 @@ try {
     'Donwload the Windows Admin Center installer.' | Write-ScriptLog
     $wacInstallerFile = Invoke-WindowsAdminCenterInstallerDownload -DownloadFolderPath $labConfig.labHost.folderPath.temp
     $wacInstallerFile | Out-String | Write-ScriptLog
-    'Donwload the Windows Admin Center installer completed.' | Write-ScriptLog
+    'Donwload the Windows Admin Center installer has been completed.' | Write-ScriptLog
 
     'Create a new SSL server authentication certificate for Windows Admin Center.' | Write-ScriptLog
     $wacCret = New-CertificateForWindowsAdminCenter -VMName $vmName
-    'Create a new SSL server authentication certificate for Windows Admin Center completed.' | Write-ScriptLog
+    'Create a new SSL server authentication certificate for Windows Admin Center has been completed.' | Write-ScriptLog
 
     'Export the Windows Admin Center certificate.' | Write-ScriptLog
     $wacPfxFilePathOnLabHost = [IO.Path]::Combine($labConfig.labHost.folderPath.temp, 'wac.pfx')
     $wacCret | Export-PfxCertificate -FilePath $wacPfxFilePathOnLabHost -Password $adminPassword | Out-String | Write-ScriptLog
-    'Export the Windows Admin Center certificate completed.' | Write-ScriptLog
+    'Export the Windows Admin Center certificate has been completed.' | Write-ScriptLog
 
     'Copy the Windows Admin Center installer into the VM.' | Write-ScriptLog
     $wacInstallerFilePathInVM = [IO.Path]::Combine('C:\Windows\Temp', [IO.Path]::GetFileName($wacInstallerFile.FullName))
     Copy-Item -ToSession $localAdminCredPSSession -Path $wacInstallerFile.FullName -Destination $wacInstallerFilePathInVM
-    'Copy the Windows Admin Center installer into the VM completed.' | Write-ScriptLog
+    'Copy the Windows Admin Center installer into the VM has been completed.' | Write-ScriptLog
 
     'Copy the Windows Admin Center certificate into the VM.' | Write-ScriptLog
     $wacPfxFilePathInVM = [IO.Path]::Combine('C:\Windows\Temp', [IO.Path]::GetFileName($wacPfxFilePathOnLabHost))
     Copy-Item -ToSession $localAdminCredPSSession -Path $wacPfxFilePathOnLabHost -Destination $wacPfxFilePathInVM
-    'Copy the Windows Admin Center certificate into the VM completed.' | Write-ScriptLog
+    'Copy the Windows Admin Center certificate into the VM has been completed.' | Write-ScriptLog
 
     'Install Windows Admin Center within the VM.' | Write-ScriptLog
     $params = @{
@@ -638,16 +638,16 @@ try {
         'Import the Windows Admin Center certificate to the Root store.' | Write-ScriptLog
         $wacCertRootStore = Import-PfxCertificate -CertStoreLocation 'Cert:\LocalMachine\Root' -FilePath $WacPfxFilePathInVM -Password $WacPfxPassword -Exportable
         $wacCertRootStore | Format-Table -Property 'Thumbprint', 'Subject' | Out-String | Write-ScriptLog
-        'Import the Windows Admin Center certificate to the Root store completed.' | Write-ScriptLog
+        'Import the Windows Admin Center certificate to the Root store has been completed.' | Write-ScriptLog
 
         'Import the Windows Admin Center certificate to the My store.' | Write-ScriptLog
         $wacCertMyStore = Import-PfxCertificate -CertStoreLocation 'Cert:\LocalMachine\My' -FilePath $WacPfxFilePathInVM -Password $WacPfxPassword -Exportable
         $wacCertMyStore | Format-Table -Property 'Thumbprint', 'Subject' | Out-String | Write-ScriptLog
-        'Import the Windows Admin Center certificate to the My store completed.' | Write-ScriptLog
+        'Import the Windows Admin Center certificate to the My store has been completed.' | Write-ScriptLog
 
         'Delete the Windows Admin Center certificate.' | Write-ScriptLog
         Remove-Item -LiteralPath $WacPfxFilePathInVM -Force
-        'Delete the Windows Admin Center certificate completed.' | Write-ScriptLog
+        'Delete the Windows Admin Center certificate has been completed.' | Write-ScriptLog
 
         'Install Windows Admin Center.' | Write-ScriptLog
         $msiArgs = @(
@@ -678,11 +678,11 @@ try {
         if ($result.ExitCode -ne 0) {
             throw 'Windows Admin Center installation failed with exit code {0}.' -f $result.ExitCode
         }
-        'Install Windows Admin Center completed.' | Write-ScriptLog
+        'Install Windows Admin Center has been completed.' | Write-ScriptLog
 
         'Delete the Windows Admin Center installer.' | Write-ScriptLog
         Remove-Item -LiteralPath $WacInstallerFilePathInVM -Force
-        'Delete the Windows Admin Center installer completed.' | Write-ScriptLog
+        'Delete the Windows Admin Center installer has been completed.' | Write-ScriptLog
 
         'Wait for the ServerManagementGateway service to be ready.' | Write-ScriptLog
         &{
@@ -704,7 +704,7 @@ try {
         'Import the ExtensionTools module.' | Write-ScriptLog
         $wacExtensionToolsPSModulePath = [IO.Path]::Combine($env:ProgramFiles, 'Windows Admin Center\PowerShell\Modules\ExtensionTools\ExtensionTools.psm1')
         Import-Module -Name $wacExtensionToolsPSModulePath -Force
-        'Import the ExtensionTools module completed.' | Write-ScriptLog
+        'Import the ExtensionTools module has been completed.' | Write-ScriptLog
 
         'Update the Windows Admin Center extensions.' | Write-ScriptLog
         &{
@@ -737,12 +737,12 @@ try {
             }
             'Windows Admin Center extension update failed. Need manual update later.' | Write-ScriptLog -Level Warning
         }
-        'Update the Windows Admin Center extensions completed.' | Write-ScriptLog
+        'Update the Windows Admin Center extensions has been completed.' | Write-ScriptLog
 
         'Set the Windows Integrated Authentication registry for Windows Admin Center.' | Write-ScriptLog
         New-RegistryKey -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft' -KeyName 'Edge'
         Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Edge' -Name 'AuthServerAllowlist' -Value $env:ComputerName
-        'Set the Windows Integrated Authentication registry for Windows Admin Center completed.' | Write-ScriptLog
+        'Set the Windows Integrated Authentication registry for Windows Admin Center has been completed.' | Write-ScriptLog
 
         'Create the shortcut for Windows Admin Center on the desktop.' | Write-ScriptLog
         $params = @{
@@ -753,9 +753,9 @@ try {
             IconLocation     = 'imageres.dll,-1028'
         }
         New-ShortcutFile @params
-        'Create the shortcut for Windows Admin Center on the desktop completed.' | Write-ScriptLog
+        'Create the shortcut for Windows Admin Center on the desktop has been completed.' | Write-ScriptLog
     } | Out-String | Write-ScriptLog
-    'Install Windows Admin Center within the VM completed.' | Write-ScriptLog
+    'Install Windows Admin Center within the VM has been completed.' | Write-ScriptLog
     #>
 
     # Temporary comment out the WAC related code because of the WAC installation issue.
@@ -777,7 +777,7 @@ try {
         'Import the ConnectionTools module.' | Write-ScriptLog
         $wacConnectionToolsPSModulePath = [IO.Path]::Combine($env:ProgramFiles, 'Windows Admin Center\PowerShell\Modules\ConnectionTools\ConnectionTools.psm1')
         Import-Module -Name $wacConnectionToolsPSModulePath -Force
-        'Import the ConnectionTools module completed.' | Write-ScriptLog
+        'Import the ConnectionTools module has been completed.' | Write-ScriptLog
 
         # Create a connection entry list to import to Windows Admin Center.
         $connectionEntries = @(
@@ -809,18 +809,18 @@ try {
         'Create a connection list file to import to Windows Admin Center.' | Write-ScriptLog
         $wacConnectionFilePathInVM = [IO.Path]::Combine('C:\Windows\Temp', 'wac-connections.txt')
         New-WacConnectionFileContent -ConnectionEntry $connectionEntries | Set-Content -LiteralPath $wacConnectionFilePathInVM -Force
-        'Create a connection list file to import to Windows Admin Center completed.' | Write-ScriptLog
+        'Create a connection list file to import to Windows Admin Center has been completed.' | Write-ScriptLog
 
         'Import server connections to Windows Admin Center for the domain Administrator.' | Write-ScriptLog
         [Uri] $gatewayEndpointUri = 'https://{0}' -f $env:ComputerName
         Import-Connection -GatewayEndpoint $gatewayEndpointUri -FileName $wacConnectionFilePathInVM
-        'Import server connections to Windows Admin Center for the domain Administrator completed.' | Write-ScriptLog
+        'Import server connections to Windows Admin Center for the domain Administrator has been completed.' | Write-ScriptLog
 
         'Delete the Windows Admin Center connection list file.' | Write-ScriptLog
         Remove-Item -LiteralPath $wacConnectionFilePathInVM -Force
-        'Delete the Windows Admin Center connection list file completed.' | Write-ScriptLog
+        'Delete the Windows Admin Center connection list file has been completed.' | Write-ScriptLog
     } | Out-String | Write-ScriptLog
-    'Configure Windows Admin Center for the domain Administrator completed.' | Write-ScriptLog
+    'Configure Windows Admin Center for the domain Administrator has been completed.' | Write-ScriptLog
     #>
 
     'Delete the module files within the VM.' | Write-ScriptLog
@@ -831,7 +831,7 @@ try {
         ImportModuleInVM     = $invokeAsLocalAdminParams.ImportModuleInVM
     }
     Remove-FileWithinVM @params
-    'Delete the module files within the VM completed.' | Write-ScriptLog
+    'Delete the module files within the VM has been completed.' | Write-ScriptLog
 
     'This script has been completed all tasks.' | Write-ScriptLog
 }

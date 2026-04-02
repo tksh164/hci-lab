@@ -59,7 +59,7 @@ try {
         PhysicalSectorSizeBytes = 4KB
     }
     $vmOSDiskVhd = New-VHD  @params
-    'Create the OS disk for the VM completed.' | Write-ScriptLog
+    'Create the OS disk for the VM has been completed.' | Write-ScriptLog
 
     'Create the VM.' | Write-ScriptLog
     $params = @{
@@ -69,17 +69,17 @@ try {
         Generation = 2
     }
     New-VM @params | Out-String | Write-ScriptLog
-    'Create the VM completed.' | Write-ScriptLog
+    'Create the VM has been completed.' | Write-ScriptLog
 
     'Change the VM''s automatic stop action.' | Write-ScriptLog
     Set-VM -Name $vmName -AutomaticStopAction ShutDown
-    'Change the VM''s automatic stop action completed.' | Write-ScriptLog
+    'Change the VM''s automatic stop action has been completed.' | Write-ScriptLog
 
     'Configure the VM''s processor.' | Write-ScriptLog
     $vmProcessorCount = 4
     if ((Get-VMHost).LogicalProcessorCount -lt $vmProcessorCount) { $vmProcessorCount = (Get-VMHost).LogicalProcessorCount }
     Set-VMProcessor -VMName $vmName -Count $vmProcessorCount
-    'Configure the VM''s processor completed.' | Write-ScriptLog
+    'Configure the VM''s processor has been completed.' | Write-ScriptLog
 
     'Configure the VM''s memory.' | Write-ScriptLog
     $params = @{
@@ -90,7 +90,7 @@ try {
         MaximumBytes         = $labConfig.addsDC.maximumRamBytes
     }
     Set-VMMemory @params
-    'Configure the VM''s memory completed.' | Write-ScriptLog
+    'Configure the VM''s memory has been completed.' | Write-ScriptLog
 
     'Enable the VM''s vTPM.' | Write-ScriptLog
     $params = @{
@@ -115,7 +115,7 @@ try {
         # Rescue only once by retry.
         Set-VMKeyProtector @params | Enable-VMTPM
     }
-    'Enable the VM''s vTPM completed.' | Write-ScriptLog
+    'Enable the VM''s vTPM has been completed.' | Write-ScriptLog
 
     'Configure the VM''s network adapters.' | Write-ScriptLog
     Get-VMNetworkAdapter -VMName $vmName | Remove-VMNetworkAdapter
@@ -137,7 +137,7 @@ try {
     Add-VMNetworkAdapter @paramsForAdd |
     Set-VMNetworkAdapter @paramsForSet |
     Set-VMNetworkAdapterVlan -Trunk -NativeVlanId 0 -AllowedVlanIdList '1-4094'
-    'Configure the {0} network adapter completed.' -f $labConfig.addsDC.netAdapters.management.name | Write-ScriptLog
+    'Configure the {0} network adapter has been completed.' -f $labConfig.addsDC.netAdapters.management.name | Write-ScriptLog
 
     'Generate the unattend answer XML.' | Write-ScriptLog
     $adminPassword = Get-Secret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName.adminPassword
@@ -148,7 +148,7 @@ try {
         TimeZone     = $labConfig.guestOS.timeZone
     }
     $unattendAnswerFileContent = New-UnattendAnswerFileContent @params
-    'Generate the unattend answer XML completed.' | Write-ScriptLog
+    'Generate the unattend answer XML has been completed.' | Write-ScriptLog
 
     'Inject the unattend answer file to the "{0}".' -f $vmOSDiskVhd.Path | Write-ScriptLog
     $params = @{
@@ -157,7 +157,7 @@ try {
         LogFolder                 = $labConfig.labHost.folderPath.log
     }
     Set-UnattendAnswerFileToVhd @params
-    'Inject the unattend answer file to the "{0}" completed.' -f $vmOSDiskVhd.Path | Write-ScriptLog
+    'Inject the unattend answer file to the "{0}" has been completed.' -f $vmOSDiskVhd.Path | Write-ScriptLog
 
     'Install the roles and features to the "{0}".' -f $vmOSDiskVhd.Path | Write-ScriptLog
     $params = @{
@@ -169,7 +169,7 @@ try {
         LogFolder   = $labConfig.labHost.folderPath.log
     }
     Install-WindowsFeatureToVhd @params
-    'Install the roles and features to the "{0}" completed.' -f $vmOSDiskVhd.Path | Write-ScriptLog
+    'Install the roles and features to the "{0}" has been completed.' -f $vmOSDiskVhd.Path | Write-ScriptLog
 
     Start-VMSurely -VMName $vmName
 
@@ -190,7 +190,7 @@ try {
         DestinationPathInVM = 'C:\Windows\Temp'
     }
     $moduleFilePathsWithinVM = Copy-FileIntoVM @params
-    'Copy the module files into the VM completed.' | Write-ScriptLog
+    'Copy the module files into the VM has been completed.' | Write-ScriptLog
 
     # The common parameters for Invoke-CommandWithinVM.
     $invokeWithinVMParams = @{
@@ -204,21 +204,21 @@ try {
         'Disable diagnostics data send screen.' | Write-ScriptLog
         New-RegistryKey -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows' -KeyName 'OOBE'
         Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\OOBE' -Name 'DisablePrivacyExperience' -Value 1
-        'Disable diagnostics data send screen completed.' | Write-ScriptLog
+        'Disable diagnostics data send screen has been completed.' | Write-ScriptLog
     
         'Stop Server Manager launch at logon.' | Write-ScriptLog
         Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotOpenServerManagerAtLogon' -Value 1
-        'Stop Server Manager launch at logon completed.' | Write-ScriptLog
+        'Stop Server Manager launch at logon has been completed.' | Write-ScriptLog
 
         'Stop Windows Admin Center popup at Server Manager launch.' | Write-ScriptLog
         Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotPopWACConsoleAtSMLaunch' -Value 1
-        'Stop Windows Admin Center popup at Server Manager launch completed.' | Write-ScriptLog
+        'Stop Windows Admin Center popup at Server Manager launch has been completed.' | Write-ScriptLog
 
         'Hide the Network Location wizard. All networks will be Public.' | Write-ScriptLog
         New-RegistryKey -ParentPath 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -KeyName 'NewNetworkWindowOff'
-        'Hide the Network Location wizard completed.' | Write-ScriptLog
+        'Hide the Network Location wizard has been completed.' | Write-ScriptLog
     }
-    'Configure registry values within the VM completed.' | Write-ScriptLog
+    'Configure registry values within the VM has been completed.' | Write-ScriptLog
 
     'Rename the network adapters.' | Write-ScriptLog
     Invoke-CommandWithinVM @invokeWithinVMParams -WithRetry -ScriptBlock {
@@ -226,7 +226,7 @@ try {
             Rename-NetAdapter -Name $_.Name -NewName $_.DisplayValue
         }
     }
-    'Rename the network adapters completed.' | Write-ScriptLog
+    'Rename the network adapters has been completed.' | Write-ScriptLog
 
     # Management
     $netAdapterConfig = $labConfig.addsDC.netAdapters.management
@@ -268,7 +268,7 @@ try {
         Set-DnsClientServerAddress @paramsForSetDnsClientServerAddress |
         Out-Null
     }
-    'Configure the IP & DNS on the "{0}" network adapter completed.' -f $netAdapterConfig.name | Write-ScriptLog
+    'Configure the IP & DNS on the "{0}" network adapter has been completed.' -f $netAdapterConfig.name | Write-ScriptLog
 
     'Log the network settings within the VM.' | Write-ScriptLog
     Invoke-CommandWithinVM @invokeWithinVMParams -WithRetry -ScriptBlock {
@@ -307,7 +307,7 @@ try {
             @{ Label = 'DNSServers'; Expression = { $_.ServerAddresses } }
         ) | Out-String -Width 200 | Write-ScriptLog
     }
-    'Log the network settings within the VM completed.' | Write-ScriptLog
+    'Log the network settings within the VM has been completed.' | Write-ScriptLog
 
     'Install AD DS (Creating a new forest) within the VM.' | Write-ScriptLog
     $scriptBlockParamList = @(
@@ -332,7 +332,7 @@ try {
         }
         Install-ADDSForest @params
     } | Out-String | Write-ScriptLog
-    'Install AD DS (Creating a new forest) within the VM completed.' | Write-ScriptLog
+    'Install AD DS (Creating a new forest) within the VM has been completed.' | Write-ScriptLog
 
     'Delete the module files within the VM.' | Write-ScriptLog
     $params = @{
@@ -342,7 +342,7 @@ try {
         ImportModuleInVM     = $invokeWithinVMParams.ImportModuleInVM
     }
     Remove-FileWithinVM @params
-    'Delete the module files within the VM completed.' | Write-ScriptLog
+    'Delete the module files within the VM has been completed.' | Write-ScriptLog
 
     # Reboot the VM.
     Stop-VMSurely -VMName $vmName

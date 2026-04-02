@@ -213,7 +213,7 @@ function Wait-AzureLocalScheduledTaskCompletion
                 ErrorAction = [Management.Automation.ActionPreference]::Stop
             }
             if ((Invoke-Command @params)) {
-                'The ImageCustomizationScheduledTask task is completed.' | Write-ScriptLog
+                'The ImageCustomizationScheduledTask task has been completed.' | Write-ScriptLog
                 return
             }
         }
@@ -318,7 +318,7 @@ try {
         PhysicalSectorSizeBytes = 4KB
     }
     $vmOSDiskVhd = New-VHD @params
-    'Create the OS disk completed.' | Write-ScriptLog
+    'Create the OS disk has been completed.' | Write-ScriptLog
 
     'Create the VM.' | Write-ScriptLog
     $params = @{
@@ -328,16 +328,16 @@ try {
         Generation = 2
     }
     New-VM @params | Out-String | Write-ScriptLog
-    'Create the VM completed.' | Write-ScriptLog
+    'Create the VM has been completed.' | Write-ScriptLog
 
     'Change the VM''s automatic stop action.' | Write-ScriptLog
     Set-VM -Name $nodeConfig.VMName -AutomaticStopAction ShutDown
-    'Change the VM''s automatic stop action completed.' | Write-ScriptLog
+    'Change the VM''s automatic stop action has been completed.' | Write-ScriptLog
 
     'Configure the VM''s processor.' | Write-ScriptLog
     $vmProcessorCount = Get-HciNodeProcessorCount -NodeCount $labConfig.hciNode.nodeCount
     Set-VMProcessor -VMName $nodeConfig.VMName -Count $vmProcessorCount -ExposeVirtualizationExtensions $true
-    'Configure the VM''s processor completed.' | Write-ScriptLog
+    'Configure the VM''s processor has been completed.' | Write-ScriptLog
 
     'Configure the VM''s memory.' | Write-ScriptLog
     $params = @{
@@ -346,7 +346,7 @@ try {
         DynamicMemoryEnabled = $false
     }
     Set-VMMemory @params
-    'Configure the VM''s memory completed.' | Write-ScriptLog
+    'Configure the VM''s memory has been completed.' | Write-ScriptLog
 
     'Enable the VM''s vTPM.' | Write-ScriptLog
     $params = @{
@@ -371,7 +371,7 @@ try {
         # Rescue only once by retry.
         Set-VMKeyProtector @params | Enable-VMTPM
     }
-    'Enable the VM''s vTPM completed.' | Write-ScriptLog
+    'Enable the VM''s vTPM has been completed.' | Write-ScriptLog
 
     'Configure the VM''s network adapters.' | Write-ScriptLog
     Get-VMNetworkAdapter -VMName $nodeConfig.VMName | Remove-VMNetworkAdapter
@@ -393,7 +393,7 @@ try {
     Add-VMNetworkAdapter @paramsForAdd |
     Set-VMNetworkAdapter @paramsForSet |
     Set-VMNetworkAdapterVlan -Trunk -NativeVlanId 0 -AllowedVlanIdList '1-4094'
-    'Configure the {0} network adapter completed.' -f $nodeConfig.NetAdapters.Management.Name | Write-ScriptLog
+    'Configure the {0} network adapter has been completed.' -f $nodeConfig.NetAdapters.Management.Name | Write-ScriptLog
 
     # Compute
     'Configure the {0} network adapter.' -f $nodeConfig.NetAdapters.Compute.Name | Write-ScriptLog
@@ -412,7 +412,7 @@ try {
     Add-VMNetworkAdapter @paramsForAdd |
     Set-VMNetworkAdapter @paramsForSet |
     Set-VMNetworkAdapterVlan -Trunk -NativeVlanId 0 -AllowedVlanIdList '1-4094'
-    'Configure the {0} network adapter completed.' -f $nodeConfig.NetAdapters.Compute.Name | Write-ScriptLog
+    'Configure the {0} network adapter has been completed.' -f $nodeConfig.NetAdapters.Compute.Name | Write-ScriptLog
 
     # Storage 1
     'Configure the {0} network adapter.' -f $nodeConfig.NetAdapters.Storage1.Name | Write-ScriptLog
@@ -430,7 +430,7 @@ try {
     Add-VMNetworkAdapter @paramsForAdd |
     Set-VMNetworkAdapter @paramsForSet |
     Set-VMNetworkAdapterVlan -Trunk -NativeVlanId 0 -AllowedVlanIdList '1-4094'
-    'Configure the {0} network adapter completed.' -f $nodeConfig.NetAdapters.Storage1.Name | Write-ScriptLog
+    'Configure the {0} network adapter has been completed.' -f $nodeConfig.NetAdapters.Storage1.Name | Write-ScriptLog
 
     # Storage 2
     'Configure the {0} network adapter.' -f $nodeConfig.NetAdapters.Storage2.Name | Write-ScriptLog
@@ -448,7 +448,7 @@ try {
     Add-VMNetworkAdapter @paramsForAdd |
     Set-VMNetworkAdapter @paramsForSet |
     Set-VMNetworkAdapterVlan -Trunk -NativeVlanId 0 -AllowedVlanIdList '1-4094'
-    'Configure the {0} network adapter completed.' -f $nodeConfig.NetAdapters.Storage2.Name | Write-ScriptLog
+    'Configure the {0} network adapter has been completed.' -f $nodeConfig.NetAdapters.Storage2.Name | Write-ScriptLog
 
     'Create the data disks.' | Write-ScriptLog
     $diskCount = 8
@@ -472,7 +472,7 @@ try {
         'DiskNumber',
         'Path'
     ) | Out-String -Width 200 | Write-ScriptLog
-    'Create the data disks completed.' | Write-ScriptLog
+    'Create the data disks has been completed.' | Write-ScriptLog
 
     'Generate the unattend answer XML.'| Write-ScriptLog
     $params = @{
@@ -482,7 +482,7 @@ try {
         TimeZone     = $labConfig.guestOS.timeZone
     }
     $unattendAnswerFileContent = New-UnattendAnswerFileContent @params
-    'Generate the unattend answer XML completed.'| Write-ScriptLog
+    'Generate the unattend answer XML has been completed.'| Write-ScriptLog
 
     'Inject the unattend answer file to the VHD.' | Write-ScriptLog
     $params = @{
@@ -491,7 +491,7 @@ try {
         LogFolder                 = $labConfig.labHost.folderPath.log
     }
     Set-UnattendAnswerFileToVhd @params
-    'Inject the unattend answer file to the VHD completed.' | Write-ScriptLog
+    'Inject the unattend answer file to the VHD has been completed.' | Write-ScriptLog
 
     'Install the roles and features to the VHD.' | Write-ScriptLog
     $params = @{
@@ -500,7 +500,7 @@ try {
         LogFolder   = $labConfig.labHost.folderPath.log
     }
     Install-WindowsFeatureToVhd @params
-    'Install the roles and features to the VHD completed.' | Write-ScriptLog
+    'Install the roles and features to the VHD has been completed.' | Write-ScriptLog
 
     Start-VMSurely -VMName $nodeConfig.VMName
 
@@ -536,7 +536,7 @@ try {
         DestinationPathInVM = 'C:\Windows\Temp'
     }
     $moduleFilePathsWithinVM = Copy-FileIntoVM @params
-    'Copy the module files into the VM completed.' | Write-ScriptLog
+    'Copy the module files into the VM has been completed.' | Write-ScriptLog
 
     # The common parameters for Invoke-CommandWithinVM.
     $invokeWithinVMParams = @{
@@ -556,26 +556,26 @@ try {
             'Disable diagnostics data send screen.' | Write-ScriptLog
             New-RegistryKey -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows' -KeyName 'OOBE'
             Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\OOBE' -Name 'DisablePrivacyExperience' -Value 1
-            'Disable diagnostics data send screen completed.' | Write-ScriptLog
+            'Disable diagnostics data send screen has been completed.' | Write-ScriptLog
 
             'Stop Server Manager launch at logon.' | Write-ScriptLog
             Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotOpenServerManagerAtLogon' -Value 1
-            'Stop Server Manager launch at logon completed.' | Write-ScriptLog
+            'Stop Server Manager launch at logon has been completed.' | Write-ScriptLog
 
             'Stop Windows Admin Center popup at Server Manager launch.' | Write-ScriptLog
             Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotPopWACConsoleAtSMLaunch' -Value 1
-            'Stop Windows Admin Center popup at Server Manager launch completed.' | Write-ScriptLog
+            'Stop Windows Admin Center popup at Server Manager launch has been completed.' | Write-ScriptLog
 
             'Hide the Network Location wizard. All networks will be Public.' | Write-ScriptLog
             New-RegistryKey -ParentPath 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -KeyName 'NewNetworkWindowOff'
-            'Hide the Network Location wizard completed.' | Write-ScriptLog
+            'Hide the Network Location wizard has been completed.' | Write-ScriptLog
 
             'Hide the first run experience of Microsoft Edge.' | Write-ScriptLog
             New-RegistryKey -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft' -KeyName 'Edge'
             Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Edge' -Name 'HideFirstRunExperience' -Value 1
-            'Hide the first run experience of Microsoft Edge completed.' | Write-ScriptLog
+            'Hide the first run experience of Microsoft Edge has been completed.' | Write-ScriptLog
         }
-        'Configure registry values within the VM completed.' | Write-ScriptLog
+        'Configure registry values within the VM has been completed.' | Write-ScriptLog
     }
 
     'Rename the network adapters.' | Write-ScriptLog
@@ -584,7 +584,7 @@ try {
             Rename-NetAdapter -Name $_.Name -NewName $_.DisplayValue
         }
     }
-    'Rename the network adapters completed.' | Write-ScriptLog
+    'Rename the network adapters has been completed.' | Write-ScriptLog
 
     # Management
     $netAdapterConfig = $nodeConfig.NetAdapters.Management
@@ -626,7 +626,7 @@ try {
         Set-DnsClientServerAddress @paramsForSetDnsClientServerAddress |
         Out-Null
     }
-    'Configure the IP & DNS on the "{0}" network adapter completed.' -f $netAdapterConfig.Name | Write-ScriptLog
+    'Configure the IP & DNS on the "{0}" network adapter has been completed.' -f $netAdapterConfig.Name | Write-ScriptLog
 
     # Compute
     $netAdapterConfig = $nodeConfig.NetAdapters.Compute
@@ -658,7 +658,7 @@ try {
         New-NetIPAddress @paramsForNewIPAddress |
         Out-Null
     }
-    'Configure the IP & DNS on the "{0}" network adapter completed.' -f $netAdapterConfig.Name | Write-ScriptLog
+    'Configure the IP & DNS on the "{0}" network adapter has been completed.' -f $netAdapterConfig.Name | Write-ScriptLog
 
     if ($labConfig.hciNode.isAzureLocalDeployment) {
         # NOTE: The storage network configuration is not needed for Azure Local deployment. It will configure during the Azure Local deployment process.
@@ -701,7 +701,7 @@ try {
             New-NetIPAddress @paramsForNewIPAddress |
             Out-Null
         }
-        'Configure the IP & DNS on the "{0}" network adapter completed.' -f $netAdapterConfig.Name | Write-ScriptLog
+        'Configure the IP & DNS on the "{0}" network adapter has been completed.' -f $netAdapterConfig.Name | Write-ScriptLog
 
         # Storage 2
         $netAdapterConfig = $nodeConfig.NetAdapters.Storage2
@@ -739,7 +739,7 @@ try {
             New-NetIPAddress @paramsForNewIPAddress |
             Out-Null
         }
-        'Configure the IP & DNS on the "{0}" network adapter completed.' -f $netAdapterConfig.Name | Write-ScriptLog
+        'Configure the IP & DNS on the "{0}" network adapter has been completed.' -f $netAdapterConfig.Name | Write-ScriptLog
     }
 
     'Log the network settings within the VM.' | Write-ScriptLog
@@ -779,12 +779,12 @@ try {
             @{ Label = 'DNSServers'; Expression = { $_.ServerAddresses } }
         ) | Out-String -Width 200 | Write-ScriptLog
     }
-    'Log the network settings within the VM completed.' | Write-ScriptLog
+    'Log the network settings within the VM has been completed.' | Write-ScriptLog
 
     # We need to wait for the domain controller VM deployment completion before update the NuGet package provider and the PowerShellGet module.
     'Wait for the domain controller VM deployment completion.' | Write-ScriptLog
     Wait-AddsDcDeploymentCompletion
-    'The domain controller VM deployment completed.' | Write-ScriptLog
+    'The domain controller VM deployment has been completed.' | Write-ScriptLog
 
     'Wait for the domain controller with DNS capability to be ready.' | Write-ScriptLog
     $params = @{
@@ -801,7 +801,7 @@ try {
         Install-PackageProvider -Name 'NuGet' -Scope 'AllUsers' -Force -Verbose | Out-String -Width 200 | Write-ScriptLog
         Get-PackageProvider -Name 'NuGet' -ListAvailable -Force | Out-String -Width 200 | Write-ScriptLog
     }
-    'Install the NuGet package provider within the VM completed.' | Write-ScriptLog
+    'Install the NuGet package provider within the VM has been completed.' | Write-ScriptLog
 
     # NOTE: The PowerShellGet module installation needs internet connection and name resolution.
     'Install the PowerShellGet module within the VM.' | Write-ScriptLog
@@ -809,7 +809,7 @@ try {
         Install-Module -Name 'PowerShellGet' -Scope 'AllUsers' -Force -Verbose
         Get-Module -Name 'PowerShellGet' -ListAvailable | Out-String -Width 200 | Write-ScriptLog
     }
-    'Install the PowerShellGet module within the VM completed.' | Write-ScriptLog
+    'Install the PowerShellGet module within the VM has been completed.' | Write-ScriptLog
 
     # The following Azure Local versions have the ImageCustomizationScheduledTask task.
     $osVersionsShouldInvokeScheduledTask = @(
@@ -826,7 +826,7 @@ try {
 
         'Wait for the Azure Local scheduled task to be completed.' | Write-ScriptLog
         Wait-AzureLocalScheduledTaskCompletion -VMName $nodeConfig.VMName -Credential $invokeWithinVMParams.Credential
-        'The Azure Local scheduled task is completed.' | Write-ScriptLog
+        'The Azure Local scheduled task is has been completed.' | Write-ScriptLog
     }
     else {
         'Skip the Azure Local scheduled task invocation because {0} does not have the scheduled task.' -f $labConfig.hciNode.operatingSystem.sku | Write-ScriptLog
@@ -840,7 +840,7 @@ try {
         ImportModuleInVM     = $invokeWithinVMParams.ImportModuleInVM
     }
     Remove-FileWithinVM @params
-    'Delete the module files within the VM completed.' | Write-ScriptLog
+    'Delete the module files within the VM has been completed.' | Write-ScriptLog
 
     # Disable the Time synchronization in the Integration Services.
     # - Use AD DC as the NTP server for member servers are a common practice.
@@ -859,7 +859,7 @@ try {
             DomainAdminCredential = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $nodeConfig.AdminPassword  # Domain Administrator credential
         }
         Add-VMToADDomain @params
-        'Join the VM to the AD domain completed.'  | Write-ScriptLog
+        'Join the VM to the AD domain has been completed.'  | Write-ScriptLog
     }
 
     # Restart the VM.
