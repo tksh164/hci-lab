@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param (
     [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-    [string[]] $PSModulePathToImport,
+    [string[]] $ImportModulePath,
 
     [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
     [string] $LogFileName,
@@ -10,17 +10,7 @@ param (
     [string] $LogContext,
 
     [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-    [string] $WimFilePath,
-
-    [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-    [ValidateRange(1, 20)]
-    [int] $ImageIndex,
-
-    [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-    [string] $VhdFilePath,
-
-    [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
-    [string[]] $UpdatePackagePath = @()
+    [string] $JobParamsJson
 )
 
 $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
@@ -28,26 +18,36 @@ $WarningPreference = [Management.Automation.ActionPreference]::Continue
 $VerbosePreference = [Management.Automation.ActionPreference]::Continue
 $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
-function Test-WimFile
-{
+function Get-UpdatePackageFilePath {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
+        [ValidateScript({ Test-Path -PathType Container -LiteralPath $_ })]
+        [string] $UpdatePackageFolderPath
+    )
+
+    $updatePackagePaths = @()
+    $updatePackagePaths += Get-ChildItem -LiteralPath $UpdatePackageFolderPath | Select-Object -ExpandProperty 'FullName' | Sort-Object
+    return $updatePackagePaths
+}
+
+function Test-WimFile {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateScript({ Test-Path -PathType Leaf -LiteralPath $_ })]
         [string] $WimFilePath,
 
         [Parameter(Mandatory = $true)][ValidateRange(1, 20)]
         [int] $ImageIndex,
 
         [Parameter(Mandatory = $true)]
+        [ValidateScript({ Test-Path -PathType Container -LiteralPath $_ })]
         [string] $ScratchDirectory,
 
         [Parameter(Mandatory = $true)]
         [string] $LogFilePath
     )
-
-    if (-not (Test-Path -PathType Leaf -LiteralPath $WimFilePath)) {
-        throw 'Cannot find the specified file "{0}".' -f $WimFilePath
-    }
 
     $params = @{
         ImagePath        = $WimFilePath
@@ -59,8 +59,7 @@ function Test-WimFile
     return $windowsImage -ne $null
 }
 
-function Add-DriveLetterToPartition
-{
+function Add-DriveLetterToPartition {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -68,46 +67,29 @@ function Add-DriveLetterToPartition
     )
 
     $isDriveLetterAssigned = $false
-    $attempts = 0
+    $ATTEMPT_LIMIT = 20
     $workingPartition = $Partition
-    do {
+    for ($attempt = 0; $attempt -lt $ATTEMPT_LIMIT; $attempt++) {
         $workingPartition | Add-PartitionAccessPath -AssignDriveLetter
         $workingPartition = $workingPartition | Get-Partition
-        if($workingPartition.DriveLetter -ne 0)
-        {
+        if($workingPartition.DriveLetter -ne 0) {
             $isDriveLetterAssigned = $true
             break
         }
 
         'Could not assigna a drive letter. Try again.' | Write-ScriptLog
-        Get-Random -Minimum 1 -Maximum 5 | Start-Sleep
-        $attempts++
-    } while ($attempts -lt 20)
+        $attempt++
+        Start-Sleep -Seconds 5
+    }
 
-    if (-not($isDriveLetterAssigned)) {
+    if (-not $isDriveLetterAssigned) {
         throw 'Could not assign a drive letter to the partition (Type:{0}, DiskNumber:{1}, PartitionNumber:{2}, Size:{3}).' -f $Partition.Type, $Partition.DiskNumber, $Partition.PartitionNumber, $Partition.Size
     }
 
     return $workingPartition
 }
 
-function Resolve-LogFilePath
-{
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory = $true)]
-        [string] $FolderPath,
-
-        [Parameter(Mandatory = $true)]
-        [string] $LogFileName
-    )
-
-    $logFileNameWithTimestamp = (Get-Date -Format 'yyyyMMdd-HHmmss') + '_' + $env:ComputerName + '_' + $LogFileName
-    return [IO.Path]::Combine($FolderPath, $logFileNameWithTimestamp)
-}
-
-function Set-VhdToBootable
-{
+function Set-VhdToBootable {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -117,10 +99,10 @@ function Set-VhdToBootable
         [char] $WindowsVolumeDriveLetter,
 
         [Parameter(Mandatory = $true)]
-        [string] $LogFilePathForStandardOutput,
+        [string] $LogFilePathStdout,
 
         [Parameter(Mandatory = $true)]
-        [string] $LogFilePathForStandardError
+        [string] $LogFilePathStderr
     )
 
     $params = @{
@@ -131,8 +113,8 @@ function Set-VhdToBootable
             '/f UEFI',                                     # Specifies the firmware type of the target system partition.
             '/v'                                           # Enables verbose mode.
         )
-        RedirectStandardOutput = $LogFilePathForStandardOutput
-        RedirectStandardError  = $LogFilePathForStandardError
+        RedirectStandardOutput = $LogFilePathStdout
+        RedirectStandardError  = $LogFilePathStderr
         NoNewWindow            = $true
         Wait                   = $true
         Passthru               = $true
@@ -145,44 +127,53 @@ function Set-VhdToBootable
 }
 
 try {
-    Import-Module -Name $PSModulePathToImport -Force
-
+    # Mandatory pre-processing.
+    $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+    Import-Module -Name $ImportModulePath -Force
     $labConfig = Get-LabDeploymentConfig
     Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log -FileName $LogFileName
     Set-ScriptLogDefaultContext -LogContext $LogContext
+    'Lab deployment config: {0}' -f ($labConfig | ConvertTo-Json -Depth 16) | Write-ScriptLog
 
     # Log the job parameters.
-    'PSModulePathToImport:' | Write-ScriptLog
-    foreach ($modulePath in $PSModulePathToImport) { '  "{0}"' -f $modulePath | Write-ScriptLog }
-    'LogFileName: {0}' -f $LogFileName | Write-ScriptLog
-    'LogContext: {0}' -f $LogContext | Write-ScriptLog
-    'WimFilePath: "{0}"' -f $WimFilePath | Write-ScriptLog
-    'ImageIndex: {0}' -f $ImageIndex | Write-ScriptLog
-    'VhdFilePath: "{0}"' -f $VhdFilePath | Write-ScriptLog
-    'UpdatePackagePath ({0}):' -f $UpdatePackagePath.Length | Write-ScriptLog
-    foreach ($packagePath in $UpdatePackagePath) { '  "{0}"' -f $packagePath | Write-ScriptLog }
-
-    # Log the lab deployment configuration.
-    'Lab deployment config:' | Write-ScriptLog
-    $labConfig | ConvertTo-Json -Depth 16 | Write-Host
-    
-    'Start to create a new base VHD from the "{0}" with the image index {1}.' -f $WimFilePath, $ImageIndex | Write-ScriptLog
-    $params = @{
-        WimFilePath      = $WimFilePath
-        ImageIndex       = $ImageIndex
-        ScratchDirectory = $labConfig.labHost.folderPath.temp
-        LogFilePath      = Resolve-LogFilePath -FolderPath $labConfig.labHost.folderPath.log -LogFileName ($LogFileName + '_test-image.log')
+    'Job parameters:' | Write-ScriptLog
+    foreach ($key in $PSBoundParameters.Keys) {
+        if ($PSBoundParameters[$key].GetType().FullName -eq 'System.String[]') {
+            '- {0}: {1}' -f $key, ($PSBoundParameters[$key] -join ',') | Write-ScriptLog
+        }
+        else {
+            '- {0}: {1}' -f $key, $PSBoundParameters[$key] | Write-ScriptLog
+        }
     }
-    if (Test-WimFile @params) {
-        'The WIM file "{0}" with the image index {1} is valid.' -f $WimFilePath, $ImageIndex | Write-ScriptLog
+
+    # Retrieve the job parameters from the JSON string.
+    $jobParams = $JobParamsJson | ConvertFrom-Json
+
+    # Retrieve the update package file paths.
+    if ([string]::IsNullOrEmpty($jobParams.UpdatePackageFolderPath)) {
+        $updatePackageFilePaths = @()
+        'No update packages to be applied.' | Write-ScriptLog
     }
     else {
-        throw 'The specified Windows image "{0}" has not the image index {1}.' -f $WimFilePath, $ImageIndex
+        $updatePackageFilePaths = Get-UpdatePackageFilePath -UpdatePackageFolderPath $jobParams.UpdatePackageFolderPath
+        '{0} update packages to be applied.' -f $updatePackageFilePaths.Length | Write-ScriptLog
     }
-    
+
+    'Validate the WIM file "{0}" with the image index {1}.' -f $jobParams.WimFilePath, $jobParams.ImageIndex | Write-ScriptLog
+    $params = @{
+        WimFilePath      = $jobParams.WimFilePath
+        ImageIndex       = $jobParams.ImageIndex
+        ScratchDirectory = $labConfig.labHost.folderPath.temp
+        LogFilePath      = [System.IO.Path]::Combine($labConfig.labHost.folderPath.log, (New-LogFileName -FileName ($LogFileName + '_test-wim')))
+    }
+    if (-not (Test-WimFile @params)) {
+        throw 'The specified WIM file "{0}" has not a valid WIM file with image index {1}.' -f $jobParams.WimFilePath, $jobParams.ImageIndex
+    }
+    'The WIM file "{0}" with the image index {1} is valid.' -f $jobParams.WimFilePath, $jobParams.ImageIndex | Write-ScriptLog
+
     'Create a new VHD file.' | Write-ScriptLog
     $params = @{
-        Path                    = $VhdFilePath
+        Path                    = $jobParams.VhdFilePath
         Dynamic                 = $true
         SizeBytes               = 500GB
         BlockSizeBytes          = 128MB
@@ -190,16 +181,16 @@ try {
         LogicalSectorSizeBytes  = 512
     }
     $vhd = New-VHD @params
-    Get-Item -LiteralPath $vhd.Path | Format-List -Property 'Name','FullName','Length','LastWriteTimeUtc' | Out-String -Width 200 | Write-ScriptLog
-    'Create a new VHD file completed.' | Write-ScriptLog
+    Get-Item -LiteralPath $vhd.Path | Format-List -Property 'Name', 'FullName', 'Length', 'LastWriteTimeUtc' | Out-String -Width 200 | Write-ScriptLog
+    'Create a new VHD file has been completed.' | Write-ScriptLog
 
     'Mount the VHD file.' | Write-ScriptLog
     $disk = $vhd | Mount-VHD -PassThru | Get-Disk
-    'Mount the VHD file completed.' | Write-ScriptLog
+    'Mount the VHD file has been completed.' | Write-ScriptLog
 
     'Initialize the VHD.' | Write-ScriptLog
     $disk | Initialize-Disk -PartitionStyle GPT
-    'Initialize the VHD completed.' | Write-ScriptLog
+    'Initialize the VHD has been completed.' | Write-ScriptLog
 
     # The partition type GUIDs.
     $PARTITION_SYSTEM_GUID = '{c12a7328-f81f-11d2-ba4b-00a0c93ec93b}'
@@ -208,34 +199,34 @@ try {
 
     'Create an EFI system partition.' | Write-ScriptLog
     $systemPartition = $disk | New-Partition -GptType $PARTITION_SYSTEM_GUID -Size 200MB
-    'Create an EFI system partition completed.' | Write-ScriptLog
+    'Create an EFI system partition has been completed.' | Write-ScriptLog
 
     'Create a Microsoft reserved partition.' | Write-ScriptLog
     $disk | New-Partition -GptType $PARTITION_MSFT_RESERVED_GUID -Size 16MB | Out-Null
-    'Create a Microsoft reserved partition completed.' | Write-ScriptLog
+    'Create a Microsoft reserved partition has been completed.' | Write-ScriptLog
 
     'Create a Windows partition.' | Write-ScriptLog
     $windowsPartition = $disk | New-Partition -GptType $PARTITION_BASIC_DATA_GUID -UseMaximumSize
-    'Create a Windows partition completed.' | Write-ScriptLog
+    'Create a Windows partition has been completed.' | Write-ScriptLog
 
     'Format the EFI system partition.' | Write-ScriptLog
     $systemVolume = $systemPartition | Format-Volume -FileSystem 'FAT32' -AllocationUnitSize 512 -Confirm:$false -Force
-    'Format the EFI system partition completed.' | Write-ScriptLog
+    'Format the EFI system partition has been completed.' | Write-ScriptLog
 
     'Format the Windows partition.' | Write-ScriptLog
     $windowsVolume = $windowsPartition | Format-Volume -FileSystem 'NTFS' -AllocationUnitSize 4KB -Confirm:$false -Force
-    'Format the Windows partition completed.' | Write-ScriptLog
+    'Format the Windows partition has been completed.' | Write-ScriptLog
 
     'Assign a drive letter to the EFI system partition.' | Write-ScriptLog
     $systemPartition = Add-DriveLetterToPartition -Partition $systemPartition
-    'Assign a drive letter to the EFI system partition completed.' | Write-ScriptLog
+    'Assign a drive letter to the EFI system partition has been completed.' | Write-ScriptLog
 
     $systemVolumeDriveLetter = (Get-Partition -Volume $systemVolume | Get-Volume).DriveLetter
     'The EFI system partition''s drive letter is "{0}".' -f $systemVolumeDriveLetter | Write-ScriptLog
 
     'Assign a drive letter to the Windows partition.' | Write-ScriptLog
     $windowsPartition = Add-DriveLetterToPartition -Partition $windowsPartition
-    'Assign a drive letter to the Windows partition completed.' | Write-ScriptLog
+    'Assign a drive letter to the Windows partition has been completed.' | Write-ScriptLog
 
     $windowsVolumeDriveLetter = (Get-Partition -Volume $windowsVolume | Get-Volume).DriveLetter
     'The Windows partition''s drive letter is "{0}".' -f $windowsVolumeDriveLetter | Write-ScriptLog
@@ -243,46 +234,46 @@ try {
     'Expand the Windows image to the Windows partition.' | Write-ScriptLog
     $params = @{
         ApplyPath        = ('{0}:' -f $windowsVolumeDriveLetter)
-        ImagePath        = $WimFilePath
-        Index            = $ImageIndex
+        ImagePath        = $jobParams.WimFilePath
+        Index            = $jobParams.ImageIndex
         ScratchDirectory = $labConfig.labHost.folderPath.temp
-        LogPath          = Resolve-LogFilePath -FolderPath $labConfig.labHost.folderPath.log -LogFileName ($LogFileName + '_expand-image.log')
+        LogPath          = [System.IO.Path]::Combine($labConfig.labHost.folderPath.log, (New-LogFileName -FileName ($LogFileName + '_expand-image')))
         LogLevel         = 'Debug'
     }
     Expand-WindowsImage @params | Out-String -Width 200 | Write-ScriptLog
-    'Expand the Windows image to the Windows partition completed.' | Write-ScriptLog
+    'Expand the Windows image to the Windows partition has been completed.' | Write-ScriptLog
 
     'The new VHD to bootable.' | Write-ScriptLog
     $params = @{
-        SystemVolumeDriveLetter      = $systemVolumeDriveLetter
-        WindowsVolumeDriveLetter     = $windowsVolumeDriveLetter
-        LogFilePathForStandardOutput = Resolve-LogFilePath -FolderPath $labConfig.labHost.folderPath.log -LogFileName ($LogFileName + '_bcdboot-stdout.log')
-        LogFilePathForStandardError  = Resolve-LogFilePath -FolderPath $labConfig.labHost.folderPath.log -LogFileName ($LogFileName + '_bcdboot-stderr.log')
+        SystemVolumeDriveLetter  = $systemVolumeDriveLetter
+        WindowsVolumeDriveLetter = $windowsVolumeDriveLetter
+        LogFilePathStdout        = [System.IO.Path]::Combine($labConfig.labHost.folderPath.log, (New-LogFileName -FileName ($LogFileName + '_bcdboot-stdout')))
+        LogFilePathStderr        = [System.IO.Path]::Combine($labConfig.labHost.folderPath.log, (New-LogFileName -FileName ($LogFileName + '_bcdboot-stderr')))
     }
     Set-VhdToBootable @params
-    'The new VHD to bootable completed.' | Write-ScriptLog
+    'The new VHD to bootable has been completed.' | Write-ScriptLog
 
-    if ($UpdatePackagePath.Length -gt 0) {
-        'Add {0} update packages to the VHD.' -f $UpdatePackagePath.Length | Write-ScriptLog
-        foreach ($packagePath in $UpdatePackagePath) {
-            'Add an update package "{0}" to the VHD.' -f $packagePath | Write-ScriptLog
+    if ($updatePackageFilePaths.Length -gt 0) {
+        'Add {0} update packages to the VHD.' -f $updatePackageFilePaths.Length | Write-ScriptLog
+        $logFilePath = [System.IO.Path]::Combine($labConfig.labHost.folderPath.log, (New-LogFileName -FileName ($LogFileName + '_add-package')))
+        foreach ($packageFilePath in $updatePackageFilePaths) {
+            'Add an update package "{0}" to the VHD.' -f $packageFilePath | Write-ScriptLog
             $params = @{
                 Path             = ('{0}:' -f $windowsVolumeDriveLetter)
-                PackagePath      = $packagePath
+                PackagePath      = $packageFilePath
                 ScratchDirectory = $labConfig.labHost.folderPath.temp
-                LogPath          = Resolve-LogFilePath -FolderPath $labConfig.labHost.folderPath.log -LogFileName ($LogFileName + '_add-package.log')
+                LogPath          = $logFilePath
                 LogLevel         = 'Debug'
             }
             Add-WindowsPackage @params | Out-String -Width 200 | Write-ScriptLog
-            'Add an update package "{0}" to the VHD completed.' -f $packagePath | Write-ScriptLog
+            'Add an update package "{0}" to the VHD has been completed.' -f $packageFilePath | Write-ScriptLog
         }
-        'Add update packages to the VHD completed.' | Write-ScriptLog
-    }
-    else {
-        'There are no update packages.' | Write-ScriptLog
+        'Add update packages to the VHD has been completed.' | Write-ScriptLog
     }
 
-    'The VHD creation job has been successfully completed.' | Write-ScriptLog
+    'The created VHD file: {0}' -f (Get-VHD -Path $vhd.Path | Format-List -Property '*' | Out-String -Width 200) | Write-ScriptLog
+
+    'This script has been completed all tasks.' | Write-ScriptLog
 }
 catch {
     $exceptionMessage = New-ExceptionMessage -ErrorRecord $_
@@ -291,15 +282,12 @@ catch {
 }
 finally {
     if ($vhd -and ($vhd | Get-VHD).Attached) {
-        'Dismount the VHD.' | Write-ScriptLog
+        'Dismount the VHD "{0}".' -f $vhd.Path | Write-ScriptLog
         $vhd | Dismount-VHD
-        'Dismount the VHD completed.' | Write-ScriptLog
-
-        'The created VHD file:' | Write-ScriptLog
-        Get-Item -LiteralPath $vhd.Path | Format-List -Property 'Name','FullName','Length','LastWriteTimeUtc' | Out-String -Width 200 | Write-ScriptLog
-        Get-VHD -Path $vhd.Path | Format-List -Property '*' | Out-String -Width 200 | Write-ScriptLog
     }
 
-    'The VHD creation job has been finished.' | Write-ScriptLog
+    # Mandatory post-processing.
+    $stopWatch.Stop()
+    'Script duration: {0}' -f $stopWatch.Elapsed.toString('hh\:mm\:ss') | Write-ScriptLog
     Stop-ScriptLogging
 }

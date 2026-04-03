@@ -1,13 +1,16 @@
 [CmdletBinding()]
 param (
     [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-    [uint32] $NodeIndex,
+    [string[]] $ImportModulePath,
 
     [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-    [string[]] $PSModuleNameToImport,
+    [string] $LogFileName,
 
     [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-    [string] $LogFileName
+    [string] $LogContext,
+
+    [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+    [string] $JobParamsJson
 )
 
 $ErrorActionPreference = [Management.Automation.ActionPreference]::Stop
@@ -15,8 +18,7 @@ $WarningPreference = [Management.Automation.ActionPreference]::Continue
 $VerbosePreference = [Management.Automation.ActionPreference]::Continue
 $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
-function Get-HciNodeRamSize
-{
+function Get-HciNodeRamSize {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -43,8 +45,7 @@ function Get-HciNodeRamSize
     return [Math]::Floor((($totalRamBytes - $labHostReservedRamBytes - $AddsDcVMRamBytes - $WacVMRamBytes) / $NodeCount) / 2MB) * 2MB
 }
 
-function Get-HciNodeProcessorCount
-{
+function Get-HciNodeProcessorCount {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -57,8 +58,185 @@ function Get-HciNodeProcessorCount
     return [Math]::Floor(((Get-VMHost).LogicalProcessorCount / $NodeCount) * 2)
 }
 
-function Get-WindowsFeatureToInstall
-{
+function New-HypervVM {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject] $VMConfig,
+
+        [Parameter(Mandatory = $true)]
+        [string] $VMFolderPath
+    )
+
+    'Create the OS disk.' | Write-ScriptLog
+    $params = @{
+        Path                    = [IO.Path]::Combine($VMFolderPath, $VMConfig.VMName, 'osdisk.vhdx')
+        Differencing            = $true
+        ParentPath              = $VMConfig.ParentVhdPath
+        BlockSizeBytes          = 32MB
+        PhysicalSectorSizeBytes = 4KB
+    }
+    $vmOSDiskVhd = New-VHD @params
+    'Create the OS disk has been completed.' | Write-ScriptLog
+
+    'Create the VM.' | Write-ScriptLog
+    $params = @{
+        Name       = $VMConfig.VMName
+        Path       = $VMFolderPath
+        VHDPath    = $vmOSDiskVhd.Path
+        Generation = 2
+    }
+    New-VM @params | Out-String | Write-ScriptLog
+    'Create the VM has been completed.' | Write-ScriptLog
+
+    'Change the VM''s automatic stop action.' | Write-ScriptLog
+    Set-VM -Name $VMConfig.VMName -AutomaticStopAction ShutDown
+    'Change the VM''s automatic stop action has been completed.' | Write-ScriptLog
+
+    'Configure the VM''s processor.' | Write-ScriptLog
+    Set-VMProcessor -VMName $VMConfig.VMName -Count $VMConfig.ProcessorCount -ExposeVirtualizationExtensions $true
+    'Configure the VM''s processor has been completed.' | Write-ScriptLog
+
+    'Configure the VM''s memory.' | Write-ScriptLog
+    $params = @{
+        VMName               = $VMConfig.VMName
+        StartupBytes         = $VMConfig.RamBytes
+        DynamicMemoryEnabled = $false
+    }
+    Set-VMMemory @params
+    'Configure the VM''s memory has been completed.' | Write-ScriptLog
+
+    'Enable the VM''s vTPM.' | Write-ScriptLog
+    $params = @{
+        VMName               = $VMConfig.VMName
+        NewLocalKeyProtector = $true
+        Passthru             = $true
+        ErrorAction          = [Management.Automation.ActionPreference]::Stop
+    }
+    try {
+        Set-VMKeyProtector @params | Enable-VMTPM
+    }
+    catch {
+        '{0} (ExceptionMessage: {1} | Exception: {2} | FullyQualifiedErrorId: {3} | CategoryInfo: {4} | ErrorDetailsMessage: {5})' -f @(
+            'Caught exception on enable vTPM, will retry to enable vTPM.',
+            $_.Exception.Message,
+            $_.Exception.GetType().FullName,
+            $_.FullyQualifiedErrorId,
+            $_.CategoryInfo.ToString(),
+            $_.ErrorDetails.Message
+        ) | Write-ScriptLog -Level Warning
+
+        # Rescue only once by retry.
+        Set-VMKeyProtector @params | Enable-VMTPM
+    }
+    'Enable the VM''s vTPM has been completed.' | Write-ScriptLog
+
+    'Configure the VM''s network adapters.' | Write-ScriptLog
+    Get-VMNetworkAdapter -VMName $VMConfig.VMName | Remove-VMNetworkAdapter
+
+    # Management
+    'Configure the {0} network adapter.' -f $VMConfig.NetAdapters.Management.Name | Write-ScriptLog
+    $paramsForAdd = @{
+        VMName       = $VMConfig.VMName
+        Name         = $VMConfig.NetAdapters.Management.Name
+        SwitchName   = $VMConfig.NetAdapters.Management.VSwitchName
+        DeviceNaming = [Microsoft.HyperV.PowerShell.OnOffState]::On
+        Passthru     = $true
+    }
+    $paramsForSet = @{
+        MacAddressSpoofing = [Microsoft.HyperV.PowerShell.OnOffState]::On
+        AllowTeaming       = [Microsoft.HyperV.PowerShell.OnOffState]::On
+        Passthru           = $true
+    }
+    Add-VMNetworkAdapter @paramsForAdd |
+    Set-VMNetworkAdapter @paramsForSet |
+    Set-VMNetworkAdapterVlan -Trunk -NativeVlanId 0 -AllowedVlanIdList '1-4094'
+    'Configure the {0} network adapter has been completed.' -f $VMConfig.NetAdapters.Management.Name | Write-ScriptLog
+
+    # Compute
+    'Configure the {0} network adapter.' -f $VMConfig.NetAdapters.Compute.Name | Write-ScriptLog
+    $paramsForAdd = @{
+        VMName       = $VMConfig.VMName
+        Name         = $VMConfig.NetAdapters.Compute.Name
+        SwitchName   = $VMConfig.NetAdapters.Compute.VSwitchName
+        DeviceNaming = [Microsoft.HyperV.PowerShell.OnOffState]::On
+        Passthru     = $true
+    }
+    $paramsForSet = @{
+        MacAddressSpoofing = [Microsoft.HyperV.PowerShell.OnOffState]::On
+        AllowTeaming       = [Microsoft.HyperV.PowerShell.OnOffState]::On
+        Passthru           = $true
+    }
+    Add-VMNetworkAdapter @paramsForAdd |
+    Set-VMNetworkAdapter @paramsForSet |
+    Set-VMNetworkAdapterVlan -Trunk -NativeVlanId 0 -AllowedVlanIdList '1-4094'
+    'Configure the {0} network adapter has been completed.' -f $VMConfig.NetAdapters.Compute.Name | Write-ScriptLog
+
+    # Storage 1
+    'Configure the {0} network adapter.' -f $VMConfig.NetAdapters.Storage1.Name | Write-ScriptLog
+    $paramsForAdd = @{
+        VMName       = $VMConfig.VMName
+        Name         = $VMConfig.NetAdapters.Storage1.Name
+        SwitchName   = $VMConfig.NetAdapters.Storage1.VSwitchName
+        DeviceNaming = [Microsoft.HyperV.PowerShell.OnOffState]::On
+        Passthru     = $true
+    }
+    $paramsForSet = @{
+        AllowTeaming = [Microsoft.HyperV.PowerShell.OnOffState]::On
+        Passthru     = $true
+    }
+    Add-VMNetworkAdapter @paramsForAdd |
+    Set-VMNetworkAdapter @paramsForSet |
+    Set-VMNetworkAdapterVlan -Trunk -NativeVlanId 0 -AllowedVlanIdList '1-4094'
+    'Configure the {0} network adapter has been completed.' -f $VMConfig.NetAdapters.Storage1.Name | Write-ScriptLog
+
+    # Storage 2
+    'Configure the {0} network adapter.' -f $VMConfig.NetAdapters.Storage2.Name | Write-ScriptLog
+    $paramsForAdd = @{
+        VMName       = $VMConfig.VMName
+        Name         = $VMConfig.NetAdapters.Storage2.Name
+        SwitchName   = $VMConfig.NetAdapters.Storage2.VSwitchName
+        DeviceNaming = [Microsoft.HyperV.PowerShell.OnOffState]::On
+        Passthru     = $true
+    }
+    $paramsForSet = @{
+        AllowTeaming = [Microsoft.HyperV.PowerShell.OnOffState]::On
+        Passthru     = $true
+    }
+    Add-VMNetworkAdapter @paramsForAdd |
+    Set-VMNetworkAdapter @paramsForSet |
+    Set-VMNetworkAdapterVlan -Trunk -NativeVlanId 0 -AllowedVlanIdList '1-4094'
+    'Configure the {0} network adapter has been completed.' -f $VMConfig.NetAdapters.Storage2.Name | Write-ScriptLog
+
+    'Create the data disks.' | Write-ScriptLog
+    $addDataDisksResult = for ($diskIndex = 1; $diskIndex -le $VMConfig.DataDisk.Count; $diskIndex++) {
+        $params = @{
+            Path                    = [IO.Path]::Combine($VMFolderPath, $VMConfig.VMName, ('datadisk{0}.vhdx' -f $diskIndex))
+            Dynamic                 = $true
+            SizeBytes               = $VMConfig.DataDisk.SizeBytes
+            BlockSizeBytes          = 32MB
+            PhysicalSectorSizeBytes = 4KB
+            LogicalSectorSizeBytes  = 4KB
+        }
+        $vmDataDiskVhd = New-VHD @params
+        Add-VMHardDiskDrive -VMName $VMConfig.VMName -Path $vmDataDiskVhd.Path -Passthru
+    }
+    $addDataDisksResult | Format-Table -Property @(
+        'VMName',
+        'ControllerType',
+        'ControllerNumber',
+        'ControllerLocation',
+        'DiskNumber',
+        'Path'
+    ) | Out-String -Width 200 | Write-ScriptLog
+    'Create the data disks has been completed.' | Write-ScriptLog
+
+    return [PSCustomObject] @{
+        OSDiskVhdFilePath = $vmOSDiskVhd.Path
+    }
+}
+
+function Get-WindowsFeatureToInstall {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -84,8 +262,7 @@ function Get-WindowsFeatureToInstall
     return $featureNames
 }
 
-function Wait-BootstrapServices
-{
+function Wait-BootstrapServices {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -147,8 +324,7 @@ function Wait-BootstrapServices
     throw 'The Bootstrap services did not enter the running state in {0} seconds.' -f $RetryTimeoutSeconds
 }
 
-function Invoke-AzureLocalScheduledTask
-{
+function Invoke-AzureLocalScheduledTask {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -172,8 +348,7 @@ function Invoke-AzureLocalScheduledTask
     Invoke-Command @params
 }
 
-function Wait-AzureLocalScheduledTaskCompletion
-{
+function Wait-AzureLocalScheduledTaskCompletion {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -210,7 +385,7 @@ function Wait-AzureLocalScheduledTaskCompletion
                 ErrorAction = [Management.Automation.ActionPreference]::Stop
             }
             if ((Invoke-Command @params)) {
-                'The ImageCustomizationScheduledTask task is completed.' | Write-ScriptLog
+                'The ImageCustomizationScheduledTask task has been completed.' | Write-ScriptLog
                 return
             }
         }
@@ -236,285 +411,122 @@ function Wait-AzureLocalScheduledTaskCompletion
 }
 
 try {
+    # Mandatory pre-processing.
     $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
-
-    Import-Module -Name $PSModuleNameToImport -Force
-
+    Import-Module -Name $ImportModulePath -Force
     $labConfig = Get-LabDeploymentConfig
     Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log -FileName $LogFileName
+    Set-ScriptLogDefaultContext -LogContext $LogContext
+    'Lab deployment config: {0}' -f ($labConfig | ConvertTo-Json -Depth 16) | Write-ScriptLog
 
-    $nodeVMName = Format-HciNodeName -Format $labConfig.hciNode.vmName -Offset $labConfig.hciNode.vmNameOffset -Index $NodeIndex
-    Set-ScriptLogDefaultContext -LogContext $nodeVMName
-
-    'Script file: {0}' -f $PSScriptRoot | Write-ScriptLog
-    'Lab deployment config:' | Write-ScriptLog
-    $labConfig | ConvertTo-Json -Depth 16 | Out-String | Write-ScriptLog
-
-    $params = @{
-        OperatingSystem = $labConfig.hciNode.operatingSystem.sku
-        ImageIndex      = $labConfig.hciNode.operatingSystem.imageIndex
-        Culture         = $labConfig.guestOS.culture
+    # Log the job parameters.
+    'Job parameters:' | Write-ScriptLog
+    foreach ($key in $PSBoundParameters.Keys) {
+        if ($PSBoundParameters[$key].GetType().FullName -eq 'System.String[]') {
+            '- {0}: {1}' -f $key, ($PSBoundParameters[$key] -join ',') | Write-ScriptLog
+        }
+        else {
+            '- {0}: {1}' -f $key, $PSBoundParameters[$key] | Write-ScriptLog
+        }
     }
-    $parentVhdPath = [IO.Path]::Combine($labConfig.labHost.folderPath.vhd, (Format-BaseVhdFileName @params))
 
-    $params = @{
-        NodeCount        = $labConfig.hciNode.nodeCount
-        AddsDcVMRamBytes = $labConfig.addsDC.maximumRamBytes
-        WacVMRamBytes    = $labConfig.wac.maximumRamBytes
-    }
-    $ramBytes = Get-HciNodeRamSize @params
+    # Retrieve the job parameters from the JSON string.
+    $jobParams = $JobParamsJson | ConvertFrom-Json
 
-    'Create a VM configuration for the HCI node VM.' | Write-ScriptLog
-    $nodeConfig = [PSCustomObject] @{
-        VMName            = $nodeVMName
-        ParentVhdPath     = $parentVhdPath
-        RamBytes          = $ramBytes
-        OperatingSystem   = $labConfig.hciNode.operatingSystem.sku
-        ImageIndex        = $labConfig.hciNode.operatingSystem.imageIndex
-        AdminPassword     = Get-Secret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName.adminPassword
-        DataDiskSizeBytes = $labConfig.hciNode.dataDiskSizeBytes
-        NetAdapters       = [PSCustomObject] @{
+    $labNodeConfig = $labConfig.hciNode
+    $vmConfig = [PSCustomObject] @{
+        VMName         = Format-HciNodeName -Format $labNodeConfig.vmName -Offset $labNodeConfig.vmNameOffset -Index $jobParams.NodeIndex
+        ProcessorCount = Get-HciNodeProcessorCount -NodeCount $labNodeConfig.nodeCount
+        RamBytes       = Get-HciNodeRamSize -NodeCount $labNodeConfig.nodeCount -AddsDcVMRamBytes $labConfig.addsDC.maximumRamBytes -WacVMRamBytes $labConfig.wac.maximumRamBytes
+        ParentVhdPath  = $jobParams.BaseVhdFilePath
+        DataDisk       = [PSCustomObject] @{
+            Count     = 8
+            SizeBytes = $labNodeConfig.dataDiskSizeBytes
+        }
+        OS = [PSCustomObject] @{
+            Sku           = $labNodeConfig.operatingSystem.sku
+            ImageIndex    = $labNodeConfig.operatingSystem.imageIndex
+            AdminPassword = Get-Secret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName.adminPassword
+        }
+        NetAdapters = [PSCustomObject] @{
             Management = [PSCustomObject] @{
-                Name               = $labConfig.hciNode.netAdapters.management.name
+                Name               = $labNodeConfig.netAdapters.management.name
                 VSwitchName        = $labConfig.labHost.vSwitch.nat.name
-                IPAddress          = $labConfig.hciNode.netAdapters.management.ipAddress -f ($labConfig.hciNode.ipAddressOffset + $NodeIndex)
-                PrefixLength       = $labConfig.hciNode.netAdapters.management.prefixLength
-                DefaultGateway     = $labConfig.hciNode.netAdapters.management.defaultGateway
-                DnsServerAddresses = $labConfig.hciNode.netAdapters.management.dnsServerAddresses
+                IPAddress          = $labNodeConfig.netAdapters.management.ipAddress -f ($labNodeConfig.ipAddressOffset + $jobParams.NodeIndex)
+                PrefixLength       = $labNodeConfig.netAdapters.management.prefixLength
+                DefaultGateway     = $labNodeConfig.netAdapters.management.defaultGateway
+                DnsServerAddresses = $labNodeConfig.netAdapters.management.dnsServerAddresses
             }
             Compute = [PSCustomObject] @{
-                Name         = $labConfig.hciNode.netAdapters.compute.name
+                Name         = $labNodeConfig.netAdapters.compute.name
                 VSwitchName  = $labConfig.labHost.vSwitch.nat.name
-                IPAddress    = $labConfig.hciNode.netAdapters.compute.ipAddress -f ($labConfig.hciNode.ipAddressOffset + $NodeIndex)
-                PrefixLength = $labConfig.hciNode.netAdapters.compute.prefixLength
+                IPAddress    = $labNodeConfig.netAdapters.compute.ipAddress -f ($labNodeConfig.ipAddressOffset + $jobParams.NodeIndex)
+                PrefixLength = $labNodeConfig.netAdapters.compute.prefixLength
             }
             Storage1 = [PSCustomObject] @{
-                Name         = $labConfig.hciNode.netAdapters.storage1.name
+                Name         = $labNodeConfig.netAdapters.storage1.name
                 VSwitchName  = $labConfig.labHost.vSwitch.nat.name
-                IPAddress    = $labConfig.hciNode.netAdapters.storage1.ipAddress -f ($labConfig.hciNode.ipAddressOffset + $NodeIndex)
-                PrefixLength = $labConfig.hciNode.netAdapters.storage1.prefixLength
-                VlanId       = $labConfig.hciNode.netAdapters.storage1.vlanId
+                IPAddress    = $labNodeConfig.netAdapters.storage1.ipAddress -f ($labNodeConfig.ipAddressOffset + $jobParams.NodeIndex)
+                PrefixLength = $labNodeConfig.netAdapters.storage1.prefixLength
+                VlanId       = $labNodeConfig.netAdapters.storage1.vlanId
             }
             Storage2 = [PSCustomObject] @{
-                Name         = $labConfig.hciNode.netAdapters.storage2.name
+                Name         = $labNodeConfig.netAdapters.storage2.name
                 VSwitchName  = $labConfig.labHost.vSwitch.nat.name
-                IPAddress    = $labConfig.hciNode.netAdapters.storage2.ipAddress -f ($labConfig.hciNode.ipAddressOffset + $NodeIndex)
-                PrefixLength = $labConfig.hciNode.netAdapters.storage2.prefixLength
-                VlanId       = $labConfig.hciNode.netAdapters.storage2.vlanId
+                IPAddress    = $labNodeConfig.netAdapters.storage2.ipAddress -f ($labNodeConfig.ipAddressOffset + $jobParams.NodeIndex)
+                PrefixLength = $labNodeConfig.netAdapters.storage2.prefixLength
+                VlanId       = $labNodeConfig.netAdapters.storage2.vlanId
             }
         }
     }
-    $nodeConfig | ConvertTo-Json -Depth 16 | Out-String | Write-ScriptLog
-    'Create a VM configuration for the HCI node VM completed.' | Write-ScriptLog
+    'Hyper-V VM config: {0}' -f ($vmConfig | ConvertTo-Json -Depth 16) | Write-ScriptLog
 
     #
     # Hyper-V VM creation
     #
 
-    'Create the OS disk.' | Write-ScriptLog
-    $params = @{
-        Path                    = [IO.Path]::Combine($labConfig.labHost.folderPath.vm, $nodeConfig.VMName, 'osdisk.vhdx')
-        Differencing            = $true
-        ParentPath              = $nodeConfig.ParentVhdPath
-        BlockSizeBytes          = 32MB
-        PhysicalSectorSizeBytes = 4KB
-    }
-    $vmOSDiskVhd = New-VHD @params
-    'Create the OS disk completed.' | Write-ScriptLog
-
-    'Create the VM.' | Write-ScriptLog
-    $params = @{
-        Name       = $nodeConfig.VMName
-        Path       = $labConfig.labHost.folderPath.vm
-        VHDPath    = $vmOSDiskVhd.Path
-        Generation = 2
-    }
-    New-VM @params | Out-String | Write-ScriptLog
-    'Create the VM completed.' | Write-ScriptLog
-
-    'Change the VM''s automatic stop action.' | Write-ScriptLog
-    Set-VM -Name $nodeConfig.VMName -AutomaticStopAction ShutDown
-    'Change the VM''s automatic stop action completed.' | Write-ScriptLog
-
-    'Configure the VM''s processor.' | Write-ScriptLog
-    $vmProcessorCount = Get-HciNodeProcessorCount -NodeCount $labConfig.hciNode.nodeCount
-    Set-VMProcessor -VMName $nodeConfig.VMName -Count $vmProcessorCount -ExposeVirtualizationExtensions $true
-    'Configure the VM''s processor completed.' | Write-ScriptLog
-
-    'Configure the VM''s memory.' | Write-ScriptLog
-    $params = @{
-        VMName               = $nodeConfig.VMName
-        StartupBytes         = $nodeConfig.RamBytes
-        DynamicMemoryEnabled = $false
-    }
-    Set-VMMemory @params
-    'Configure the VM''s memory completed.' | Write-ScriptLog
-
-    'Enable the VM''s vTPM.' | Write-ScriptLog
-    $params = @{
-        VMName               = $nodeConfig.VMName
-        NewLocalKeyProtector = $true
-        Passthru             = $true
-        ErrorAction          = [Management.Automation.ActionPreference]::Stop
-    }
-    try {
-        Set-VMKeyProtector @params | Enable-VMTPM
-    }
-    catch {
-        '{0} (ExceptionMessage: {1} | Exception: {2} | FullyQualifiedErrorId: {3} | CategoryInfo: {4} | ErrorDetailsMessage: {5})' -f @(
-            'Caught exception on enable vTPM, will retry to enable vTPM.',
-            $_.Exception.Message,
-            $_.Exception.GetType().FullName,
-            $_.FullyQualifiedErrorId,
-            $_.CategoryInfo.ToString(),
-            $_.ErrorDetails.Message
-        ) | Write-ScriptLog -Level Warning
-
-        # Rescue only once by retry.
-        Set-VMKeyProtector @params | Enable-VMTPM
-    }
-    'Enable the VM''s vTPM completed.' | Write-ScriptLog
-
-    'Configure the VM''s network adapters.' | Write-ScriptLog
-    Get-VMNetworkAdapter -VMName $nodeConfig.VMName | Remove-VMNetworkAdapter
-
-    # Management
-    'Configure the {0} network adapter.' -f $nodeConfig.NetAdapters.Management.Name | Write-ScriptLog
-    $paramsForAdd = @{
-        VMName       = $nodeConfig.VMName
-        Name         = $nodeConfig.NetAdapters.Management.Name
-        SwitchName   = $nodeConfig.NetAdapters.Management.VSwitchName
-        DeviceNaming = [Microsoft.HyperV.PowerShell.OnOffState]::On
-        Passthru     = $true
-    }
-    $paramsForSet = @{
-        MacAddressSpoofing = [Microsoft.HyperV.PowerShell.OnOffState]::On
-        AllowTeaming       = [Microsoft.HyperV.PowerShell.OnOffState]::On
-        Passthru           = $true
-    }
-    Add-VMNetworkAdapter @paramsForAdd |
-    Set-VMNetworkAdapter @paramsForSet |
-    Set-VMNetworkAdapterVlan -Trunk -NativeVlanId 0 -AllowedVlanIdList '1-4094'
-    'Configure the {0} network adapter completed.' -f $nodeConfig.NetAdapters.Management.Name | Write-ScriptLog
-
-    # Compute
-    'Configure the {0} network adapter.' -f $nodeConfig.NetAdapters.Compute.Name | Write-ScriptLog
-    $paramsForAdd = @{
-        VMName       = $nodeConfig.VMName
-        Name         = $nodeConfig.NetAdapters.Compute.Name
-        SwitchName   = $nodeConfig.NetAdapters.Compute.VSwitchName
-        DeviceNaming = [Microsoft.HyperV.PowerShell.OnOffState]::On
-        Passthru     = $true
-    }
-    $paramsForSet = @{
-        MacAddressSpoofing = [Microsoft.HyperV.PowerShell.OnOffState]::On
-        AllowTeaming       = [Microsoft.HyperV.PowerShell.OnOffState]::On
-        Passthru           = $true
-    }
-    Add-VMNetworkAdapter @paramsForAdd |
-    Set-VMNetworkAdapter @paramsForSet |
-    Set-VMNetworkAdapterVlan -Trunk -NativeVlanId 0 -AllowedVlanIdList '1-4094'
-    'Configure the {0} network adapter completed.' -f $nodeConfig.NetAdapters.Compute.Name | Write-ScriptLog
-
-    # Storage 1
-    'Configure the {0} network adapter.' -f $nodeConfig.NetAdapters.Storage1.Name | Write-ScriptLog
-    $paramsForAdd = @{
-        VMName       = $nodeConfig.VMName
-        Name         = $nodeConfig.NetAdapters.Storage1.Name
-        SwitchName   = $nodeConfig.NetAdapters.Storage1.VSwitchName
-        DeviceNaming = [Microsoft.HyperV.PowerShell.OnOffState]::On
-        Passthru     = $true
-    }
-    $paramsForSet = @{
-        AllowTeaming = [Microsoft.HyperV.PowerShell.OnOffState]::On
-        Passthru     = $true
-    }
-    Add-VMNetworkAdapter @paramsForAdd |
-    Set-VMNetworkAdapter @paramsForSet |
-    Set-VMNetworkAdapterVlan -Trunk -NativeVlanId 0 -AllowedVlanIdList '1-4094'
-    'Configure the {0} network adapter completed.' -f $nodeConfig.NetAdapters.Storage1.Name | Write-ScriptLog
-
-    # Storage 2
-    'Configure the {0} network adapter.' -f $nodeConfig.NetAdapters.Storage2.Name | Write-ScriptLog
-    $paramsForAdd = @{
-        VMName       = $nodeConfig.VMName
-        Name         = $nodeConfig.NetAdapters.Storage2.Name
-        SwitchName   = $nodeConfig.NetAdapters.Storage2.VSwitchName
-        DeviceNaming = [Microsoft.HyperV.PowerShell.OnOffState]::On
-        Passthru     = $true
-    }
-    $paramsForSet = @{
-        AllowTeaming = [Microsoft.HyperV.PowerShell.OnOffState]::On
-        Passthru     = $true
-    }
-    Add-VMNetworkAdapter @paramsForAdd |
-    Set-VMNetworkAdapter @paramsForSet |
-    Set-VMNetworkAdapterVlan -Trunk -NativeVlanId 0 -AllowedVlanIdList '1-4094'
-    'Configure the {0} network adapter completed.' -f $nodeConfig.NetAdapters.Storage2.Name | Write-ScriptLog
-
-    'Create the data disks.' | Write-ScriptLog
-    $diskCount = 8
-    $addDataDisksResult = for ($diskIndex = 1; $diskIndex -le $diskCount; $diskIndex++) {
-        $params = @{
-            Path                    = [IO.Path]::Combine($labConfig.labHost.folderPath.vm, $nodeConfig.VMName, ('datadisk{0}.vhdx' -f $diskIndex))
-            Dynamic                 = $true
-            SizeBytes               = $nodeConfig.DataDiskSizeBytes
-            BlockSizeBytes          = 32MB
-            PhysicalSectorSizeBytes = 4KB
-            LogicalSectorSizeBytes  = 4KB
-        }
-        $vmDataDiskVhd = New-VHD @params
-        Add-VMHardDiskDrive -VMName $nodeConfig.VMName -Path $vmDataDiskVhd.Path -Passthru
-    }
-    $addDataDisksResult | Format-Table -Property @(
-        'VMName',
-        'ControllerType',
-        'ControllerNumber',
-        'ControllerLocation',
-        'DiskNumber',
-        'Path'
-    ) | Out-String -Width 200 | Write-ScriptLog
-    'Create the data disks completed.' | Write-ScriptLog
+    # Create a new Hyper-V VM.
+    $hvVMInfo = New-HypervVM -VMConfig $vmConfig -VMFolderPath $labConfig.labHost.folderPath.vm
 
     'Generate the unattend answer XML.'| Write-ScriptLog
     $params = @{
-        ComputerName = $nodeConfig.VMName
-        Password     = $nodeConfig.AdminPassword
+        ComputerName = $vmConfig.VMName
+        Password     = $vmConfig.OS.AdminPassword
         Culture      = $labConfig.guestOS.culture
         TimeZone     = $labConfig.guestOS.timeZone
     }
     $unattendAnswerFileContent = New-UnattendAnswerFileContent @params
-    'Generate the unattend answer XML completed.'| Write-ScriptLog
+    'Generate the unattend answer XML has been completed.'| Write-ScriptLog
 
     'Inject the unattend answer file to the VHD.' | Write-ScriptLog
     $params = @{
-        VhdPath                   = $vmOSDiskVhd.Path
+        VhdPath                   = $hvVMInfo.OSDiskVhdFilePath
         UnattendAnswerFileContent = $unattendAnswerFileContent
         LogFolder                 = $labConfig.labHost.folderPath.log
     }
     Set-UnattendAnswerFileToVhd @params
-    'Inject the unattend answer file to the VHD completed.' | Write-ScriptLog
+    'Inject the unattend answer file to the VHD has been completed.' | Write-ScriptLog
 
     'Install the roles and features to the VHD.' | Write-ScriptLog
     $params = @{
-        VhdPath     = $vmOSDiskVhd.Path
-        FeatureName = Get-WindowsFeatureToInstall -HciNodeOperatingSystemSku $labConfig.hciNode.operatingSystem.sku
+        VhdPath     = $hvVMInfo.OSDiskVhdFilePath
+        FeatureName = Get-WindowsFeatureToInstall -HciNodeOperatingSystemSku $vmConfig.OS.Sku
         LogFolder   = $labConfig.labHost.folderPath.log
     }
     Install-WindowsFeatureToVhd @params
-    'Install the roles and features to the VHD completed.' | Write-ScriptLog
+    'Install the roles and features to the VHD has been completed.' | Write-ScriptLog
 
-    Start-VMSurely -VMName $nodeConfig.VMName
+    Start-VMSurely -VMName $vmConfig.VMName
 
     # NOTE: The VM automatically restarts at some point between after the VM started and before PowerShell Direct is ready.
     'Wait for PowerShell Direct to be ready.' | Write-ScriptLog
-    $localAdminCredential = New-LogonCredential -DomainFqdn '.' -Password $nodeConfig.AdminPassword
-    Wait-PowerShellDirectReady -VMName $nodeConfig.VMName -Credential $localAdminCredential
+    $localAdminCredential = New-LogonCredential -DomainFqdn '.' -Password $vmConfig.OS.AdminPassword
+    Wait-PowerShellDirectReady -VMName $vmConfig.VMName -Credential $localAdminCredential
     'PowerShell Direct is ready.' | Write-ScriptLog
 
-    if ($labConfig.hciNode.isAzureLocalDeployment) {
+    if ($labNodeConfig.isAzureLocalDeployment) {
         'Wait for the Bootstrap services to be available.' | Write-ScriptLog
-        Wait-BootstrapServices -VMName $nodeConfig.VMName -Credential $localAdminCredential
+        Wait-BootstrapServices -VMName $vmConfig.VMName -Credential $localAdminCredential
         'The Bootstrap services are available.' | Write-ScriptLog
 
         # NOTE: The VM automatically restarts at some point after the Bootstrap services are available.
@@ -522,7 +534,7 @@ try {
         Start-Sleep -Seconds 60
 
         'Wait for PowerShell Direct to be ready.' | Write-ScriptLog
-        Wait-PowerShellDirectReady -VMName $nodeConfig.VMName -Credential $localAdminCredential
+        Wait-PowerShellDirectReady -VMName $vmConfig.VMName -Credential $localAdminCredential
         'PowerShell Direct is ready.' | Write-ScriptLog
     }
 
@@ -532,17 +544,17 @@ try {
 
     'Copy the module files into the VM.' | Write-ScriptLog
     $params = @{
-        VMName              = $nodeConfig.VMName
+        VMName              = $vmConfig.VMName
         Credential          = $localAdminCredential
         SourceFilePath      = (Get-Module -Name 'common').Path
         DestinationPathInVM = 'C:\Windows\Temp'
     }
     $moduleFilePathsWithinVM = Copy-FileIntoVM @params
-    'Copy the module files into the VM completed.' | Write-ScriptLog
+    'Copy the module files into the VM has been completed.' | Write-ScriptLog
 
     # The common parameters for Invoke-CommandWithinVM.
     $invokeWithinVMParams = @{
-        VMName           = $nodeConfig.VMName
+        VMName           = $vmConfig.VMName
         Credential       = $localAdminCredential
         ImportModuleInVM = $moduleFilePathsWithinVM
     }
@@ -552,32 +564,32 @@ try {
         [HciLab.OSSku]::WindowsServer2022,
         [HciLab.OSSku]::WindowsServer2025
     )
-    if (($NodeConfig.ImageIndex -eq [HciLab.OSImageIndex]::WSDatacenterDesktopExperience) -and ($NodeConfig.OperatingSystem -in $wsOS)) {
+    if (($vmConfig.OS.ImageIndex -eq [HciLab.OSImageIndex]::WSDatacenterDesktopExperience) -and ($vmConfig.OS.Sku -in $wsOS)) {
         'Configure registry values within the VM.' | Write-ScriptLog
         Invoke-CommandWithinVM @invokeWithinVMParams -ScriptBlock {
             'Disable diagnostics data send screen.' | Write-ScriptLog
             New-RegistryKey -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows' -KeyName 'OOBE'
             Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\OOBE' -Name 'DisablePrivacyExperience' -Value 1
-            'Disable diagnostics data send screen completed.' | Write-ScriptLog
+            'Disable diagnostics data send screen has been completed.' | Write-ScriptLog
 
             'Stop Server Manager launch at logon.' | Write-ScriptLog
             Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotOpenServerManagerAtLogon' -Value 1
-            'Stop Server Manager launch at logon completed.' | Write-ScriptLog
+            'Stop Server Manager launch at logon has been completed.' | Write-ScriptLog
 
             'Stop Windows Admin Center popup at Server Manager launch.' | Write-ScriptLog
             Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager' -Name 'DoNotPopWACConsoleAtSMLaunch' -Value 1
-            'Stop Windows Admin Center popup at Server Manager launch completed.' | Write-ScriptLog
+            'Stop Windows Admin Center popup at Server Manager launch has been completed.' | Write-ScriptLog
 
             'Hide the Network Location wizard. All networks will be Public.' | Write-ScriptLog
             New-RegistryKey -ParentPath 'HKLM:\SYSTEM\CurrentControlSet\Control\Network' -KeyName 'NewNetworkWindowOff'
-            'Hide the Network Location wizard completed.' | Write-ScriptLog
+            'Hide the Network Location wizard has been completed.' | Write-ScriptLog
 
             'Hide the first run experience of Microsoft Edge.' | Write-ScriptLog
             New-RegistryKey -ParentPath 'HKLM:\SOFTWARE\Policies\Microsoft' -KeyName 'Edge'
             Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Edge' -Name 'HideFirstRunExperience' -Value 1
-            'Hide the first run experience of Microsoft Edge completed.' | Write-ScriptLog
+            'Hide the first run experience of Microsoft Edge has been completed.' | Write-ScriptLog
         }
-        'Configure registry values within the VM completed.' | Write-ScriptLog
+        'Configure registry values within the VM has been completed.' | Write-ScriptLog
     }
 
     'Rename the network adapters.' | Write-ScriptLog
@@ -586,10 +598,10 @@ try {
             Rename-NetAdapter -Name $_.Name -NewName $_.DisplayValue
         }
     }
-    'Rename the network adapters completed.' | Write-ScriptLog
+    'Rename the network adapters has been completed.' | Write-ScriptLog
 
     # Management
-    $netAdapterConfig = $nodeConfig.NetAdapters.Management
+    $netAdapterConfig = $vmConfig.NetAdapters.Management
     'Configure the IP & DNS on the "{0}" network adapter.' -f $netAdapterConfig.Name | Write-ScriptLog
     Invoke-CommandWithinVM @invokeWithinVMParams -WithRetry -ScriptBlockParamList $netAdapterConfig -ScriptBlock {
         param (
@@ -628,10 +640,10 @@ try {
         Set-DnsClientServerAddress @paramsForSetDnsClientServerAddress |
         Out-Null
     }
-    'Configure the IP & DNS on the "{0}" network adapter completed.' -f $netAdapterConfig.Name | Write-ScriptLog
+    'Configure the IP & DNS on the "{0}" network adapter has been completed.' -f $netAdapterConfig.Name | Write-ScriptLog
 
     # Compute
-    $netAdapterConfig = $nodeConfig.NetAdapters.Compute
+    $netAdapterConfig = $vmConfig.NetAdapters.Compute
     'Configure the IP & DNS on the "{0}" network adapter.' -f $netAdapterConfig.Name | Write-ScriptLog
     Invoke-CommandWithinVM @invokeWithinVMParams -WithRetry -ScriptBlockParamList $netAdapterConfig -ScriptBlock {
         param (
@@ -660,15 +672,15 @@ try {
         New-NetIPAddress @paramsForNewIPAddress |
         Out-Null
     }
-    'Configure the IP & DNS on the "{0}" network adapter completed.' -f $netAdapterConfig.Name | Write-ScriptLog
+    'Configure the IP & DNS on the "{0}" network adapter has been completed.' -f $netAdapterConfig.Name | Write-ScriptLog
 
-    if ($labConfig.hciNode.isAzureLocalDeployment) {
+    if ($labNodeConfig.isAzureLocalDeployment) {
         # NOTE: The storage network configuration is not needed for Azure Local deployment. It will configure during the Azure Local deployment process.
         'Skip the storage network configuration because the deployment is Azure Local deployment.' | Write-ScriptLog
     }
     else {
         # Storage 1
-        $netAdapterConfig = $nodeConfig.NetAdapters.Storage1
+        $netAdapterConfig = $vmConfig.NetAdapters.Storage1
         'Configure the IP & DNS on the "{0}" network adapter.' -f $netAdapterConfig.Name | Write-ScriptLog
         Invoke-CommandWithinVM @invokeWithinVMParams -WithRetry -ScriptBlockParamList $netAdapterConfig -ScriptBlock {
             param (
@@ -703,10 +715,10 @@ try {
             New-NetIPAddress @paramsForNewIPAddress |
             Out-Null
         }
-        'Configure the IP & DNS on the "{0}" network adapter completed.' -f $netAdapterConfig.Name | Write-ScriptLog
+        'Configure the IP & DNS on the "{0}" network adapter has been completed.' -f $netAdapterConfig.Name | Write-ScriptLog
 
         # Storage 2
-        $netAdapterConfig = $nodeConfig.NetAdapters.Storage2
+        $netAdapterConfig = $vmConfig.NetAdapters.Storage2
         'Configure the IP & DNS on the "{0}" network adapter.' -f $netAdapterConfig.Name | Write-ScriptLog
         Invoke-CommandWithinVM @invokeWithinVMParams -WithRetry -ScriptBlockParamList $netAdapterConfig -ScriptBlock {
             param (
@@ -741,7 +753,7 @@ try {
             New-NetIPAddress @paramsForNewIPAddress |
             Out-Null
         }
-        'Configure the IP & DNS on the "{0}" network adapter completed.' -f $netAdapterConfig.Name | Write-ScriptLog
+        'Configure the IP & DNS on the "{0}" network adapter has been completed.' -f $netAdapterConfig.Name | Write-ScriptLog
     }
 
     'Log the network settings within the VM.' | Write-ScriptLog
@@ -781,18 +793,18 @@ try {
             @{ Label = 'DNSServers'; Expression = { $_.ServerAddresses } }
         ) | Out-String -Width 200 | Write-ScriptLog
     }
-    'Log the network settings within the VM completed.' | Write-ScriptLog
+    'Log the network settings within the VM has been completed.' | Write-ScriptLog
 
     # We need to wait for the domain controller VM deployment completion before update the NuGet package provider and the PowerShellGet module.
     'Wait for the domain controller VM deployment completion.' | Write-ScriptLog
     Wait-AddsDcDeploymentCompletion
-    'The domain controller VM deployment completed.' | Write-ScriptLog
+    'The domain controller VM deployment has been completed.' | Write-ScriptLog
 
     'Wait for the domain controller with DNS capability to be ready.' | Write-ScriptLog
     $params = @{
         AddsDcVMName       = $labConfig.addsDC.vmName
         AddsDcComputerName = $labConfig.addsDC.vmName  # The DC's computer name is the same as the VM name. It's specified in the unattend.xml.
-        Credential         = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $nodeConfig.AdminPassword  # Domain Administrator credential
+        Credential         = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $vmConfig.OS.AdminPassword  # Domain Administrator credential
     }
     Wait-DomainControllerServiceReady @params
     'The domain controller with DNS capability is ready.' | Write-ScriptLog
@@ -803,7 +815,7 @@ try {
         Install-PackageProvider -Name 'NuGet' -Scope 'AllUsers' -Force -Verbose | Out-String -Width 200 | Write-ScriptLog
         Get-PackageProvider -Name 'NuGet' -ListAvailable -Force | Out-String -Width 200 | Write-ScriptLog
     }
-    'Install the NuGet package provider within the VM completed.' | Write-ScriptLog
+    'Install the NuGet package provider within the VM has been completed.' | Write-ScriptLog
 
     # NOTE: The PowerShellGet module installation needs internet connection and name resolution.
     'Install the PowerShellGet module within the VM.' | Write-ScriptLog
@@ -811,7 +823,7 @@ try {
         Install-Module -Name 'PowerShellGet' -Scope 'AllUsers' -Force -Verbose
         Get-Module -Name 'PowerShellGet' -ListAvailable | Out-String -Width 200 | Write-ScriptLog
     }
-    'Install the PowerShellGet module within the VM completed.' | Write-ScriptLog
+    'Install the PowerShellGet module within the VM has been completed.' | Write-ScriptLog
 
     # The following Azure Local versions have the ImageCustomizationScheduledTask task.
     $osVersionsShouldInvokeScheduledTask = @(
@@ -822,16 +834,16 @@ try {
         [HciLab.OSSku]::AzureLocal24H2_2505,
         [HciLab.OSSku]::AzureLocal24H2_2504
     )
-    if ($labConfig.hciNode.isAzureLocalDeployment -and $labConfig.hciNode.operatingSystem.sku -in $osVersionsShouldInvokeScheduledTask) {
+    if ($labNodeConfig.isAzureLocalDeployment -and $vmConfig.OS.Sku -in $osVersionsShouldInvokeScheduledTask) {
         'Invoke the Azure Local scheduled task.' | Write-ScriptLog
-        Invoke-AzureLocalScheduledTask -VMName $nodeConfig.VMName -Credential $invokeWithinVMParams.Credential
+        Invoke-AzureLocalScheduledTask -VMName $vmConfig.VMName -Credential $invokeWithinVMParams.Credential
 
         'Wait for the Azure Local scheduled task to be completed.' | Write-ScriptLog
-        Wait-AzureLocalScheduledTaskCompletion -VMName $nodeConfig.VMName -Credential $invokeWithinVMParams.Credential
-        'The Azure Local scheduled task is completed.' | Write-ScriptLog
+        Wait-AzureLocalScheduledTaskCompletion -VMName $vmConfig.VMName -Credential $invokeWithinVMParams.Credential
+        'The Azure Local scheduled task is has been completed.' | Write-ScriptLog
     }
     else {
-        'Skip the Azure Local scheduled task invocation because {0} does not have the scheduled task.' -f $labConfig.hciNode.operatingSystem.sku | Write-ScriptLog
+        'Skip the Azure Local scheduled task invocation because {0} does not have the scheduled task.' -f $vmConfig.OS.Sku | Write-ScriptLog
     }
 
     'Delete the module files within the VM.' | Write-ScriptLog
@@ -842,37 +854,37 @@ try {
         ImportModuleInVM     = $invokeWithinVMParams.ImportModuleInVM
     }
     Remove-FileWithinVM @params
-    'Delete the module files within the VM completed.' | Write-ScriptLog
+    'Delete the module files within the VM has been completed.' | Write-ScriptLog
 
     # Disable the Time synchronization in the Integration Services.
     # - Use AD DC as the NTP server for member servers are a common practice.
     # - The Azure Local instance deployment validator will check the NTP settings and connectivity to the NTP server.
     #   The check will fail if the source is "VM IC Time Synchronization Provider".
-    if ($labConfig.hciNode.shouldJoinToAddsDomain -or $labConfig.hciNode.isAzureLocalDeployment) {
-        Disable-VMIntegrationService -VMName $nodeConfig.VMName -Name 'Time Synchronization' -Passthru | Out-String | Write-ScriptLog
+    if ($labNodeConfig.shouldJoinToAddsDomain -or $labNodeConfig.isAzureLocalDeployment) {
+        Disable-VMIntegrationService -VMName $vmConfig.VMName -Name 'Time Synchronization' -Passthru | Out-String | Write-ScriptLog
     }
 
-    if ($labConfig.hciNode.shouldJoinToAddsDomain) {
+    if ($labNodeConfig.shouldJoinToAddsDomain) {
         'Join the VM to the AD domain.'  | Write-ScriptLog
         $params = @{
-            VMName                = $nodeConfig.VMName
+            VMName                = $vmConfig.VMName
             LocalAdminCredential  = $localAdminCredential
             DomainFqdn            = $labConfig.addsDomain.fqdn
-            DomainAdminCredential = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $nodeConfig.AdminPassword  # Domain Administrator credential
+            DomainAdminCredential = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $vmConfig.OS.AdminPassword  # Domain Administrator credential
         }
         Add-VMToADDomain @params
-        'Join the VM to the AD domain completed.'  | Write-ScriptLog
+        'Join the VM to the AD domain has been completed.'  | Write-ScriptLog
     }
 
     # Restart the VM.
-    Stop-VMSurely -VMName $nodeConfig.VMName
-    Start-VMSurely -VMName $nodeConfig.VMName
+    Stop-VMSurely -VMName $vmConfig.VMName
+    Start-VMSurely -VMName $vmConfig.VMName
 
     'Wait for the VM to be ready.' | Write-ScriptLog
     $params = @{
-        VMName     = $nodeConfig.VMName
-        Credential = if ($labConfig.hciNode.shouldJoinToAddsDomain) {
-            New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $nodeConfig.AdminPassword
+        VMName     = $vmConfig.VMName
+        Credential = if ($labNodeConfig.shouldJoinToAddsDomain) {
+            New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $vmConfig.OS.AdminPassword
         }
         else {
             $localAdminCredential
@@ -881,14 +893,16 @@ try {
     Wait-PowerShellDirectReady @params
     'The VM is ready.' | Write-ScriptLog
 
-    'The HCI node VM creation has been successfully completed.' | Write-ScriptLog
+    'This script has been completed all tasks.' | Write-ScriptLog
 }
 catch {
-    New-ExceptionMessage -ErrorRecord $_ | Write-ScriptLog -Level Error
+    $exceptionMessage = New-ExceptionMessage -ErrorRecord $_
+    $exceptionMessage | Write-ScriptLog -Level Error
     throw $exceptionMessage
 }
 finally {
+    # Mandatory post-processing.
     $stopWatch.Stop()
-    'Duration of this script ran: {0}' -f $stopWatch.Elapsed.toString('hh\:mm\:ss') | Write-ScriptLog
+    'Script duration: {0}' -f $stopWatch.Elapsed.toString('hh\:mm\:ss') | Write-ScriptLog
     Stop-ScriptLogging
 }

@@ -64,8 +64,89 @@ namespace HciLab
 }
 '@
 
-function New-ExceptionMessage
-{
+function ConvertFrom-Jsonc {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateScript({ Test-Path -PathType Leaf -LiteralPath $_ })]
+        [string] $FilePath
+    )
+
+    # Remove single-line and multi-line comments before ConvertFrom-Json.
+    return (Get-Content -LiteralPath $FilePath -Raw) -replace '(?m)(?<=^([^"]|"[^"]*")*)//.*','' -replace '(?ms)/\*.*?\*/','' | ConvertFrom-Json
+}
+
+function Out-FileUtf8NoBom {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [string] $Content,
+
+        [Parameter(Mandatory = $true)]
+        [string] $FilePath
+    )
+
+    $utf8Encoding = [System.Text.UTF8Encoding]::new($false, $true)  # No BOM, throw on invalid bytes.
+    [System.IO.File]::WriteAllText($FilePath, $Content, $utf8Encoding)
+}
+
+function Select-UniquePSObject {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [PSCustomObject[]] $InputObject,
+
+        [Parameter(Mandatory = $true)]
+        [string[]] $KeyPropertyName
+    )
+
+    begin {
+        $hashSet = [System.Collections.Generic.HashSet[string]]::new()
+        $uniqueObjects = @()
+    }
+
+    process {
+        $uniqueObjects += foreach ($obj in $InputObject) {
+            $key = ($KeyPropertyName | ForEach-Object { $obj.$_ }) -join '|'
+            if ($hashSet.Add($key)) { $obj }
+        }
+    }
+
+    end {
+        return $uniqueObjects
+    }
+}
+
+function Add-NestedHashtableValue {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [Hashtable] $Hashtable,
+
+        [Parameter(Mandatory = $true)]
+        [string[]] $KeySequence,
+
+        [Parameter(Mandatory = $true)]
+        [object] $LeafValue
+    )
+
+    $ht = $Hashtable
+    for ($i = 0; $i -lt $KeySequence.Length; $i++) {
+        $key = $KeySequence[$i]
+
+        if ($i -eq ($KeySequence.Length - 1)) {
+            $ht.($key) = $LeafValue
+        }
+        else {
+            if ($ht.Keys -notcontains $key) {
+                $ht.($key) = @{}
+            }
+        }
+        $ht = $ht.($key)
+    }
+}
+
+function New-ExceptionMessage {
     param (
         [Parameter(Mandatory = $true)]
         [System.Management.Automation.ErrorRecord] $ErrorRecord,
@@ -84,7 +165,7 @@ function New-ExceptionMessage
     }
 
     $ex = $ErrorRecord.Exception
-    $builder = New-Object -TypeName 'System.Text.StringBuilder'
+    $builder = [System.Text.StringBuilder]::new()
     [void] $builder.AppendLine('')
     [void] $builder.AppendLine($fenceChar * $horizontalLineLength)
     [void] $builder.AppendLine($headerText)
@@ -125,37 +206,7 @@ function New-ExceptionMessage
     return $builder.ToString()
 }
 
-function Start-ScriptLogging
-{
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory = $true)]
-        [string] $OutputDirectory,
-
-        # The log file name suffix. The default value is the file name without extension of the caller script.
-        [Parameter(Mandatory = $false)]
-        [string] $FileName = [IO.Path]::GetFileNameWithoutExtension($MyInvocation.ScriptName)
-    )
-
-    if (-not (Test-Path -PathType Container -LiteralPath $OutputDirectory)) {
-        New-Item -ItemType Directory -Path $OutputDirectory -Force
-    }
-
-    $transcriptFileName = New-LogFileName -FileName $FileName
-    $transcriptFilePath = [IO.Path]::Combine($OutputDirectory, $transcriptFileName)
-    Start-Transcript -LiteralPath $transcriptFilePath -Append -IncludeInvocationHeader
-}
-
-function Stop-ScriptLogging
-{
-    [CmdletBinding()]
-    param ()
-
-    Stop-Transcript
-}
-
-function New-LogFileName
-{
+function New-LogFileName {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $false)]
@@ -165,11 +216,37 @@ function New-LogFileName
     return '{0:yyyyMMdd-HHmmss}_{1}_{2}.log' -f [DateTime]::Now, $env:ComputerName, $FileName
 }
 
+function Start-ScriptLogging {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $OutputDirectory,
+
+        # The log file name suffix. The default value is the file name without extension of the caller script.
+        [Parameter(Mandatory = $false)]
+        [string] $FileName = [System.IO.Path]::GetFileNameWithoutExtension($MyInvocation.ScriptName)
+    )
+
+    if (-not (Test-Path -PathType Container -LiteralPath $OutputDirectory)) {
+        New-Item -ItemType Directory -Path $OutputDirectory -Force
+    }
+
+    $transcriptFileName = New-LogFileName -FileName $FileName
+    $transcriptFilePath = [System.IO.Path]::Combine($OutputDirectory, $transcriptFileName)
+    Start-Transcript -LiteralPath $transcriptFilePath -Append -IncludeInvocationHeader
+}
+
+function Stop-ScriptLogging {
+    [CmdletBinding()]
+    param ()
+
+    Stop-Transcript
+}
+
 # The script log default context.
 $script:scriptLogDefaultConext = ''
 
-function Set-ScriptLogDefaultContext
-{
+function Set-ScriptLogDefaultContext {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -179,8 +256,7 @@ function Set-ScriptLogDefaultContext
     $script:scriptLogDefaultConext = $LogContext
 }
 
-function Write-ScriptLog
-{
+function Write-ScriptLog {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true, Position = 1, ValueFromPipeline = $true)]
@@ -206,12 +282,10 @@ function Write-ScriptLog
     else {
         '[{0}]' -f $computerName
     }
-    $logRecord = '{0} {1,-7} {2} {3}' -f $timestamp, $Level.ToUpper(), $context, $Message
-    Write-Host -Object $logRecord -ForegroundColor Cyan
+    '{0} {1,-7} {2} {3}' -f $timestamp, $Level.ToUpper(), $context, $Message | Write-Host -ForegroundColor Cyan
 }
 
-function Get-LabDeploymentConfig
-{
+function Get-LabDeploymentConfig {
     [CmdletBinding()]
     param ()
 
@@ -227,8 +301,17 @@ function Get-LabDeploymentConfig
     return [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($encodedUserData)) | ConvertFrom-Json
 }
 
-function Get-Secret
-{
+function Get-MaterialInventoryFilePath {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject] $LabConfig
+    )
+
+    return [System.IO.Path]::Combine($LabConfig.labHost.folderPath.temp, 'inventory.json')
+}
+
+function Get-Secret {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -243,8 +326,8 @@ function Get-Secret
 
     'Get a secret value of the "{0}" from the "{1}".' -f $SecretName, $KeyVaultName | Write-ScriptLog
 
-    $attemptLimit = 10
-    for ($attempts = 0; $attempts -lt $attemptLimit; $attempts++) {
+    $ATTEMPT_LIMIT = 10
+    for ($attempt = 0; $attempt -lt $ATTEMPT_LIMIT; $attempt++) {
         try {
             # Get a token for Key Vault using VM's managed identity via Azure Instance Metadata Service.
             $accessToken = Get-AccessTokenUsingManagedId -Resource 'https%3A%2F%2Fvault.azure.net'
@@ -280,8 +363,7 @@ function Get-Secret
     throw 'Could not get a secret value from the Key Vault.'
 }
 
-function Get-AccessTokenUsingManagedId
-{
+function Get-AccessTokenUsingManagedId {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -319,52 +401,7 @@ function Get-AccessTokenUsingManagedId
     throw 'Could not get an access token from the Azure Instance Metadata Service endpoint.'
 }
 
-function Get-InstanceMetadata
-{
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory = $false)]
-        [ValidateScript({ $_.StartsWith('/') })]
-        [string] $FilterPath = '',
-
-        [Parameter(Mandatory = $false)]
-        [switch] $LeafNode
-    )
-
-    $queryFormat = if ($LeafNode) { 'text' } else { 'json' }
-
-    $retryLimit = 10
-    for ($retryCount = 0; $retryCount -lt $retryLimit; $retryCount++) {
-        try {
-            $params = @{
-                Method  = 'Get'
-                Uri     = 'http://169.254.169.254/metadata/instance' + $FilterPath + '?api-version=2021-02-01&format=' + $queryFormat
-                Headers = @{
-                    Metadata = 'true'
-                }
-                UseBasicParsing = $true
-            }
-            return Invoke-RestMethod @params
-        }
-        catch {
-            # Common error codes when using IMDS to retrieve load balancer information
-            # https://learn.microsoft.com/en-us/azure/load-balancer/troubleshoot-load-balancer-imds
-            $httpStatusCode = [int]($_.Exception.Response.StatusCode)
-            if ($httpStatusCode -eq 429) {
-                ('/metadata/instance: TooManyRequests: {0}' -f $_.ErrorDetails.Message) | Write-ScriptLog -Level Warning
-                Start-Sleep -Seconds 1
-            }
-            else {
-                throw $_
-            }
-        }
-    }
-
-    throw 'Could not get an instance medata from the Azure Instance Metadata Service endpoint.'
-}
-
-function Invoke-FileDownload
-{
+function Invoke-FileDownload {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -428,8 +465,7 @@ function Invoke-FileDownload
     throw 'The download from "{0}" did not succeed in the acceptable retry count ({1}).' -f $SourceUri, $MaxRetryCount
 }
 
-function New-RegistryKey
-{
+function New-RegistryKey {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -447,28 +483,7 @@ function New-RegistryKey
     }
 }
 
-function Format-IsoFileName
-{
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory = $true)]
-        [string] $OperatingSystem,
-
-        [Parameter(Mandatory = $true)]
-        [string] $Culture,
-
-        [Parameter(Mandatory = $false)]
-        [string] $Suffix
-    )
-
-    if ($PSBoundParameters.Keys.Contains('Suffix')) {
-        return '{0}_{1}_{2}.iso' -f $OperatingSystem, $Culture, $Suffix
-    }
-    return '{0}_{1}.iso' -f $OperatingSystem, $Culture
-}
-
-function Format-BaseVhdFileName
-{
+function Format-BaseVhdFileName {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -485,8 +500,7 @@ function Format-BaseVhdFileName
     return '{0}_{1}_{2}.vhdx' -f $OperatingSystem, $ImageIndex, $Culture
 }
 
-function Format-HciNodeName
-{
+function Format-HciNodeName {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -568,8 +582,7 @@ function New-UnattendAnswerFileContent
 '@ -f $encodedAdminPassword, $ComputerName, $TimeZone, $Culture
 }
 
-function Wait-VhdDismountCompletion
-{
+function Wait-VhdDismountCompletion {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -592,8 +605,7 @@ function Wait-VhdDismountCompletion
     }
 }
 
-function Set-UnattendAnswerFileToVhd
-{
+function Set-UnattendAnswerFileToVhd {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -644,27 +656,21 @@ function Set-UnattendAnswerFileToVhd
     Remove-Item $scratchDirectory -Force
 }
 
-function CreateWaitHandleForSerialization
-{
+function CreateWaitHandleForSerialization {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
         [string] $SyncEventName
     )
 
-    $params = @{
-        TypeName     = 'System.Threading.EventWaitHandle'
-        ArgumentList = @(
-            $true,
-            [System.Threading.EventResetMode]::AutoReset,
-            $SyncEventName
-        )
-    }
-    return New-Object @params
+    return [System.Threading.EventWaitHandle]::new(
+        $true,
+        [System.Threading.EventResetMode]::AutoReset,
+        $SyncEventName
+    )
 }
 
-function Install-WindowsFeatureToVhd
-{
+function Install-WindowsFeatureToVhd {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -747,8 +753,7 @@ function Install-WindowsFeatureToVhd
     throw 'The Install-WindowsFeature cmdlet execution for "{0}" was not succeeded in the acceptable time ({1}).' -f $VhdPath, $RetryTimeout.ToString()
 }
 
-function Start-VMSurely
-{
+function Start-VMSurely {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -805,8 +810,7 @@ function Start-VMSurely
     throw $exceptionMessage
 }
 
-function Stop-VMSurely
-{
+function Stop-VMSurely {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -890,8 +894,7 @@ function Stop-VMSurely
     throw $exceptionMessage
 }
 
-function Wait-PowerShellDirectReady
-{
+function Wait-PowerShellDirectReady {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -942,25 +945,19 @@ function Wait-PowerShellDirectReady
 $script:addsDcDeploymentCompletionSyncEventName = 'Local\hcilab-adds-dc-deployment-completion'
 $script:addsDcDeploymentCompletionWaitHandle = $null
 
-function Block-AddsDomainOperation
-{
+function Block-AddsDomainOperation {
     [CmdletBinding()]
     param ()
 
     'Block the AD DS domain operations until the AD DS domain controller VM deployment is completed.' | Write-ScriptLog
-    $params = @{
-        TypeName     = 'System.Threading.EventWaitHandle'
-        ArgumentList = @(
-            $false,
-            [System.Threading.EventResetMode]::ManualReset,
-            $script:addsDcDeploymentCompletionSyncEventName
-        )
-    }
-    $script:addsDcDeploymentCompletionWaitHandle = New-Object @params
+    $script:addsDcDeploymentCompletionWaitHandle = [System.Threading.EventWaitHandle]::new(
+        $false,
+        [System.Threading.EventResetMode]::ManualReset,
+        $script:addsDcDeploymentCompletionSyncEventName
+    )
 }
 
-function Unblock-AddsDomainOperation
-{
+function Unblock-AddsDomainOperation {
     [CmdletBinding()]
     param ()
 
@@ -976,8 +973,7 @@ function Unblock-AddsDomainOperation
     }
 }
 
-function Wait-AddsDcDeploymentCompletion
-{
+function Wait-AddsDcDeploymentCompletion {
     [CmdletBinding()]
     param ()
 
@@ -997,8 +993,7 @@ function Wait-AddsDcDeploymentCompletion
     }
 }
 
-function Wait-DomainControllerServiceReady
-{
+function Wait-DomainControllerServiceReady {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -1094,33 +1089,25 @@ function Wait-DomainControllerServiceReady
     throw 'The AD DS domain controller "{0}" was not ready in the acceptable time ({1}).' -f $AddsDcVMName, $RetryTimeout.ToString()
 }
 
-function New-LogonCredential
-{
+function New-LogonCredential {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
         [AllowEmptyString()]
         [string] $DomainFqdn,
 
-        [Parameter(Mandatory = $true)]
-        [securestring] $Password,
-
         [Parameter(Mandatory = $false)]
-        [string] $UserName = 'Administrator'
+        [string] $UserName = 'Administrator',
+
+        [Parameter(Mandatory = $true)]
+        [securestring] $Password
     )
 
-    $params = @{
-        TypeName     = 'System.Management.Automation.PSCredential'
-        ArgumentList = @(
-            if ($DomainFqdn -eq '') { $UserName } else { '{0}\{1}' -f $DomainFqdn, $UserName },
-            $Password
-        )
-    }
-    return New-Object @params
+    $userName = if ($DomainFqdn -eq '') { $UserName } else { '{0}\{1}' -f $DomainFqdn, $UserName }
+    return [System.Management.Automation.PSCredential]::new($userName, $Password)
 }
 
-function Add-VMToADDomain
-{
+function Add-VMToADDomain {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -1180,8 +1167,7 @@ function Add-VMToADDomain
     throw 'Domain join the "{0}" VM to the AD domain "{1}" was not complete in the acceptable time ({2}).' -f $VMName, $DomainFqdn, $RetryTimeout.ToString()
 }
 
-function New-PSDirectSession
-{
+function New-PSDirectSession {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -1191,8 +1177,8 @@ function New-PSDirectSession
         [PSCredential] $Credential
     )
 
-    $attemptLimit = 5
-    for ($attempts = 0; $attempts -lt $attemptLimit; $attempts++) {
+    $ATTEMPT_LIMIT = 5
+    for ($attempt = 0; $attempt -lt $ATTEMPT_LIMIT; $attempt++) {
         try {
             'Create a new PowerShell Direct session to "{0}" with "{1}".' -f $VMName, $Credential.UserName | Write-ScriptLog
             $pss = New-PSSession -VMName $VMName -Credential $Credential -Name ('"{0}" with "{1}"' -f $VMName, $Credential.UserName)
@@ -1211,8 +1197,7 @@ function New-PSDirectSession
     throw $exceptionMessage
 }
 
-function Remove-PSDirectSession
-{
+function Remove-PSDirectSession {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -1224,8 +1209,7 @@ function Remove-PSDirectSession
     'Delete a PowerShell Direct session to {0} succeeded.' -f $Session.Name | Write-ScriptLog
 }
 
-function Invoke-PSDirectSessionGroundwork
-{
+function Invoke-PSDirectSessionGroundwork {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -1258,8 +1242,7 @@ function Invoke-PSDirectSessionGroundwork
     }
 }
 
-function Copy-FileIntoVM
-{
+function Copy-FileIntoVM {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -1298,8 +1281,7 @@ function Copy-FileIntoVM
     }
 }
 
-function Remove-FileWithinVM
-{
+function Remove-FileWithinVM {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -1315,8 +1297,8 @@ function Remove-FileWithinVM
         [string[]] $ImportModuleInVM = @()
     )
 
-    $attemptLimit = 5
-    for ($attempts = 0; $attempts -lt $attemptLimit; $attempts++) {
+    $ATTEMPT_LIMIT = 5
+    for ($attempt = 0; $attempt -lt $ATTEMPT_LIMIT; $attempt++) {
         try {
             $pss = New-PSDirectSession -VMName $VMName -Credential $Credential
             Invoke-PSDirectSessionGroundwork -Session $pss -ImportModuleInVM $ImportModuleInVM
@@ -1363,8 +1345,7 @@ function Remove-FileWithinVM
     throw $exceptionMessage
 }
 
-function Invoke-CommandWithinVM
-{
+function Invoke-CommandWithinVM {
     param (
         [Parameter(Mandatory = $true)]
         [string] $VMName,
@@ -1386,7 +1367,7 @@ function Invoke-CommandWithinVM
     )
 
     $attemptLimit = if ($WithRetry) { 5 } else { 1 }
-    for ($attempts = 0; $attempts -lt $attemptLimit; $attempts++) {
+    for ($attempt = 0; $attempt -lt $attemptLimit; $attempt++) {
         try {
             $pss = New-PSDirectSession -VMName $VMName -Credential $Credential
             Invoke-PSDirectSessionGroundwork -Session $pss -ImportModuleInVM $ImportModuleInVM
@@ -1419,8 +1400,7 @@ function Invoke-CommandWithinVM
     throw $exceptionMessage
 }
 
-function New-ShortcutFile
-{
+function New-ShortcutFile {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -1450,69 +1430,71 @@ function New-ShortcutFile
     'Create a shortcut file "{0}" completed.' -f $ShortcutFilePath | Write-ScriptLog
 }
 
-function New-WacConnectionFileEntry
-{
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory = $true)]
-        [string] $Name,
+# function New-WacConnectionFileEntry {
+#     [CmdletBinding()]
+#     param (
+#         [Parameter(Mandatory = $true)]
+#         [string] $Name,
 
-        [Parameter(Mandatory = $true)]
-        [ValidateSet('msft.sme.connection-type.server', 'msft.sme.connection-type.cluster')]
-        [string] $Type,
+#         [Parameter(Mandatory = $true)]
+#         [ValidateSet('msft.sme.connection-type.server', 'msft.sme.connection-type.cluster')]
+#         [string] $Type,
 
-        [Parameter(Mandatory = $false)]
-        [AllowEmptyCollection()]
-        [string[]] $Tag = @(),
+#         [Parameter(Mandatory = $false)]
+#         [AllowEmptyCollection()]
+#         [string[]] $Tag = @(),
 
-        [Parameter(Mandatory = $false)]
-        [AllowEmptyString()]
-        [string] $GroupId = ''
-    )
+#         [Parameter(Mandatory = $false)]
+#         [AllowEmptyString()]
+#         [string] $GroupId = ''
+#     )
 
-    $entry = @{
-        Name = $Name
-        Type = $Type
-        Tags = $Tag -join '|'
-        GroupId = $GroupId
-    }
-    return [PSCustomObject] $entry
-}
+#     $entry = @{
+#         Name = $Name
+#         Type = $Type
+#         Tags = $Tag -join '|'
+#         GroupId = $GroupId
+#     }
+#     return [PSCustomObject] $entry
+# }
 
-function New-WacConnectionFileContent
-{
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory = $true)]
-        [PSCustomObject[]] $ConnectionEntry
-    )
+# function New-WacConnectionFileContent {
+#     [CmdletBinding()]
+#     param (
+#         [Parameter(Mandatory = $true)]
+#         [PSCustomObject[]] $ConnectionEntry
+#     )
 
-    $builder = New-Object -TypeName 'System.Text.StringBuilder'
-    [void] $builder.AppendLine('"name","type","tags","groupId"')
-    foreach ($entry in $ConnectionEntry) {
-        $values = @(
-            ('"' + $entry.Name + '"'),
-            ('"' + $entry.Type + '"'),
-            ('"' + $entry.Tags + '"'),
-            ('"' + $entry.GroupId + '"')
-        )
-        [void] $builder.AppendLine($values -join ',')
-    }
-    return $builder.ToString()
-}
+#     $builder = [System.Text.StringBuilder]::new()
+#     [void] $builder.AppendLine('"name","type","tags","groupId"')
+#     foreach ($entry in $ConnectionEntry) {
+#         $values = @(
+#             ('"' + $entry.Name + '"'),
+#             ('"' + $entry.Type + '"'),
+#             ('"' + $entry.Tags + '"'),
+#             ('"' + $entry.GroupId + '"')
+#         )
+#         [void] $builder.AppendLine($values -join ',')
+#     }
+#     return $builder.ToString()
+# }
 
 $exportFunctions = @(
+    'ConvertFrom-Jsonc',
+    'Out-FileUtf8NoBom',
+    'Select-UniquePSObject',
+    'Add-NestedHashtableValue',
     'New-ExceptionMessage',
+    'New-LogFileName',
     'Start-ScriptLogging',
     'Stop-ScriptLogging',
     'Set-ScriptLogDefaultContext',
     'Write-ScriptLog',
     'Get-LabDeploymentConfig',
+    'Get-MaterialInventoryFilePath',
     'Get-Secret',
-    'Get-InstanceMetadata',
     'Invoke-FileDownload',
     'New-RegistryKey',
-    'Format-IsoFileName',
     'Format-BaseVhdFileName',
     'Format-HciNodeName',
     'New-UnattendAnswerFileContent',
@@ -1530,8 +1512,8 @@ $exportFunctions = @(
     'Copy-FileIntoVM',
     'Remove-FileWithinVM',
     'Invoke-CommandWithinVM'
-    'New-ShortcutFile',
-    'New-WacConnectionFileEntry',
-    'New-WacConnectionFileContent'
+    'New-ShortcutFile'
+    # 'New-WacConnectionFileEntry',
+    # 'New-WacConnectionFileContent'
 )
 Export-ModuleMember -Function $exportFunctions
