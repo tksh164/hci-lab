@@ -71,9 +71,7 @@ $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 # Active Directory preparation for Azure Local
 #
 
-function New-ADObjectsForAzureLocal
-{
-    [OutputType([void])]
+function New-ADObjectsForAzureLocal {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -119,9 +117,7 @@ function New-ADObjectsForAzureLocal
 # Configurator App for Azure Local
 #
 
-function Install-ConfiguratorAppForAzureLocal
-{
-    [OutputType([void])]
+function Install-ConfiguratorAppForAzureLocal {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
