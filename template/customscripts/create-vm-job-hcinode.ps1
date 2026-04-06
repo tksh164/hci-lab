@@ -447,6 +447,8 @@ try {
             Sku           = $labNodeConfig.operatingSystem.sku
             ImageIndex    = $labNodeConfig.operatingSystem.imageIndex
             AdminPassword = Get-Secret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName.adminPassword
+            Language      = $labConfig.guestOS.culture
+            TimeZone      = $labConfig.guestOS.timeZone
         }
         NetAdapters = [PSCustomObject] @{
             Management = [PSCustomObject] @{
@@ -492,8 +494,8 @@ try {
     $params = @{
         ComputerName = $vmConfig.VMName
         Password     = $vmConfig.OS.AdminPassword
-        Culture      = $labConfig.guestOS.culture
-        TimeZone     = $labConfig.guestOS.timeZone
+        Culture      = $vmConfig.OS.Language
+        TimeZone     = $vmConfig.OS.TimeZone
     }
     $unattendAnswerFileContent = New-UnattendAnswerFileContent @params
     'Generate the unattend answer XML has been completed.'| Write-ScriptLog
