@@ -433,6 +433,10 @@ try {
     # Retrieve the job parameters from the JSON string.
     $jobParams = $JobParamsJson | ConvertFrom-Json
 
+    # Retrieve the admin password from the Key Vault.
+    $adminPassword = Get-Secret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName.adminPassword
+
+    # Hyper-V VM configuration.
     $labNodeConfig = $labConfig.hciNode
     $vmConfig = [PSCustomObject] @{
         VMName         = Format-HciNodeName -Format $labNodeConfig.vmName -Offset $labNodeConfig.vmNameOffset -Index $jobParams.NodeIndex
@@ -444,11 +448,10 @@ try {
             SizeBytes = $labNodeConfig.dataDiskSizeBytes
         }
         OS = [PSCustomObject] @{
-            Sku           = $labNodeConfig.operatingSystem.sku
-            ImageIndex    = $labNodeConfig.operatingSystem.imageIndex
-            AdminPassword = Get-Secret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName.adminPassword
-            Language      = $labConfig.guestOS.culture
-            TimeZone      = $labConfig.guestOS.timeZone
+            Sku        = $labNodeConfig.operatingSystem.sku
+            ImageIndex = $labNodeConfig.operatingSystem.imageIndex
+            Language   = $labConfig.guestOS.culture
+            TimeZone   = $labConfig.guestOS.timeZone
         }
         NetAdapters = [PSCustomObject] @{
             Management = [PSCustomObject] @{
@@ -493,7 +496,7 @@ try {
     'Generate the unattend answer XML.'| Write-ScriptLog
     $params = @{
         ComputerName = $vmConfig.VMName
-        Password     = $vmConfig.OS.AdminPassword
+        Password     = $adminPassword
         Culture      = $vmConfig.OS.Language
         TimeZone     = $vmConfig.OS.TimeZone
     }
@@ -520,9 +523,12 @@ try {
 
     Start-VMSurely -VMName $vmConfig.VMName
 
+    # Credentials
+    $localAdminCredential = New-LogonCredential -DomainFqdn '.' -Password $adminPassword
+    $domainAdminCredential = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $adminPassword
+
     # NOTE: The VM automatically restarts at some point between after the VM started and before PowerShell Direct is ready.
     'Wait for PowerShell Direct to be ready.' | Write-ScriptLog
-    $localAdminCredential = New-LogonCredential -DomainFqdn '.' -Password $vmConfig.OS.AdminPassword
     Wait-PowerShellDirectReady -VMName $vmConfig.VMName -Credential $localAdminCredential
     'PowerShell Direct is ready.' | Write-ScriptLog
 
@@ -806,7 +812,7 @@ try {
     $params = @{
         AddsDcVMName       = $labConfig.addsDC.vmName
         AddsDcComputerName = $labConfig.addsDC.vmName  # The DC's computer name is the same as the VM name. It's specified in the unattend.xml.
-        Credential         = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $vmConfig.OS.AdminPassword  # Domain Administrator credential
+        Credential         = $domainAdminCredential
     }
     Wait-DomainControllerServiceReady @params
     'The domain controller with DNS capability is ready.' | Write-ScriptLog
@@ -872,7 +878,7 @@ try {
             VMName                = $vmConfig.VMName
             LocalAdminCredential  = $localAdminCredential
             DomainFqdn            = $labConfig.addsDomain.fqdn
-            DomainAdminCredential = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $vmConfig.OS.AdminPassword  # Domain Administrator credential
+            DomainAdminCredential = $domainAdminCredential
         }
         Add-VMToADDomain @params
         'Join the VM to the AD domain has been completed.'  | Write-ScriptLog
@@ -885,12 +891,7 @@ try {
     'Wait for the VM to be ready.' | Write-ScriptLog
     $params = @{
         VMName     = $vmConfig.VMName
-        Credential = if ($labNodeConfig.shouldJoinToAddsDomain) {
-            New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $vmConfig.OS.AdminPassword
-        }
-        else {
-            $localAdminCredential
-        }
+        Credential = if ($labNodeConfig.shouldJoinToAddsDomain) { $domainAdminCredential } else { $localAdminCredential }
     }
     Wait-PowerShellDirectReady @params
     'The VM is ready.' | Write-ScriptLog
