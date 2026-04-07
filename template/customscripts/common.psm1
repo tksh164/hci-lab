@@ -1092,9 +1092,9 @@ function Wait-DomainControllerServiceReady {
 function New-LogonCredential {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [AllowEmptyString()]
-        [string] $DomainFqdn,
+        [string] $DomainFqdn = '',
 
         [Parameter(Mandatory = $false)]
         [string] $UserName = 'Administrator',
