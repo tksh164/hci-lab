@@ -31,6 +31,108 @@ function Get-WorkboxProcessorCount {
     return $DefaultProcessorCount
 }
 
+function New-WorkboxVM {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject] $VMConfig,
+
+        [Parameter(Mandatory = $true)]
+        [string] $VMFolderPath
+    )
+
+    'Create the OS disk.' | Write-ScriptLog
+    $params = @{
+        Path                    = [System.IO.Path]::Combine($VMFolderPath, $VMConfig.VMName, 'osdisk.vhdx')
+        Differencing            = $true
+        ParentPath              = $VMConfig.ParentVhdPath
+        BlockSizeBytes          = 32MB
+        PhysicalSectorSizeBytes = 4KB
+    }
+    $vmOSDiskVhd = New-VHD @params
+    'Create the OS disk has been completed.' | Write-ScriptLog
+
+    'Create the VM.' | Write-ScriptLog
+    $params = @{
+        Name       = $VMConfig.VMName
+        Path       = $VMFolderPath
+        VHDPath    = $vmOSDiskVhd.Path
+        Generation = 2
+    }
+    New-VM @params | Out-String | Write-ScriptLog
+    'Create the VM has been completed.' | Write-ScriptLog
+
+    'Change the VM''s automatic stop action.' | Write-ScriptLog
+    Set-VM -Name $VMConfig.VMName -AutomaticStopAction ShutDown
+    'Change the VM''s automatic stop action has been completed.' | Write-ScriptLog
+
+    'Configure the VM''s processor.' | Write-ScriptLog
+    Set-VMProcessor -VMName $VMConfig.VMName -Count $VMConfig.ProcessorCount
+    'Configure the VM''s processor has been completed.' | Write-ScriptLog
+
+    'Configure the VM''s memory.' | Write-ScriptLog
+    $params = @{
+        VMName               = $VMConfig.VMName
+        StartupBytes         = $VMConfig.RamBytes
+        DynamicMemoryEnabled = $true
+        MinimumBytes         = 512MB
+        MaximumBytes         = $VMConfig.MaximumRamBytes
+    }
+    Set-VMMemory @params
+    'Configure the VM''s memory has been completed.' | Write-ScriptLog
+
+    'Enable the VM''s vTPM.' | Write-ScriptLog
+    $params = @{
+        VMName               = $VMConfig.VMName
+        NewLocalKeyProtector = $true
+        Passthru             = $true
+        ErrorAction          = [Management.Automation.ActionPreference]::Stop
+    }
+    try {
+        Set-VMKeyProtector @params | Enable-VMTPM
+    }
+    catch {
+        '{0} (ExceptionMessage: {1} | Exception: {2} | FullyQualifiedErrorId: {3} | CategoryInfo: {4} | ErrorDetailsMessage: {5})' -f @(
+            'Caught exception on enable vTPM, will retry to enable vTPM.',
+            $_.Exception.Message,
+            $_.Exception.GetType().FullName,
+            $_.FullyQualifiedErrorId,
+            $_.CategoryInfo.ToString(),
+            $_.ErrorDetails.Message
+        ) | Write-ScriptLog -Level Warning
+
+        # Rescue only once by retry.
+        Set-VMKeyProtector @params | Enable-VMTPM
+    }
+    'Enable the VM''s vTPM has been completed.' | Write-ScriptLog
+
+    'Configure the VM''s network adapters.' | Write-ScriptLog
+    Get-VMNetworkAdapter -VMName $VMConfig.VMName | Remove-VMNetworkAdapter
+
+    # Management
+    'Configure the {0} network adapter.' -f $VMConfig.NetAdapters.Management.Name | Write-ScriptLog
+    $paramsForAdd = @{
+        VMName       = $VMConfig.VMName
+        Name         = $VMConfig.NetAdapters.Management.Name
+        SwitchName   = $VMConfig.NetAdapters.Management.VSwitchName
+        DeviceNaming = [Microsoft.HyperV.PowerShell.OnOffState]::On
+        Passthru     = $true
+    }
+    $paramsForSet = @{
+        MacAddressSpoofing = [Microsoft.HyperV.PowerShell.OnOffState]::On
+        AllowTeaming       = [Microsoft.HyperV.PowerShell.OnOffState]::On
+        Passthru           = $true
+    }
+    Add-VMNetworkAdapter @paramsForAdd |
+    Set-VMNetworkAdapter @paramsForSet |
+    Set-VMNetworkAdapterVlan -Trunk -NativeVlanId 0 -AllowedVlanIdList '1-4094'
+    'Configure the {0} network adapter has been completed.' -f $labConfig.wac.netAdapters.management.name | Write-ScriptLog
+
+    return [PSCustomObject] @{
+        OSDiskVhdFilePath = $vmOSDiskVhd.Path
+    }
+}
+
 #
 # Windows Admin Center
 #
@@ -244,11 +346,12 @@ try {
     $vmConfig = [PSCustomObject] @{
         VMName          = $labConfig.wac.vmName
         ProcessorCount  = Get-WorkboxProcessorCount -DefaultProcessorCount 6
+        RamBytes        = 1GB
         MaximumRamBytes = $labConfig.wac.maximumRamBytes
         ParentVhdPath   = $jobParams.BaseVhdFilePath
         OS = [PSCustomObject] @{
-            Language      = $labConfig.guestOS.culture
-            TimeZone      = $labConfig.guestOS.timeZone
+            Language = $labConfig.guestOS.culture
+            TimeZone = $labConfig.guestOS.timeZone
         }
         NetAdapters = [PSCustomObject] @{
             Management = [PSCustomObject] @{
@@ -267,92 +370,8 @@ try {
     # Hyper-V VM creation
     #
 
-    'Create the OS disk for the VM.' | Write-ScriptLog
-    $params = @{
-        Path                    = [System.IO.Path]::Combine($labConfig.labHost.folderPath.vm, $vmConfig.VMName, 'osdisk.vhdx')
-        Differencing            = $true
-        ParentPath              = $jobParams.BaseVhdFilePath
-        BlockSizeBytes          = 32MB
-        PhysicalSectorSizeBytes = 4KB
-    }
-    $vmOSDiskVhd = New-VHD  @params
-    'Create the OS disk for the VM has been completed.' | Write-ScriptLog
-
-    'Create the VM.' | Write-ScriptLog
-    $params = @{
-        Name       = $vmConfig.VMName
-        Path       = $labConfig.labHost.folderPath.vm
-        VHDPath    = $vmOSDiskVhd.Path
-        Generation = 2
-    }
-    New-VM @params | Out-String | Write-ScriptLog
-    'Create the VM has been completed.' | Write-ScriptLog
-
-    'Change the VM''s automatic stop action.' | Write-ScriptLog
-    Set-VM -Name $vmConfig.VMName -AutomaticStopAction ShutDown
-    'Change the VM''s automatic stop action has been completed' | Write-ScriptLog
-
-    'Configure the VM''s processor.' | Write-ScriptLog
-    Set-VMProcessor -VMName $vmConfig.VMName -Count $vmConfig.ProcessorCount
-    'Configure the VM''s processor has been completed.' | Write-ScriptLog
-
-    'Configure the VM''s memory.' | Write-ScriptLog
-    $params = @{
-        VMName               = $vmConfig.VMName
-        StartupBytes         = 1GB
-        DynamicMemoryEnabled = $true
-        MinimumBytes         = 512MB
-        MaximumBytes         = $vmConfig.MaximumRamBytes
-    }
-    Set-VMMemory @params
-    'Configure the VM''s memory has been completed.' | Write-ScriptLog
-
-    'Enable the VM''s vTPM.' | Write-ScriptLog
-    $params = @{
-        VMName               = $vmConfig.VMName
-        NewLocalKeyProtector = $true
-        Passthru             = $true
-        ErrorAction          = [Management.Automation.ActionPreference]::Stop
-    }
-    try {
-        Set-VMKeyProtector @params | Enable-VMTPM
-    }
-    catch {
-        '{0} (ExceptionMessage: {1} | Exception: {2} | FullyQualifiedErrorId: {3} | CategoryInfo: {4} | ErrorDetailsMessage: {5})' -f @(
-            'Caught exception on enable vTPM, will retry to enable vTPM.',
-            $_.Exception.Message,
-            $_.Exception.GetType().FullName,
-            $_.FullyQualifiedErrorId,
-            $_.CategoryInfo.ToString(),
-            $_.ErrorDetails.Message
-        ) | Write-ScriptLog -Level Warning
-
-        # Rescue only once by retry.
-        Set-VMKeyProtector @params | Enable-VMTPM
-    }
-    'Enable the VM''s vTPM has been completed.' | Write-ScriptLog
-
-    'Configure the VM''s network adapters.' | Write-ScriptLog
-    Get-VMNetworkAdapter -VMName $vmConfig.VMName | Remove-VMNetworkAdapter
-
-    # Management
-    'Configure the {0} network adapter.' -f $vmConfig.NetAdapters.Management.Name | Write-ScriptLog
-    $paramsForAdd = @{
-        VMName       = $vmConfig.VMName
-        Name         = $vmConfig.NetAdapters.Management.Name
-        SwitchName   = $vmConfig.NetAdapters.Management.VSwitchName
-        DeviceNaming = [Microsoft.HyperV.PowerShell.OnOffState]::On
-        Passthru     = $true
-    }
-    $paramsForSet = @{
-        MacAddressSpoofing = [Microsoft.HyperV.PowerShell.OnOffState]::On
-        AllowTeaming       = [Microsoft.HyperV.PowerShell.OnOffState]::On
-        Passthru           = $true
-    }
-    Add-VMNetworkAdapter @paramsForAdd |
-    Set-VMNetworkAdapter @paramsForSet |
-    Set-VMNetworkAdapterVlan -Trunk -NativeVlanId 0 -AllowedVlanIdList '1-4094'
-    'Configure the {0} network adapter has been completed.' -f $labConfig.wac.netAdapters.management.name | Write-ScriptLog
+    # Create a new Hyper-V VM.
+    $hvVMInfo = New-WorkboxVM -VMConfig $vmConfig -VMFolderPath $labConfig.labHost.folderPath.vm
 
     'Generate the unattend answer XML.' | Write-ScriptLog
     $params = @{
@@ -364,18 +383,18 @@ try {
     $unattendAnswerFileContent = New-UnattendAnswerFileContent @params
     'Generate the unattend answer XML has been completed.' | Write-ScriptLog
 
-    'Inject the unattend answer file to the "{0}".' -f $vmOSDiskVhd.Path | Write-ScriptLog
+    'Inject the unattend answer file to the "{0}".' -f $hvVMInfo.OSDiskVhdFilePath | Write-ScriptLog
     $params = @{
-        VhdPath                   = $vmOSDiskVhd.Path
+        VhdPath                   = $hvVMInfo.OSDiskVhdFilePath
         UnattendAnswerFileContent = $unattendAnswerFileContent
         LogFolder                 = $labConfig.labHost.folderPath.log
     }
     Set-UnattendAnswerFileToVhd @params
-    'Inject the unattend answer file to the "{0}" has been completed.' -f $vmOSDiskVhd.Path | Write-ScriptLog
+    'Inject the unattend answer file to the "{0}" has been completed.' -f $hvVMInfo.OSDiskVhdFilePath | Write-ScriptLog
 
-    'Install the roles and features to the "{0}".' -f $vmOSDiskVhd.Path | Write-ScriptLog
+    'Install the roles and features to the "{0}".' -f $hvVMInfo.OSDiskVhdFilePath | Write-ScriptLog
     $params = @{
-        VhdPath     = $vmOSDiskVhd.Path
+        VhdPath     = $hvVMInfo.OSDiskVhdFilePath
         FeatureName = @(
             'RSAT-ADDS-Tools',
             'RSAT-AD-AdminCenter',
@@ -391,7 +410,7 @@ try {
         LogFolder   = $labConfig.labHost.folderPath.log
     }
     Install-WindowsFeatureToVhd @params
-    'Install the roles and features to the "{0}" has been completed.' -f $vmOSDiskVhd.Path | Write-ScriptLog
+    'Install the roles and features to the "{0}" has been completed.' -f $hvVMInfo.OSDiskVhdFilePath | Write-ScriptLog
 
     Start-VMSurely -VMName $vmConfig.VMName
 
@@ -484,7 +503,7 @@ try {
         }
         $paramsForNewIPAddress = @{
             AddressFamily  = 'IPv4'
-            IPAddress      = $NetAdapterConfig.IpAddress
+            IPAddress      = $NetAdapterConfig.IPAddress
             PrefixLength   = $NetAdapterConfig.PrefixLength
             DefaultGateway = $NetAdapterConfig.DefaultGateway
         }
