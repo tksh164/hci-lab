@@ -58,7 +58,7 @@ function Get-HciNodeProcessorCount {
     return [Math]::Floor(((Get-VMHost).LogicalProcessorCount / $NodeCount) * 2)
 }
 
-function New-HypervVM {
+function New-HciNodeVM {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -70,7 +70,7 @@ function New-HypervVM {
 
     'Create the OS disk.' | Write-ScriptLog
     $params = @{
-        Path                    = [IO.Path]::Combine($VMFolderPath, $VMConfig.VMName, 'osdisk.vhdx')
+        Path                    = [System.IO.Path]::Combine($VMFolderPath, $VMConfig.VMName, 'osdisk.vhdx')
         Differencing            = $true
         ParentPath              = $VMConfig.ParentVhdPath
         BlockSizeBytes          = 32MB
@@ -491,9 +491,9 @@ try {
     #
 
     # Create a new Hyper-V VM.
-    $hvVMInfo = New-HypervVM -VMConfig $vmConfig -VMFolderPath $labConfig.labHost.folderPath.vm
+    $hvVMInfo = New-HciNodeVM -VMConfig $vmConfig -VMFolderPath $labConfig.labHost.folderPath.vm
 
-    'Generate the unattend answer XML.'| Write-ScriptLog
+    'Generate the unattend answer XML.' | Write-ScriptLog
     $params = @{
         ComputerName = $vmConfig.VMName
         Password     = $adminPassword
@@ -501,25 +501,25 @@ try {
         TimeZone     = $vmConfig.OS.TimeZone
     }
     $unattendAnswerFileContent = New-UnattendAnswerFileContent @params
-    'Generate the unattend answer XML has been completed.'| Write-ScriptLog
+    'Generate the unattend answer XML has been completed.' | Write-ScriptLog
 
-    'Inject the unattend answer file to the VHD.' | Write-ScriptLog
+    'Inject the unattend answer file to the "{0}".' -f $hvVMInfo.OSDiskVhdFilePath | Write-ScriptLog
     $params = @{
         VhdPath                   = $hvVMInfo.OSDiskVhdFilePath
         UnattendAnswerFileContent = $unattendAnswerFileContent
         LogFolder                 = $labConfig.labHost.folderPath.log
     }
     Set-UnattendAnswerFileToVhd @params
-    'Inject the unattend answer file to the VHD has been completed.' | Write-ScriptLog
+    'Inject the unattend answer file to the "{0}" has been completed.' -f $hvVMInfo.OSDiskVhdFilePath | Write-ScriptLog
 
-    'Install the roles and features to the VHD.' | Write-ScriptLog
+    'Install the roles and features to the "{0}".' -f $hvVMInfo.OSDiskVhdFilePath | Write-ScriptLog
     $params = @{
         VhdPath     = $hvVMInfo.OSDiskVhdFilePath
         FeatureName = Get-WindowsFeatureToInstall -HciNodeOperatingSystemSku $vmConfig.OS.Sku
         LogFolder   = $labConfig.labHost.folderPath.log
     }
     Install-WindowsFeatureToVhd @params
-    'Install the roles and features to the VHD has been completed.' | Write-ScriptLog
+    'Install the roles and features to the "{0}" has been completed.' -f $hvVMInfo.OSDiskVhdFilePath | Write-ScriptLog
 
     Start-VMSurely -VMName $vmConfig.VMName
 
@@ -812,7 +812,7 @@ try {
     $params = @{
         AddsDcVMName       = $labConfig.addsDC.vmName
         AddsDcComputerName = $labConfig.addsDC.vmName  # The DC's computer name is the same as the VM name. It's specified in the unattend.xml.
-        Credential         = $domainAdminCredential
+        Credential         = $domainAdminCredential    # Domain Administrator credential
     }
     Wait-DomainControllerServiceReady @params
     'The domain controller with DNS capability is ready.' | Write-ScriptLog
@@ -828,7 +828,7 @@ try {
     # NOTE: The PowerShellGet module installation needs internet connection and name resolution.
     'Install the PowerShellGet module within the VM.' | Write-ScriptLog
     Invoke-CommandWithinVM @invokeWithinVMParams -WithRetry -ScriptBlock {
-        Install-Module -Name 'PowerShellGet' -Scope 'AllUsers' -Force -Verbose
+        Install-Module -Name 'PowerShellGet' -Repository 'PSGallery' -Scope 'AllUsers' -Force -Verbose
         Get-Module -Name 'PowerShellGet' -ListAvailable | Out-String -Width 200 | Write-ScriptLog
     }
     'Install the PowerShellGet module within the VM has been completed.' | Write-ScriptLog
@@ -873,7 +873,7 @@ try {
     }
 
     if ($labNodeConfig.shouldJoinToAddsDomain) {
-        'Join the VM to the AD domain.'  | Write-ScriptLog
+        'Join the VM to the AD domain.' | Write-ScriptLog
         $params = @{
             VMName                = $vmConfig.VMName
             LocalAdminCredential  = $localAdminCredential
@@ -881,7 +881,7 @@ try {
             DomainAdminCredential = $domainAdminCredential
         }
         Add-VMToADDomain @params
-        'Join the VM to the AD domain has been completed.'  | Write-ScriptLog
+        'Join the VM to the AD domain has been completed.' | Write-ScriptLog
     }
 
     # Restart the VM.
