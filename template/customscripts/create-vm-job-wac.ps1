@@ -25,8 +25,9 @@ function Get-WorkboxProcessorCount {
         [int] $DefaultProcessorCount
     )
 
-    if ((Get-VMHost).LogicalProcessorCount -lt $DefaultProcessorCount) {
-        return (Get-VMHost).LogicalProcessorCount
+    $logicalProcessorCount = (Get-VMHost).LogicalProcessorCount
+    if ($logicalProcessorCount -lt $DefaultProcessorCount) {
+        return $logicalProcessorCount
     }
     return $DefaultProcessorCount
 }
