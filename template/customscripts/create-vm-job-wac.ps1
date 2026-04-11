@@ -126,7 +126,7 @@ function New-WorkboxVM {
     Add-VMNetworkAdapter @paramsForAdd |
     Set-VMNetworkAdapter @paramsForSet |
     Set-VMNetworkAdapterVlan -Trunk -NativeVlanId 0 -AllowedVlanIdList '1-4094'
-    'Configure the {0} network adapter has been completed.' -f $labConfig.wac.netAdapters.management.name | Write-ScriptLog
+    'Configure the {0} network adapter has been completed.' -f $VMConfig.NetAdapters.Management.Name | Write-ScriptLog
 
     return [PSCustomObject] @{
         OSDiskVhdFilePath = $vmOSDiskVhd.Path
