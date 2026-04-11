@@ -18,6 +18,31 @@ $WarningPreference = [Management.Automation.ActionPreference]::Continue
 $VerbosePreference = [Management.Automation.ActionPreference]::Continue
 $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
+function Get-AddsDCProcessorCount {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [int] $DefaultProcessorCount
+    )
+
+    $logicalProcessorCount = (Get-VMHost).LogicalProcessorCount
+    if ($logicalProcessorCount -lt $DefaultProcessorCount) {
+        return $logicalProcessorCount
+    }
+    return $DefaultProcessorCount
+}
+
+function New-AddsDCVM {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject] $VMConfig,
+
+        [Parameter(Mandatory = $true)]
+        [string] $VMFolderPath
+    )
+}
+
 try {
     # Mandatory pre-processing.
     $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
@@ -44,26 +69,51 @@ try {
     'Start blocking the AD DS domain operations on other VMs.' | Write-ScriptLog
     Block-AddsDomainOperation
 
+    # Retrieve the admin password from the Key Vault.
+    $adminPassword = Get-Secret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName.adminPassword
+
+    # Hyper-V VM configuration.
+    $vmConfig = [PSCustomObject] @{
+        VMName          = $labConfig.addsDC.vmName
+        ProcessorCount  = Get-AddsDCProcessorCount -DefaultProcessorCount 4
+        RamBytes        = 1GB
+        MaximumRamBytes = $labConfig.addsDC.maximumRamBytes
+        ParentVhdPath   = $jobParams.BaseVhdFilePath
+        OS = [PSCustomObject] @{
+            Language = $labConfig.guestOS.culture
+            TimeZone = $labConfig.guestOS.timeZone
+        }
+        NetAdapters = [PSCustomObject] @{
+            Management = [PSCustomObject] @{
+                Name               = $labConfig.addsDC.netAdapters.management.name
+                VSwitchName        = $labConfig.labHost.vSwitch.nat.name
+                IPAddress          = $labConfig.addsDC.netAdapters.management.ipAddress
+                PrefixLength       = $labConfig.addsDC.netAdapters.management.prefixLength
+                DefaultGateway     = $labConfig.addsDC.netAdapters.management.defaultGateway
+                DnsServerAddresses = $labConfig.addsDC.netAdapters.management.dnsServerAddresses
+            }
+        }
+    }
+    'Hyper-V VM config: {0}' -f ($vmConfig | ConvertTo-Json -Depth 16) | Write-ScriptLog
+
     #
     # Hyper-V VM creation
     #
 
-    $vmName = $labConfig.addsDC.vmName
-
-    'Create the OS disk for the VM.' | Write-ScriptLog
+    'Create the OS disk.' | Write-ScriptLog
     $params = @{
-        Path                    = [System.IO.Path]::Combine($labConfig.labHost.folderPath.vm, $vmName, 'osdisk.vhdx')
+        Path                    = [System.IO.Path]::Combine($labConfig.labHost.folderPath.vm, $vmConfig.VMName, 'osdisk.vhdx')
         Differencing            = $true
-        ParentPath              = $jobParams.BaseVhdFilePath
+        ParentPath              = $vmConfig.ParentVhdPath
         BlockSizeBytes          = 32MB
         PhysicalSectorSizeBytes = 4KB
     }
-    $vmOSDiskVhd = New-VHD  @params
-    'Create the OS disk for the VM has been completed.' | Write-ScriptLog
+    $vmOSDiskVhd = New-VHD @params
+    'Create the OS disk has been completed.' | Write-ScriptLog
 
     'Create the VM.' | Write-ScriptLog
     $params = @{
-        Name       = $vmName
+        Name       = $vmConfig.VMName
         Path       = $labConfig.labHost.folderPath.vm
         VHDPath    = $vmOSDiskVhd.Path
         Generation = 2
@@ -72,29 +122,27 @@ try {
     'Create the VM has been completed.' | Write-ScriptLog
 
     'Change the VM''s automatic stop action.' | Write-ScriptLog
-    Set-VM -Name $vmName -AutomaticStopAction ShutDown
+    Set-VM -Name $vmConfig.VMName -AutomaticStopAction ShutDown
     'Change the VM''s automatic stop action has been completed.' | Write-ScriptLog
 
     'Configure the VM''s processor.' | Write-ScriptLog
-    $vmProcessorCount = 4
-    if ((Get-VMHost).LogicalProcessorCount -lt $vmProcessorCount) { $vmProcessorCount = (Get-VMHost).LogicalProcessorCount }
-    Set-VMProcessor -VMName $vmName -Count $vmProcessorCount
+    Set-VMProcessor -VMName $vmConfig.VMName -Count $vmConfig.ProcessorCount
     'Configure the VM''s processor has been completed.' | Write-ScriptLog
 
     'Configure the VM''s memory.' | Write-ScriptLog
     $params = @{
-        VMName               = $vmName
+        VMName               = $vmConfig.VMName
         StartupBytes         = 1GB
         DynamicMemoryEnabled = $true
         MinimumBytes         = 512MB
-        MaximumBytes         = $labConfig.addsDC.maximumRamBytes
+        MaximumBytes         = $vmConfig.MaximumRamBytes
     }
     Set-VMMemory @params
     'Configure the VM''s memory has been completed.' | Write-ScriptLog
 
     'Enable the VM''s vTPM.' | Write-ScriptLog
     $params = @{
-        VMName               = $vmName
+        VMName               = $vmConfig.VMName
         NewLocalKeyProtector = $true
         Passthru             = $true
         ErrorAction          = [Management.Automation.ActionPreference]::Stop
@@ -118,14 +166,14 @@ try {
     'Enable the VM''s vTPM has been completed.' | Write-ScriptLog
 
     'Configure the VM''s network adapters.' | Write-ScriptLog
-    Get-VMNetworkAdapter -VMName $vmName | Remove-VMNetworkAdapter
+    Get-VMNetworkAdapter -VMName $vmConfig.VMName | Remove-VMNetworkAdapter
 
     # Management
-    'Configure the {0} network adapter.' -f $labConfig.addsDC.netAdapters.management.name | Write-ScriptLog
+    'Configure the {0} network adapter.' -f $vmConfig.NetAdapters.Management.Name | Write-ScriptLog
     $paramsForAdd = @{
-        VMName       = $vmName
-        Name         = $labConfig.addsDC.netAdapters.management.name
-        SwitchName   = $labConfig.labHost.vSwitch.nat.name
+        VMName       = $vmConfig.VMName
+        Name         = $vmConfig.NetAdapters.Management.Name
+        SwitchName   = $vmConfig.NetAdapters.Management.VSwitchName
         DeviceNaming = [Microsoft.HyperV.PowerShell.OnOffState]::On
         Passthru     = $true
     }
@@ -137,15 +185,14 @@ try {
     Add-VMNetworkAdapter @paramsForAdd |
     Set-VMNetworkAdapter @paramsForSet |
     Set-VMNetworkAdapterVlan -Trunk -NativeVlanId 0 -AllowedVlanIdList '1-4094'
-    'Configure the {0} network adapter has been completed.' -f $labConfig.addsDC.netAdapters.management.name | Write-ScriptLog
+    'Configure the {0} network adapter has been completed.' -f $vmConfig.NetAdapters.Management.Name | Write-ScriptLog
 
     'Generate the unattend answer XML.' | Write-ScriptLog
-    $adminPassword = Get-Secret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName.adminPassword
     $params = @{
-        ComputerName = $vmName
+        ComputerName = $vmConfig.VMName
         Password     = $adminPassword
-        Culture      = $labConfig.guestOS.culture
-        TimeZone     = $labConfig.guestOS.timeZone
+        Culture      = $vmConfig.OS.Language
+        TimeZone     = $vmConfig.OS.TimeZone
     }
     $unattendAnswerFileContent = New-UnattendAnswerFileContent @params
     'Generate the unattend answer XML has been completed.' | Write-ScriptLog
@@ -171,11 +218,14 @@ try {
     Install-WindowsFeatureToVhd @params
     'Install the roles and features to the "{0}" has been completed.' -f $vmOSDiskVhd.Path | Write-ScriptLog
 
-    Start-VMSurely -VMName $vmName
+    Start-VMSurely -VMName $vmConfig.VMName
+
+    # Credentials
+    $localAdminCredential = New-LogonCredential -DomainFqdn '.' -Password $adminPassword
+    $domainAdminCredential = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $adminPassword
 
     'Wait for the VM to be ready.' | Write-ScriptLog
-    $localAdminCredential = New-LogonCredential -DomainFqdn '.' -Password $adminPassword
-    Wait-PowerShellDirectReady -VMName $vmName -Credential $localAdminCredential
+    Wait-PowerShellDirectReady -VMName $vmConfig.VMName -Credential $localAdminCredential
     'The VM is ready.' | Write-ScriptLog
 
     #
@@ -184,7 +234,7 @@ try {
 
     'Copy the module files into the VM.' | Write-ScriptLog
     $params = @{
-        VMName              = $vmName
+        VMName              = $vmConfig.VMName
         Credential          = $localAdminCredential
         SourceFilePath      = (Get-Module -Name 'common').Path
         DestinationPathInVM = 'C:\Windows\Temp'
@@ -194,7 +244,7 @@ try {
 
     # The common parameters for Invoke-CommandWithinVM.
     $invokeWithinVMParams = @{
-        VMName           = $vmName
+        VMName           = $vmConfig.VMName
         Credential       = $localAdminCredential
         ImportModuleInVM = $moduleFilePathsWithinVM
     }
@@ -229,21 +279,20 @@ try {
     'Rename the network adapters has been completed.' | Write-ScriptLog
 
     # Management
-    $netAdapterConfig = $labConfig.addsDC.netAdapters.management
-    'Configure the IP & DNS on the "{0}" network adapter.' -f $netAdapterConfig.name | Write-ScriptLog
-    Invoke-CommandWithinVM @invokeWithinVMParams -WithRetry -ScriptBlockParamList $netAdapterConfig -ScriptBlock {
+    'Configure the IP & DNS on the "{0}" network adapter.' -f $vmConfig.NetAdapters.Management.Name | Write-ScriptLog
+    Invoke-CommandWithinVM @invokeWithinVMParams -WithRetry -ScriptBlockParamList $vmConfig.NetAdapters.Management -ScriptBlock {
         param (
             [Parameter(Mandatory = $true)]
             [PSCustomObject] $NetAdapterConfig
         )
 
         # Remove default route.
-        Get-NetAdapter -Name $NetAdapterConfig.name |
+        Get-NetAdapter -Name $NetAdapterConfig.Name |
         Get-NetIPInterface -AddressFamily 'IPv4' |
         Remove-NetRoute -DestinationPrefix '0.0.0.0/0' -Confirm:$false -ErrorAction SilentlyContinue
 
         # Remove existing NetIPAddresses.
-        Get-NetAdapter -Name $NetAdapterConfig.name |
+        Get-NetAdapter -Name $NetAdapterConfig.Name |
         Get-NetIPInterface -AddressFamily 'IPv4' |
         Remove-NetIPAddress -Confirm:$false -ErrorAction SilentlyContinue
 
@@ -255,20 +304,20 @@ try {
         }
         $paramsForNewIPAddress = @{
             AddressFamily  = 'IPv4'
-            IPAddress      = $NetAdapterConfig.ipAddress
-            PrefixLength   = $NetAdapterConfig.prefixLength
-            DefaultGateway = $NetAdapterConfig.defaultGateway
+            IPAddress      = $NetAdapterConfig.IPAddress
+            PrefixLength   = $NetAdapterConfig.PrefixLength
+            DefaultGateway = $NetAdapterConfig.DefaultGateway
         }
         $paramsForSetDnsClientServerAddress = @{
-            ServerAddresses = $NetAdapterConfig.dnsServerAddresses
+            ServerAddresses = $NetAdapterConfig.DnsServerAddresses
         }
-        Get-NetAdapter -Name $NetAdapterConfig.name |
+        Get-NetAdapter -Name $NetAdapterConfig.Name |
         Set-NetIPInterface @paramsForSetNetIPInterface |
         New-NetIPAddress @paramsForNewIPAddress |
         Set-DnsClientServerAddress @paramsForSetDnsClientServerAddress |
         Out-Null
     }
-    'Configure the IP & DNS on the "{0}" network adapter has been completed.' -f $netAdapterConfig.name | Write-ScriptLog
+    'Configure the IP & DNS on the "{0}" network adapter has been completed.' -f $vmConfig.NetAdapters.Management.Name | Write-ScriptLog
 
     'Log the network settings within the VM.' | Write-ScriptLog
     Invoke-CommandWithinVM @invokeWithinVMParams -WithRetry -ScriptBlock {
@@ -344,14 +393,13 @@ try {
     Remove-FileWithinVM @params
     'Delete the module files within the VM has been completed.' | Write-ScriptLog
 
-    # Reboot the VM.
-    Stop-VMSurely -VMName $vmName
-    Start-VMSurely -VMName $vmName
+    # Restart the VM.
+    Stop-VMSurely -VMName $vmConfig.VMName
+    Start-VMSurely -VMName $vmConfig.VMName
 
     'Wait for ready to the domain controller.' | Write-ScriptLog
-    $domainAdminCredential = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $adminPassword
     # The DC's computer name is the same as the VM name. It's specified in the unattend.xml.
-    Wait-DomainControllerServiceReady -AddsDcVMName $vmName -AddsDcComputerName $vmName -Credential $domainAdminCredential
+    Wait-DomainControllerServiceReady -AddsDcVMName $vmConfig.VMName -AddsDcComputerName $vmConfig.VMName -Credential $domainAdminCredential
     'The domain controller is ready.' | Write-ScriptLog
 
     'Allow the AD DS domain operations on other VMs.' | Write-ScriptLog
