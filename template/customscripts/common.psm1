@@ -901,44 +901,57 @@ function Wait-PowerShellDirectReady {
         [string] $VMName,
 
         [Parameter(Mandatory = $true)]
-        [PSCredential] $Credential,
-
-        [Parameter(Mandatory = $false)]
-        [ValidateRange(0, 3600)]
-        [int] $RetryIntervalSeconds = 15,
-
-        [Parameter(Mandatory = $false)]
-        [TimeSpan] $RetryTimeout = (New-TimeSpan -Minutes 30)
+        [PSCredential] $Credential
     )
 
-    $startTime = Get-Date
-    while ((Get-Date) -lt ($startTime + $RetryTimeout)) {
+    # Wait for the guest operating system to be ready before checking PowerShell Direct readiness.
+    Wait-LabVMGuestOperatingSystemReady -VMName $VMName -Credential $Credential
+
+    'Wait for PowerShell Direct of the VM "{0}".' -f $VMName | Write-ScriptLog
+    $psdCheckTimeoutSeconds = 300
+    $psdCheckTimeout = [System.DateTime]::Now.AddSeconds($psdCheckTimeoutSeconds)
+    $timeoutRestCount = 0
+    while ($true) {
         try {
-            $params = @{
-                VMName      = $VMName
-                Credential  = $Credential
-                ScriptBlock = { 'ready' }
-                ErrorAction = [Management.Automation.ActionPreference]::Stop
-            }
-            if ((Invoke-Command @params) -eq 'ready') {
-                'PowerShell Direct is ready on the VM.' | Write-ScriptLog
-                return
+            $result = Invoke-Command -VMName $VMName -Credential $Credential -ScriptBlock { 'ready' } -ErrorAction Stop
+            if ($result -eq 'ready') {
+                break
             }
         }
         catch {
-            '{0} (ExceptionMessage: {1} | Exception: {2} | FullyQualifiedErrorId: {3} | CategoryInfo: {4} | ErrorDetailsMessage: {5})' -f @(
-                'Probing PowerShell Direct ready state...',
-                $_.Exception.Message,
-                $_.Exception.GetType().FullName,
-                $_.FullyQualifiedErrorId,
-                $_.CategoryInfo.ToString(),
-                $_.ErrorDetails.Message
-            ) | Write-ScriptLog -Level Warning
-        }
-        Start-Sleep -Seconds $RetryIntervalSeconds
-    }
+            $er = $_
 
-    throw 'PowerShell Direct did not ready on the VM "{0}" in the acceptable time ({1}).' -f $VMName, $RetryTimeout.ToString()
+            # The VM may have restarted while PowerShell Direct was running.
+            if (($er.Exception -is [System.Management.Automation.Remoting.PSRemotingTransportException]) -and ($er.Exception.Message -like '*The Hyper-V socket target process has ended.*')) {
+                'The VM "{0}" may have restarted while PowerShell Direct was running. Wait for the guest operating system to be ready.' -f $VMName | Write-ScriptLog
+                Wait-LabVMGuestOperatingSystemReady -VMName $VMName -Credential $Credential
+                'Reset the PowerShell Direct checking timeout.' | Write-ScriptLog
+                $psdCheckTimeout = [System.DateTime]::Now.AddSeconds($psdCheckTimeoutSeconds)
+                $timeoutRestCount++
+            }
+            else {
+                '{0} (ExceptionMessage: {1} | Exception: {2} | FullyQualifiedErrorId: {3} | CategoryInfo: {4} | ErrorDetailsMessage: {5})' -f @(
+                    'Probing PowerShell Direct ready state...',
+                    $er.Exception.Message,
+                    $er.Exception.GetType().FullName,
+                    $er.FullyQualifiedErrorId,
+                    $er.CategoryInfo.ToString(),
+                    $er.ErrorDetails.Message
+                ) | Write-ScriptLog -Level Warning
+            }
+        }
+
+        Start-Sleep -Seconds 10
+
+        if ($timeoutRestCount -gt 2) {
+            throw 'PowerShell Direct of the VM "{0}" did not to be ready even reset timeout {1} times.' -f $VMName, $timeoutRestCount
+        }
+
+        if ([System.DateTime]::Now -gt $psdCheckTimeout) {
+            throw 'PowerShell Direct of the VM "{0}" did not to be ready in {1} seconds.' -f $VMName, $psdCheckTimeoutSeconds
+        }
+    }
+    'PowerShell Direct of the VM "{0}" is ready.' -f $VMName | Write-ScriptLog
 }
 
 function Wait-LabVMGuestOperatingSystemReady {
@@ -977,7 +990,7 @@ function Wait-LabVMGuestOperatingSystemReady {
 
     # Check the Heeartbeat service status of the VM.
     'Check the Heartbeat service status of the VM "{0}".' -f $VMName | Write-ScriptLog
-    $heartbeatStatusCheckTimeoutSeconds = 600
+    $heartbeatStatusCheckTimeoutSeconds = 300
     $heartbeatStatusCheckTimeout = [System.DateTime]::Now.AddSeconds($heartbeatStatusCheckTimeoutSeconds)
     while ($true) {
         $heartbeatStatus = (Get-VMIntegrationService -VMName $VMName -Name 'Heartbeat').PrimaryOperationalStatus
@@ -1028,36 +1041,6 @@ function Wait-LabVMGuestOperatingSystemReady {
         }
     }
     'Could connect to the VM "{0}" via WinRM port (TCP 5985).' -f $VMName | Write-ScriptLog
-
-    # Check the PowerShell Direct availability.
-    'Check the PowerShell Direct availability of the VM "{0}".' -f $VMName | Write-ScriptLog
-    $psdCheckTimeoutSeconds = 300
-    $psdCheckTimeout = [System.DateTime]::Now.AddSeconds($psdCheckTimeoutSeconds)
-    while ($true) {
-        try {
-            $result = Invoke-Command -VMName $VMName -Credential $Credential -ScriptBlock { 'ready' } -ErrorAction Stop
-            if ($result -eq 'ready') {
-                break
-            }
-        }
-        catch {
-            '{0} (ExceptionMessage: {1} | Exception: {2} | FullyQualifiedErrorId: {3} | CategoryInfo: {4} | ErrorDetailsMessage: {5})' -f @(
-                'Probing PowerShell Direct ready state...',
-                $_.Exception.Message,
-                $_.Exception.GetType().FullName,
-                $_.FullyQualifiedErrorId,
-                $_.CategoryInfo.ToString(),
-                $_.ErrorDetails.Message
-            ) | Write-ScriptLog -Level Warning
-        }
-
-        Start-Sleep -Seconds 10
-
-        if ([System.DateTime]::Now -gt $psdCheckTimeout) {
-            throw 'Did not connect to the VM "{0}" via PowerShell Direct in {1} seconds.' -f $VMName, $psdCheckTimeoutSeconds
-        }
-    }
-    'Could connect to the VM "{0}" via PowerShell Direct.' -f $VMName | Write-ScriptLog
 }
 
 # A sync event name for blocking the AD DS operations.
@@ -1622,7 +1605,6 @@ $exportFunctions = @(
     'Start-VMSurely',
     'Stop-VMSurely',
     'Wait-PowerShellDirectReady',
-    'Wait-LabVMGuestOperatingSystemReady',
     'Block-AddsDomainOperation',
     'Unblock-AddsDomainOperation',
     'Wait-AddsDcDeploymentCompletion',
