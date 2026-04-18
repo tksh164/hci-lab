@@ -98,6 +98,9 @@ function Set-VhdToBootable {
         [Parameter(Mandatory = $true)]
         [char] $WindowsVolumeDriveLetter,
 
+        [Parameter(Mandatory = $false)]
+        [bool] $UseNonbootex = $false,
+
         [Parameter(Mandatory = $true)]
         [string] $LogFilePathStdout,
 
@@ -105,14 +108,22 @@ function Set-VhdToBootable {
         [string] $LogFilePathStderr
     )
 
+    'Stdout log file: "{0}"' -f $LogFilePathStdout | Write-ScriptLog
+    'Stderr log file: "{0}"' -f $LogFilePathStderr | Write-ScriptLog
+
+    $argList = @(
+        ('{0}:\Windows' -f $WindowsVolumeDriveLetter), # Specifies the location of the windows system root.
+        ('/s {0}:' -f $SystemVolumeDriveLetter),       # Specifies an optional volume letter parameter to designate the target system partition where boot environment files are copied.
+        '/f UEFI',                                     # Specifies the firmware type of the target system partition.
+        '/v'                                           # Enables verbose mode.
+    )
+    if ($UseNonbootex) {
+        $argList += '/offline'  # Force select non-bootex binaries.
+    }
+
     $params = @{
-        FilePath     = 'C:\Windows\System32\bcdboot.exe'
-        ArgumentList = @(
-            ('{0}:\Windows' -f $WindowsVolumeDriveLetter), # Specifies the location of the windows system root.
-            ('/s {0}:' -f $SystemVolumeDriveLetter),       # Specifies an optional volume letter parameter to designate the target system partition where boot environment files are copied.
-            '/f UEFI',                                     # Specifies the firmware type of the target system partition.
-            '/v'                                           # Enables verbose mode.
-        )
+        FilePath               = 'C:\Windows\System32\bcdboot.exe'
+        ArgumentList           = $argList
         RedirectStandardOutput = $LogFilePathStdout
         RedirectStandardError  = $LogFilePathStderr
         NoNewWindow            = $true
@@ -247,6 +258,7 @@ try {
     $params = @{
         SystemVolumeDriveLetter  = $systemVolumeDriveLetter
         WindowsVolumeDriveLetter = $windowsVolumeDriveLetter
+        UseNonbootex             = $jobParams.UseNonbootex
         LogFilePathStdout        = [System.IO.Path]::Combine($labConfig.labHost.folderPath.log, (New-LogFileName -FileName ($LogFileName + '_bcdboot-stdout')))
         LogFilePathStderr        = [System.IO.Path]::Combine($labConfig.labHost.folderPath.log, (New-LogFileName -FileName ($LogFileName + '_bcdboot-stderr')))
     }
