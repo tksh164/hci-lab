@@ -6,6 +6,19 @@ $WarningPreference = [Management.Automation.ActionPreference]::Continue
 $VerbosePreference = [Management.Automation.ActionPreference]::Continue
 $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
+function Test-UseNonbootex {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $Sku
+    )
+
+    if ($Sku -eq [HciLab.OSSku]::WindowsServer2022) {
+        return $true
+    }
+    return $false
+}
+
 function Mount-IsoFile {
     [CmdletBinding()]
     param (
@@ -126,31 +139,35 @@ try {
     $vhdSpecsForVms = @(
         # For AD DS DC
         [PSCustomObject] @{
-            Sku        = [HciLab.OSSku]::WindowsServer2025
-            Language   = $labConfig.guestOS.culture
-            ImageIndex = [int]([HciLab.OSImageIndex]::WSDatacenterServerCore)
+            Sku          = [HciLab.OSSku]::WindowsServer2025
+            Language     = $labConfig.guestOS.culture
+            ImageIndex   = [int]([HciLab.OSImageIndex]::WSDatacenterServerCore)
+            UseNonbootex = Test-UseNonbootex -Sku [HciLab.OSSku]::WindowsServer2025
         },
         # For workbox
         [PSCustomObject] @{
-            Sku        = [HciLab.OSSku]::WindowsServer2025
-            Language   = $labConfig.guestOS.culture
-            ImageIndex = [int]([HciLab.OSImageIndex]::WSDatacenterDesktopExperience)
+            Sku          = [HciLab.OSSku]::WindowsServer2025
+            Language     = $labConfig.guestOS.culture
+            ImageIndex   = [int]([HciLab.OSImageIndex]::WSDatacenterDesktopExperience)
+            UseNonbootex = Test-UseNonbootex -Sku [HciLab.OSSku]::WindowsServer2025
         },
         # For HCI nodes
         [PSCustomObject] @{
-            Sku        = $labConfig.hciNode.operatingSystem.sku
-            Language   = $labConfig.guestOS.culture
-            ImageIndex = $labConfig.hciNode.operatingSystem.imageIndex
+            Sku          = $labConfig.hciNode.operatingSystem.sku
+            Language     = $labConfig.guestOS.culture
+            ImageIndex   = $labConfig.hciNode.operatingSystem.imageIndex
+            UseNonbootex = Test-UseNonbootex -Sku $labConfig.hciNode.operatingSystem.sku
         }
     )
 
     # The base VHD specs to be created. Select unique specs because sometimes the VMs in the lab use the same OS spec.
     $vhdSpecs = $vhdSpecsForVms | Select-UniquePSObject -KeyPropertyName @('Sku', 'ImageIndex', 'Language') | ForEach-Object -Process {
         [PSCustomObject] @{
-            Sku         = $_.Sku
-            Language    = $_.Language
-            ImageIndex  = $_.ImageIndex
-            VhdFilePath = New-BaseVhdFilePath -VhdFolderPath $labConfig.labHost.folderPath.vhd -Sku $_.Sku -Language $_.Language -ImageIndex $_.ImageIndex
+            Sku          = $_.Sku
+            Language     = $_.Language
+            ImageIndex   = $_.ImageIndex
+            UseNonbootex = $_.UseNonbootex
+            VhdFilePath  = New-BaseVhdFilePath -VhdFolderPath $labConfig.labHost.folderPath.vhd -Sku $_.Sku -Language $_.Language -ImageIndex $_.ImageIndex
         }
     }
     'The base VHD specs: {0}' -f ($vhdSpecs | Format-List -Property '*' | Out-String -Width 200) | Write-ScriptLog
@@ -180,17 +197,16 @@ try {
     $jobSpecs = @()
     $jobSpecs += foreach ($spec in $vhdSpecs) {
         $jobName = '{0}_{1}_{2}' -f $spec.Sku, $spec.Language, $spec.ImageIndex
-        $jobLogFileName = [System.IO.Path]::GetFileNameWithoutExtension($jobScriptFilePath) + '_' + $jobName
-
-        [PSCustomObject]@{
+        [PSCustomObject] @{
             JobName           = $jobName
             JobScriptFilePath = $jobScriptFilePath
             ImportModulePaths = $importModulePaths
-            LogFileName       = $jobLogFileName
+            LogFileName       = [System.IO.Path]::GetFileNameWithoutExtension($jobScriptFilePath) + '_' + $jobName
             LogContext        = $jobName
             JobParamsJson     = (@{
                 WimFilePath             = $wimFilePathLookupHash.(Get-WimFilePathLookupKey -Sku $spec.Sku -Language $spec.Language)
                 ImageIndex              = $spec.ImageIndex
+                UseNonbootex            = $spec.UseNonbootex
                 UpdatePackageFolderPath = if ($materialInventory.Update.($spec.Sku).Path) { $materialInventory.Update.($spec.Sku).Path } else { '' }
                 VhdFilePath             = $spec.VhdFilePath                
             } | ConvertTo-Json -Compress -Depth 5)

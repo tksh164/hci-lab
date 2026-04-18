@@ -98,6 +98,9 @@ function Set-VhdToBootable {
         [Parameter(Mandatory = $true)]
         [char] $WindowsVolumeDriveLetter,
 
+        [Parameter(Mandatory = $false)]
+        [bool] $UseNonbootex = $false,
+
         [Parameter(Mandatory = $true)]
         [string] $LogFilePathStdout,
 
@@ -105,14 +108,22 @@ function Set-VhdToBootable {
         [string] $LogFilePathStderr
     )
 
+    'Stdout log file: "{0}"' -f $LogFilePathStdout | Write-ScriptLog
+    'Stderr log file: "{0}"' -f $LogFilePathStderr | Write-ScriptLog
+
+    $argList = @(
+        ('{0}:\Windows' -f $WindowsVolumeDriveLetter), # Specifies the location of the windows system root.
+        ('/s {0}:' -f $SystemVolumeDriveLetter),       # Specifies an optional volume letter parameter to designate the target system partition where boot environment files are copied.
+        '/f UEFI',                                     # Specifies the firmware type of the target system partition.
+        '/v'                                           # Enables verbose mode.
+    )
+    if ($UseNonbootex) {
+        $argList += '/offline'  # Force select non-bootex binaries.
+    }
+
     $params = @{
-        FilePath     = 'C:\Windows\System32\bcdboot.exe'
-        ArgumentList = @(
-            ('{0}:\Windows' -f $WindowsVolumeDriveLetter), # Specifies the location of the windows system root.
-            ('/s {0}:' -f $SystemVolumeDriveLetter),       # Specifies an optional volume letter parameter to designate the target system partition where boot environment files are copied.
-            '/f UEFI',                                     # Specifies the firmware type of the target system partition.
-            '/v'                                           # Enables verbose mode.
-        )
+        FilePath               = 'C:\Windows\System32\bcdboot.exe'
+        ArgumentList           = $argList
         RedirectStandardOutput = $LogFilePathStdout
         RedirectStandardError  = $LogFilePathStderr
         NoNewWindow            = $true
@@ -123,6 +134,45 @@ function Set-VhdToBootable {
 
     if ($result.ExitCode -ne 0) {
         throw 'The bcdboot.exe failed with exit code {0}.' -f $result.ExitCode
+    }
+}
+
+function Add-PackageToVHD {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [char] $TargetVolumeDriveLetter,
+
+        [Parameter(Mandatory = $true)]
+        [string[]] $PackageFilePath,
+
+        [Parameter(Mandatory = $true)]
+        [string] $LogFolderPath,
+
+        [Parameter(Mandatory = $true)]
+        [string] $LogFileBaseName,
+
+        [Parameter(Mandatory = $true)]
+        [string] $ScratchFolderPath
+    )
+
+    for ($i = 0; $i -lt $PackageFilePath.Length; $i++) {
+        $filePath = $PackageFilePath[$i]
+        'The package {0} of {1}. Add a package "{2}" to the volume "{3}:".' -f ($i + 1), $PackageFilePath.Length, $filePath, $TargetVolumeDriveLetter | Write-ScriptLog
+        $packageName = [System.IO.Path]::GetFileNameWithoutExtension($filePath).Split('_')[0]
+        $logFileName = New-LogFileName -FileName ($LogFileBaseName + '_add-win-package_' + $packageName)
+        $logFilePath = [System.IO.Path]::Combine($LogFolderPath, $logFileName)
+        'Log file: "{0}"' -f $logFilePath | Write-ScriptLog
+        $params = @{
+            Path             = ('{0}:' -f $TargetVolumeDriveLetter)
+            PackagePath      = $filePath
+            ScratchDirectory = $ScratchFolderPath
+            LogPath          = $logFilePath
+            LogLevel         = 'Debug'
+        }
+        $result = Add-WindowsPackage @params
+        'Result: {0}' -f ($result | Format-List -Property '*' | Out-String) | Write-ScriptLog
+        'The package {0} of {1}. Add a package "{2}" to the volume "{3}:" has been completed.' -f ($i + 1), $PackageFilePath.Length, $filePath, $TargetVolumeDriveLetter | Write-ScriptLog
     }
 }
 
@@ -152,11 +202,9 @@ try {
     # Retrieve the update package file paths.
     if ([string]::IsNullOrEmpty($jobParams.UpdatePackageFolderPath)) {
         $updatePackageFilePaths = @()
-        'No update packages to be applied.' | Write-ScriptLog
     }
     else {
         $updatePackageFilePaths = Get-UpdatePackageFilePath -UpdatePackageFolderPath $jobParams.UpdatePackageFolderPath
-        '{0} update packages to be applied.' -f $updatePackageFilePaths.Length | Write-ScriptLog
     }
 
     'Validate the WIM file "{0}" with the image index {1}.' -f $jobParams.WimFilePath, $jobParams.ImageIndex | Write-ScriptLog
@@ -237,7 +285,7 @@ try {
         ImagePath        = $jobParams.WimFilePath
         Index            = $jobParams.ImageIndex
         ScratchDirectory = $labConfig.labHost.folderPath.temp
-        LogPath          = [System.IO.Path]::Combine($labConfig.labHost.folderPath.log, (New-LogFileName -FileName ($LogFileName + '_expand-image')))
+        LogPath          = [System.IO.Path]::Combine($labConfig.labHost.folderPath.log, (New-LogFileName -FileName ($LogFileName + '_expand-win-image')))
         LogLevel         = 'Debug'
     }
     Expand-WindowsImage @params | Out-String -Width 200 | Write-ScriptLog
@@ -247,6 +295,7 @@ try {
     $params = @{
         SystemVolumeDriveLetter  = $systemVolumeDriveLetter
         WindowsVolumeDriveLetter = $windowsVolumeDriveLetter
+        UseNonbootex             = $jobParams.UseNonbootex
         LogFilePathStdout        = [System.IO.Path]::Combine($labConfig.labHost.folderPath.log, (New-LogFileName -FileName ($LogFileName + '_bcdboot-stdout')))
         LogFilePathStderr        = [System.IO.Path]::Combine($labConfig.labHost.folderPath.log, (New-LogFileName -FileName ($LogFileName + '_bcdboot-stderr')))
     }
@@ -255,20 +304,18 @@ try {
 
     if ($updatePackageFilePaths.Length -gt 0) {
         'Add {0} update packages to the VHD.' -f $updatePackageFilePaths.Length | Write-ScriptLog
-        $logFilePath = [System.IO.Path]::Combine($labConfig.labHost.folderPath.log, (New-LogFileName -FileName ($LogFileName + '_add-package')))
-        foreach ($packageFilePath in $updatePackageFilePaths) {
-            'Add an update package "{0}" to the VHD.' -f $packageFilePath | Write-ScriptLog
-            $params = @{
-                Path             = ('{0}:' -f $windowsVolumeDriveLetter)
-                PackagePath      = $packageFilePath
-                ScratchDirectory = $labConfig.labHost.folderPath.temp
-                LogPath          = $logFilePath
-                LogLevel         = 'Debug'
-            }
-            Add-WindowsPackage @params | Out-String -Width 200 | Write-ScriptLog
-            'Add an update package "{0}" to the VHD has been completed.' -f $packageFilePath | Write-ScriptLog
+        $params = @{
+            TargetVolumeDriveLetter = $windowsVolumeDriveLetter
+            PackageFilePath         = $updatePackageFilePaths
+            LogFolderPath           = $labConfig.labHost.folderPath.log
+            LogFileBaseName         = $LogFileName
+            ScratchFolderPath       = $labConfig.labHost.folderPath.temp
         }
+        Add-PackageToVHD @params
         'Add update packages to the VHD has been completed.' | Write-ScriptLog
+    }
+    else {
+        'There is no update package to add to the VHD.' | Write-ScriptLog
     }
 
     'The created VHD file: {0}' -f (Get-VHD -Path $vhd.Path | Format-List -Property '*' | Out-String -Width 200) | Write-ScriptLog
