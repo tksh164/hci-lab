@@ -300,7 +300,7 @@
             },
             "updates": [
                 // OS
-                "https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/f8f0420a-0875-4e1e-a904-9a7acfcfbe46/public/windows11.0-kb5082063-x64_2fb0b6b3988432626f68c231d154c35362ff58ea.msu",
+                "https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/65d8cc0f-c25e-450a-a70e-dba103715bf2/public/windows11.0-kb5091157-x64_7b236751a35d946ee9934e5419b9898a9bd2a7e0.msu",
                 // .NET Framework
                 "https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/7a69bf2b-e673-47ec-b107-2992ede1f251/public/windows11.0-kb5082417-x64-ndp481_ba911bfe7418f65a00ada14910360bc126cfc26c.msu",
                 "https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/9e7e9e65-f8e1-4c58-895a-03a4e4b27b16/public/windows11.0-kb5082420-x64-ndp481_e669d8241160acba1ade1a111a50a5702f15706e.msu"
@@ -326,7 +326,7 @@
             "updates": [
                 // OS
                 "https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2023/09/windows10.0-kb5030216-x64_cbe587155f9818548b75f65d5cd41d341ed2fc61.msu",  // Update the SSU version to the minimum required SSU version 20348.1960 to install the latest LCU.
-                "https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2026/04/windows10.0-kb5082142-x64_0d2677e2b8f6550a978bd89e8991c4d3813ccf1f.msu",
+                "https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/updt/2026/04/windows10.0-kb5091575-x64_1325b929415fcca311c8b52a8cb7550f19040a90.msu",
                 // .NET Framework
                 "https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2026/03/windows10.0-kb5082427-x64-ndp48_93c2fe735418ab29bfba14c8c6df96ffc377d82f.msu",
                 "https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2026/03/windows10.0-kb5082425-x64-ndp481_435f53976e85e367d28583d5e767ad3263e52bf0.msu"
