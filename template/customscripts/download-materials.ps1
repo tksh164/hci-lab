@@ -219,6 +219,16 @@ function New-DownloadMaterialSpecList {
             # Additional properties
             InventoryKey     = 'configuratorApp'
         }
+
+        # .NET Desktop Runtime (Dependency of Configurator App)
+        $materialInfoList += [PSCustomObject] @{
+            # Common properties
+            Type             = 'file'
+            Url              = $MaterialMetadata.dotNet9DesktopRuntime.url
+            OutputFolderPath = $LabConfig.labHost.folderPath.temp
+            FileName         = $MaterialMetadata.dotNet9DesktopRuntime.fileName
+            # Additional properties
+            InventoryKey     = 'dotNet9DesktopRuntime'
         }
     }
 
