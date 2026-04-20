@@ -354,11 +354,19 @@
         "fileSizeInBytes": -1,
         "fileName": "WindowsAdminCenter.msi"
     },
-    "AzureLocalConfiguratorApp": {
+    "azureLocalConfiguratorApp": {
         "url": "https://aka.ms/ConfiguratorAppForHCI",
         "hash": "",
         "hashAlgorithm": "",
         "fileSizeInBytes": -1,
-        "fileName": "Configurator-App-for-Azure-Local-Setup.exe"
+        "fileName": "ConfiguratorApp.msix"
+    },
+    // Configurator App depends on .NET 9.0 Desktop Runtime.
+    "dotNet9DesktopRuntime": {
+        "url": "https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/9.0.15/windowsdesktop-runtime-9.0.15-win-x64.exe",
+        "hash": "",
+        "hashAlgorithm": "",
+        "fileSizeInBytes": -1,
+        "fileName": "windowsdesktop-runtime-9.0.15-win-x64.exe"
     }
 }
