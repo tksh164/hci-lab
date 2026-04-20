@@ -36,7 +36,7 @@ function Get-ConfigAppSetupFilePath {
         [PSCustomObject] $MaterialInventory
     )
 
-    $INVENTORY_KEY = 'AzureLocalConfiguratorApp'
+    $INVENTORY_KEY = 'configuratorApp'
     $setupFilePath = if ($labConfig.wac.shouldInstallConfigAppForAzureLocal) {
         $materialInventory.File.$INVENTORY_KEY.Path
     }

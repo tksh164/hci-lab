@@ -354,7 +354,7 @@
         "fileSizeInBytes": -1,
         "fileName": "WindowsAdminCenter.msi"
     },
-    "azureLocalConfiguratorApp": {
+    "configuratorApp": {
         "url": "https://aka.ms/ConfiguratorAppForHCI",
         "hash": "",
         "hashAlgorithm": "",
