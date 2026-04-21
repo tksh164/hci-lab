@@ -29,23 +29,6 @@ function Get-VhdFilePath {
     return $vhdFilePath
 }
 
-function Get-ConfigAppSetupFilePath {
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory = $true)]
-        [PSCustomObject] $MaterialInventory
-    )
-
-    $INVENTORY_KEY = 'configuratorApp'
-    $setupFilePath = if ($labConfig.wac.shouldInstallConfigAppForAzureLocal) {
-        $materialInventory.File.$INVENTORY_KEY.Path
-    }
-    else {
-        ''  # Empty string
-    }
-    return $setupFilePath
-}
-
 try {
     # Mandatory pre-processing.
     $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
@@ -81,8 +64,9 @@ try {
             LogFileName       = 'create-vm-job-workbox'
             LogContext        = $labConfig.wac.vmName
             JobParamsJson     = (@{
-                BaseVhdFilePath        = Get-VhdFilePath -MaterialInventory $materialInventory -Sku ([HciLab.OSSku]::WindowsServer2025) -Language $labConfig.guestOS.culture -ImageIndex ([int]([HciLab.OSImageIndex]::WSDatacenterDesktopExperience))
-                ConfigAppSetupFilePath = Get-ConfigAppSetupFilePath -MaterialInventory $materialInventory
+                BaseVhdFilePath                   = Get-VhdFilePath -MaterialInventory $materialInventory -Sku ([HciLab.OSSku]::WindowsServer2025) -Language $labConfig.guestOS.culture -ImageIndex ([int]([HciLab.OSImageIndex]::WSDatacenterDesktopExperience))
+                ConfigAppSetupFilePath            = if ($labConfig.wac.shouldInstallConfigAppForAzureLocal) { $materialInventory.File.configuratorApp.Path } else { '' }
+                DotNetDesktopRuntimeSetupFilePath = if ($labConfig.wac.shouldInstallConfigAppForAzureLocal) { $materialInventory.File.dotNet9DesktopRuntime.Path } else { '' }
             } | ConvertTo-Json -Compress -Depth 5)
         }
     )

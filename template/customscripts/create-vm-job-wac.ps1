@@ -127,11 +127,14 @@ function Install-ConfiguratorAppForAzureLocal {
         [hashtable] $InvokeWithinVMParams,
 
         [Parameter(Mandatory = $true)]
-        [string] $ConfigAppSetupFilePath
+        [string] $ConfigAppSetupFilePath,
+
+        [Parameter(Mandatory = $true)]
+        [string] $DotNetDesktopRuntimeSetupFilePath
     )
 
     'Create a work folder within the VM.' | Write-ScriptLog
-    $workFolderPathInVM = 'C:\HciLabWork'
+    $workFolderPathInVM = 'C:\Temp'
     Invoke-CommandWithinVM @InvokeWithinVMParams -ScriptBlockParamList $workFolderPathInVM -ScriptBlock {
         param (
             [Parameter(Mandatory = $true)]
@@ -152,19 +155,52 @@ function Install-ConfiguratorAppForAzureLocal {
     $configAppSetupFilePathInVM = Copy-FileIntoVM @params
     'Copy the Configurator App setup file into the VM has been completed.' | Write-ScriptLog
 
-    'Execute the Configurator App setup within the VM.' | Write-ScriptLog
-    Invoke-CommandWithinVM @InvokeWithinVMParams -WithRetry -ScriptBlockParamList $configAppSetupFilePathInVM -ScriptBlock {
+    'Copy the .NET Desktop Runtime setup file into the VM.' | Write-ScriptLog
+    $params = @{
+        VMName              = $vmName
+        Credential          = $domainAdminCredential
+        SourceFilePath      = $DotNetDesktopRuntimeSetupFilePath
+        DestinationPathInVM = $workFolderPathInVM
+    }
+    $dotNetDesktopRuntimeSetupFilePathInVM = Copy-FileIntoVM @params
+    'Copy the .NET Desktop Runtime setup file into the VM has been completed.' | Write-ScriptLog
+
+    'Setup the Configurator App within the VM.' | Write-ScriptLog
+    Invoke-CommandWithinVM @InvokeWithinVMParams -ScriptBlockParamList $configAppSetupFilePathInVM -ScriptBlock {
         param (
             [Parameter(Mandatory = $true)]
-            [string] $ConfigAppSetupFilePath
+            [string] $SetupFilePath
         )
 
-        $exeArgs = @( '/S' )
-        $result = Start-Process -FilePath $ConfigAppSetupFilePath -ArgumentList $exeArgs -Wait -PassThru
+        Add-AppxPackage -Path $SetupFilePath
+    }
+    'Setup the Configurator App within the VM has been completed.' | Write-ScriptLog
+
+    'Setup the .NET Desktop Runtime within the VM.' | Write-ScriptLog
+    $scriptBlockParamList = @(
+        $dotNetDesktopRuntimeSetupFilePathInVM,
+        ([System.IO.Path]::Combine($workFolderPathInVM, 'dotnet-runtime-setup.log'))
+    )
+    Invoke-CommandWithinVM @InvokeWithinVMParams -ScriptBlockParamList $scriptBlockParamList -ScriptBlock {
+        param (
+            [Parameter(Mandatory = $true)]
+            [string] $SetupFilePath,
+
+            [Parameter(Mandatory = $true)]
+            [string] $LogFilePath
+        )
+
+        $setupArgs = @(
+            '/install',
+            '/quiet',
+            '/norestart',
+            ('/log "{0}"' -f $LogFilePath)
+        )
+        $result = Start-Process -FilePath $SetupFilePath -ArgumentList $setupArgs -Wait -PassThru
         $result | Format-List -Property @(
-            @{ Label = 'FileName'; Expression = { $_.StartInfo.FileName } },
-            @{ Label = 'Arguments'; Expression = { $_.StartInfo.Arguments } },
-            @{ Label = 'WorkingDirectory'; Expression = { $_.StartInfo.WorkingDirectory } },
+            @{ Name = 'FileName'; Expression = { $_.StartInfo.FileName } },
+            @{ Name = 'Arguments'; Expression = { $_.StartInfo.Arguments } },
+            @{ Name = 'WorkingDirectory'; Expression = { $_.StartInfo.WorkingDirectory } },
             'Id',
             'HasExited',
             'ExitCode',
@@ -175,10 +211,10 @@ function Install-ConfiguratorAppForAzureLocal {
             'UserProcessorTime'
         ) | Out-String | Write-ScriptLog
         if ($result.ExitCode -ne 0) {
-            throw 'The Configurator App installation failed with exit code {0}.' -f $result.ExitCode
+            throw 'The .NET Desktop Runtime setup failed with exit code {0}.' -f $result.ExitCode
         }
     }
-    'Execute the Configurator App setup within the VM has been completed.' | Write-ScriptLog
+    'Setup the .NET Desktop Runtime within the VM has been completed.' | Write-ScriptLog
 }
 
 try {
@@ -577,7 +613,13 @@ try {
 
     if ($labConfig.wac.shouldInstallConfigAppForAzureLocal) {
         'Install the Configurator App for Azure Local within the VM.' | Write-ScriptLog
-        Install-ConfiguratorAppForAzureLocal -LabConfig $labConfig -InvokeWithinVMParams $invokeAsDomainAdminParams -ConfigAppSetupFilePath $jobParams.ConfigAppSetupFilePath
+        $params = @{
+            LabConfig                         = $labConfig
+            InvokeWithinVMParams              = $invokeAsDomainAdminParams
+            ConfigAppSetupFilePath            = $jobParams.ConfigAppSetupFilePath
+            DotNetDesktopRuntimeSetupFilePath = $jobParams.DotNetDesktopRuntimeSetupFilePath
+        }
+        Install-ConfiguratorAppForAzureLocal @params
         'Install the Configurator App for Azure Local within the VM has been completed.' | Write-ScriptLog
     }
     else {
