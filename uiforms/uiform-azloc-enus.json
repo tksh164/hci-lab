@@ -2225,7 +2225,7 @@
                                     "visible": true,
                                     "label": "Configurator App for Azure Local",
                                     "toolTip": "The Configurator App for Azure Local is bootstrap and register the machines you plan to include in your Azure Local instance. <a href=\"https://learn.microsoft.com/azure/azure-local/deploy/deployment-arc-register-configurator-app\">Learn more</a>",
-                                    "defaultValue": "Not install",
+                                    "defaultValue": "Install",
                                     "constraints": {
                                         "required": true,
                                         "allowedValues": [
