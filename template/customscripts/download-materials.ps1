@@ -208,16 +208,27 @@ function New-DownloadMaterialSpecList {
         }
     }
 
-    # Configurator App for Azure Local
     if ($LabConfig.wac.shouldInstallConfigAppForAzureLocal) {
+        # Configurator App for Azure Local
         $materialInfoList += [PSCustomObject] @{
             # Common properties
             Type             = 'file'
-            Url              = $MaterialMetadata.AzureLocalConfiguratorApp.url
+            Url              = $MaterialMetadata.configuratorApp.url
             OutputFolderPath = $LabConfig.labHost.folderPath.temp
-            FileName         = $MaterialMetadata.AzureLocalConfiguratorApp.fileName
+            FileName         = $MaterialMetadata.configuratorApp.fileName
             # Additional properties
-            InventoryKey     = 'AzureLocalConfiguratorApp'
+            InventoryKey     = 'configuratorApp'
+        }
+
+        # .NET Desktop Runtime (Dependency of Configurator App)
+        $materialInfoList += [PSCustomObject] @{
+            # Common properties
+            Type             = 'file'
+            Url              = $MaterialMetadata.dotNet9DesktopRuntime.url
+            OutputFolderPath = $LabConfig.labHost.folderPath.temp
+            FileName         = $MaterialMetadata.dotNet9DesktopRuntime.fileName
+            # Additional properties
+            InventoryKey     = 'dotNet9DesktopRuntime'
         }
     }
 
