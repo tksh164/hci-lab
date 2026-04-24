@@ -18,10 +18,126 @@ $WarningPreference = [Management.Automation.ActionPreference]::Continue
 $VerbosePreference = [Management.Automation.ActionPreference]::Continue
 $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 
+function Get-WorkboxProcessorCount {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [int] $DefaultProcessorCount
+    )
+
+    $logicalProcessorCount = (Get-VMHost).LogicalProcessorCount
+    if ($logicalProcessorCount -lt $DefaultProcessorCount) {
+        return $logicalProcessorCount
+    }
+    return $DefaultProcessorCount
+}
+
+function New-WorkboxVM {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject] $VMConfig,
+
+        [Parameter(Mandatory = $true)]
+        [string] $VMFolderPath
+    )
+
+    'Create the OS disk.' | Write-ScriptLog
+    $params = @{
+        Path                    = [System.IO.Path]::Combine($VMFolderPath, $VMConfig.VMName, 'osdisk.vhdx')
+        Differencing            = $true
+        ParentPath              = $VMConfig.ParentVhdPath
+        BlockSizeBytes          = 32MB
+        PhysicalSectorSizeBytes = 4KB
+    }
+    $vmOSDiskVhd = New-VHD @params
+    'Create the OS disk has been completed.' | Write-ScriptLog
+
+    'Create the VM.' | Write-ScriptLog
+    $params = @{
+        Name       = $VMConfig.VMName
+        Path       = $VMFolderPath
+        VHDPath    = $vmOSDiskVhd.Path
+        Generation = 2
+    }
+    New-VM @params | Out-String | Write-ScriptLog
+    'Create the VM has been completed.' | Write-ScriptLog
+
+    'Change the VM''s automatic stop action.' | Write-ScriptLog
+    Set-VM -Name $VMConfig.VMName -AutomaticStopAction ShutDown
+    'Change the VM''s automatic stop action has been completed.' | Write-ScriptLog
+
+    'Configure the VM''s processor.' | Write-ScriptLog
+    Set-VMProcessor -VMName $VMConfig.VMName -Count $VMConfig.ProcessorCount
+    'Configure the VM''s processor has been completed.' | Write-ScriptLog
+
+    'Configure the VM''s memory.' | Write-ScriptLog
+    $params = @{
+        VMName               = $VMConfig.VMName
+        StartupBytes         = $VMConfig.RamBytes
+        DynamicMemoryEnabled = $true
+        MinimumBytes         = 512MB
+        MaximumBytes         = $VMConfig.MaximumRamBytes
+    }
+    Set-VMMemory @params
+    'Configure the VM''s memory has been completed.' | Write-ScriptLog
+
+    'Enable the VM''s vTPM.' | Write-ScriptLog
+    $params = @{
+        VMName               = $VMConfig.VMName
+        NewLocalKeyProtector = $true
+        Passthru             = $true
+        ErrorAction          = [Management.Automation.ActionPreference]::Stop
+    }
+    try {
+        Set-VMKeyProtector @params | Enable-VMTPM
+    }
+    catch {
+        '{0} (ExceptionMessage: {1} | Exception: {2} | FullyQualifiedErrorId: {3} | CategoryInfo: {4} | ErrorDetailsMessage: {5})' -f @(
+            'Caught exception on enable vTPM, will retry to enable vTPM.',
+            $_.Exception.Message,
+            $_.Exception.GetType().FullName,
+            $_.FullyQualifiedErrorId,
+            $_.CategoryInfo.ToString(),
+            $_.ErrorDetails.Message
+        ) | Write-ScriptLog -Level Warning
+
+        # Rescue only once by retry.
+        Set-VMKeyProtector @params | Enable-VMTPM
+    }
+    'Enable the VM''s vTPM has been completed.' | Write-ScriptLog
+
+    'Configure the VM''s network adapters.' | Write-ScriptLog
+    Get-VMNetworkAdapter -VMName $VMConfig.VMName | Remove-VMNetworkAdapter
+
+    # Management
+    'Configure the {0} network adapter.' -f $VMConfig.NetAdapters.Management.Name | Write-ScriptLog
+    $paramsForAdd = @{
+        VMName       = $VMConfig.VMName
+        Name         = $VMConfig.NetAdapters.Management.Name
+        SwitchName   = $VMConfig.NetAdapters.Management.VSwitchName
+        DeviceNaming = [Microsoft.HyperV.PowerShell.OnOffState]::On
+        Passthru     = $true
+    }
+    $paramsForSet = @{
+        MacAddressSpoofing = [Microsoft.HyperV.PowerShell.OnOffState]::On
+        AllowTeaming       = [Microsoft.HyperV.PowerShell.OnOffState]::On
+        Passthru           = $true
+    }
+    Add-VMNetworkAdapter @paramsForAdd |
+    Set-VMNetworkAdapter @paramsForSet |
+    Set-VMNetworkAdapterVlan -Trunk -NativeVlanId 0 -AllowedVlanIdList '1-4094'
+    'Configure the {0} network adapter has been completed.' -f $VMConfig.NetAdapters.Management.Name | Write-ScriptLog
+
+    return [PSCustomObject] @{
+        OSDiskVhdFilePath = $vmOSDiskVhd.Path
+    }
+}
+
 #
 # Windows Admin Center
 #
-
+#
 # function Invoke-WindowsAdminCenterInstallerDownload
 # {
 #     [CmdletBinding()]
@@ -67,39 +183,47 @@ $ProgressPreference = [Management.Automation.ActionPreference]::SilentlyContinue
 #     return $wacCret
 # }
 
-#
-# Active Directory preparation for Azure Local
-#
-
 function New-ADObjectsForAzureLocal {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
-        [PSCustomObject] $LabConfig,
+        [string] $VMNameToInvoke,
 
         [Parameter(Mandatory = $true)]
-        [hashtable] $InvokeWithinVMParams,
+        [PSCredential] $CredentialToInvoke,
 
         [Parameter(Mandatory = $true)]
-        [string] $OrgUnitForAzureLocal,
+        [string[]] $ModuleNamesToInvoke,
 
         [Parameter(Mandatory = $true)]
-        [string] $LcmUserName
+        [PSCredential] $LcmUserCredential,
+
+        [Parameter(Mandatory = $true)]
+        [string] $OrgUnitForAzureLocal
     )
 
     'Install the "AsHciADArtifactsPreCreationTool" module within the VM.' | Write-ScriptLog
-    Invoke-CommandWithinVM @InvokeWithinVMParams -ScriptBlock {
+    $params = @{
+        VMName           = $VMNameToInvoke
+        Credential       = $CredentialToInvoke
+        ImportModuleInVM = $ModuleNamesToInvoke
+    }
+    Invoke-CommandWithinVM @params -ScriptBlock {
         Install-Module -Name 'AsHciADArtifactsPreCreationTool' -Repository 'PSGallery' -Scope 'AllUsers' -Force -Verbose
     }
     'Install the "AsHciADArtifactsPreCreationTool" module within the VM has been completed.' | Write-ScriptLog
 
     'Invoke the Active Directory preparation tool within the VM.' | Write-ScriptLog
-    $lcmUserCredential = New-LogonCredential -DomainFqdn '' -UserName $LcmUserName -Password $adminPassword
-    $scriptBlockParamList = @(
-        $lcmUserCredential,
-        $OrgUnitForAzureLocal
-    )
-    Invoke-CommandWithinVM @InvokeWithinVMParams -ScriptBlockParamList $scriptBlockParamList -ScriptBlock {
+    $params = @{
+        VMName               = $VMNameToInvoke
+        Credential           = $CredentialToInvoke
+        ImportModuleInVM     = $ModuleNamesToInvoke
+        ScriptBlockParamList = @(
+            $LcmUserCredential,
+            $OrgUnitForAzureLocal
+        )
+    }
+    Invoke-CommandWithinVM @params -ScriptBlock {
         param (
             [Parameter(Mandatory = $true)]
             [PSCredential] $LcmUserCredential,
@@ -113,18 +237,17 @@ function New-ADObjectsForAzureLocal {
     'Invoke the Active Directory preparation tool within the VM has been completed.' | Write-ScriptLog
 }
 
-#
-# Configurator App for Azure Local
-#
-
 function Install-ConfiguratorAppForAzureLocal {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
-        [PSCustomObject] $LabConfig,
+        [string] $VMNameToInvoke,
 
         [Parameter(Mandatory = $true)]
-        [hashtable] $InvokeWithinVMParams,
+        [PSCredential] $CredentialToInvoke,
+
+        [Parameter(Mandatory = $true)]
+        [string[]] $ModuleNamesToInvoke,
 
         [Parameter(Mandatory = $true)]
         [string] $ConfigAppSetupFilePath,
@@ -133,9 +256,15 @@ function Install-ConfiguratorAppForAzureLocal {
         [string] $DotNetDesktopRuntimeSetupFilePath
     )
 
-    'Create a work folder within the VM.' | Write-ScriptLog
+    'Create a temporary folder within the VM.' | Write-ScriptLog
     $workFolderPathInVM = 'C:\Temp'
-    Invoke-CommandWithinVM @InvokeWithinVMParams -ScriptBlockParamList $workFolderPathInVM -ScriptBlock {
+    $params = @{
+        VMName               = $VMNameToInvoke
+        Credential           = $CredentialToInvoke
+        ImportModuleInVM     = $ModuleNamesToInvoke
+        ScriptBlockParamList = $workFolderPathInVM
+    }
+    Invoke-CommandWithinVM @params -ScriptBlock {
         param (
             [Parameter(Mandatory = $true)]
             [string] $FolderPath
@@ -143,12 +272,12 @@ function Install-ConfiguratorAppForAzureLocal {
 
         New-Item -ItemType Directory -Path $FolderPath -Force | Out-String | Write-ScriptLog
     }
-    'Create a work folder within the VM has been completed.' | Write-ScriptLog
+    'Create a temporary folder within the VM has been completed.' | Write-ScriptLog
 
     'Copy the Configurator App setup file into the VM.' | Write-ScriptLog
     $params = @{
-        VMName              = $vmName
-        Credential          = $domainAdminCredential
+        VMName              = $VMNameToInvoke
+        Credential          = $CredentialToInvoke
         SourceFilePath      = $ConfigAppSetupFilePath
         DestinationPathInVM = $workFolderPathInVM
     }
@@ -157,16 +286,22 @@ function Install-ConfiguratorAppForAzureLocal {
 
     'Copy the .NET Desktop Runtime setup file into the VM.' | Write-ScriptLog
     $params = @{
-        VMName              = $vmName
-        Credential          = $domainAdminCredential
+        VMName              = $VMNameToInvoke
+        Credential          = $CredentialToInvoke
         SourceFilePath      = $DotNetDesktopRuntimeSetupFilePath
         DestinationPathInVM = $workFolderPathInVM
     }
     $dotNetDesktopRuntimeSetupFilePathInVM = Copy-FileIntoVM @params
     'Copy the .NET Desktop Runtime setup file into the VM has been completed.' | Write-ScriptLog
 
-    'Setup the Configurator App within the VM.' | Write-ScriptLog
-    Invoke-CommandWithinVM @InvokeWithinVMParams -ScriptBlockParamList $configAppSetupFilePathInVM -ScriptBlock {
+    'Execute the Configurator App setup within the VM.' | Write-ScriptLog
+    $params = @{
+        VMName               = $VMNameToInvoke
+        Credential           = $CredentialToInvoke
+        ImportModuleInVM     = $ModuleNamesToInvoke
+        ScriptBlockParamList = $configAppSetupFilePathInVM
+    }
+    Invoke-CommandWithinVM @params -ScriptBlock {
         param (
             [Parameter(Mandatory = $true)]
             [string] $SetupFilePath
@@ -177,11 +312,16 @@ function Install-ConfiguratorAppForAzureLocal {
     'Setup the Configurator App within the VM has been completed.' | Write-ScriptLog
 
     'Setup the .NET Desktop Runtime within the VM.' | Write-ScriptLog
-    $scriptBlockParamList = @(
-        $dotNetDesktopRuntimeSetupFilePathInVM,
-        ([System.IO.Path]::Combine($workFolderPathInVM, 'dotnet-runtime-setup.log'))
-    )
-    Invoke-CommandWithinVM @InvokeWithinVMParams -ScriptBlockParamList $scriptBlockParamList -ScriptBlock {
+    $params = @{
+        VMName               = $VMNameToInvoke
+        Credential           = $CredentialToInvoke
+        ImportModuleInVM     = $ModuleNamesToInvoke
+        ScriptBlockParamList = @(
+            $dotNetDesktopRuntimeSetupFilePathInVM,
+            ([System.IO.Path]::Combine($workFolderPathInVM, 'dotnet-runtime-setup.log'))
+        )
+    }
+    Invoke-CommandWithinVM @params -ScriptBlock {
         param (
             [Parameter(Mandatory = $true)]
             [string] $SetupFilePath,
@@ -240,124 +380,62 @@ try {
     # Retrieve the job parameters from the JSON string.
     $jobParams = $JobParamsJson | ConvertFrom-Json
 
+    # Retrieve the admin password from the Key Vault.
+    $adminPassword = Get-Secret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName.adminPassword
+
+    # Hyper-V VM configuration.
+    $vmConfig = [PSCustomObject] @{
+        VMName          = $labConfig.wac.vmName
+        ProcessorCount  = Get-WorkboxProcessorCount -DefaultProcessorCount 6
+        RamBytes        = 1GB
+        MaximumRamBytes = $labConfig.wac.maximumRamBytes
+        ParentVhdPath   = $jobParams.BaseVhdFilePath
+        OS = [PSCustomObject] @{
+            Language = $labConfig.guestOS.culture
+            TimeZone = $labConfig.guestOS.timeZone
+        }
+        NetAdapters = [PSCustomObject] @{
+            Management = [PSCustomObject] @{
+                Name               = $labConfig.wac.netAdapters.management.name
+                VSwitchName        = $labConfig.labHost.vSwitch.nat.name
+                IPAddress          = $labConfig.wac.netAdapters.management.ipAddress
+                PrefixLength       = $labConfig.wac.netAdapters.management.prefixLength
+                DefaultGateway     = $labConfig.wac.netAdapters.management.defaultGateway
+                DnsServerAddresses = $labConfig.wac.netAdapters.management.dnsServerAddresses
+            }
+        }
+    }
+    'Hyper-V VM config: {0}' -f ($vmConfig | ConvertTo-Json -Depth 16) | Write-ScriptLog
+
     #
     # Hyper-V VM creation
     #
 
-    $vmName = $labConfig.wac.vmName
-
-    'Create the OS disk for the VM.' | Write-ScriptLog
-    $params = @{
-        Path                    = [System.IO.Path]::Combine($labConfig.labHost.folderPath.vm, $vmName, 'osdisk.vhdx')
-        Differencing            = $true
-        ParentPath              = $jobParams.BaseVhdFilePath
-        BlockSizeBytes          = 32MB
-        PhysicalSectorSizeBytes = 4KB
-    }
-    $vmOSDiskVhd = New-VHD  @params
-    'Create the OS disk for the VM has been completed.' | Write-ScriptLog
-
-    'Create the VM.' | Write-ScriptLog
-    $params = @{
-        Name       = $vmName
-        Path       = $labConfig.labHost.folderPath.vm
-        VHDPath    = $vmOSDiskVhd.Path
-        Generation = 2
-    }
-    New-VM @params | Out-String | Write-ScriptLog
-    'Create the VM has been completed.' | Write-ScriptLog
-
-    'Change the VM''s automatic stop action.' | Write-ScriptLog
-    Set-VM -Name $vmName -AutomaticStopAction ShutDown
-    'Change the VM''s automatic stop action has been completed' | Write-ScriptLog
-
-    'Configure the VM''s processor.' | Write-ScriptLog
-    $vmProcessorCount = 6
-    if ((Get-VMHost).LogicalProcessorCount -lt $vmProcessorCount) { $vmProcessorCount = (Get-VMHost).LogicalProcessorCount }
-    Set-VMProcessor -VMName $vmName -Count $vmProcessorCount
-    'Configure the VM''s processor has been completed.' | Write-ScriptLog
-
-    'Configure the VM''s memory.' | Write-ScriptLog
-    $params = @{
-        VMName               = $vmName
-        StartupBytes         = 1GB
-        DynamicMemoryEnabled = $true
-        MinimumBytes         = 512MB
-        MaximumBytes         = $labConfig.wac.maximumRamBytes
-    }
-    Set-VMMemory @params
-    'Configure the VM''s memory has been completed.' | Write-ScriptLog
-
-    'Enable the VM''s vTPM.' | Write-ScriptLog
-    $params = @{
-        VMName               = $vmName
-        NewLocalKeyProtector = $true
-        Passthru             = $true
-        ErrorAction          = [Management.Automation.ActionPreference]::Stop
-    }
-    try {
-        Set-VMKeyProtector @params | Enable-VMTPM
-    }
-    catch {
-        '{0} (ExceptionMessage: {1} | Exception: {2} | FullyQualifiedErrorId: {3} | CategoryInfo: {4} | ErrorDetailsMessage: {5})' -f @(
-            'Caught exception on enable vTPM, will retry to enable vTPM.',
-            $_.Exception.Message,
-            $_.Exception.GetType().FullName,
-            $_.FullyQualifiedErrorId,
-            $_.CategoryInfo.ToString(),
-            $_.ErrorDetails.Message
-        ) | Write-ScriptLog -Level Warning
-
-        # Rescue only once by retry.
-        Set-VMKeyProtector @params | Enable-VMTPM
-    }
-    'Enable the VM''s vTPM has been completed.' | Write-ScriptLog
-
-    'Configure the VM''s network adapters.' | Write-ScriptLog
-    Get-VMNetworkAdapter -VMName $vmName | Remove-VMNetworkAdapter
-
-    # Management
-    'Configure the {0} network adapter.' -f $labConfig.wac.netAdapters.management.name | Write-ScriptLog
-    $paramsForAdd = @{
-        VMName       = $vmName
-        Name         = $labConfig.wac.netAdapters.management.name
-        SwitchName   = $labConfig.labHost.vSwitch.nat.name
-        DeviceNaming = [Microsoft.HyperV.PowerShell.OnOffState]::On
-        Passthru     = $true
-    }
-    $paramsForSet = @{
-        MacAddressSpoofing = [Microsoft.HyperV.PowerShell.OnOffState]::On
-        AllowTeaming       = [Microsoft.HyperV.PowerShell.OnOffState]::On
-        Passthru           = $true
-    }
-    Add-VMNetworkAdapter @paramsForAdd |
-    Set-VMNetworkAdapter @paramsForSet |
-    Set-VMNetworkAdapterVlan -Trunk -NativeVlanId 0 -AllowedVlanIdList '1-4094'
-    'Configure the {0} network adapter has been completed.' -f $labConfig.wac.netAdapters.management.name | Write-ScriptLog
+    # Create a new Hyper-V VM.
+    $hvVMInfo = New-WorkboxVM -VMConfig $vmConfig -VMFolderPath $labConfig.labHost.folderPath.vm
 
     'Generate the unattend answer XML.' | Write-ScriptLog
-    $adminPassword = Get-Secret -KeyVaultName $labConfig.keyVault.name -SecretName $labConfig.keyVault.secretName.adminPassword
     $params = @{
-        ComputerName = $vmName
+        ComputerName = $vmConfig.VMName
         Password     = $adminPassword
-        Culture      = $labConfig.guestOS.culture
-        TimeZone     = $labConfig.guestOS.timeZone
+        Culture      = $vmConfig.OS.Language
+        TimeZone     = $vmConfig.OS.TimeZone
     }
     $unattendAnswerFileContent = New-UnattendAnswerFileContent @params
     'Generate the unattend answer XML has been completed.' | Write-ScriptLog
 
-    'Inject the unattend answer file to the "{0}".' -f $vmOSDiskVhd.Path | Write-ScriptLog
+    'Inject the unattend answer file to the "{0}".' -f $hvVMInfo.OSDiskVhdFilePath | Write-ScriptLog
     $params = @{
-        VhdPath                   = $vmOSDiskVhd.Path
+        VhdPath                   = $hvVMInfo.OSDiskVhdFilePath
         UnattendAnswerFileContent = $unattendAnswerFileContent
         LogFolder                 = $labConfig.labHost.folderPath.log
     }
     Set-UnattendAnswerFileToVhd @params
-    'Inject the unattend answer file to the "{0}" has been completed.' -f $vmOSDiskVhd.Path | Write-ScriptLog
+    'Inject the unattend answer file to the "{0}" has been completed.' -f $hvVMInfo.OSDiskVhdFilePath | Write-ScriptLog
 
-    'Install the roles and features to the "{0}".' -f $vmOSDiskVhd.Path | Write-ScriptLog
+    'Install the roles and features to the "{0}".' -f $hvVMInfo.OSDiskVhdFilePath | Write-ScriptLog
     $params = @{
-        VhdPath     = $vmOSDiskVhd.Path
+        VhdPath     = $hvVMInfo.OSDiskVhdFilePath
         FeatureName = @(
             'RSAT-ADDS-Tools',
             'RSAT-AD-AdminCenter',
@@ -373,22 +451,25 @@ try {
         LogFolder   = $labConfig.labHost.folderPath.log
     }
     Install-WindowsFeatureToVhd @params
-    'Install the roles and features to the "{0}" has been completed.' -f $vmOSDiskVhd.Path | Write-ScriptLog
+    'Install the roles and features to the "{0}" has been completed.' -f $hvVMInfo.OSDiskVhdFilePath | Write-ScriptLog
 
-    Start-VMSurely -VMName $vmName
+    Start-VMSurely -VMName $vmConfig.VMName
+
+    # Credentials
+    $localAdminCredential = New-LogonCredential -DomainFqdn '.' -Password $adminPassword
+    $domainAdminCredential = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $adminPassword
+
+    'Wait for PowerShell Direct to be ready.' | Write-ScriptLog
+    Wait-PowerShellDirectReady -VMName $vmConfig.VMName -Credential $localAdminCredential
+    'PowerShell Direct is ready.' | Write-ScriptLog
 
     #
     # Guest OS configuration
     #
 
-    'Wait for the VM to be ready.' | Write-ScriptLog
-    $localAdminCredential = New-LogonCredential -DomainFqdn '.' -Password $adminPassword
-    Wait-PowerShellDirectReady -VMName $vmName -Credential $localAdminCredential
-    'The VM is ready.' | Write-ScriptLog
-
     'Copy the module files into the VM.' | Write-ScriptLog
     $params = @{
-        VMName              = $vmName
+        VMName              = $vmConfig.VMName
         Credential          = $localAdminCredential
         SourceFilePath      = (Get-Module -Name 'common').Path
         DestinationPathInVM = 'C:\Windows\Temp'
@@ -398,7 +479,7 @@ try {
 
     # The common parameters for Invoke-CommandWithinVM with the local Administrator credentials.
     $invokeAsLocalAdminParams = @{
-        VMName           = $vmName
+        VMName           = $vmConfig.VMName
         Credential       = $localAdminCredential
         ImportModuleInVM = $moduleFilePathsWithinVM
     }
@@ -438,21 +519,20 @@ try {
     'Rename the network adapters has been completed.' | Write-ScriptLog
 
     # Management
-    $netAdapterConfig = $labConfig.wac.netAdapters.management
-    'Configure the IP & DNS on the "{0}" network adapter.' -f $netAdapterConfig.name | Write-ScriptLog
-    Invoke-CommandWithinVM @invokeAsLocalAdminParams -WithRetry -ScriptBlockParamList $netAdapterConfig -ScriptBlock {
+    'Configure the IP & DNS on the "{0}" network adapter.' -f $vmConfig.NetAdapters.Management.Name | Write-ScriptLog
+    Invoke-CommandWithinVM @invokeAsLocalAdminParams -WithRetry -ScriptBlockParamList $vmConfig.NetAdapters.Management -ScriptBlock {
         param (
             [Parameter(Mandatory = $true)]
             [PSCustomObject] $NetAdapterConfig
         )
 
         # Remove default route.
-        Get-NetAdapter -Name $NetAdapterConfig.name |
+        Get-NetAdapter -Name $NetAdapterConfig.Name |
         Get-NetIPInterface -AddressFamily 'IPv4' |
         Remove-NetRoute -DestinationPrefix '0.0.0.0/0' -Confirm:$false -ErrorAction SilentlyContinue
 
         # Remove existing NetIPAddresses.
-        Get-NetAdapter -Name $NetAdapterConfig.name |
+        Get-NetAdapter -Name $NetAdapterConfig.Name |
         Get-NetIPInterface -AddressFamily 'IPv4' |
         Remove-NetIPAddress -Confirm:$false -ErrorAction SilentlyContinue
 
@@ -464,20 +544,20 @@ try {
         }
         $paramsForNewIPAddress = @{
             AddressFamily  = 'IPv4'
-            IPAddress      = $NetAdapterConfig.ipAddress
-            PrefixLength   = $NetAdapterConfig.prefixLength
-            DefaultGateway = $NetAdapterConfig.defaultGateway
+            IPAddress      = $NetAdapterConfig.IPAddress
+            PrefixLength   = $NetAdapterConfig.PrefixLength
+            DefaultGateway = $NetAdapterConfig.DefaultGateway
         }
         $paramsForSetDnsClientServerAddress = @{
-            ServerAddresses = $NetAdapterConfig.dnsServerAddresses
+            ServerAddresses = $NetAdapterConfig.DnsServerAddresses
         }
-        Get-NetAdapter -Name $NetAdapterConfig.name |
+        Get-NetAdapter -Name $NetAdapterConfig.Name |
         Set-NetIPInterface @paramsForSetNetIPInterface |
         New-NetIPAddress @paramsForNewIPAddress |
         Set-DnsClientServerAddress @paramsForSetDnsClientServerAddress |
         Out-Null
     }
-    'Configure the IP & DNS on the "{0}" network adapter has been completed.' -f $netAdapterConfig.name | Write-ScriptLog
+    'Configure the IP & DNS on the "{0}" network adapter has been completed.' -f $vmConfig.NetAdapters.Management.Name | Write-ScriptLog
 
     'Log the network settings within the VM.' | Write-ScriptLog
     Invoke-CommandWithinVM @invokeAsLocalAdminParams -WithRetry -ScriptBlock {
@@ -542,7 +622,6 @@ try {
     'The domain controller VM deployment has been completed.' | Write-ScriptLog
 
     'Wait for the domain controller with DNS capability to be ready.' | Write-ScriptLog
-    $domainAdminCredential = New-LogonCredential -DomainFqdn $labConfig.addsDomain.fqdn -Password $adminPassword
     $params = @{
         AddsDcVMName       = $labConfig.addsDC.vmName
         AddsDcComputerName = $labConfig.addsDC.vmName  # The DC's computer name is the same as the VM name. It's specified in the unattend.xml.
@@ -569,11 +648,11 @@ try {
 
     # Disable the Time synchronization in the Integration Services.
     # Use AD DC as the NTP server for member servers are a common practice.
-    Disable-VMIntegrationService -VMName $vmName -Name 'Time Synchronization' -Passthru | Out-String | Write-ScriptLog
+    Disable-VMIntegrationService -VMName $vmConfig.VMName -Name 'Time Synchronization' -Passthru | Out-String | Write-ScriptLog
 
     'Join the VM to the AD domain.' | Write-ScriptLog
     $params = @{
-        VMName                = $vmName
+        VMName                = $vmConfig.VMName
         LocalAdminCredential  = $localAdminCredential
         DomainFqdn            = $labConfig.addsDomain.fqdn
         DomainAdminCredential = $domainAdminCredential
@@ -581,28 +660,22 @@ try {
     Add-VMToADDomain @params
     'Join the VM to the AD domain has been completed.' | Write-ScriptLog
 
-    # Reboot the VM.
-    Stop-VMSurely -VMName $vmName
-    Start-VMSurely -VMName $vmName
+    # Restart the VM.
+    Stop-VMSurely -VMName $vmConfig.VMName
+    Start-VMSurely -VMName $vmConfig.VMName
 
     'Wait for the VM to be ready.' | Write-ScriptLog
-    Wait-PowerShellDirectReady -VMName $vmName -Credential $domainAdminCredential
+    Wait-PowerShellDirectReady -VMName $vmConfig.VMName -Credential $domainAdminCredential
     'The VM is ready.' | Write-ScriptLog
-
-    # The common parameters for Invoke-CommandWithinVM with the domain Administrator credentials.
-    $invokeAsDomainAdminParams = @{
-        VMName           = $vmName
-        Credential       = $domainAdminCredential
-        ImportModuleInVM = $moduleFilePathsWithinVM
-    }
 
     if ($labConfig.addsDC.shouldPrepareAddsForAzureLocal) {
         'Create Active Directory objects for Azure Local.' | Write-ScriptLog
         $params = @{
-            LabConfig            = $labConfig
-            InvokeWithinVMParams = $invokeAsDomainAdminParams
+            VMNameToInvoke       = $vmConfig.VMName
+            CredentialToInvoke   = $domainAdminCredential
+            ModuleNamesToInvoke  = $moduleFilePathsWithinVM
+            LcmUserCredential    = New-LogonCredential -UserName $labConfig.addsDC.lcmUserName -Password $adminPassword
             OrgUnitForAzureLocal = $labConfig.addsDC.orgUnitForAzureLocal
-            LcmUserName          = $labConfig.addsDC.lcmUserName
         }
         New-ADObjectsForAzureLocal @params
         'Create Active Directory objects for Azure Local has been completed.' | Write-ScriptLog
@@ -614,8 +687,9 @@ try {
     if ($labConfig.wac.shouldInstallConfigAppForAzureLocal) {
         'Install the Configurator App for Azure Local within the VM.' | Write-ScriptLog
         $params = @{
-            LabConfig                         = $labConfig
-            InvokeWithinVMParams              = $invokeAsDomainAdminParams
+            VMNameToInvoke                    = $vmConfig.VMName
+            CredentialToInvoke                = $domainAdminCredential
+            ModuleNamesToInvoke               = $moduleFilePathsWithinVM
             ConfigAppSetupFilePath            = $jobParams.ConfigAppSetupFilePath
             DotNetDesktopRuntimeSetupFilePath = $jobParams.DotNetDesktopRuntimeSetupFilePath
         }
@@ -634,7 +708,7 @@ try {
     'Donwload the Windows Admin Center installer has been completed.' | Write-ScriptLog
 
     'Create a new SSL server authentication certificate for Windows Admin Center.' | Write-ScriptLog
-    $wacCret = New-CertificateForWindowsAdminCenter -VMName $vmName
+    $wacCret = New-CertificateForWindowsAdminCenter -VMName $vmConfig.VMName
     'Create a new SSL server authentication certificate for Windows Admin Center has been completed.' | Write-ScriptLog
 
     'Export the Windows Admin Center certificate.' | Write-ScriptLog
@@ -820,7 +894,7 @@ try {
         # Create a connection entry list to import to Windows Admin Center.
         $connectionEntries = @(
             (New-WacConnectionFileEntry -Name ('{0}.{1}' -f $LabConfig.addsDC.vmName, $LabConfig.addsDomain.fqdn) -Type 'msft.sme.connection-type.server'),  # Entry for the AD DS DC.
-            (New-WacConnectionFileEntry -Name ('{0}.{1}' -f $vmName, $LabConfig.addsDomain.fqdn) -Type 'msft.sme.connection-type.server')  # Entry for the management server (WAC).
+            (New-WacConnectionFileEntry -Name ('{0}.{1}' -f $vmConfig.VMName, $LabConfig.addsDomain.fqdn) -Type 'msft.sme.connection-type.server')  # Entry for the management server (WAC).
         )
 
         # Entry for the HCI nodes.
