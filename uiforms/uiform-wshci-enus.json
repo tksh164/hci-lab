@@ -166,7 +166,7 @@
                             "visible": true,
                             "options": {
                                 "style": "Info",
-                                "text": "128 GiB memory is the real minimum when you deploy any workloads on your HCI cluster. You may need more memory if you deploy hybrid services on your HCI cluster because this lab environment has multiple Hyper-V VMs such as HCI nodes, an AD domain controller and a workbox machine on a single Azure Virtual machine.<ul><li><a href='https://learn.microsoft.com/azure/virtual-machines/sizes'>Azure Virtual Machine sizes</a></li><li><a href='https://azure.microsoft.com/pricing/details/virtual-machines/windows'>Windows Virtual Machines pricing</a></li></ul>"
+                                "text": "128 GiB memory is the real minimum when you deploy any workloads on your HCI cluster. You may need more memory if you deploy hybrid services on your HCI cluster because this lab environment has multiple Hyper-V VMs such as HCI nodes, an AD domain controller and a workbox machine on a single Azure Virtual machine. Azure Virtual Machine sizes: <https://learn.microsoft.com/azure/virtual-machines/sizes>, Windows Virtual Machines pricing: <https://azure.microsoft.com/pricing/details/virtual-machines/windows>"
                             }
                         },
                         {
@@ -439,7 +439,7 @@
                                     "visible": true,
                                     "options": {
                                         "style": "Info",
-                                        "text": "[format('The selected VM size <strong>{0}</strong> supports <strong>{1}</strong> disks.', replace(steps('basics').vmSize, '_', ' '), first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount)))]"
+                                        "text": "[format('The selected VM size {0} supports {1} disks.', replace(steps('basics').vmSize, '_', ' '), first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount)))]"
                                     }
                                 }
                             ]
@@ -504,7 +504,7 @@
                                     "type": "Microsoft.Common.OptionsGroup",
                                     "visible": true,
                                     "label": "Visual Studio Code",
-                                    "toolTip": "Visual Studio Code is a lightweight but powerful source code editor which runs on your desktop. <a href='https://code.visualstudio.com'>more</a>",
+                                    "toolTip": "Visual Studio Code is a lightweight but powerful source code editor which runs on your desktop. Learn more: <https://code.visualstudio.com>",
                                     "defaultValue": "Not install",
                                     "constraints": {
                                         "required": true,
@@ -1462,7 +1462,7 @@
                                     "type": "Microsoft.Common.OptionsGroup",
                                     "visible": true,
                                     "label": "Windows Admin Center",
-                                    "toolTip": "The Windows Admin Center is a remote management tool for Windows Server. <a href=\"https://learn.microsoft.com/windows-server/manage/windows-admin-center/overview\">Learn more</a>",
+                                    "toolTip": "The Windows Admin Center is a remote management tool for Windows Server. Learn more: <https://learn.microsoft.com/windows-server/manage/windows-admin-center/overview>",
                                     "defaultValue": "Not install",
                                     "constraints": {
                                         "required": true,
@@ -1477,7 +1477,7 @@
                                         {
                                             "visible": true,
                                             "style": "Info",
-                                            "text": "HCI Lab supports Windows Admin Center installation. But it is temporary disabled. You can install Windows Admin Center manually after your lab environment deployment finished. <a href=\"https://learn.microsoft.com/windows-server/manage/windows-admin-center/deploy/install\">Learn more</a>"
+                                            "text": "HCI Lab supports Windows Admin Center installation. But it is temporary disabled. You can install Windows Admin Center manually after your lab environment deployment finished. Learn more: <https://learn.microsoft.com/windows-server/manage/windows-admin-center/deploy/install>"
                                         }
                                     ]
                                 }
