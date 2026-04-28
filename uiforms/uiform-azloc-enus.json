@@ -1253,13 +1253,21 @@
                                     "placeholder": "Select the machines' operating system...",
                                     "defaultDescription": "---",
                                     "filterPlaceholder": "Filter machines' operating systems...",
-                                    "defaultValue": "Azure Local 2603",
+                                    "defaultValue": "Azure Local 2604",
                                     "constraints": {
                                         "required": true,
                                         "allowedValues": [
                                             {
-                                                "label": "Azure Local 2603",
+                                                "label": "Azure Local 2604",
                                                 "description": "The latest generally available version.",
+                                                "value": {
+                                                    "sku": "azloc24h2_2604",
+                                                    "imageIndex": 1
+                                                }
+                                            },
+                                            {
+                                                "label": "Azure Local 2603",
+                                                "description": "The previous version.",
                                                 "value": {
                                                     "sku": "azloc24h2_2603",
                                                     "imageIndex": 1
@@ -1298,8 +1306,8 @@
                                                 }
                                             },
                                             {
-                                                "label": "Azure Local 2510",
-                                                "description": "The previous version.",
+                                                "label": "Azure Local 2510 [End of support]",
+                                                "description": "Notice: This version reached the end of support.",
                                                 "value": {
                                                     "sku": "azloc24h2_2510",
                                                     "imageIndex": 1
@@ -1307,7 +1315,7 @@
                                             },
                                             {
                                                 "label": "Azure Local 2509 [End of support]",
-                                                "description": "<strong>Notice:</strong> This version reached the end of support.",
+                                                "description": "Notice: This version reached the end of support.",
                                                 "value": {
                                                     "sku": "azloc24h2_2509",
                                                     "imageIndex": 1
@@ -1315,7 +1323,7 @@
                                             },
                                             {
                                                 "label": "Azure Local 2508 [End of support]",
-                                                "description": "<strong>Notice:</strong> This version reached the end of support.",
+                                                "description": "Notice: This version reached the end of support.",
                                                 "value": {
                                                     "sku": "azloc24h2_2508",
                                                     "imageIndex": 1
@@ -1323,7 +1331,7 @@
                                             },
                                             {
                                                 "label": "Azure Local 2507 [End of support]",
-                                                "description": "<strong>Notice:</strong> This version reached the end of support.",
+                                                "description": "Notice: This version reached the end of support.",
                                                 "value": {
                                                     "sku": "azloc24h2_2507",
                                                     "imageIndex": 1
@@ -1331,7 +1339,7 @@
                                             },
                                             {
                                                 "label": "Azure Local 2506 [End of support]",
-                                                "description": "<strong>Notice:</strong> This version reached the end of support.",
+                                                "description": "Notice: This version reached the end of support.",
                                                 "value": {
                                                     "sku": "azloc24h2_2506",
                                                     "imageIndex": 1
@@ -1339,7 +1347,7 @@
                                             },
                                             {
                                                 "label": "Azure Local 2505 [End of support]",
-                                                "description": "<strong>Notice:</strong> This version reached the end of support.",
+                                                "description": "Notice: This version reached the end of support.",
                                                 "value": {
                                                     "sku": "azloc24h2_2505",
                                                     "imageIndex": 1
@@ -1347,7 +1355,7 @@
                                             },
                                             {
                                                 "label": "Azure Local 2504 [End of support]",
-                                                "description": "<strong>Notice:</strong> This version reached the end of support.",
+                                                "description": "Notice: This version reached the end of support.",
                                                 "value": {
                                                     "sku": "azloc24h2_2504",
                                                     "imageIndex": 1
@@ -1355,7 +1363,7 @@
                                             },
                                             {
                                                 "label": "Azure Local 2503 [End of support]",
-                                                "description": "<strong>Notice:</strong> This version reached the end of support.",
+                                                "description": "Notice: This version reached the end of support.",
                                                 "value": {
                                                     "sku": "ashci23h2",
                                                     "imageIndex": 1
@@ -1363,7 +1371,7 @@
                                             },
                                             {
                                                 "label": "Azure Stack HCI, version 22H2 [End of support]",
-                                                "description": "<strong>Notice:</strong> This version reached the end of support on May 31, 2025.",
+                                                "description": "Notice: This version reached the end of support on May 31, 2025.",
                                                 "value": {
                                                     "sku": "ashci22h2",
                                                     "imageIndex": 1
@@ -1371,7 +1379,7 @@
                                             },
                                             {
                                                 "label": "Azure Stack HCI, version 21H2 [End of support]",
-                                                "description": "<strong>Notice:</strong> This version reached the end of support on November 14, 2023.",
+                                                "description": "Notice: This version reached the end of support on November 14, 2023.",
                                                 "value": {
                                                     "sku": "ashci21h2",
                                                     "imageIndex": 1
@@ -1379,7 +1387,7 @@
                                             },
                                             {
                                                 "label": "Azure Stack HCI, version 20H2 [End of support]",
-                                                "description": "<strong>Notice:</strong> This version reached the end of support on December 13, 2022.",
+                                                "description": "Notice: This version reached the end of support on December 13, 2022.",
                                                 "value": {
                                                     "sku": "ashci20h2",
                                                     "imageIndex": 1

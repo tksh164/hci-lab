@@ -42,15 +42,16 @@ The following operating systems are selectable for lab machines.
 
 | Operating system | OS build | Description |
 | ---- | ---- | ---- |
-| Azure Local 2603 (24H2) | 26100.32522 | The latest generally available version of Azure Local. |
+| Azure Local 2604 (24H2) | 26100.32690 | The latest generally available version of Azure Local. |
 | Windows Server 2025 Datacenter Evaluation (Desktop Experience) | 26100.1742 | Windows Server 2025 Datacenter with the standard graphical user interface. |
 
 <details>
 <summary>📚 Selectable other operating systems for lab machines</summary>
-<p>The following operating systems are still available for selection, but they have not been tested.</p>
+<p>The following operating systems are still available for selection, but they have not tested.</p>
 
 | Operating system | OS build | Description |
 | ---- | ---- | ---- |
+| Azure Local 2603 (24H2) | 26100.32522 | The previous version of Azure Local. |
 | Azure Local 2602 (24H2) | 26100.32370 | The previous version of Azure Local. |
 | Azure Local 2601 (24H2) | 26100.32230 | The previous version of Azure Local. |
 | Azure Local 2512 (24H2) | 26100.7462 | The previous version of Azure Local. |
@@ -67,7 +68,6 @@ The following operating systems are selectable for lab machines.
 | Azure Stack HCI, version 21H2 | 20348.288 | This version of Azure Stack HCI reached the end of support on November 14, 2023. |
 | Azure Stack HCI, version 20H2 | 17784.1408 | This version of Azure Stack HCI reached the end of support on December 13, 2022. |
 | Windows Server 2022 Datacenter Evaluation (Desktop Experience) | 20348.587 | Windows Server 2022 Datacenter with the standard graphical user interface. |
-
 </details>
 
 ## ⚖️ License
