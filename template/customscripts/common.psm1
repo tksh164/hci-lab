@@ -601,7 +601,7 @@ function Wait-VhdDismountCompletion {
     )
 
     $logFilePath = [IO.Path]::Combine($LogFolder, (New-LogFileName -FileName ('waitvhddismount-' + [IO.Path]::GetFileNameWithoutExtension([IO.Path]::GetDirectoryName($VhdPath)))))
-    while ((Get-WindowsImage -Mounted -LogPath $logFilePath | Where-Object -Property 'ImagePath' -EQ -Value $VhdPath) -ne $null) {
+    while ((Get-WindowsImage -Mounted -LogPath $logFilePath -ErrorAction Continue | Where-Object -Property 'ImagePath' -EQ -Value $VhdPath) -ne $null) {
         'Wait for the VHD dismount completion...' | Write-ScriptLog -LogContext $VhdPath
         Start-Sleep -Seconds $ProbeIntervalSeconds
     }
@@ -907,14 +907,14 @@ function Wait-PowerShellDirectReady {
     )
 
     # Wait for the guest operating system to be ready before checking PowerShell Direct readiness.
-    Wait-LabVMGuestOperatingSystemReady -VMName $VMName -Credential $Credential
+    Wait-LabVMGuestOperatingSystemReady -VMName $VMName
 
-    'Wait for PowerShell Direct of the VM "{0}".' -f $VMName | Write-ScriptLog
     $psdCheckTimeoutSeconds = 300
     $psdCheckTimeout = [System.DateTime]::Now.AddSeconds($psdCheckTimeoutSeconds)
     $timeoutRestCount = 0
     while ($true) {
         try {
+            'Wait for PowerShell Direct of the VM "{0}".' -f $VMName | Write-ScriptLog
             $result = Invoke-Command -VMName $VMName -Credential $Credential -ScriptBlock { 'ready' } -ErrorAction Stop
             if ($result -eq 'ready') {
                 break
@@ -926,7 +926,7 @@ function Wait-PowerShellDirectReady {
             # The VM may have restarted while PowerShell Direct was running.
             if (($er.Exception -is [System.Management.Automation.Remoting.PSRemotingTransportException]) -and ($er.Exception.Message -like '*The Hyper-V socket target process has ended.*')) {
                 'The VM "{0}" may have restarted while PowerShell Direct was running. Wait for the guest operating system to be ready.' -f $VMName | Write-ScriptLog
-                Wait-LabVMGuestOperatingSystemReady -VMName $VMName -Credential $Credential
+                Wait-LabVMGuestOperatingSystemReady -VMName $VMName
                 'Reset the PowerShell Direct checking timeout.' | Write-ScriptLog
                 $psdCheckTimeout = [System.DateTime]::Now.AddSeconds($psdCheckTimeoutSeconds)
                 $timeoutRestCount++
@@ -960,18 +960,15 @@ function Wait-LabVMGuestOperatingSystemReady {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
-        [string] $VMName,
-
-        [Parameter(Mandatory = $true)]
-        [PSCredential] $Credential
+        [string] $VMName
     )
 
     # Check the VM's state is in the Running state.
-    'Check the state of the VM "{0}".' -f $VMName | Write-ScriptLog
     $vmStateCheckTimeoutSeconds = 60
     $vmStateCheckTimeout = [System.DateTime]::Now.AddSeconds($vmStateCheckTimeoutSeconds)
     while ($true) {
         try {
+            'Check the state of the VM "{0}".' -f $VMName | Write-ScriptLog
             $vmState = (Get-VM -VMName $VMName).State
             if ($vmState -eq 'Running') {
                 break
@@ -990,29 +987,15 @@ function Wait-LabVMGuestOperatingSystemReady {
     }
     'The VM "{0}" is in the "{1}" state.' -f $VMName, $vmState | Write-ScriptLog
 
-    # Check the Heeartbeat service status of the VM.
-    'Check the Heartbeat service status of the VM "{0}".' -f $VMName | Write-ScriptLog
-    $heartbeatStatusCheckTimeoutSeconds = 300
-    $heartbeatStatusCheckTimeout = [System.DateTime]::Now.AddSeconds($heartbeatStatusCheckTimeoutSeconds)
-    while ($true) {
-        $heartbeatStatus = (Get-VMIntegrationService -VMName $VMName -Name 'Heartbeat').PrimaryOperationalStatus
-        if ($heartbeatStatus -eq 'Ok') {
-            break
-        }
-
-        Start-Sleep -Seconds 5
-
-        if ([System.DateTime]::Now -gt $heartbeatStatusCheckTimeout) {
-            throw 'The Heartbeat service of the VM "{0}" did not reach the Ok status in {1} seconds. It is currently in the "{2}" status.' -f $VMName, $heartbeatStatusCheckTimeoutSeconds, $heartbeatStatus
-        }
-    }
-    'The Heartbeat service of the VM "{0}" is the "{1}" status.' -f $VMName, $heartbeatStatus | Write-ScriptLog
+    # Check the VM integration service status of the VM.
+    Wait-VMIntegrationServiceReady -VMName $VMName -ServiceName 'Heartbeat'
+    Wait-VMIntegrationServiceReady -VMName $VMName -ServiceName 'Shutdown'
 
     # Check the name resolution by LLMNR.
-    'Check the name resolution by LLMNR of the VM "{0}".' -f $VMName | Write-ScriptLog
     $llmnrCheckTimeoutSeconds = 300
     $llmnrCheckTimeout = [System.DateTime]::Now.AddSeconds($llmnrCheckTimeoutSeconds)
     while ($true) {
+        'Check the name resolution by LLMNR of the VM "{0}".' -f $VMName | Write-ScriptLog
         $result = Resolve-DnsName -Name $VMName -Type A -LlmnrOnly -ErrorAction Ignore
         if ($result -ne $null) {
             break
@@ -1027,22 +1010,50 @@ function Wait-LabVMGuestOperatingSystemReady {
     'Could resolve the VM''s name "{0}" by LLMNR.' -f $VMName | Write-ScriptLog
 
     # Check the WinRM connectivity of the VM.
-    'Check the WinRM connectivity (TCP 5985) of the VM "{0}".' -f $VMName | Write-ScriptLog
-    $winRmCheckTimeoutSeconds = 300
-    $winRmCheckTimeout = [System.DateTime]::Now.AddSeconds($winRmCheckTimeoutSeconds)
+    # $winRmCheckTimeoutSeconds = 300
+    # $winRmCheckTimeout = [System.DateTime]::Now.AddSeconds($winRmCheckTimeoutSeconds)
+    # while ($true) {
+    #     'Check the WinRM connectivity (TCP 5985) of the VM "{0}".' -f $VMName | Write-ScriptLog
+    #     $isTcpTestSucceeded = (Test-NetConnection -ComputerName $VMName -Port 5985).TcpTestSucceeded
+    #     if ($isTcpTestSucceeded) {
+    #         break
+    #     }
+
+    #     Start-Sleep -Seconds 5
+
+    #     if ([System.DateTime]::Now -gt $winRmCheckTimeout) {
+    #         throw 'Did not connect to the VM "{0}" via WinRM port (TCP 5985) in {1} seconds.' -f $VMName, $winRmCheckTimeoutSeconds
+    #     }
+    # }
+    # 'Could connect to the VM "{0}" via WinRM port (TCP 5985).' -f $VMName | Write-ScriptLog
+}
+
+function Wait-VMIntegrationServiceReady {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $VMName,
+
+        [Parameter(Mandatory = $true)]
+        [string] $ServiceName
+    )
+
+    $statusCheckTimeoutSeconds = 300
+    $statusCheckTimeout = [System.DateTime]::Now.AddSeconds($statusCheckTimeoutSeconds)
     while ($true) {
-        $isTcpTestSucceeded = (Test-NetConnection -ComputerName $VMName -Port 5985).TcpTestSucceeded
-        if ($isTcpTestSucceeded) {
+        'Check the {0} service status of the VM "{1}".' -f $ServiceName, $VMName | Write-ScriptLog
+        $serviceStatus = (Get-VMIntegrationService -VMName $VMName -Name $ServiceName).PrimaryOperationalStatus
+        if ($serviceStatus -eq 'Ok') {
             break
         }
 
         Start-Sleep -Seconds 5
 
-        if ([System.DateTime]::Now -gt $winRmCheckTimeout) {
-            throw 'Did not connect to the VM "{0}" via WinRM port (TCP 5985) in {1} seconds.' -f $VMName, $winRmCheckTimeoutSeconds
+        if ([System.DateTime]::Now -gt $statusCheckTimeout) {
+            throw 'The {0} service of the VM "{1}" did not reach the Ok status in {2} seconds. It is currently in the "{3}" status.' -f $ServiceName, $VMName, $statusCheckTimeoutSeconds, $serviceStatus
         }
     }
-    'Could connect to the VM "{0}" via WinRM port (TCP 5985).' -f $VMName | Write-ScriptLog
+    'The {0} service of the VM "{1}" is the "{2}" status.' -f $ServiceName, $VMName, $serviceStatus | Write-ScriptLog
 }
 
 # A sync event name for blocking the AD DS operations.

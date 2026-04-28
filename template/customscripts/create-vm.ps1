@@ -101,12 +101,34 @@ try {
         Start-Job -Name $spec.JobName -LiteralPath $spec.JobScriptFilePath -InputObject ([PSCustomObject] $jobParams)
         'The job "{0}" has started.' -f $spec.JobName | Write-ScriptLog
     }
-    $jobStatus = $jobs | Format-Table -Property 'Id', 'Name', 'State', 'HasMoreData', 'PSBeginTime', 'PSEndTime' | Out-String -Width 200
-    'The Hyper-V VM creation job status: {0}' -f $jobStatus | Write-ScriptLog
     'Create the Hyper-V VM creation jobs has been completed.' | Write-ScriptLog
 
-    'Waiting for completion of the all Hyper-V VM creation jobs.' | Write-ScriptLog
-    $jobs | Receive-Job -Wait
+    while ($true) {
+        $currentJobs = Get-Job 
+
+        $currentJobStates = $currentJobs | Format-Table -Property @(
+            'Id',
+            'Name',
+            'State',
+            'HasMoreData',
+            'PSBeginTime',
+            'PSEndTime',
+            @{ Label = 'Elapsed'; Expression = { if ($_.PSEndTime -ne $null) { $_.PSEndTime - $_.PSBeginTime } else { [DateTime]::Now - $_.PSBeginTime } } }
+        ) | Out-String -Width 200
+        'The Hyper-V VM creation job status: {0}' -f $currentJobStates | Write-ScriptLog
+
+        $jobStates = $currentJobs.State | Select-Object -Unique
+        if ((($jobStates | Measure-Object).Count -eq 1) -and ($jobStates -eq 'Completed')) {
+            'All the Hyper-V VM creation jobs has been completed,' | Write-ScriptLog
+            break
+        }
+        elseif (($jobStates -contains 'Failed') -or ($jobStates -contains 'Stopped') -or ($jobStates -contains 'Suspended') -or ($jobStates -contains 'Disconnected')) {
+            throw 'One or more Hyper-V VM creation jobs have failed.'
+        }
+
+        'Waiting for completion of the all Hyper-V VM creation jobs.' | Write-ScriptLog
+        Start-Sleep -Seconds 30
+    }
 
     'This script has been completed all tasks.' | Write-ScriptLog
 }
@@ -116,9 +138,6 @@ catch {
     throw $exceptionMessage
 }
 finally {
-    $finalStatus = $jobs | Format-Table -Property 'Id', 'Name', 'State', 'HasMoreData', 'PSBeginTime', 'PSEndTime', @{ Label = 'ElapsedTime'; Expression = { $_.PSEndTime - $_.PSBeginTime } } | Out-String -Width 200
-    'The final status of the Hyper-V VM creation jobs: {0}' -f $finalStatus | Write-ScriptLog
-
     # Mandatory post-processing.
     $stopWatch.Stop()
     'Script duration: {0}' -f $stopWatch.Elapsed.toString('hh\:mm\:ss') | Write-ScriptLog
