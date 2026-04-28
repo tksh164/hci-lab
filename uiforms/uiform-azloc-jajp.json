@@ -166,7 +166,7 @@
                             "visible": true,
                             "options": {
                                 "style": "Info",
-                                "text": "Azure Local インスタンスにワークロードを展開する場合、128 GiB メモリが実質的な最小要件です。Azure Local インスタンスにハイブリッド サービスを展開する場合は、より多くのメモリが必要になる可能性があります。このラボ環境では、単一の Azure 仮想マシン上に Azure Local インスタンスのマシン、AD ドメイン コントローラー、ワークボックス マシンなど、複数の Hyper-V 仮想マシンが存在するためです。<ul><li><a href='https://learn.microsoft.com/azure/virtual-machines/sizes'>Azure の仮想マシンのサイズ</a></li><li><a href='https://azure.microsoft.com/pricing/details/virtual-machines/windows'>Windows Virtual Machines の料金</a></li></ul>"
+                                "text": "Azure Local インスタンスにワークロードを展開する場合、128 GiB メモリが実質的な最小要件です。Azure Local インスタンスにハイブリッド サービスを展開する場合は、より多くのメモリが必要になる可能性があります。このラボ環境では、単一の Azure 仮想マシン上に Azure Local インスタンスのマシン、AD ドメイン コントローラー、ワークボックス マシンなど、複数の Hyper-V 仮想マシンが存在するためです。Azure の仮想マシンのサイズ: <https://learn.microsoft.com/azure/virtual-machines/sizes>、Windows Virtual Machines の料金: <https://azure.microsoft.com/pricing/details/virtual-machines/windows>"
                             }
                         },
                         {
@@ -439,7 +439,7 @@
                                     "visible": true,
                                     "options": {
                                         "style": "Info",
-                                        "text": "[format('選択した VM サイズ <strong>{0}</strong> は <strong>{1}</strong> 個のディスクをサポートしています。', replace(steps('basics').vmSize, '_', ' '), first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount)))]"
+                                        "text": "[format('選択した VM サイズ {0} は {1} 個のディスクをサポートしています。', replace(steps('basics').vmSize, '_', ' '), first(map(filter(steps('basics').getVmSkuArmApi.transformed.list, (vmsku) => equals(vmsku.name, steps('basics').vmSize)), (item) => item.maxDataDiskCount)))]"
                                     }
                                 }
                             ]
@@ -504,7 +504,7 @@
                                     "type": "Microsoft.Common.OptionsGroup",
                                     "visible": true,
                                     "label": "Visual Studio Code",
-                                    "toolTip": "Visual Studio Codeは、デスクトップ上で動作する軽量かつ強力なソース コード エディターです。<a href='https://code.visualstudio.com'>詳細情報</a>",
+                                    "toolTip": "Visual Studio Codeは、デスクトップ上で動作する軽量かつ強力なソース コード エディターです。詳細情報: <https://code.visualstudio.com>",
                                     "defaultValue": "インストールしない",
                                     "constraints": {
                                         "required": true,
@@ -2232,7 +2232,7 @@
                                     "type": "Microsoft.Common.OptionsGroup",
                                     "visible": true,
                                     "label": "Configurator App for Azure Local",
-                                    "toolTip": "Configurator App for Azure Local は、Azure Local インスタンスに含める予定のマシンを初期設定し、登録します。<a href=\"https://learn.microsoft.com/azure/azure-local/deploy/deployment-arc-register-configurator-app\">詳細情報</a>",
+                                    "toolTip": "Configurator App for Azure Local は、Azure Local インスタンスに含める予定のマシンを初期設定し、登録します。詳細情報: <https://learn.microsoft.com/azure/azure-local/deploy/deployment-arc-register-configurator-app>",
                                     "defaultValue": "インストールする",
                                     "constraints": {
                                         "required": true,
@@ -2253,7 +2253,7 @@
                                     "type": "Microsoft.Common.OptionsGroup",
                                     "visible": true,
                                     "label": "Windows Admin Center",
-                                    "toolTip": "Windows Admin Center は、Windows Server 用のリモート管理ツールです。<a href=\"https://learn.microsoft.com/windows-server/manage/windows-admin-center/overview\">詳細情報</a>",
+                                    "toolTip": "Windows Admin Center は、Windows Server 用のリモート管理ツールです。詳細情報: <https://learn.microsoft.com/windows-server/manage/windows-admin-center/overview>",
                                     "defaultValue": "インストールしない",
                                     "constraints": {
                                         "required": true,
@@ -2268,7 +2268,7 @@
                                         {
                                             "visible": true,
                                             "style": "Info",
-                                            "text": "Azure Local Lab は Windows Admin Center のインストールをサポートしています。ただし、現在は一時的に無効化されています。ラボ環境のデプロイメント完了後、手動で Windows Admin Center をインストールできます。<a href=\"https://learn.microsoft.com/windows-server/manage/windows-admin-center/deploy/install\">詳細情報</a>"
+                                            "text": "Azure Local Lab は Windows Admin Center のインストールをサポートしています。ただし、現在は一時的に無効化されています。ラボ環境のデプロイメント完了後、手動で Windows Admin Center をインストールできます。詳細情報: <https://learn.microsoft.com/windows-server/manage/windows-admin-center/deploy/install>"
                                         }
                                     ]
                                 }
