@@ -356,6 +356,11 @@ function Get-Secret {
                 ('Will retry get the secret due to unable to retrieve the value of {0} from {1}: {2}' -f $SecretName, $KeyVaultName, $_.ErrorDetails.Message) | Write-ScriptLog -Level Warning
                 Start-Sleep -Seconds 1
             }
+            # Handle the "The remote server returned an error: (503) Server Unavailable." exception.
+            elseif ($_.Exception.Message -like '*(503) Server Unavailable*') {
+                ('Will retry get the secret due to unable to retrieve the value of {0} from {1}: {2}' -f $SecretName, $KeyVaultName, $_.Exception.Message) | Write-ScriptLog -Level Warning
+                Start-Sleep -Seconds 5
+            }
             else {
                 throw $_
             }
