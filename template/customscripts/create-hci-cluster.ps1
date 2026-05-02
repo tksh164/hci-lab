@@ -223,7 +223,7 @@ try {
         $labConfig.hciCluster.ipAddress,
         $nodeNames
     )
-    Invoke-CommandWithinVM @invokeParamsMgmt -ScriptBlockParamList $scriptBlockParamList -ScriptBlock {
+    Invoke-CommandWithinVM @invokeParamsMgmt -WithRetry -ScriptBlockParamList $scriptBlockParamList -ScriptBlock {
         param (
             [Parameter(Mandatory = $true)]
             [string] $ClusterName,
