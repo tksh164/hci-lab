@@ -216,7 +216,8 @@ try {
             'ServerManager-Core-RSAT',
             'ServerManager-Core-RSAT-Role-Tools'
         )
-        LogFolderPath = $labConfig.labHost.folderPath.log
+        LogFolderPath     = $labConfig.labHost.folderPath.log
+        LogFileNamePrefix = $LogFileName
     }
     Invoke-VHDSpecialization @params
 
