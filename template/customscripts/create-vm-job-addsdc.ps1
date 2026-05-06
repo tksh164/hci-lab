@@ -195,6 +195,9 @@ try {
     $hvVMInfo = New-AddsDCVM -VMConfig $vmConfig -VMFolderPath $labConfig.labHost.folderPath.vm
 
     # Add Windows features and an unattend file to the VHD.
+    # (none) ... Required feature
+    # *      ... Dependency
+    # -      ... Parent
     $params = @{
         VHDFilePath   = $hvVMInfo.OSDiskVhdFilePath
         ComputerName  = $vmConfig.VMName
@@ -202,19 +205,19 @@ try {
         Language      = $vmConfig.OS.Language
         TimeZone      = $vmConfig.OS.TimeZone
         FeatureName   = @(
-            # Corresponds to AD-Domain-Services
-            'DirectoryServices-DomainController',
-            'RSAT-AD-Tools-Feature',
-            # Corresponds to RSAT-AD-PowerShell
-            'ActiveDirectory-PowerShell',
-            # Corresponds to DNS
-            'DNS-Server-Full-Role',
-            # Corresponds to FS-FileServer
-            'File-Services',
-            'CoreFileServer',
-            # Corresponds to Server Manager
-            'ServerManager-Core-RSAT',
-            'ServerManager-Core-RSAT-Role-Tools'
+            'DirectoryServices-DomainController',  # AD-Domain-Services
+            'ActiveDirectory-PowerShell',          # * RSAT-AD-PowerShell
+            'RSAT-AD-Tools-Feature',               # -- RSAT-AD-Tools
+            'ServerManager-Core-RSAT-Role-Tools',  # ---- RSAT-Role-Tools
+            'ServerManager-Core-RSAT',             # ----- RSAT
+            'MicrosoftWindowsPowerShell',          # * PowerShell
+            'MicrosoftWindowsPowerShellRoot',      # -- PowerShellRoot
+            'NetFx4',                              # * NET-Framework-45-Core
+            'NetFx4ServerFeatures',                # -- NET-Framework-45-Features
+            'DNS-Server-Full-Role',                # DNS
+            'CoreFileServer',                      # FS-FileServer
+            'File-Services',                       # - File-Services
+            'FileAndStorage-Services'              # -- FileAndStorage-Services
         )
         LogFolderPath     = $labConfig.labHost.folderPath.log
         LogFileNamePrefix = $LogFileName
