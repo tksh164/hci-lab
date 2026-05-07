@@ -214,7 +214,9 @@ try {
             'MicrosoftWindowsPowerShellRoot',      # -- PowerShellRoot
             'NetFx4',                              # * NET-Framework-45-Core
             'NetFx4ServerFeatures',                # -- NET-Framework-45-Features
+
             'DNS-Server-Full-Role',                # DNS
+
             'CoreFileServer',                      # FS-FileServer
             'File-Services',                       # - File-Services
             'FileAndStorage-Services'              # -- FileAndStorage-Services
