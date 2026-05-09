@@ -243,22 +243,49 @@ function Get-WindowsFeatureToInstall {
         [string] $HciNodeOperatingSystemSku
     )
 
+    # (none) ... Required feature
+    # *      ... Dependency
+    # -      ... Parent
     $featureNames = @(
-        'Hyper-V',  # Note: https://twitter.com/pronichkin/status/1294308601276719104
-        'Failover-Clustering',
-        'Data-Center-Bridging',
-        'RSAT-AD-PowerShell',
-        'Hyper-V-PowerShell',
-        'RSAT-Clustering-PowerShell'  # This is need for administration from Cluster Manager in Windows Admin Center.
+        'Microsoft-Hyper-V',                        # Hyper-V
+        'Microsoft-Hyper-V-Offline',                # - Hyper-V, Note: https://twitter.com/pronichkin/status/1294308601276719104
+        'Microsoft-Hyper-V-Online',                 # - Hyper-V
+
+        'FailoverCluster-FullServer',               # Failover-Clustering
+
+        'DataCenterBridging',                       # Data-Center-Bridging
+
+        'ActiveDirectory-PowerShell',               # RSAT-AD-PowerShell
+        'RSAT-AD-Tools-Feature',                    # - RSAT-AD-Tools
+        'ServerManager-Core-RSAT-Role-Tools',       # -- RSAT-Role-Tools
+        'ServerManager-Core-RSAT',                  # --- RSAT
+        'NetFx4',                                   # * NET-Framework-45-Core
+        'NetFx4ServerFeatures',                     # -- NET-Framework-45-Features
+        'MicrosoftWindowsPowerShell',               # * PowerShell
+        'MicrosoftWindowsPowerShellRoot',           # -- PowerShellRoot
+
+        'Microsoft-Hyper-V-Management-PowerShell',  # Hyper-V-PowerShell
+        'RSAT-Hyper-V-Tools-Feature',               # - RSAT-Hyper-V-Tools
+
+        'FailoverCluster-PowerShell',               # RSAT-Clustering-PowerShell, This is need for administration from Cluster Manager in Windows Admin Center.
+        'FailoverCluster-AdminPak',                 # - RSAT-Clustering
+        'ServerManager-Core-RSAT-Feature-Tools'     # -- RSAT-Feature-Tools
     )
+
     if ([HciLab.OSSku]::AzureStackHciSkus -contains $HciNodeOperatingSystemSku) {
-        $featureNames += 'FS-Data-Deduplication'
-        $featureNames += 'BitLocker'
+        $featureNames += 'Dedup-Core'               # FS-Data-Deduplication
+        $featureNames += 'File-Services'            # - File-Services
+        $featureNames += 'FileAndStorage-Services'  # -- FileAndStorage-Services
+        $featureNames += 'CoreFileServer'           # * FS-FileServer
+
+        $featureNames += 'BitLocker'                # BitLocker
+        $featureNames += 'EnhancedStorage'          # * EnhancedStorage
 
         if ($HciNodeOperatingSystemSku -ne [HciLab.OSSku]::AzureStackHci20H2) {
-            $featureNames += 'NetworkATC'
+            $featureNames += 'NetworkATC'           # NetworkATC
         }
     }
+
     return $featureNames
 }
 
@@ -493,33 +520,18 @@ try {
     # Create a new Hyper-V VM.
     $hvVMInfo = New-HciNodeVM -VMConfig $vmConfig -VMFolderPath $labConfig.labHost.folderPath.vm
 
-    'Generate the unattend answer XML.' | Write-ScriptLog
+    # Add Windows features and an unattend file to the VHD.
     $params = @{
-        ComputerName = $vmConfig.VMName
-        Password     = $adminPassword
-        Culture      = $vmConfig.OS.Language
-        TimeZone     = $vmConfig.OS.TimeZone
+        VHDFilePath       = $hvVMInfo.OSDiskVhdFilePath
+        ComputerName      = $vmConfig.VMName
+        AdminPassword     = $adminPassword
+        Language          = $vmConfig.OS.Language
+        TimeZone          = $vmConfig.OS.TimeZone
+        FeatureName       = Get-WindowsFeatureToInstall -HciNodeOperatingSystemSku $vmConfig.OS.Sku
+        LogFolderPath     = $labConfig.labHost.folderPath.log
+        LogFileNamePrefix = $LogFileName
     }
-    $unattendAnswerFileContent = New-UnattendAnswerFileContent @params
-    'Generate the unattend answer XML has been completed.' | Write-ScriptLog
-
-    'Inject the unattend answer file to the "{0}".' -f $hvVMInfo.OSDiskVhdFilePath | Write-ScriptLog
-    $params = @{
-        VhdPath                   = $hvVMInfo.OSDiskVhdFilePath
-        UnattendAnswerFileContent = $unattendAnswerFileContent
-        LogFolder                 = $labConfig.labHost.folderPath.log
-    }
-    Set-UnattendAnswerFileToVhd @params
-    'Inject the unattend answer file to the "{0}" has been completed.' -f $hvVMInfo.OSDiskVhdFilePath | Write-ScriptLog
-
-    'Install the roles and features to the "{0}".' -f $hvVMInfo.OSDiskVhdFilePath | Write-ScriptLog
-    $params = @{
-        VhdPath     = $hvVMInfo.OSDiskVhdFilePath
-        FeatureName = Get-WindowsFeatureToInstall -HciNodeOperatingSystemSku $vmConfig.OS.Sku
-        LogFolder   = $labConfig.labHost.folderPath.log
-    }
-    Install-WindowsFeatureToVhd @params
-    'Install the roles and features to the "{0}" has been completed.' -f $hvVMInfo.OSDiskVhdFilePath | Write-ScriptLog
+    Invoke-VHDSpecialization @params
 
     Start-VMSurely -VMName $vmConfig.VMName
 
