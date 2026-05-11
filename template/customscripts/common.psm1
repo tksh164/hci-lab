@@ -715,6 +715,7 @@ function Invoke-VHDSpecialization {
         $params = @{
             Path             = $vhdMountFolderPath
             FeatureName      = $FeatureName
+            All              = $true
             ScratchDirectory = $ScratchFolderPath
             NoRestart        = $true
             LogPath          = $winFeatureLogFilePath
