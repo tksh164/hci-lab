@@ -415,9 +415,6 @@ try {
     $hvVMInfo = New-WorkboxVM -VMConfig $vmConfig -VMFolderPath $labConfig.labHost.folderPath.vm
 
     # Add Windows features and an unattend file to the VHD.
-    # (none) ... Required feature
-    # *      ... Dependency
-    # -      ... Parent
     $params = @{
         VHDFilePath   = $hvVMInfo.OSDiskVhdFilePath
         ComputerName  = $vmConfig.VMName
@@ -426,33 +423,13 @@ try {
         TimeZone      = $vmConfig.OS.TimeZone
         FeatureName   = @(
             'Microsoft-Hyper-V-Management-Clients',                   # Hyper-V-Tools
-            'RSAT-Hyper-V-Tools-Feature',                             # - RSAT-Hyper-V-Tools
-
             'Microsoft-Hyper-V-Management-PowerShell',                # Hyper-V-PowerShell
-
             'FailoverCluster-Mgmt',                                   # RSAT-Clustering-Mgmt
-            'FailoverCluster-AdminPak',                               # - RSAT-Clustering
-            'ServerManager-Core-RSAT-Feature-Tools',                  # -- RSAT-Feature-Tools
-
             'FailoverCluster-PowerShell',                             # RSAT-Clustering-PowerShell
-
             'DirectoryServices-DomainController-Tools',               # RSAT-ADDS-Tools
-            'RSAT-ADDS-Tools-Feature',                                # - RSAT-ADDS
-            'RSAT-AD-Tools-Feature',                                  # -- RSAT-AD-Tools
-            'ServerManager-Core-RSAT-Role-Tools',                     # --- RSAT-Role-Tools
-            'ServerManager-Core-RSAT',                                # ---- RSAT
-
             'DirectoryServices-AdministrativeCenter',                 # RSAT-AD-AdminCenter
-            'NetFx4',                                                 # * NET-Framework-45-Core
-            'NetFx4ServerFeatures',                                   # -- NET-Framework-45-Features
-            'ActiveDirectory-PowerShell',                             # * RSAT-AD-PowerShell
-            'MicrosoftWindowsPowerShell',                             # ** PowerShell
-            'MicrosoftWindowsPowerShellRoot',                         # --- PowerShellRoot
-
             'Microsoft-Windows-GroupPolicy-ServerAdminTools-Update',  # GPMC
-
             'DNS-Server-Tools',                                       # RSAT-DNS-Server
-
             'DataCenterBridging-LLDP-Tools'                           # RSAT-DataCenterBridging-LLDP-Tools
         )
         LogFolderPath     = $labConfig.labHost.folderPath.log
