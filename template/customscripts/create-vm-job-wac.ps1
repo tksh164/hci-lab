@@ -424,11 +424,12 @@ try {
         FeatureName   = @(
             'Microsoft-Hyper-V-Management-Clients',                   # Hyper-V-Tools
             'Microsoft-Hyper-V-Management-PowerShell',                # Hyper-V-PowerShell
+            'Microsoft-Windows-GroupPolicy-ServerAdminTools-Update',  # GPMC
+            'FailoverCluster-AdminPak',                               # RSAT-Clustering
             'FailoverCluster-Mgmt',                                   # RSAT-Clustering-Mgmt
             'FailoverCluster-PowerShell',                             # RSAT-Clustering-PowerShell
             'DirectoryServices-DomainController-Tools',               # RSAT-ADDS-Tools
             'DirectoryServices-AdministrativeCenter',                 # RSAT-AD-AdminCenter
-            'Microsoft-Windows-GroupPolicy-ServerAdminTools-Update',  # GPMC
             'DNS-Server-Tools',                                       # RSAT-DNS-Server
             'DataCenterBridging-LLDP-Tools'                           # RSAT-DataCenterBridging-LLDP-Tools
         )
