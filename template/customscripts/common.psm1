@@ -646,7 +646,7 @@ function Invoke-VHDSpecialization {
         [Parameter(Mandatory = $true)]
         [string] $TimeZone,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true)][AllowEmptyCollection()]
         [string[]] $FeatureName,
 
         [Parameter(Mandatory = $true)]
@@ -707,22 +707,27 @@ function Invoke-VHDSpecialization {
         Set-Content -LiteralPath $unattendFilePath -Value $unattendFileContent -Force
         'Create the unattend answer file has been completed.' | Write-ScriptLog -LogContext $VHDFilePath
 
-        # Windows feature log file path.
-        $winFeatureLogFilePath = [System.IO.Path]::Combine($LogFolderPath, (New-LogFileName -FileName ($LogFileNamePrefix + '_win-feature')))
-        'Windows feature log file path: "{0}"' -f $winFeatureLogFilePath | Write-ScriptLog -LogContext $VHDFilePath
+        if ($FeatureName.Count -gt 0) {
+            # Windows feature log file path.
+            $winFeatureLogFilePath = [System.IO.Path]::Combine($LogFolderPath, (New-LogFileName -FileName ($LogFileNamePrefix + '_win-feature')))
+            'Windows feature log file path: "{0}"' -f $winFeatureLogFilePath | Write-ScriptLog -LogContext $VHDFilePath
 
-        'Add Windows features.' | Write-ScriptLog -LogContext $VHDFilePath
-        $params = @{
-            Path             = $vhdMountFolderPath
-            FeatureName      = $FeatureName
-            All              = $true
-            ScratchDirectory = $ScratchFolderPath
-            NoRestart        = $true
-            LogPath          = $winFeatureLogFilePath
-            LogLevel         = 'WarningsInfo'
+            'Add Windows features.' | Write-ScriptLog -LogContext $VHDFilePath
+            $params = @{
+                Path             = $vhdMountFolderPath
+                FeatureName      = $FeatureName
+                All              = $true
+                ScratchDirectory = $ScratchFolderPath
+                NoRestart        = $true
+                LogPath          = $winFeatureLogFilePath
+                LogLevel         = 'WarningsInfo'
+            }
+            Enable-WindowsOptionalFeature @params | Format-List -Property '*' | Out-String | Write-ScriptLog -LogContext $VHDFilePath
+            'Add Windows features has been completed.' | Write-ScriptLog -LogContext $VHDFilePath
         }
-        Enable-WindowsOptionalFeature @params | Format-List -Property '*' | Out-String | Write-ScriptLog -LogContext $VHDFilePath
-        'Add Windows features has been completed.' | Write-ScriptLog -LogContext $VHDFilePath
+        else {
+            'No Windows feature need to be added.' | Write-ScriptLog -LogContext $VHDFilePath
+        }
     }
     finally {
         if (Test-WindowsImageMount -VHDMountFolderPath $vhdMountFolderPath) {
