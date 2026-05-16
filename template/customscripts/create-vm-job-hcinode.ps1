@@ -243,23 +243,21 @@ function Get-WindowsFeatureToInstall {
         [string] $HciNodeOperatingSystemSku
     )
 
+    # Azure Local do not need to install any features before Azure Local instance deployment.
+    if ([HciLab.OSSku]::AzureStackHciSkus -contains $HciNodeOperatingSystemSku) {
+        return ,@()
+    }
+
     $featureNames = @(
         'Microsoft-Hyper-V',                        # Hyper-V, Note: https://twitter.com/pronichkin/status/1294308601276719104
         'FailoverCluster-FullServer',               # Failover-Clustering
         'DataCenterBridging',                       # Data-Center-Bridging
-        'ActiveDirectory-PowerShell',               # RSAT-AD-PowerShell
         'Microsoft-Hyper-V-Management-PowerShell',  # Hyper-V-PowerShell
+        'ActiveDirectory-PowerShell',               # RSAT-AD-PowerShell
+        'ServerManager-Core-RSAT-Feature-Tools',    # RSAT-Feature-Tools
+        'FailoverCluster-AdminPak',                 # RSAT-Clustering
         'FailoverCluster-PowerShell'                # RSAT-Clustering-PowerShell, this is need for administration from Cluster Manager in Windows Admin Center.
     )
-
-    if ([HciLab.OSSku]::AzureStackHciSkus -contains $HciNodeOperatingSystemSku) {
-        $featureNames += 'Dedup-Core'  # FS-Data-Deduplication
-        $featureNames += 'BitLocker'   # BitLocker
-
-        if ($HciNodeOperatingSystemSku -ne [HciLab.OSSku]::AzureStackHci20H2) {
-            $featureNames += 'NetworkATC'  # NetworkATC
-        }
-    }
 
     return $featureNames
 }
