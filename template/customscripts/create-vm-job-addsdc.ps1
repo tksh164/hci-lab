@@ -194,36 +194,22 @@ try {
     # Create a new Hyper-V VM.
     $hvVMInfo = New-AddsDCVM -VMConfig $vmConfig -VMFolderPath $labConfig.labHost.folderPath.vm
 
-    'Generate the unattend answer XML.' | Write-ScriptLog
+    # Add Windows features and an unattend file to the VHD.
     $params = @{
-        ComputerName = $vmConfig.VMName
-        Password     = $adminPassword
-        Culture      = $vmConfig.OS.Language
-        TimeZone     = $vmConfig.OS.TimeZone
-    }
-    $unattendAnswerFileContent = New-UnattendAnswerFileContent @params
-    'Generate the unattend answer XML has been completed.' | Write-ScriptLog
-
-    'Inject the unattend answer file to the "{0}".' -f $hvVMInfo.OSDiskVhdFilePath | Write-ScriptLog
-    $params = @{
-        VhdPath                   = $hvVMInfo.OSDiskVhdFilePath
-        UnattendAnswerFileContent = $unattendAnswerFileContent
-        LogFolder                 = $labConfig.labHost.folderPath.log
-    }
-    Set-UnattendAnswerFileToVhd @params
-    'Inject the unattend answer file to the "{0}" has been completed.' -f $hvVMInfo.OSDiskVhdFilePath | Write-ScriptLog
-
-    'Install the roles and features to the "{0}".' -f $hvVMInfo.OSDiskVhdFilePath | Write-ScriptLog
-    $params = @{
-        VhdPath     = $hvVMInfo.OSDiskVhdFilePath
-        FeatureName = @(
-            'AD-Domain-Services'
-            # DNS, FS-FileServer, RSAT-AD-PowerShell are automatically installed as dependencies.
+        VHDFilePath   = $hvVMInfo.OSDiskVhdFilePath
+        ComputerName  = $vmConfig.VMName
+        AdminPassword = $adminPassword
+        Language      = $vmConfig.OS.Language
+        TimeZone      = $vmConfig.OS.TimeZone
+        FeatureName   = @(
+            'DirectoryServices-DomainController',  # AD-Domain-Services
+            'DNS-Server-Full-Role',                # DNS
+            'CoreFileServer'                       # FS-FileServer
         )
-        LogFolder   = $labConfig.labHost.folderPath.log
+        LogFolderPath     = $labConfig.labHost.folderPath.log
+        LogFileNamePrefix = $LogFileName
     }
-    Install-WindowsFeatureToVhd @params
-    'Install the roles and features to the "{0}" has been completed.' -f $hvVMInfo.OSDiskVhdFilePath | Write-ScriptLog
+    Invoke-VHDSpecialization @params
 
     Start-VMSurely -VMName $vmConfig.VMName
 

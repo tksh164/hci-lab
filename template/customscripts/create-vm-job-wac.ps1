@@ -414,44 +414,29 @@ try {
     # Create a new Hyper-V VM.
     $hvVMInfo = New-WorkboxVM -VMConfig $vmConfig -VMFolderPath $labConfig.labHost.folderPath.vm
 
-    'Generate the unattend answer XML.' | Write-ScriptLog
+    # Add Windows features and an unattend file to the VHD.
     $params = @{
-        ComputerName = $vmConfig.VMName
-        Password     = $adminPassword
-        Culture      = $vmConfig.OS.Language
-        TimeZone     = $vmConfig.OS.TimeZone
-    }
-    $unattendAnswerFileContent = New-UnattendAnswerFileContent @params
-    'Generate the unattend answer XML has been completed.' | Write-ScriptLog
-
-    'Inject the unattend answer file to the "{0}".' -f $hvVMInfo.OSDiskVhdFilePath | Write-ScriptLog
-    $params = @{
-        VhdPath                   = $hvVMInfo.OSDiskVhdFilePath
-        UnattendAnswerFileContent = $unattendAnswerFileContent
-        LogFolder                 = $labConfig.labHost.folderPath.log
-    }
-    Set-UnattendAnswerFileToVhd @params
-    'Inject the unattend answer file to the "{0}" has been completed.' -f $hvVMInfo.OSDiskVhdFilePath | Write-ScriptLog
-
-    'Install the roles and features to the "{0}".' -f $hvVMInfo.OSDiskVhdFilePath | Write-ScriptLog
-    $params = @{
-        VhdPath     = $hvVMInfo.OSDiskVhdFilePath
-        FeatureName = @(
-            'RSAT-ADDS-Tools',
-            'RSAT-AD-AdminCenter',
-            'RSAT-AD-PowerShell',
-            'GPMC',
-            'RSAT-DNS-Server',
-            'RSAT-Clustering-Mgmt',
-            'RSAT-Clustering-PowerShell',
-            'Hyper-V-Tools',
-            'Hyper-V-PowerShell',
-            'RSAT-DataCenterBridging-LLDP-Tools'
+        VHDFilePath   = $hvVMInfo.OSDiskVhdFilePath
+        ComputerName  = $vmConfig.VMName
+        AdminPassword = $adminPassword
+        Language      = $vmConfig.OS.Language
+        TimeZone      = $vmConfig.OS.TimeZone
+        FeatureName   = @(
+            'Microsoft-Hyper-V-Management-Clients',                   # Hyper-V-Tools
+            'Microsoft-Hyper-V-Management-PowerShell',                # Hyper-V-PowerShell
+            'Microsoft-Windows-GroupPolicy-ServerAdminTools-Update',  # GPMC
+            'FailoverCluster-AdminPak',                               # RSAT-Clustering
+            'FailoverCluster-Mgmt',                                   # RSAT-Clustering-Mgmt
+            'FailoverCluster-PowerShell',                             # RSAT-Clustering-PowerShell
+            'DirectoryServices-DomainController-Tools',               # RSAT-ADDS-Tools
+            'DirectoryServices-AdministrativeCenter',                 # RSAT-AD-AdminCenter
+            'DNS-Server-Tools',                                       # RSAT-DNS-Server
+            'DataCenterBridging-LLDP-Tools'                           # RSAT-DataCenterBridging-LLDP-Tools
         )
-        LogFolder   = $labConfig.labHost.folderPath.log
+        LogFolderPath     = $labConfig.labHost.folderPath.log
+        LogFileNamePrefix = $LogFileName
     }
-    Install-WindowsFeatureToVhd @params
-    'Install the roles and features to the "{0}" has been completed.' -f $hvVMInfo.OSDiskVhdFilePath | Write-ScriptLog
+    Invoke-VHDSpecialization @params
 
     Start-VMSurely -VMName $vmConfig.VMName
 
