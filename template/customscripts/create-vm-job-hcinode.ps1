@@ -317,7 +317,7 @@ function Wait-BootstrapServices {
         Start-Sleep -Seconds $RetryIntervalSeconds
         $elapsedSeconds = [int] ((Get-Date) - $startTime).TotalSeconds
         if (($elapsedSeconds % $LoggingIntervalSeconds) -eq 0) {
-            Write-Host ('{0} seconds elapsed.' -f $elapsedSeconds)
+            '{0} seconds elapsed.' -f $elapsedSeconds | Write-ScriptLog
         }
     }
 
@@ -403,7 +403,7 @@ function Wait-AzureLocalScheduledTaskCompletion {
         Start-Sleep -Seconds $RetryIntervalSeconds
         $elapsedSeconds = [int] ((Get-Date) - $startTime).TotalSeconds
         if (($elapsedSeconds % $LoggingIntervalSeconds) -eq 0) {
-            Write-Host ('{0} seconds elapsed.' -f $elapsedSeconds)
+            '{0} seconds elapsed.' -f $elapsedSeconds | Write-ScriptLog
         }
     }
 
