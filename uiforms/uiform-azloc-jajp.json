@@ -1253,13 +1253,21 @@
                                     "placeholder": "マシンのオペレーティング システムを選択...",
                                     "defaultDescription": "---",
                                     "filterPlaceholder": "マシンのオペレーティング システムをフィルター...",
-                                    "defaultValue": "Azure Local 2604",
+                                    "defaultValue": "Azure Local 2605",
                                     "constraints": {
                                         "required": true,
                                         "allowedValues": [
                                             {
-                                                "label": "Azure Local 2604",
+                                                "label": "Azure Local 2605",
                                                 "description": "最新の一般提供バージョンです。",
+                                                "value": {
+                                                    "sku": "azloc24h2_2605",
+                                                    "imageIndex": 1
+                                                }
+                                            },
+                                            {
+                                                "label": "Azure Local 2604",
+                                                "description": "以前のバージョンです。",
                                                 "value": {
                                                     "sku": "azloc24h2_2604",
                                                     "imageIndex": 1
@@ -1298,8 +1306,8 @@
                                                 }
                                             },
                                             {
-                                                "label": "Azure Local 2511",
-                                                "description": "以前のバージョンです。",
+                                                "label": "Azure Local 2511 [サポート終了]",
+                                                "description": "注意: このバージョンのサポート期間は終了しました。",
                                                 "value": {
                                                     "sku": "azloc24h2_2511",
                                                     "imageIndex": 1

@@ -1253,13 +1253,21 @@
                                     "placeholder": "Select the machines' operating system...",
                                     "defaultDescription": "---",
                                     "filterPlaceholder": "Filter machines' operating systems...",
-                                    "defaultValue": "Azure Local 2604",
+                                    "defaultValue": "Azure Local 2605",
                                     "constraints": {
                                         "required": true,
                                         "allowedValues": [
                                             {
-                                                "label": "Azure Local 2604",
+                                                "label": "Azure Local 2605",
                                                 "description": "The latest generally available version.",
+                                                "value": {
+                                                    "sku": "azloc24h2_2605",
+                                                    "imageIndex": 1
+                                                }
+                                            },
+                                            {
+                                                "label": "Azure Local 2604",
+                                                "description": "The previous version.",
                                                 "value": {
                                                     "sku": "azloc24h2_2604",
                                                     "imageIndex": 1
@@ -1298,8 +1306,8 @@
                                                 }
                                             },
                                             {
-                                                "label": "Azure Local 2511",
-                                                "description": "The previous version.",
+                                                "label": "Azure Local 2511 [End of support]",
+                                                "description": "Notice: This version reached the end of support.",
                                                 "value": {
                                                     "sku": "azloc24h2_2511",
                                                     "imageIndex": 1
