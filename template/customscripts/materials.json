@@ -34,6 +34,18 @@
 
 {
     "os": {
+        "azloc24h2_2605": {
+            "iso": {
+                "en-us": {
+                    "url": "https://azurestackreleases.download.prss.microsoft.com/dbazure/AzureLocal/ComposedImage/12.2605.0.3023/AzureLocal24H2.26100.32230.LCM.12.2605.0.3023.x64.en-us.iso",
+                    "hash": "00AC73684C462E5FCF42294DDF11715728235685",
+                    "hashAlgorithm": "SHA1",
+                    "fileSizeInBytes": 6941110272,
+                    "fileName": "azloc24h2_2605_en-us.iso"
+                }
+            },
+            "updates": []
+        },
         "azloc24h2_2604": {
             "iso": {
                 "en-us": {
