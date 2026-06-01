@@ -492,23 +492,6 @@ function New-RegistryKey {
     }
 }
 
-function Format-BaseVhdFileName {
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory = $true)]
-        [string] $OperatingSystem,
-
-        [Parameter(Mandatory = $true)]
-        [ValidateRange(1, 4)]
-        [int] $ImageIndex,
-
-        [Parameter(Mandatory = $true)]
-        [string] $Culture
-    )
-
-    return '{0}_{1}_{2}.vhdx' -f $OperatingSystem, $ImageIndex, $Culture
-}
-
 function Format-HciNodeName {
     [CmdletBinding()]
     param (
@@ -1637,7 +1620,6 @@ $exportFunctions = @(
     'Get-Secret',
     'Invoke-FileDownload',
     'New-RegistryKey',
-    'Format-BaseVhdFileName',
     'Format-HciNodeName',
     'Invoke-VHDSpecialization',
     'Start-VMSurely',
