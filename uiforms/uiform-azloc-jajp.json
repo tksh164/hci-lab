@@ -208,7 +208,7 @@
                                 },
                                 {
                                     "name": "adminPassword",
-                                    "type": "Microsoft.Compute.CredentialsCombo",
+                                    "type": "Microsoft.Common.PasswordBox",
                                     "visible": true,
                                     "label": {
                                         "password": "パスワード",
@@ -217,9 +217,10 @@
                                     "toolTip": {
                                         "password": "管理者パスワードを指定します。"
                                     },
-                                    "osPlatform": "Windows",
                                     "constraints": {
-                                        "required": true
+                                        "required": true,
+                                        "regex": "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{14,72}$",
+                                        "validationMessage": "パスワードは 14 文字以上 72 文字以下で、以下の要素を含んでいる必要があります: 小文字 1 文字、大文字 1 文字、数字 1 文字、特殊文字 1 文字。"
                                     },
                                     "options": {
                                         "hideConfirmation": false
