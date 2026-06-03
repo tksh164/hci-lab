@@ -14,7 +14,7 @@
         "adminPassword": {
             "type": "securestring",
             "metadata": {
-                "description": "The administrator password. The password must have 3 of the following: 1 lower case character, 1 upper case character, 1 number, and 1 special character. And the password must be between 12 and 123 characters long."
+                "description": "The administrator password. The password must be between 14 and 72 characters and have 4 of the following: 1 lower case character, 1 upper case character, 1 number, and 1 special character."
             }
         },
         "labHostVmName": {
