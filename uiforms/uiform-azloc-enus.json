@@ -208,7 +208,7 @@
                                 },
                                 {
                                     "name": "adminPassword",
-                                    "type": "Microsoft.Compute.CredentialsCombo",
+                                    "type": "Microsoft.Common.PasswordBox",
                                     "visible": true,
                                     "label": {
                                         "password": "Password",
@@ -217,9 +217,10 @@
                                     "toolTip": {
                                         "password": "Specify the administrator password."
                                     },
-                                    "osPlatform": "Windows",
                                     "constraints": {
-                                        "required": true
+                                        "required": true,
+                                        "regex": "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{14,72}$",
+                                        "validationMessage": "Password must be between 14 and 72 characters and have 4 of the following: 1 lower case character, 1 upper case character, 1 number, and 1 special character."
                                     },
                                     "options": {
                                         "hideConfirmation": false
