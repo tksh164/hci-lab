@@ -385,6 +385,6 @@ Leave default for this tutorial. Click **Next: Validation**.
 
 3. Click **Next: Review + create**.
 
-## 4.9 Review + create tab
+### 4.9 Review + create tab
 
 1. Click **Create** to start Azure Local instance deployment. Azure Local deployment will take around 3.5 hours. You can check progress on **Deployments** in the Azure Local resource.
