@@ -1,8 +1,8 @@
 # Tutorial: Deploy Azure Local with Azure Local Lab
 
-> **Note:** This tutorial based on Azure Local 2605.
+> **Note:** This tutorial is based on Azure Local 2605.
 
-This tutorial describes Azure Local deployment sequence with Azure Local Lab. Azure Local deployment sequence has [6 steps](https://learn.microsoft.com/azure/azure-local/deploy/deployment-introduction). Azure Local Lab provides automation of step 1 to 3.
+This tutorial describes the Azure Local deployment sequence with Azure Local Lab. The Azure Local deployment sequence has [6 steps](https://learn.microsoft.com/azure/azure-local/deploy/deployment-introduction). Azure Local Lab provides automation of step 1 to 3.
 
 | Step | Step # in Azure Local deployment sequence | Step # in this tutorial |
 | ---- | :--: | :--: |
@@ -13,17 +13,17 @@ This tutorial describes Azure Local deployment sequence with Azure Local Lab. Az
 | Register Azure Local machines with Azure Arc | 5 | 3 |
 | Deploy the system | 6 | 4 |
 
-Recommend quick review the [Lab tour](https://github.com/tksh164/hci-lab/blob/main/docs/hci-lab-tour.md) before start Azure Local Lab deployment to familiar with Azure Local Lab.
+We recommend that you quickly review the [Lab tour](https://github.com/tksh164/hci-lab/blob/main/docs/hci-lab-tour.md) before starting the Azure Local Lab deployment to familiarize yourself with Azure Local Lab.
 
 ## 1. Deploy Azure Local Lab environment
 
 This step covers [Step 1: Prepare Active Directory](https://learn.microsoft.com/azure/azure-local/deploy/deployment-prep-active-directory), [Step 2: Download the operating system](https://learn.microsoft.com/azure/azure-local/deploy/download-23h2-software) and [Step 3A: Install OS manually via ISO](https://learn.microsoft.com/azure/azure-local/deploy/deployment-install-os).
 
-1. Open Azure portal from the following **Deploy to Azure** on [README](https://github.com/tksh164/hci-lab/blob/main/README.md) to deploy your lab environment. To keep the README tab, open it as a new tab (Ctrl + Click).
+1. Open Azure portal from the following **Deploy to Azure** on [README](https://github.com/tksh164/hci-lab/blob/main/README.md) to deploy your lab environment. To keep the README tab, open it in a new tab (Ctrl + Click).
 
-    > **Tips:** The only difference between languages is the UI language displayed when you deploy your lab environment in Azure portal. The language is not effect to the lab environment you deployed.
+    > **Tips:** The only difference between languages is the UI language displayed when you deploy your lab environment in Azure portal. The language does not affect the lab environment you deploy.
 
-    > **Tips:** Recommend to choose **Yes, I trust the authors** to use the user friendly deployment UI. Read [FAQ](./docs/hci-lab-tour.md#why-the-trust-confirmation-message-showing-when-open-deploy-to-azure) for details.
+    > **Tips:** We recommend choosing **Yes, I trust the authors** to use the user friendly deployment UI. Read the [FAQ](./hci-lab-tour.md#why-the-trust-confirmation-message-shown-when-opening-deploy-to-azure) for details.
 
 2. Fill out required fields in the UI form.
 
@@ -122,7 +122,7 @@ This step covers [Step 4: Set up subscription permissions](https://learn.microso
         'Microsoft.KeyVault'
     )
 
-    # Register reuiqred resource providers.
+    # Register required resource providers.
     $providerNamespaces |% { Register-AzResourceProvider -ProviderNamespace $_ }
 
     # Check the registration state of the required resource providers. All resource providers should show as "Registered".
@@ -154,9 +154,9 @@ This step covers [Step 4: Set up subscription permissions](https://learn.microso
 
 | Purpose | Scope | Role permission | Assign access to | Notes |
 | ---- | ---- | ---- | ---- | ---- |
-| Arc Machine registration | The **resource group** that youe specify in **1. Deploy Azure Local Lab environment** | Require one of them: <ul><li>Owner</li><li>Azure Connected Machine Onboarding and Azure Connected Machine Resource Administrator</li></ul> | The user who registers the machines as Arc resources. In this tutorial, that’s you. | You don't need to care about this permissions if you have **Owner** role permission on the Azure subscription because the permission inherited from the Azure subscription to the resource group. |
-| Azure Local instance deployment | The **resource group** that youe specify in **1. Deploy Azure Local Lab environment** | Require all: <ul><li>Key Vault Data Access Administrator</li><li>Key Vault Secrets Officer</li><li>Key Vault Contributor</li><li>Storage Account Contributor</li></ul> | The user who deploys the Azure Local instance. In this tutorial, that’s you. | You can skip preparation for this permissions actually because those permissions will grant during the Azure Local instance deployment via Azure portal. |
-| Azure Local instance deployment | The **Azure subscription** that youe specify in **1. Deploy Azure Local Lab environment** | Require all: <ul><li>Azure Stack HCI Administrator</li><li>Reader</li></ul> | The user who deploys the Azure Local instance. In this tutorial, that’s you. | **Reader** is not required if you have **Owner** role permission on the Azure subscription. **Owner** is superset role permission of **Reader**. |
+| Arc Machine registration | The **resource group** that you specify in **1. Deploy Azure Local Lab environment** | Require one of them: <ul><li>Owner</li><li>Azure Connected Machine Onboarding and Azure Connected Machine Resource Administrator</li></ul> | The user who registers the machines as Arc resources. In this tutorial, that’s you. | You don't need to care about this permissions if you have **Owner** role permission on the Azure subscription because the permission inherited from the Azure subscription to the resource group. |
+| Azure Local instance deployment | The **resource group** that you specify in **1. Deploy Azure Local Lab environment** | Require all: <ul><li>Key Vault Data Access Administrator</li><li>Key Vault Secrets Officer</li><li>Key Vault Contributor</li><li>Storage Account Contributor</li></ul> | The user who deploys the Azure Local instance. In this tutorial, that’s you. | You can skip preparation for this permissions actually because those permissions will grant during the Azure Local instance deployment via Azure portal. |
+| Azure Local instance deployment | The **Azure subscription** that you specify in **1. Deploy Azure Local Lab environment** | Require all: <ul><li>Azure Stack HCI Administrator</li><li>Reader</li></ul> | The user who deploys the Azure Local instance. In this tutorial, that’s you. | **Reader** is not required if you have **Owner** role permission on the Azure subscription. **Owner** is superset role permission of **Reader**. |
 
 > **Tips:** Actually, for this tutorial, you need to configure only the **Azure Stack HCI Administrator** role permission if you have the **Owner** role permission of the Azure subscription.
 
@@ -251,9 +251,9 @@ To deploy a new Azure Local instance, search **Azure Local** in Azure portal the
 
     1. Click **Add machines** to select the machines to deploy. In this tutorial, you can select 2 machines. Add all selectable machines. Click **Add** to begin installing the extension on Arc Machines. Wait for complete the extension installation on all Arc Machines. It may take around 10 minutes.
 
-    2. Click **Validate selected machines**. The validation should be successfuyl.
+    2. Click **Validate selected machines**. The validation should be successful.
 
-    3. Select **Create a new Key Vault** and click **Create a new key vault** to create a new Key Vault for Azure Local deployment. Enter a valid Key Vault name that should be unique in global and use default value for other fields. Then click **Create**.
+    3. Select **Create a new Key Vault** and click **Create a new key vault** to create a new Key Vault for Azure Local deployment. Enter a valid Key Vault name that should be unique in global and use the default value for other fields. Then click **Create**.
 
     4. If show a message **Insufficient permissions at resource group level. click here**, Click **Grant Key Vault permissions** to grant required permissions.
 
@@ -282,24 +282,24 @@ To deploy a new Azure Local instance, search **Azure Local** in Azure portal the
     - Intent 1
         1. Traffic types: Select **Management** for this tutorial.
         2. Intent name: Enter the intent name. e.g. **Management**
-        3. Network adapter 1: Select **Management [Microsoft Hyper-V Network Adapter] (172.16.0.11)** for this turotial.
-        4. Click **Customize network settings** in Intent 1 and change **RDMA protocol** to **Disabled** then click **Save**. Use default value expect RDMA protocol. Azure Local Lab leverages nested virtualization and it does not support any RDMA protocols.
+        3. Network adapter 1: Select **Management [Microsoft Hyper-V Network Adapter] (172.16.0.11)** for this tutorial.
+        4. Click **Customize network settings** in Intent 1 and change **RDMA protocol** to **Disabled** then click **Save**. Use the default value except RDMA protocol. Azure Local Lab leverages nested virtualization and it does not support any RDMA protocols.
 
     - Intent 2
         1. Traffic types: Select **Compute** for this tutorial.
         2. Intent name: Enter the intent name. e.g. **Compute**
-        3. Network adapter 1: Select **Compute [Microsoft Hyper-V Network Adapter] (10.0.0.11)** for this turotial.
-        4. Click **Customize network settings** in Intent 2 and change **RDMA protocol** to **Disabled** then click **Save**. Use default value expect RDMA protocol.
+        3. Network adapter 1: Select **Compute [Microsoft Hyper-V Network Adapter] (10.0.0.11)** for this tutorial.
+        4. Click **Customize network settings** in Intent 2 and change **RDMA protocol** to **Disabled** then click **Save**. Use the default value except RDMA protocol.
 
     - Intent 3
         1. Traffic types: Select **Storage** for this tutorial.
         2. Intent name: Enter the intent name. e.g. **Storage**
-        3. Network adapter 1: Select **Storage1 [Microsoft Hyper-V Network Adapter] (169.254.xx.xx)** for this turotial.
-        4. Storage Network 1 VLAN ID: Use default value **711**.
+        3. Network adapter 1: Select **Storage1 [Microsoft Hyper-V Network Adapter] (169.254.xx.xx)** for this tutorial.
+        4. Storage Network 1 VLAN ID: Use the default value **711**.
         5. Click **Select another adapter for this traffic** in Intent 3.
-        6. Network adapter 2: Select **Storage2 [Microsoft Hyper-V Network Adapter] (169.254.xx.xx)** for this turotial.
-        7. Storage Network 2 VLAN ID: Use default value **712**.
-        8. Click **Customize network settings** in Intent 3 and change **RDMA protocol** to **Disabled** then click **Save**. Use default value expect RDMA protocol.
+        6. Network adapter 2: Select **Storage2 [Microsoft Hyper-V Network Adapter] (169.254.xx.xx)** for this tutorial.
+        7. Storage Network 2 VLAN ID: Use the default value **712**.
+        8. Click **Customize network settings** in Intent 3 and change **RDMA protocol** to **Disabled** then click **Save**. Use the default value except RDMA protocol.
 
 4. **Nodes and Instance IP assignment**
 
@@ -327,8 +327,8 @@ To deploy a new Azure Local instance, search **Azure Local** in Azure portal the
 
 2. **Specify system witness settings**
 
-    - Witness type: **Cloud witness** on this tutorial. If you have odd number of machines, it will be No witness.
-    - Azure storage account name: Click **Create new** and enter globally unique storage account name on **Storage account name**. Use default value for other fields. Then click **Create**.
+    - Witness type: **Cloud witness** in this tutorial. If you have odd number of machines, it will be No witness.
+    - Azure storage account name: Click **Create new** and enter globally unique storage account name on **Storage account name**. Use the default value for other fields. Then click **Create**.
 
         > **Tips:** Azure Local deployment needs the following settings on the newly create Storage account. You should check the settings before go forward if your organization disabled/disallow the setting by policy. In some cases, the organization provides special tags to except the policy.
         > - Allow public access from all networks
@@ -336,18 +336,18 @@ To deploy a new Azure Local instance, search **Azure Local** in Azure portal the
 
 3. **Specify Active Directory details**
 
-    - Domain: Enter **lab.internal** on this tutorial.
-    - OU: Etner **OU=AzureLocal,DC=lab,DC=internal** on this tutorial.
+    - Domain: Enter **lab.internal** in this tutorial.
+    - OU: Enter **OU=AzureLocal,DC=lab,DC=internal** in this tutorial.
 
 4. **Deployment account**
 
-    - Username: Etner **lcmuser** on this tutorial.
+    - Username: Enter **lcmuser** in this tutorial.
     - Password: Enter the password that you specified in **1. Deploy Azure Local Lab environment** that entered as the password of Administrator account.
     - Confirm password: Enter the same password as Password.
 
 5. **Local administrator**
 
-    - Username: Enter **Administrator** on this tutorial.
+    - Username: Enter **Administrator** in this tutorial.
     - Password: Enter the password that you specified in **1. Deploy Azure Local Lab environment** that entered as the password of Administrator account.
     - Confirm password: Enter the same password as Password.
 
@@ -357,7 +357,7 @@ To deploy a new Azure Local instance, search **Azure Local** in Azure portal the
 
 1. **Set the security level of your system's infrastructure**
 
-    - Security level: Select **Recommended security settings** on this tutorial.
+    - Security level: Select **Recommended security settings** in this tutorial.
 
 2. Click **Next: Advanced**.
 
@@ -365,7 +365,7 @@ To deploy a new Azure Local instance, search **Azure Local** in Azure portal the
 
 1. **Create workload and infrastructure volumes**
 
-    - Volumes: Select **Create one workload volume and storage path per machine, and one required infrastructure volume per system (Recommended)** on this tutorial.
+    - Volumes: Select **Create one workload volume and storage path per machine, and one required infrastructure volume per system (Recommended)** in this tutorial.
 
 2. Click **Next: Tags**.
 
@@ -377,11 +377,11 @@ Leave default for this tutorial. Click **Next: Validation**.
 
 1. **Resource Creation**
 
-    - The resource creation will starts automatically when open the Validation tab. It will takes around 2 minutes.
+    - The resource creation starts automatically when you open the Validation tab. It will take around 2 minutes.
 
 2. **Validation progress**
 
-    1. Click **Start validation** to start validation. The validation will takes around 40 minutes.
+    1. Click **Start validation** to start validation. The validation will take around 40 minutes.
 
 3. Click **Next: Review + create**.
 
