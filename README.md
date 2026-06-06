@@ -11,9 +11,9 @@ The Azure Local Lab helps build your own lab environment for Azure Local and Win
 
 1. Open Azure portal from the following **Deploy to Azure** to deploy your lab environment. To keep this page, open it as a new tab (Ctrl + Click).
 
-    > **Note:** The only difference between languages is the UI language displayed when you deploy your lab environment in Azure portal. The language is not effect to the lab environment you deployed.
+    > **Note:** The only difference between languages is the UI language displayed when you deploy your lab environment in Azure portal. The language does not affect the lab environment you deploy.
 
-    > **Note:** Recommend to choose **Yes, I trust the authors** to use the user friendly deployment UI. Read [FAQ](./docs/hci-lab-tour.md#why-the-trust-confirmation-message-showing-when-open-deploy-to-azure) for details.
+    > **Note:** We recommend choosing **Yes, I trust the authors** to use the user friendly deployment UI. Read the [FAQ](./docs/hci-lab-tour.md#why-the-trust-confirmation-message-showing-when-open-deploy-to-azure) for details.
 
     | Lab environment | English | Japanese (日本語) |
     | ---- | ---- | ---- |
