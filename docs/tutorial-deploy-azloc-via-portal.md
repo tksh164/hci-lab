@@ -40,7 +40,7 @@ This step covers [Step 1: Prepare Active Directory](https://learn.microsoft.com/
 
     - **Administrator account**
         - **Username:** Specify the username for your Azure Local Lab host VM. This username will also be used for Hyper-V VMs in your Azure Local Lab environment.
-        - **Password:** Specify the password for your Azure Local Lab host VM. Also, this password will be used for Hyper-V VMs in your Azure Local Lab environment.
+        - **Password:** Specify the password for your Azure Local Lab host VM. This password will also be used for Hyper-V VMs in your Azure Local Lab environment.
         - **Confirm password:** Re-enter the password for confirmation.
 
     - **Azure Hybrid Benefit**
@@ -56,7 +56,7 @@ This step covers [Step 1: Prepare Active Directory](https://learn.microsoft.com/
         - **Data volume capacity:** Select the data volume capacity. All assets in your lab are stored on this volume. It is recommended to use the default volume size or larger.
 
     - **Azure Bastion Developer**
-        - Select **Enable** if you want to use Azure Bastion to access your lab host VM. Bastion Developer is a free, lightweight offering of the Azure Bastion service. It is ideal for Dev/Test users who want to securely connect to VMs. It is recommended to select **Enable** even if you plan to connect your lab host via any Remote Desktop clients because there is no tradeoff.
+        - Select **Enable** if you want to use Azure Bastion to access your lab host VM. Bastion Developer is a free, lightweight offering of the Azure Bastion service. It is ideal for Dev/Test users who want to securely connect to VMs. It is recommended to select **Enable** even if you plan to connect to your lab host via any Remote Desktop client because there is no tradeoff.
 
     - **Apps**
         - **Visual Studio Code:** Select this if you want to install Visual Studio Code on your Azure Local lab host VM.
