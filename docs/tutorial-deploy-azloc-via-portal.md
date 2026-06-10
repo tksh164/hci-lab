@@ -103,7 +103,7 @@ This step covers [Step 1: Prepare Active Directory](https://learn.microsoft.com/
 
 This step covers [Step 4: Set up subscription permissions](https://learn.microsoft.com/azure/azure-local/deploy/deployment-arc-register-server-permissions).
 
-1. Register required resource providers. Make sure that your Azure subscription is registered against the required resource providers. To register, you must be an **Owner** or **Contributor** on your subscription. You can also ask an administrator of Azure subscription to register.
+1. Register required resource providers. Make sure that your Azure subscription is registered with the required resource providers. To register, you must be an **Owner** or **Contributor** on your subscription. You can also ask an administrator of Azure subscription to register.
 
     ```powershell
     $providerNamespaces = @(
@@ -129,7 +129,7 @@ This step covers [Step 4: Set up subscription permissions](https://learn.microso
     Get-AzResourceProvider -ProviderNamespace $providerNamespaces | Group-Object -Property 'RegistrationState'
     ```
 
-2. Verify role permissions on the resource group to register machines as Arc resources. Make sure that you're either have **Owner** role permission on the resource group or have the following role permissions on the resource group where the machines are provisioned as Arc resources.
+2. Verify role permissions on the resource group to register machines as Arc resources. Make sure that you either have the **Owner** role permission on the resource group or have the following role permissions on the resource group where the machines are provisioned as Arc resources.
 
     - Azure Connected Machine Onboarding
     - Azure Connected Machine Resource Administrator
@@ -154,9 +154,9 @@ This step covers [Step 4: Set up subscription permissions](https://learn.microso
 
 | Purpose | Scope | Role permission | Assign access to | Notes |
 | ---- | ---- | ---- | ---- | ---- |
-| Arc Machine registration | The **resource group** that you specify in **1. Deploy Azure Local Lab environment** | Require one of them: <ul><li>Owner</li><li>Azure Connected Machine Onboarding and Azure Connected Machine Resource Administrator</li></ul> | The user who registers the machines as Arc resources. In this tutorial, that’s you. | You don't need to care about this permissions if you have **Owner** role permission on the Azure subscription because the permission inherited from the Azure subscription to the resource group. |
-| Azure Local instance deployment | The **resource group** that you specify in **1. Deploy Azure Local Lab environment** | Require all: <ul><li>Key Vault Data Access Administrator</li><li>Key Vault Secrets Officer</li><li>Key Vault Contributor</li><li>Storage Account Contributor</li></ul> | The user who deploys the Azure Local instance. In this tutorial, that’s you. | You can skip preparation for this permissions actually because those permissions will grant during the Azure Local instance deployment via Azure portal. |
-| Azure Local instance deployment | The **Azure subscription** that you specify in **1. Deploy Azure Local Lab environment** | Require all: <ul><li>Azure Stack HCI Administrator</li><li>Reader</li></ul> | The user who deploys the Azure Local instance. In this tutorial, that’s you. | **Reader** is not required if you have **Owner** role permission on the Azure subscription. **Owner** is superset role permission of **Reader**. |
+| Arc Machine registration | The **resource group** that you specify in **1. Deploy Azure Local Lab environment** | Require one of them: <ul><li>Owner</li><li>Azure Connected Machine Onboarding and Azure Connected Machine Resource Administrator</li></ul> | The user who registers the machines as Arc resources. In this tutorial, that's you. | You don't need to warry about these permissions if you have the **Owner** role permission on the Azure subscription because the permission inherited from the Azure subscription to the resource group. |
+| Azure Local instance deployment | The **resource group** that you specify in **1. Deploy Azure Local Lab environment** | Require all: <ul><li>Key Vault Data Access Administrator</li><li>Key Vault Secrets Officer</li><li>Key Vault Contributor</li><li>Storage Account Contributor</li></ul> | The user who deploys the Azure Local instance. In this tutorial, that's you. | You can actually skip preparation for these permissions because they are granted during the Azure Local instance deployment via Azure portal. |
+| Azure Local instance deployment | The **Azure subscription** that you specify in **1. Deploy Azure Local Lab environment** | Require all: <ul><li>Azure Stack HCI Administrator</li><li>Reader</li></ul> | The user who deploys the Azure Local instance. In this tutorial, that's you. | The **Reader** role permission is not required if you have the **Owner** role permission on the Azure subscription. The **Owner** role permission is a superset role permission of the **Reader** role permission. |
 
 > **Tips:** Actually, for this tutorial, you need to configure only the **Azure Stack HCI Administrator** role permission if you have the **Owner** role permission of the Azure subscription.
 
@@ -164,7 +164,7 @@ This step covers [Step 4: Set up subscription permissions](https://learn.microso
 
 This step covers [Step 5A: Register Azure Local machines with Azure Arc, without using the Arc gateway](https://learn.microsoft.com/azure/azure-local/deploy/deployment-without-azure-arc-gateway).
 
-1. You need to allow Remote Desktop access to your lab host Azure VM from your local machine. It can be by [enabling JIT VM access](https://learn.microsoft.com/azure/defender-for-cloud/enable-just-in-time-access) or [adding an inbound security rule in the Network Security Group](https://learn.microsoft.com/azure/virtual-network/tutorial-filter-network-traffic?tabs=portal#create-security-rules). The recommended way is using JIT VM access.
+1. You need to allow Remote Desktop access to your lab host Azure VM from your local machine. You can do this by [enabling JIT VM access](https://learn.microsoft.com/azure/defender-for-cloud/enable-just-in-time-access) or [adding an inbound security rule in the Network Security Group](https://learn.microsoft.com/azure/virtual-network/tutorial-filter-network-traffic?tabs=portal#create-security-rules). The recommended way is using JIT VM access.
 
 2. Connect to your lab host Azure VM using your favorite Remote Desktop client. To connect, use the credentials that you specified in **1. Deploy Azure Local Lab environment**.
 
@@ -181,9 +181,9 @@ This step covers [Step 5A: Register Azure Local machines with Azure Arc, without
     - Enter password: The password that you specified in **1. Deploy Azure Local Lab environment** as the password of Administrator account.
     - Security alert: Click **Accept**
 
-7. Wait for the prerequisites check to complete. The check will complete with all skipped status. Then click **Configure device** to start configuration.
+7. Wait for the prerequisites check to complete. The check will complete with all items showing a kipped status. Then click **Configure device** to start configuration.
 
-8. In the **Basics** step, click **Edit network settings** and select **Management** if not selected it as a network interface, then click **Apply**. After that click **Next**.
+8. In the **Basics** step, click **Edit network settings** and select **Management** if it is not already selected as a network interface, then click **Apply**. After that click **Next**.
 
     **Network settings:**
 
@@ -209,17 +209,17 @@ This step covers [Step 5A: Register Azure Local machines with Azure Arc, without
 9. In the **Arc agent setup** step, enter the following information then click **Next**. Don't use **Log in to Azure** in this tutorial.
 
     - Cloud type: Azure
-    - Subscription: The subscription ID to create a Arc Machine resource of the machine. In this tutorial, enter the subscription ID that you specified in **1. Deploy Azure Local Lab environment**.
-    - Resource group: The resource group name to create a Arc Machine resource of the machine. In this tutorial, enter the resource group name that you specified in **1. Deploy Azure Local Lab environment**.
-    - Region: The region to create a Arc Machine resource of the machine such as **japaneast**. In this tutorial, enter the region that you specified in **1. Deploy Azure Local Lab environment**.
-    - Tenant ID: Optional, but recommend to enter the tenant ID if the user who registers the machine as an Arc Machine belong multiple tenants especially.
+    - Subscription: The subscription ID to create an Arc Machine resource of the machine. In this tutorial, enter the subscription ID that you specified in **1. Deploy Azure Local Lab environment**.
+    - Resource group: The resource group name to create an Arc Machine resource of the machine. In this tutorial, enter the resource group name that you specified in **1. Deploy Azure Local Lab environment**.
+    - Region: The region to create an Arc Machine resource of the machine such as **japaneast**. In this tutorial, enter the region that you specified in **1. Deploy Azure Local Lab environment**.
+    - Tenant ID: Optional, but we recommend entering the tenant ID, especially if the user who registers the machine as an Arc Machine belongs multiple tenants.
     - Arc gateway ID: Specify the Arc gateway's resource ID if you use Arc gateway. Leave empty in this tutorial.
 
 10. In the **Review and apply** step, review the configuration details and click **Done**.
 
-11. In the **Configuration status** page, wait for show the device code to register the machine as an Arc Machine. Enter the code and complete authentication on [https://login.microsoft.com/device](https://login.microsoft.com/device) from any devices.
+11. In the **Configuration status** page, wait for the device code to be shown to register the machine as an Arc Machine. Enter the code and complete authentication on [https://login.microsoft.com/device](https://login.microsoft.com/device) from any devices.
 
-12. Repeat the above steps to all machines.
+12. Repeat the above steps for all machines.
 
     > **Tips:** You can register multiple machines at the same time.
 
