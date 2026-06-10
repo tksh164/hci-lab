@@ -19,11 +19,11 @@ We recommend that you quickly review the [Lab tour](https://github.com/tksh164/h
 
 This step covers [Step 1: Prepare Active Directory](https://learn.microsoft.com/azure/azure-local/deploy/deployment-prep-active-directory), [Step 2: Download the operating system](https://learn.microsoft.com/azure/azure-local/deploy/download-23h2-software) and [Step 3A: Install OS manually via ISO](https://learn.microsoft.com/azure/azure-local/deploy/deployment-install-os).
 
-1. Open Azure portal from the following **Deploy to Azure** on [README](https://github.com/tksh164/hci-lab/blob/main/README.md) to deploy your lab environment. To keep the README tab, open it in a new tab (Ctrl + Click).
+1. Open the Azure portal from the **Deploy to Azure** button on the [README](https://github.com/tksh164/hci-lab/blob/main/README.md) to deploy your lab environment. To keep the README open, use Ctrl + Click to open the Azure portal in a new tab.
 
-    > **Tips:** The only difference between languages is the UI language displayed when you deploy your lab environment in Azure portal. The language does not affect the lab environment you deploy.
+    > **Tip:** The only difference between languages is the UI language displayed when you deploy your lab environment in the Azure portal. The language does not affect the lab environment you deploy.
 
-    > **Tips:** We recommend choosing **Yes, I trust the authors** to use the user friendly deployment UI. Read the [FAQ](./hci-lab-tour.md#why-the-trust-confirmation-message-shown-when-opening-deploy-to-azure) for details.
+    > **Tip:** We recommend choosing **Yes, I trust the authors** to use the user friendly deployment UI. Read the [FAQ](./hci-lab-tour.md#why-the-trust-confirmation-message-shown-when-opening-deploy-to-azure) for details.
 
 2. Fill out required fields in the UI form.
 
@@ -103,7 +103,7 @@ This step covers [Step 1: Prepare Active Directory](https://learn.microsoft.com/
 
 This step covers [Step 4: Set up subscription permissions](https://learn.microsoft.com/azure/azure-local/deploy/deployment-arc-register-server-permissions).
 
-1. Register required resource providers. Make sure that your Azure subscription is registered with the required resource providers. To register, you must be an **Owner** or **Contributor** on your subscription. You can also ask an administrator of Azure subscription to register.
+1. Register required resource providers. Make sure that your Azure subscription is registered with the required resource providers. To register, you must be an **Owner** or **Contributor** on your subscription. You can also ask the administrator of your Azure subscription to register them.
 
     ```powershell
     $providerNamespaces = @(
@@ -129,36 +129,36 @@ This step covers [Step 4: Set up subscription permissions](https://learn.microso
     Get-AzResourceProvider -ProviderNamespace $providerNamespaces | Group-Object -Property 'RegistrationState'
     ```
 
-2. Verify role permissions on the resource group to register machines as Arc resources. Make sure that you either have the **Owner** role permission on the resource group or have the following role permissions on the resource group where the machines are provisioned as Arc resources.
+2. Verify roles on the resource group to register machines as Arc resources. Make sure that you have either the **Owner** role on the resource group or the following roles on the resource group where the machines are provisioned as Arc resources.
 
     - Azure Connected Machine Onboarding
     - Azure Connected Machine Resource Administrator
 
-    In this tutorial, we will register machines to the resource group that the same as the resource group we deployed Azure Local Lab in the previous step.
+    In this tutorial, we will register machines to the same resource group that we deployed Azure Local Lab in the previous step.
 
-3. Verify role permissions on the resource group that used to register machines as Arc resources to deploy Azure Local instance for the later steps. Assign the following permissions to the user who deploys the Azure Local instance.
+3. Verify roles on the resource group that used to register machines as Arc resources to deploy Azure Local instance for the later steps. Assign the following permissions to the user who deploys the Azure Local instance.
 
     - Key Vault Data Access Administrator
     - Key Vault Secrets Officer
     - Key Vault Contributor
     - Storage Account Contributor
 
-    In this tutorial, we will deploy Azure Local instance into the resource group that the same as the resource group we deployed Azure Local Lab in the previous step.
+    In this tutorial, we will deploy Azure Local instance into the same resource group that we deployed Azure Local Lab in the previous step.
 
-4. Verify role permissions on the Azure subscription for Azure Local deployment. Assign the following role permissions to the user who deploys the Azure Local instance.
+4. Verify roles on the Azure subscription for Azure Local deployment. Assign the following roles to the user who deploys the Azure Local instance.
 
     - Azure Stack HCI Administrator
     - Reader
 
-**Summary of role permissions for this tutorial:**
+**Summary of roles for this tutorial:**
 
-| Purpose | Scope | Role permission | Assign access to | Notes |
+| Purpose | Scope | Roles | Assign access to | Notes |
 | ---- | ---- | ---- | ---- | ---- |
-| Arc Machine registration | The **resource group** that you specify in **1. Deploy Azure Local Lab environment** | Require one of them: <ul><li>Owner</li><li>Azure Connected Machine Onboarding and Azure Connected Machine Resource Administrator</li></ul> | The user who registers the machines as Arc resources. In this tutorial, that's you. | You don't need to warry about these permissions if you have the **Owner** role permission on the Azure subscription because the permission inherited from the Azure subscription to the resource group. |
-| Azure Local instance deployment | The **resource group** that you specify in **1. Deploy Azure Local Lab environment** | Require all: <ul><li>Key Vault Data Access Administrator</li><li>Key Vault Secrets Officer</li><li>Key Vault Contributor</li><li>Storage Account Contributor</li></ul> | The user who deploys the Azure Local instance. In this tutorial, that's you. | You can actually skip preparation for these permissions because they are granted during the Azure Local instance deployment via Azure portal. |
-| Azure Local instance deployment | The **Azure subscription** that you specify in **1. Deploy Azure Local Lab environment** | Require all: <ul><li>Azure Stack HCI Administrator</li><li>Reader</li></ul> | The user who deploys the Azure Local instance. In this tutorial, that's you. | The **Reader** role permission is not required if you have the **Owner** role permission on the Azure subscription. The **Owner** role permission is a superset role permission of the **Reader** role permission. |
+| Arc Machine registration | The **resource group** that you specify in **1. Deploy Azure Local Lab environment** | Require one of them: <ul><li>Owner</li><li>Azure Connected Machine Onboarding and Azure Connected Machine Resource Administrator</li></ul> | The user who registers the machines as Arc resources. In this tutorial, that's you. | You don't need to worry about these permissions if you have the **Owner** role on the Azure subscription because the permissions are inherited from the Azure subscription down to the resource group. |
+| Azure Local instance deployment | The **resource group** that you specify in **1. Deploy Azure Local Lab environment** | Require all: <ul><li>Key Vault Data Access Administrator</li><li>Key Vault Secrets Officer</li><li>Key Vault Contributor</li><li>Storage Account Contributor</li></ul> | The user who deploys the Azure Local instance. In this tutorial, that's you. | You can actually skip preparation for these permissions because they are granted during the Azure Local instance deployment via the Azure portal. |
+| Azure Local instance deployment | The **Azure subscription** that you specify in **1. Deploy Azure Local Lab environment** | Require all: <ul><li>Azure Stack HCI Administrator</li><li>Reader</li></ul> | The user who deploys the Azure Local instance. In this tutorial, that's you. | The **Reader** role is not required if you have the **Owner** role on the Azure subscription. The **Owner** role is a superset role of the **Reader** role. |
 
-> **Tips:** Actually, for this tutorial, you need to configure only the **Azure Stack HCI Administrator** role permission if you have the **Owner** role permission of the Azure subscription.
+> **Tip:** Actually, for this tutorial, you need to configure only the **Azure Stack HCI Administrator** role if you have the **Owner** role of the Azure subscription.
 
 ## 3. Register Azure Local machines with Azure Arc using Configurator app
 
@@ -181,7 +181,7 @@ This step covers [Step 5A: Register Azure Local machines with Azure Arc, without
     - Enter password: The password that you specified in **1. Deploy Azure Local Lab environment** as the password of Administrator account.
     - Security alert: Click **Accept**
 
-7. Wait for the prerequisites check to complete. The check will complete with all items showing a kipped status. Then click **Configure device** to start configuration.
+7. Wait for the prerequisites check to finish. All items showing a skipped status. And, then click **Configure device** to start the configuration.
 
 8. In the **Basics** step, click **Edit network settings** and select **Management** if it is not already selected as a network interface, then click **Apply**. After that click **Next**.
 
@@ -206,7 +206,7 @@ This step covers [Step 5A: Register Azure Local machines with Azure Arc, without
     - Time server: time.windows.com
     - Hostname: MACHINE01
 
-9. In the **Arc agent setup** step, enter the following information then click **Next**. Don't use **Log in to Azure** in this tutorial.
+9. In the **Arc agent setup** step, enter the following information then click **Next**. Do not use the **Log in to Azure** button in this tutorial.
 
     - Cloud type: Azure
     - Subscription: The subscription ID to create an Arc Machine resource of the machine. In this tutorial, enter the subscription ID that you specified in **1. Deploy Azure Local Lab environment**.
@@ -217,17 +217,17 @@ This step covers [Step 5A: Register Azure Local machines with Azure Arc, without
 
 10. In the **Review and apply** step, review the configuration details and click **Done**.
 
-11. In the **Configuration status** page, wait for the device code to be shown to register the machine as an Arc Machine. Enter the code and complete authentication on [https://login.microsoft.com/device](https://login.microsoft.com/device) from any devices.
+11. In the **Configuration status** page, wait for the device code to be shown to register the machine as an Arc Machine. Enter the code and complete authentication on [https://login.microsoft.com/device](https://login.microsoft.com/device) from any device.
 
 12. Repeat the above steps for all machines.
 
-    > **Tips:** You can register multiple machines at the same time.
+    > **Tip:** You can register multiple machines at the same time.
 
-## 4. Deploy Azure Local instance via Azure portal
+## 4. Deploy Azure Local instance via the Azure portal
 
 This step covers [Step 6A: Deploy the system via Azure portal](https://learn.microsoft.com/azure/azure-local/deploy/deploy-via-portal).
 
-To deploy a new Azure Local instance, search **Azure Local** in Azure portal then click **Create instance**.
+To deploy a new Azure Local instance, search **Azure Local** in the Azure portal then click **Create instance**.
 
 ### 4.1 Basics tab
 
@@ -239,7 +239,7 @@ To deploy a new Azure Local instance, search **Azure Local** in Azure portal the
 2. **Instance details**
 
     - Instance name: Specify the Azure Local instance resource name. e.g. **azloc1**
-    - Region: Select a region of the Azure Local instance resource such as **Japan East**.
+    - Region: Select a region for the Azure Local instance resource, such as **Japan East**.
     - Cluster options: Select **Standard** for this tutorial.
     - Storage options: Select **Storage Spaces Direct (S2D)** for this tutorial.
 
@@ -249,7 +249,7 @@ To deploy a new Azure Local instance, search **Azure Local** in Azure portal the
 
 4. **Select the machines to use and validate**
 
-    1. Click **Add machines** to select the machines to deploy. In this tutorial, you can select 2 machines. Add all selectable machines. Click **Add** to begin installing the extension on Arc Machines. Wait for complete the extension installation on all Arc Machines. It may take around 10 minutes.
+    1. Click **Add machines** to select the machines to deploy. In this tutorial, you can select 2 machines. Add all selectable machines. Click **Add** to begin installing the extension on Arc Machines. Wait for the extension installation to complete on all Arc Machines. It may take around 10 minutes.
 
     2. Click **Validate selected machines**. The validation should be successful.
 
@@ -257,7 +257,7 @@ To deploy a new Azure Local instance, search **Azure Local** in Azure portal the
 
     4. If a message **Insufficient permissions at resource group level. click here** is shown, click **Grant Key Vault permissions** to grant required permissions.
 
-        > **Tips:** Azure Local deployment needs **Allow public access from all networks** setting on the newly create Key Vault. You should check the setting before go forward if your organization disabled/disallow the setting by policy. In some cases, the organization provides special tags to except the policy.
+        > **Tip:** Azure Local deployment needs **Allow public access from all networks** setting on the newly create Key Vault. You should check the setting before go forward if your organization disabled/disallow the setting by policy. In some cases, the organization provides special tags to except the policy.
 
 5. Click **Next: Configuration**.
 
@@ -275,7 +275,7 @@ To deploy a new Azure Local instance, search **Azure Local** in Azure portal the
 
 2. **Group network traffic types by intent**
 
-    - Networking pattern: Select **Custom configuration** for this tutorial. Azure Local Lab can support other patterns.
+    - Networking pattern: Select **Custom configuration** for this tutorial. Azure Local Lab also supports other patterns.
 
 3. **Provide intent details**
 
@@ -330,7 +330,7 @@ To deploy a new Azure Local instance, search **Azure Local** in Azure portal the
     - Witness type: **Cloud witness** in this tutorial. If you have an odd number of machines, it will be **No witness**.
     - Azure storage account name: Click **Create new** and enter globally unique storage account name on **Storage account name**. Use the default value for other fields. Then click **Create**.
 
-        > **Tips:** Azure Local deployment needs the following settings on the newly create Storage account. You should check the settings before go forward if your organization disabled/disallow the setting by policy. In some cases, the organization provides special tags to except the policy.
+        > **Tip:** Azure Local deployment needs the following settings on the newly create Storage account. You should check the settings before go forward if your organization disabled/disallow the setting by policy. In some cases, the organization provides special tags to except the policy.
         > - Allow public access from all networks
         > - Allow storage account key access
 
