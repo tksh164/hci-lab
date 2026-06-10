@@ -253,9 +253,9 @@ To deploy a new Azure Local instance, search **Azure Local** in Azure portal the
 
     2. Click **Validate selected machines**. The validation should be successful.
 
-    3. Select **Create a new Key Vault** and click **Create a new key vault** to create a new Key Vault for Azure Local deployment. Enter a valid Key Vault name that should be unique in global and use the default value for other fields. Then click **Create**.
+    3. Select **Create a new Key Vault** and click **Create a new key vault** to create a new Key Vault for Azure Local deployment. Enter a valid Key Vault name that must be globally unique and use the default value for other fields. Then click **Create**.
 
-    4. If show a message **Insufficient permissions at resource group level. click here**, Click **Grant Key Vault permissions** to grant required permissions.
+    4. If a message **Insufficient permissions at resource group level. click here** is shown, click **Grant Key Vault permissions** to grant required permissions.
 
         > **Tips:** Azure Local deployment needs **Allow public access from all networks** setting on the newly create Key Vault. You should check the setting before go forward if your organization disabled/disallow the setting by policy. In some cases, the organization provides special tags to except the policy.
 
@@ -327,7 +327,7 @@ To deploy a new Azure Local instance, search **Azure Local** in Azure portal the
 
 2. **Specify system witness settings**
 
-    - Witness type: **Cloud witness** in this tutorial. If you have odd number of machines, it will be No witness.
+    - Witness type: **Cloud witness** in this tutorial. If you have an odd number of machines, it will be **No witness**.
     - Azure storage account name: Click **Create new** and enter globally unique storage account name on **Storage account name**. Use the default value for other fields. Then click **Create**.
 
         > **Tips:** Azure Local deployment needs the following settings on the newly create Storage account. You should check the settings before go forward if your organization disabled/disallow the setting by policy. In some cases, the organization provides special tags to except the policy.
