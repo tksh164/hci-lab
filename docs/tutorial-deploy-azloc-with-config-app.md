@@ -1,4 +1,4 @@
-# Tutorial: Deploy Azure Local with Azure Local Lab
+# Tutorial: Deploy Azure Local with Configurator App using Azure Local Lab
 
 > **Note:** This tutorial is based on Azure Local 2605.
 
