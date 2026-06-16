@@ -1,4 +1,4 @@
-# Deploy AKS on Windows Server 2022 with HCI Lab
+# Deploy AKS on Windows Server 2022 using HCI Lab
 
 This document describes the steps to deploy AKS on Windows Server 2022 using HCI Lab.
 
