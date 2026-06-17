@@ -34,7 +34,8 @@ The Azure Local Lab helps build your own lab environment for Azure Local and Win
 
 - [Lab tour](./docs/hci-lab-tour.md): Explains about the configuration of the HCI Lab environment.
 - [Frequently asked questions](./docs/hci-lab-tour.md#frequently-asked-questions): Frequently asked questions on the HCI Lab.
-- [Deploy AKS on Windows Server 2022 with HCI Lab](./docs/deploy-aks-on-ws2022-with-hcilab.md): Step by step to deploy the AKS on Windows Server 2022 with HCI Lab.
+- [Tutorial: Deploy Azure Local with Configurator App using Azure Local Lab](./docs/tutorial-deploy-azloc-with-config-app.md): Step by step to deploy the Azure Local with App Configurator App using Auzre Local Lab.
+- [Tutorial: Deploy AKS on Windows Server 2022 using HCI Lab](./docs/tutorial-deploy-aks-on-ws2022.md): Step by step to deploy the AKS on Windows Server 2022 using HCI Lab.
 
 ## 📚 Selectable operating systems
 
