@@ -43,7 +43,7 @@ The following operating systems are selectable for lab machines.
 
 | Operating system | OS build | Description |
 | ---- | ---- | ---- |
-| Azure Local 2605 (24H2) | 26100.32860 | The latest generally available version of Azure Local. |
+| Azure Local 2606 (24H2) | 26100.32995	| The latest generally available version of Azure Local. |
 | Windows Server 2025 Datacenter Evaluation (Desktop Experience) | 26100.1742 | Windows Server 2025 Datacenter with the standard graphical user interface. |
 
 <details>
@@ -52,6 +52,7 @@ The following operating systems are selectable for lab machines.
 
 | Operating system | OS build | Description |
 | ---- | ---- | ---- |
+| Azure Local 2605 (24H2) | 26100.32860 | The previous version of Azure Local. |
 | Azure Local 2604 (24H2) | 26100.32690 | The previous version of Azure Local. |
 | Azure Local 2603 (24H2) | 26100.32522 | The previous version of Azure Local. |
 | Azure Local 2602 (24H2) | 26100.32370 | The previous version of Azure Local. |
