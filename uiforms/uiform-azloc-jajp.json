@@ -1254,13 +1254,21 @@
                                     "placeholder": "マシンのオペレーティング システムを選択...",
                                     "defaultDescription": "---",
                                     "filterPlaceholder": "マシンのオペレーティング システムをフィルター...",
-                                    "defaultValue": "Azure Local 2605",
+                                    "defaultValue": "Azure Local 2606",
                                     "constraints": {
                                         "required": true,
                                         "allowedValues": [
                                             {
-                                                "label": "Azure Local 2605",
+                                                "label": "Azure Local 2606",
                                                 "description": "最新の一般提供バージョンです。",
+                                                "value": {
+                                                    "sku": "azloc24h2_2606",
+                                                    "imageIndex": 1
+                                                }
+                                            },
+                                            {
+                                                "label": "Azure Local 2605",
+                                                "description": "以前のバージョンです。",
                                                 "value": {
                                                     "sku": "azloc24h2_2605",
                                                     "imageIndex": 1
@@ -1300,7 +1308,7 @@
                                             },
                                             {
                                                 "label": "Azure Local 2512",
-                                                "description": "以前のバージョンです。",
+                                                "description": "注意: このバージョンのサポート期間は終了しました。",
                                                 "value": {
                                                     "sku": "azloc24h2_2512",
                                                     "imageIndex": 1
