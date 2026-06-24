@@ -57,9 +57,9 @@ The following operating systems are selectable for lab machines.
 | Azure Local 2603 (24H2) | 26100.32522 | The previous version of Azure Local. |
 | Azure Local 2602 (24H2) | 26100.32370 | The previous version of Azure Local. |
 | Azure Local 2601 (24H2) | 26100.32230 | The previous version of Azure Local. |
-| Azure Local 2512 (24H2) | 26100.7462 | The previous version of Azure Local. |
-| Azure Local 2511 (24H2) | 26100.7171 | The previous version of Azure Local. |
-| Azure Local 2510 (24H2) | 26100.6899 | The previous version of Azure Local. |
+| Azure Local 2512 (24H2) | 26100.7462 | This version of Azure Local reached the end of support. |
+| Azure Local 2511 (24H2) | 26100.7171 | This version of Azure Local reached the end of support. |
+| Azure Local 2510 (24H2) | 26100.6899 | This version of Azure Local reached the end of support. |
 | Azure Local 2509 (24H2) | 26100.6584 | This version of Azure Local reached the end of support. |
 | Azure Local 2508 (24H2) | 26100.4946 | This version of Azure Local reached the end of support. |
 | Azure Local 2507 (24H2) | 26100.4652 | This version of Azure Local reached the end of support. |
