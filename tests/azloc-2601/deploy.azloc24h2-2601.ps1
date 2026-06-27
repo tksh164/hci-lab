@@ -11,7 +11,7 @@ param (
     [switch] $ValidateOnly
 )
 
-$symbol = 'ws2022'
+$symbol = 'azloc24h2-2601'
 
 $params = @{
     ResourceGroupName      = 'labenv-{0}-{1}' -f $symbol, [datetime]::Now.ToString('yyMMddHHmmss')

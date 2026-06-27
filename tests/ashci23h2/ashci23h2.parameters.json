@@ -1,0 +1,54 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "adminUserName": {
+            "value": "AzureUser"
+        },
+        "labHostVmSize": {
+            "value": "Standard_E16s_v5"
+        },
+        "labHostVmDataDiskSize": {
+            "value": 64
+        },
+        "labHostVmDataDiskCount": {
+            "value": 32
+        },
+        "hasEligibleWindowsServerLicense": {
+            "value": false
+        },
+        "shouldDeployBastionDeveloper" : {
+            "value": true
+        },
+        "shouldInstallUpdatesToLabVm": {
+            "value": false
+        },
+        "hciNodeOsSku": {
+            "value": "ashci23h2"
+        },
+        "hciNodeOsImageIndex": {
+            "value": 1
+        },
+        "hciNodeCount": {
+            "value": 2
+        },
+        "shouldHciNodeJoinToAddsDomain": {
+            "value": false
+        },
+        "shouldCreateHciCluster": {
+            "value": false
+        },
+        "isAzureLocalDeployment": {
+            "value": true
+        },
+        "shouldPrepareAddsForAzureLocal": {
+            "value": true
+        },
+        "shouldInstallConfigAppForAzureLocal": {
+            "value": true
+        },
+        "repoBaseUri": {
+            "value": "https://storage-account-name.xxx.web.core.windows.net/templates/labenv/"
+        }
+    }
+}
