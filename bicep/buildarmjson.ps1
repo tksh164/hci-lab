@@ -5,10 +5,10 @@ $bicepFilePaths = @(
     './labenv/cloudwitness.bicep',
     './labenv/customscript.bicep',
     './labenv/dsc.bicep',
-    './labenv/hci-lab.bicep',
     './labenv/hostvm.bicep',
     './labenv/keyvault-rbac.bicep',
     './labenv/keyvault.bicep',
+    './labenv/labenv.bicep',
     './labenv/vnet.bicep'
 )
 $outputBaseFolderPath = '../templates'
