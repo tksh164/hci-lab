@@ -453,15 +453,15 @@ var customScript = {
     ]
     commandToExecute: 'powershell.exe -ExecutionPolicy Unrestricted -File .\\configure-lab-host.ps1'
   }
-  downloadIsoUpdates: {
+  downloadMaterials: {
     deploymentName: 'download-materials'
     apiVersion: deploymentApiVersion
     fileUris: [
-      uri(customScriptBaseUriWithSlash, 'download-iso-updates.ps1')
-      uri(customScriptBaseUriWithSlash, 'download-iso-updates-asset-urls.psd1')
+      uri(customScriptBaseUriWithSlash, 'download-materials.ps1')
+      uri(customScriptBaseUriWithSlash, 'materials.json')
       uri(customScriptBaseUriWithSlash, 'common.psm1')
     ]
-    commandToExecute: 'powershell.exe -ExecutionPolicy Unrestricted -File .\\download-iso-updates.ps1'
+    commandToExecute: 'powershell.exe -ExecutionPolicy Unrestricted -File .\\download-materials.ps1'
   }
   createBaseVhd: {
     deploymentName: 'create-base-vhd'
@@ -916,8 +916,8 @@ resource res_configureHostVm 'Microsoft.Resources/deployments@2025-04-01' = {
 }
 
 // Download ISO files and updates.
-resource res_downloadIsoUpdates 'Microsoft.Resources/deployments@2025-04-01' = {
-  name: customScript.downloadIsoUpdates.deploymentName
+resource res_downloadMaterials 'Microsoft.Resources/deployments@2025-04-01' = {
+  name: customScript.downloadMaterials.deploymentName
   dependsOn: [
     res_configureHostVm
   ]
@@ -938,10 +938,10 @@ resource res_downloadIsoUpdates 'Microsoft.Resources/deployments@2025-04-01' = {
         value: customScriptExtensionName
       }
       fileUris: {
-        value: customScript.downloadIsoUpdates.fileUris
+        value: customScript.downloadMaterials.fileUris
       }
       commandToExecute: {
-        value: customScript.downloadIsoUpdates.commandToExecute
+        value: customScript.downloadMaterials.commandToExecute
       }
     }
   }
@@ -951,7 +951,7 @@ resource res_downloadIsoUpdates 'Microsoft.Resources/deployments@2025-04-01' = {
 resource res_createBaseVhd 'Microsoft.Resources/deployments@2025-04-01' = {
   name: customScript.createBaseVhd.deploymentName
   dependsOn: [
-    res_downloadIsoUpdates
+    res_downloadMaterials
   ]
   properties: {
     mode: 'Incremental'
