@@ -1,14 +1,22 @@
 #Requires -Version 7
 
 $bicepFilePaths = @(
-    './labenv/hci-lab.bicep'
+    './labenv/bastion.bicep',
+    './labenv/cloudwitness.bicep',
+    './labenv/customscript.bicep',
+    './labenv/dsc.bicep',
+    './labenv/hci-lab.bicep',
+    './labenv/hostvm.bicep',
+    './labenv/keyvault-rbac.bicep',
+    './labenv/keyvault.bicep',
+    './labenv/vnet.bicep'
 )
 $outputBaseFolderPath = '../templates'
 
-# Check the bicep command.
-$bicepCommand = Get-Command -Name 'bicep'
-Write-Host 'Bicep: ' -NoNewline -ForegroundColor Cyan
-Write-Host ('"{0}"' -f $bicepCommand.Path)
+# Check the az command.
+$azCommand = Get-Command -Name 'az'
+Write-Host 'az: ' -NoNewline -ForegroundColor Cyan
+Write-Host ('"{0}"' -f $azCommand.Path)
 
 # Build the bicep file to ARM template file.
 foreach ($bicepFilePath in $bicepFilePaths) {
@@ -23,5 +31,5 @@ foreach ($bicepFilePath in $bicepFilePaths) {
     Write-Host ' -> ' -NoNewline -ForegroundColor Cyan
     Write-Host ('"{0}"' -f $outputFolderFullPath)
 
-    & $bicepCommand.Path @('build', '--outdir', $outputFolderFullPath, $bicepFileFullPath)
+    & $azCommand.Path @('bicep', 'build', '--outdir', $outputFolderFullPath, '--file', $bicepFileFullPath)
 }
