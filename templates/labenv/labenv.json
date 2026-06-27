@@ -1,0 +1,1079 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.44.1.10279",
+      "templateHash": "3598194207507689322"
+    }
+  },
+  "parameters": {
+    "adminUserName": {
+      "type": "string",
+      "defaultValue": "AzureUser",
+      "minLength": 1,
+      "maxLength": 20,
+      "metadata": {
+        "description": "The administrator user name."
+      }
+    },
+    "adminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "The administrator password. The password must be between 14 and 72 characters and have 4 of the following: 1 lower case character, 1 upper case character, 1 number, and 1 special character."
+      }
+    },
+    "labHostVmName": {
+      "type": "string",
+      "defaultValue": "labenv-vm1",
+      "minLength": 1,
+      "maxLength": 64,
+      "metadata": {
+        "description": "The name of the lab host virtual machine resource name. This value is not used for the virtual machine's computer name."
+      }
+    },
+    "labHostVmSize": {
+      "type": "string",
+      "defaultValue": "Standard_E16s_v5",
+      "allowedValues": [
+        "Standard_E4s_v6",
+        "Standard_E8s_v6",
+        "Standard_E16s_v6",
+        "Standard_E20s_v6",
+        "Standard_E32s_v6",
+        "Standard_E48s_v6",
+        "Standard_E64s_v6",
+        "Standard_E96s_v6",
+        "Standard_E4s_v5",
+        "Standard_E8s_v5",
+        "Standard_E16s_v5",
+        "Standard_E20s_v5",
+        "Standard_E32s_v5",
+        "Standard_E48s_v5",
+        "Standard_E64s_v5",
+        "Standard_E96s_v5",
+        "Standard_E4bs_v5",
+        "Standard_E8bs_v5",
+        "Standard_E16bs_v5",
+        "Standard_E32bs_v5",
+        "Standard_E48bs_v5",
+        "Standard_E64bs_v5",
+        "Standard_E16as_v6",
+        "Standard_E20as_v6",
+        "Standard_E32as_v6",
+        "Standard_E48as_v6",
+        "Standard_E64as_v6",
+        "Standard_E96as_v6",
+        "Standard_E16as_v5",
+        "Standard_E20as_v5",
+        "Standard_E32as_v5",
+        "Standard_E48as_v5",
+        "Standard_E64as_v5",
+        "Standard_E96as_v5",
+        "Standard_D8s_v6",
+        "Standard_D16s_v6",
+        "Standard_D32s_v6",
+        "Standard_D48s_v6",
+        "Standard_D64s_v6",
+        "Standard_D96s_v6",
+        "Standard_D8s_v5",
+        "Standard_D16s_v5",
+        "Standard_D32s_v5",
+        "Standard_D48s_v5",
+        "Standard_D64s_v5",
+        "Standard_D96s_v5",
+        "Standard_D32as_v6",
+        "Standard_D48as_v6",
+        "Standard_D64as_v6",
+        "Standard_D96as_v6",
+        "Standard_D32as_v5",
+        "Standard_D48as_v5",
+        "Standard_D64as_v5",
+        "Standard_D96as_v5",
+        "Standard_D16ls_v6",
+        "Standard_D32ls_v6",
+        "Standard_D48ls_v6",
+        "Standard_D64ls_v6",
+        "Standard_D96ls_v6",
+        "Standard_D16ls_v5",
+        "Standard_D32ls_v5",
+        "Standard_D48ls_v5",
+        "Standard_D64ls_v5",
+        "Standard_D96ls_v5",
+        "Standard_D8s_v4",
+        "Standard_D16s_v4",
+        "Standard_D32s_v4",
+        "Standard_D48s_v4",
+        "Standard_D64s_v4",
+        "Standard_F8as_v6",
+        "Standard_F16as_v6",
+        "Standard_F32as_v6",
+        "Standard_F48as_v6",
+        "Standard_F64as_v6",
+        "Standard_F16als_v6",
+        "Standard_F32als_v6",
+        "Standard_F48als_v6",
+        "Standard_F64als_v6",
+        "Standard_F16s_v2",
+        "Standard_F32s_v2",
+        "Standard_F48s_v2",
+        "Standard_F64s_v2",
+        "Standard_F72s_v2",
+        "Standard_FX4mds",
+        "Standard_FX12mds",
+        "Standard_FX24mds",
+        "Standard_FX36mds",
+        "Standard_FX48mds"
+      ],
+      "metadata": {
+        "description": "The size of the lab host virtual machine."
+      }
+    },
+    "labHostVmOsDiskType": {
+      "type": "string",
+      "defaultValue": "StandardSSD_LRS",
+      "allowedValues": [
+        "Premium_LRS",
+        "StandardSSD_LRS",
+        "Standard_LRS"
+      ],
+      "metadata": {
+        "description": "The storage type of the lab host virtual machine's OS disk."
+      }
+    },
+    "labHostVmDataDiskType": {
+      "type": "string",
+      "defaultValue": "StandardSSD_LRS",
+      "allowedValues": [
+        "Premium_LRS",
+        "StandardSSD_LRS"
+      ],
+      "metadata": {
+        "description": "The storage type of the lab host virtual machine's data disk."
+      }
+    },
+    "labHostVmDataDiskSize": {
+      "type": "int",
+      "defaultValue": 64,
+      "allowedValues": [
+        32,
+        64,
+        128,
+        256,
+        512,
+        1024
+      ],
+      "metadata": {
+        "description": "The size of individual disk of the lab host virtual machine's data disks in GiB."
+      }
+    },
+    "labHostVmDataDiskCount": {
+      "type": "int",
+      "defaultValue": 8,
+      "minValue": 8,
+      "maxValue": 32,
+      "metadata": {
+        "description": "The number of data disks on the lab host virtual machine."
+      }
+    },
+    "hasEligibleWindowsServerLicense": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "By specifying True, you confirm you have an eligible Windows Server license with Software Assurance or Windows Server subscription to apply this Azure Hybrid Benefit. You can read more about compliance here: http://go.microsoft.com/fwlink/?LinkId=859786"
+      }
+    },
+    "shouldDeployBastionDeveloper": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "By specifying True, will be deploy Azure Bastion Developer."
+      }
+    },
+    "toolsToInstall": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "The tools to be installed on the lab host virtual machine. Use ';' to separate tool's symbol. Supported tool's symbols are windowsterminal, vscode."
+      }
+    },
+    "shouldEnabledAutoshutdown": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "By specifying True, will be auto-shutdown configured to the lab host virtual machine."
+      }
+    },
+    "autoshutdownTime": {
+      "type": "string",
+      "defaultValue": "22:00",
+      "metadata": {
+        "description": "The auto-shutdown time."
+      }
+    },
+    "autoshutdownTimeZone": {
+      "type": "string",
+      "defaultValue": "UTC",
+      "metadata": {
+        "description": "The time zone for auto-shutdown time."
+      }
+    },
+    "labVmOsCulture": {
+      "type": "string",
+      "defaultValue": "en-us",
+      "allowedValues": [
+        "en-us",
+        "ja-jp"
+      ],
+      "metadata": {
+        "description": "The operating system's culture of the lab virtual machines. This affects such as language and input method of the operating system."
+      }
+    },
+    "labVmOsTimeZone": {
+      "type": "string",
+      "defaultValue": "UTC",
+      "metadata": {
+        "description": "The time zone of the lab virtual machines."
+      }
+    },
+    "shouldInstallUpdatesToLabVm": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "By specifying True, operating system's updates will be installed during the deployment."
+      }
+    },
+    "hciNodeOsSku": {
+      "type": "string",
+      "defaultValue": "azloc24h2_2606",
+      "allowedValues": [
+        "azloc24h2_2606",
+        "azloc24h2_2605",
+        "azloc24h2_2604",
+        "azloc24h2_2603",
+        "azloc24h2_2602",
+        "azloc24h2_2601",
+        "azloc24h2_2512",
+        "azloc24h2_2511",
+        "azloc24h2_2510",
+        "azloc24h2_2509",
+        "azloc24h2_2508",
+        "azloc24h2_2507",
+        "azloc24h2_2506",
+        "azloc24h2_2505",
+        "azloc24h2_2504",
+        "ashci23h2",
+        "ashci22h2",
+        "ashci21h2",
+        "ashci20h2",
+        "ws2025",
+        "ws2022"
+      ],
+      "metadata": {
+        "description": "The operating system for the HCI node virtual machines."
+      }
+    },
+    "hciNodeOsImageIndex": {
+      "type": "int",
+      "defaultValue": 1,
+      "allowedValues": [
+        1,
+        4
+      ],
+      "metadata": {
+        "description": "The image index of the operating system for the HCI node virtual machines."
+      }
+    },
+    "hciNodeCount": {
+      "type": "int",
+      "defaultValue": 2,
+      "minValue": 2,
+      "maxValue": 8,
+      "metadata": {
+        "description": "The number of HCI nodes to deploy."
+      }
+    },
+    "shouldHciNodeJoinToAddsDomain": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "By specifying True, the HCI nodes join to the AD DS domain during the deployment."
+      }
+    },
+    "addsDomainFqdn": {
+      "type": "string",
+      "defaultValue": "lab.internal",
+      "metadata": {
+        "description": "The Active Directory Domain Services domain FQDN."
+      }
+    },
+    "shouldCreateHciCluster": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "By specifying True, automatically create an HCI cluster during the deployment."
+      }
+    },
+    "hciClusterName": {
+      "type": "string",
+      "defaultValue": "hciclus",
+      "metadata": {
+        "description": "The cluster name (cluster name object/CNO) for the HCI cluster."
+      }
+    },
+    "isAzureLocalDeployment": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "By specifying True, it means the deployment is Azure Local."
+      }
+    },
+    "shouldPrepareAddsForAzureLocal": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "By specifying True, the Azure Local AD objects will be created during the deployment."
+      }
+    },
+    "addsOrgUnitPathForAzureLocal": {
+      "type": "string",
+      "defaultValue": "OU=AzureLocal,DC=lab,DC=internal",
+      "metadata": {
+        "description": "The Active Directory organizational Unit (OU) path to place the Azure Local related objects."
+      }
+    },
+    "lcmUserName": {
+      "type": "string",
+      "defaultValue": "lcmuser",
+      "metadata": {
+        "description": "The user name of the Lifecycle Manager (LCM) deployment user account."
+      }
+    },
+    "shouldInstallConfigAppForAzureLocal": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "By specifying True, the Configurator App for Azure Local will be installed during the deployment."
+      }
+    },
+    "repoBaseUri": {
+      "type": "string",
+      "defaultValue": "https://raw.githubusercontent.com/tksh164/hci-lab/main/template/",
+      "metadata": {
+        "description": "The base URI of template's repository. The value must end with '/'."
+      }
+    },
+    "salt": {
+      "type": "string",
+      "defaultValue": "[utcNow()]",
+      "metadata": {
+        "description": "The value for generate unique values."
+      }
+    }
+  },
+  "variables": {
+    "location": "[resourceGroup().location]",
+    "uniquePart": "[substring(uniqueString(resourceGroup().id, parameters('salt')), 0, 5)]",
+    "repoBaseUriWithSlash": "[if(endsWith(parameters('repoBaseUri'), '/'), parameters('repoBaseUri'), format('{0}/', parameters('repoBaseUri')))]",
+    "deploymentApiVersion": "2025-04-01",
+    "virtualNetwork": {
+      "deploymentName": "deploy-vnet",
+      "apiVersion": "[variables('deploymentApiVersion')]",
+      "linkedTemplateUri": "[uri(variables('repoBaseUriWithSlash'), 'vnet.json')]",
+      "name": "labenv-vnet"
+    },
+    "bastion": {
+      "deploymentName": "deploy-bastion",
+      "apiVersion": "[variables('deploymentApiVersion')]",
+      "linkedTemplateUri": "[uri(variables('repoBaseUriWithSlash'), 'bastion.json')]",
+      "name": "labenv-bastion"
+    },
+    "hostVm": {
+      "deploymentName": "deploy-host-vm",
+      "apiVersion": "[variables('deploymentApiVersion')]",
+      "linkedTemplateUri": "[uri(variables('repoBaseUriWithSlash'), 'hostvm.json')]"
+    },
+    "keyVault": {
+      "deploymentName": "deploy-key-vault",
+      "apiVersion": "[variables('deploymentApiVersion')]",
+      "linkedTemplateUri": "[uri(variables('repoBaseUriWithSlash'), 'keyvault.json')]",
+      "name": "[format('labenv-{0}-kv', toLower(variables('uniquePart')))]"
+    },
+    "keyVaultRbac": {
+      "deploymentName": "assign-key-vault-rbac-with-host-vm-managed-id",
+      "apiVersion": "[variables('deploymentApiVersion')]",
+      "linkedTemplateUri": "[uri(variables('repoBaseUriWithSlash'), 'keyvault-rbac.json')]"
+    },
+    "witnessStorageAccount": {
+      "deploymentName": "deploy-storage-account-witness",
+      "apiVersion": "[variables('deploymentApiVersion')]",
+      "linkedTemplateUri": "[uri(variables('repoBaseUriWithSlash'), 'cloudwitness.json')]",
+      "namePrefix": "labenvwitness"
+    },
+    "dscLinkedTemplateUri": "[uri(variables('repoBaseUriWithSlash'), 'dsc.json')]",
+    "dscExtensionName": "hci-lab-dsc-extension",
+    "dscBaseUriWithSlash": "[uri(variables('repoBaseUriWithSlash'), 'dsc/')]",
+    "dsc": {
+      "installRolesFeatures": {
+        "deploymentName": "install-roles-and-features-on-host-vm",
+        "apiVersion": "[variables('deploymentApiVersion')]",
+        "zipUri": "[uri(variables('dscBaseUriWithSlash'), 'install-roles-and-features.zip')]",
+        "scriptName": "install-roles-and-features.ps1",
+        "functionName": "install-roles-and-features"
+      },
+      "rebootHostVm": {
+        "deploymentName": "reboot-host-vm",
+        "apiVersion": "[variables('deploymentApiVersion')]",
+        "zipUri": "[uri(variables('dscBaseUriWithSlash'), 'reboot.zip')]",
+        "scriptName": "reboot.ps1",
+        "functionName": "reboot"
+      }
+    },
+    "customScriptLinkedTemplateUri": "[uri(variables('repoBaseUriWithSlash'), 'customscript.json')]",
+    "customScriptExtensionName": "hci-lab-customscript-extension",
+    "customScriptBaseUriWithSlash": "[uri(variables('repoBaseUriWithSlash'), 'customscripts/')]",
+    "customScript": {
+      "configureHostVm": {
+        "deploymentName": "configure-host-vm",
+        "apiVersion": "[variables('deploymentApiVersion')]",
+        "fileUris": [
+          "[uri(variables('customScriptBaseUriWithSlash'), 'configure-lab-host.ps1')]",
+          "[uri(variables('customScriptBaseUriWithSlash'), 'common.psm1')]"
+        ],
+        "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\configure-lab-host.ps1"
+      },
+      "downloadMaterials": {
+        "deploymentName": "download-materials",
+        "apiVersion": "[variables('deploymentApiVersion')]",
+        "fileUris": [
+          "[uri(variables('customScriptBaseUriWithSlash'), 'download-materials.ps1')]",
+          "[uri(variables('customScriptBaseUriWithSlash'), 'materials.json')]",
+          "[uri(variables('customScriptBaseUriWithSlash'), 'common.psm1')]"
+        ],
+        "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\download-materials.ps1"
+      },
+      "createBaseVhd": {
+        "deploymentName": "create-base-vhd",
+        "apiVersion": "[variables('deploymentApiVersion')]",
+        "fileUris": [
+          "[uri(variables('customScriptBaseUriWithSlash'), 'create-base-vhd.ps1')]",
+          "[uri(variables('customScriptBaseUriWithSlash'), 'create-base-vhd-job.ps1')]",
+          "[uri(variables('customScriptBaseUriWithSlash'), 'common.psm1')]"
+        ],
+        "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\create-base-vhd.ps1"
+      },
+      "createVm": {
+        "deploymentName": "create-lab-vms",
+        "apiVersion": "[variables('deploymentApiVersion')]",
+        "fileUris": [
+          "[uri(variables('customScriptBaseUriWithSlash'), 'create-vm.ps1')]",
+          "[uri(variables('customScriptBaseUriWithSlash'), 'create-vm-job-addsdc.ps1')]",
+          "[uri(variables('customScriptBaseUriWithSlash'), 'create-vm-job-wac.ps1')]",
+          "[uri(variables('customScriptBaseUriWithSlash'), 'create-vm-job-hcinode.ps1')]",
+          "[uri(variables('customScriptBaseUriWithSlash'), 'common.psm1')]"
+        ],
+        "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\create-vm.ps1"
+      },
+      "createHciCluster": {
+        "deploymentName": "create-hci-cluster",
+        "apiVersion": "[variables('deploymentApiVersion')]",
+        "fileUris": [
+          "[uri(variables('customScriptBaseUriWithSlash'), 'create-hci-cluster.ps1')]",
+          "[uri(variables('customScriptBaseUriWithSlash'), 'create-hci-cluster-test-cat-en-us.psd1')]",
+          "[uri(variables('customScriptBaseUriWithSlash'), 'create-hci-cluster-test-cat-ja-jp.psd1')]",
+          "[uri(variables('customScriptBaseUriWithSlash'), 'common.psm1')]"
+        ],
+        "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\create-hci-cluster.ps1"
+      }
+    },
+    "labConfig": {
+      "labHost": {
+        "storage": {
+          "poolName": "hcilabpool",
+          "driveLetter": "V",
+          "volumeLabel": "HCI Lab Data"
+        },
+        "folderPath": {
+          "log": "C:\\temp\\hcilab-logs",
+          "temp": "V:\\temp",
+          "updates": "V:\\temp\\updates",
+          "vhd": "V:\\vhd",
+          "vm": "V:\\vm"
+        },
+        "vSwitch": {
+          "nat": {
+            "name": "HciLabNAT"
+          }
+        },
+        "netNat": [
+          {
+            "name": "ManagementNAT",
+            "InternalAddressPrefix": "172.16.0.0/24",
+            "hostInternalIPAddress": "172.16.0.1",
+            "hostInternalPrefixLength": 24
+          },
+          {
+            "name": "ComputeNAT",
+            "InternalAddressPrefix": "10.0.0.0/16",
+            "hostInternalIPAddress": "10.0.0.1",
+            "hostInternalPrefixLength": 16
+          }
+        ],
+        "toolsToInstall": "[parameters('toolsToInstall')]"
+      },
+      "guestOS": {
+        "culture": "[parameters('labVmOsCulture')]",
+        "timeZone": "[parameters('labVmOsTimeZone')]",
+        "shouldInstallUpdates": "[parameters('shouldInstallUpdatesToLabVm')]"
+      },
+      "addsDomain": {
+        "fqdn": "[parameters('addsDomainFqdn')]"
+      },
+      "addsDC": {
+        "vmName": "addsdc",
+        "maximumRamBytes": 2147483648,
+        "netAdapters": {
+          "management": {
+            "name": "Management",
+            "ipAddress": "172.16.0.2",
+            "prefixLength": 24,
+            "defaultGateway": "172.16.0.1",
+            "dnsServerAddresses": [
+              "168.63.129.16"
+            ]
+          }
+        },
+        "shouldPrepareAddsForAzureLocal": "[parameters('shouldPrepareAddsForAzureLocal')]",
+        "orgUnitForAzureLocal": "[parameters('addsOrgUnitPathForAzureLocal')]",
+        "lcmUserName": "[parameters('lcmUserName')]"
+      },
+      "wac": {
+        "vmName": "workbox",
+        "maximumRamBytes": 6442450944,
+        "netAdapters": {
+          "management": {
+            "name": "Management",
+            "ipAddress": "172.16.0.3",
+            "prefixLength": 24,
+            "defaultGateway": "172.16.0.1",
+            "dnsServerAddresses": [
+              "172.16.0.2"
+            ]
+          }
+        },
+        "shouldInstallConfigAppForAzureLocal": "[parameters('shouldInstallConfigAppForAzureLocal')]"
+      },
+      "hciNode": {
+        "vmName": "machine{0:00}",
+        "vmNameOffset": 1,
+        "operatingSystem": {
+          "sku": "[parameters('hciNodeOsSku')]",
+          "imageIndex": "[parameters('hciNodeOsImageIndex')]"
+        },
+        "nodeCount": "[parameters('hciNodeCount')]",
+        "shouldJoinToAddsDomain": "[parameters('shouldHciNodeJoinToAddsDomain')]",
+        "isAzureLocalDeployment": "[parameters('isAzureLocalDeployment')]",
+        "dataDiskSizeBytes": 1099511627776,
+        "ipAddressOffset": 11,
+        "netAdapters": {
+          "management": {
+            "name": "Management",
+            "ipAddress": "172.16.0.{0}",
+            "prefixLength": 24,
+            "defaultGateway": "172.16.0.1",
+            "dnsServerAddresses": [
+              "172.16.0.2"
+            ]
+          },
+          "compute": {
+            "name": "Compute",
+            "ipAddress": "10.0.0.{0}",
+            "prefixLength": 16
+          },
+          "storage1": {
+            "name": "Storage1",
+            "vlanId": 711,
+            "ipAddress": "172.20.1.{0}",
+            "prefixLength": 24
+          },
+          "storage2": {
+            "name": "Storage2",
+            "vlanId": 712,
+            "ipAddress": "172.20.2.{0}",
+            "prefixLength": 24
+          }
+        }
+      },
+      "hciCluster": {
+        "shouldCreateCluster": "[and(parameters('shouldHciNodeJoinToAddsDomain'), parameters('shouldCreateHciCluster'))]",
+        "name": "[parameters('hciClusterName')]",
+        "ipAddress": "172.16.0.200"
+      },
+      "keyVault": {
+        "name": "[variables('keyVault').name]",
+        "secretName": {
+          "adminPassword": "AdminPassword",
+          "cloudWitnessStorageAccountName": "CloudWitnessStorageAccountName",
+          "cloudWitnessStorageAccountKey": "CloudWitnessStorageAccountKey"
+        }
+      }
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "[variables('virtualNetwork').deploymentName]",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('virtualNetwork').linkedTemplateUri]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "location": {
+            "value": "[variables('location')]"
+          },
+          "virtualNetworkName": {
+            "value": "[variables('virtualNetwork').name]"
+          }
+        }
+      }
+    },
+    {
+      "condition": "[parameters('shouldDeployBastionDeveloper')]",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "[variables('bastion').deploymentName]",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('bastion').linkedTemplateUri]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "location": {
+            "value": "[variables('location')]"
+          },
+          "bastionName": {
+            "value": "[variables('bastion').name]"
+          },
+          "virtualNetworkId": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('virtualNetwork').deploymentName), '2025-04-01').outputs.virtualNetworkId.value]"
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', variables('virtualNetwork').deploymentName)]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "[variables('hostVm').deploymentName]",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('hostVm').linkedTemplateUri]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "location": {
+            "value": "[variables('location')]"
+          },
+          "subnetId": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('virtualNetwork').deploymentName), '2025-04-01').outputs.subnetId.value.default]"
+          },
+          "vmName": {
+            "value": "[parameters('labHostVmName')]"
+          },
+          "adminUserName": {
+            "value": "[parameters('adminUserName')]"
+          },
+          "adminPassword": {
+            "value": "[parameters('adminPassword')]"
+          },
+          "vmSize": {
+            "value": "[parameters('labHostVmSize')]"
+          },
+          "osDiskType": {
+            "value": "[parameters('labHostVmOsDiskType')]"
+          },
+          "dataDiskType": {
+            "value": "[parameters('labHostVmDataDiskType')]"
+          },
+          "dataDiskSize": {
+            "value": "[parameters('labHostVmDataDiskSize')]"
+          },
+          "dataDiskCount": {
+            "value": "[parameters('labHostVmDataDiskCount')]"
+          },
+          "hasEligibleWindowsServerLicense": {
+            "value": "[parameters('hasEligibleWindowsServerLicense')]"
+          },
+          "base64EncodedLabConfig": {
+            "value": "[base64(string(variables('labConfig')))]"
+          },
+          "shouldEnabledAutoshutdown": {
+            "value": "[parameters('shouldEnabledAutoshutdown')]"
+          },
+          "autoshutdownTime": {
+            "value": "[parameters('autoshutdownTime')]"
+          },
+          "autoshutdownTimeZone": {
+            "value": "[parameters('autoshutdownTimeZone')]"
+          },
+          "uniqueString": {
+            "value": "[variables('uniquePart')]"
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', variables('virtualNetwork').deploymentName)]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "[variables('keyVault').deploymentName]",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('keyVault').linkedTemplateUri]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "location": {
+            "value": "[variables('location')]"
+          },
+          "keyVaultName": {
+            "value": "[variables('keyVault').name]"
+          },
+          "hostVmSubnetId": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('virtualNetwork').deploymentName), '2025-04-01').outputs.subnetId.value.default]"
+          },
+          "secretNameForLabHostAdminPassword": {
+            "value": "[variables('labConfig').keyVault.secretName.adminPassword]"
+          },
+          "labHostAdminPassword": {
+            "value": "[parameters('adminPassword')]"
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', variables('virtualNetwork').deploymentName)]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "[variables('keyVaultRbac').deploymentName]",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('keyVaultRbac').linkedTemplateUri]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "keyVaultName": {
+            "value": "[variables('keyVault').name]"
+          },
+          "servicePrincipalId": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('hostVm').deploymentName), '2025-04-01').outputs.principalId.value]"
+          },
+          "roleDefinitionId": {
+            "value": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')]"
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', variables('keyVault').deploymentName)]",
+        "[resourceId('Microsoft.Resources/deployments', variables('hostVm').deploymentName)]"
+      ]
+    },
+    {
+      "condition": "[not(parameters('isAzureLocalDeployment'))]",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "[variables('witnessStorageAccount').deploymentName]",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('witnessStorageAccount').linkedTemplateUri]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "location": {
+            "value": "[variables('location')]"
+          },
+          "storageAccountNamePrefix": {
+            "value": "[variables('witnessStorageAccount').namePrefix]"
+          },
+          "uniqueString": {
+            "value": "[variables('uniquePart')]"
+          },
+          "hostVmSubnetId": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('virtualNetwork').deploymentName), '2025-04-01').outputs.subnetId.value.default]"
+          },
+          "keyVaultName": {
+            "value": "[variables('keyVault').name]"
+          },
+          "secretNameForStorageAccountName": {
+            "value": "[variables('labConfig').keyVault.secretName.cloudWitnessStorageAccountName]"
+          },
+          "secretNameForStorageAccountKey": {
+            "value": "[variables('labConfig').keyVault.secretName.cloudWitnessStorageAccountKey]"
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', variables('keyVault').deploymentName)]",
+        "[resourceId('Microsoft.Resources/deployments', variables('virtualNetwork').deploymentName)]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "[variables('dsc').installRolesFeatures.deploymentName]",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('dscLinkedTemplateUri')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "location": {
+            "value": "[variables('location')]"
+          },
+          "parentVmResourceName": {
+            "value": "[parameters('labHostVmName')]"
+          },
+          "extensionName": {
+            "value": "[variables('dscExtensionName')]"
+          },
+          "zipUri": {
+            "value": "[variables('dsc').installRolesFeatures.zipUri]"
+          },
+          "scriptName": {
+            "value": "[variables('dsc').installRolesFeatures.scriptName]"
+          },
+          "functionName": {
+            "value": "[variables('dsc').installRolesFeatures.functionName]"
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', variables('hostVm').deploymentName)]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "[variables('customScript').configureHostVm.deploymentName]",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('customScriptLinkedTemplateUri')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "location": {
+            "value": "[variables('location')]"
+          },
+          "parentVmResourceName": {
+            "value": "[parameters('labHostVmName')]"
+          },
+          "extensionName": {
+            "value": "[variables('customScriptExtensionName')]"
+          },
+          "fileUris": {
+            "value": "[variables('customScript').configureHostVm.fileUris]"
+          },
+          "commandToExecute": {
+            "value": "[variables('customScript').configureHostVm.commandToExecute]"
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', variables('dsc').installRolesFeatures.deploymentName)]",
+        "[resourceId('Microsoft.Resources/deployments', variables('keyVaultRbac').deploymentName)]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "[variables('customScript').downloadMaterials.deploymentName]",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('customScriptLinkedTemplateUri')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "location": {
+            "value": "[variables('location')]"
+          },
+          "parentVmResourceName": {
+            "value": "[parameters('labHostVmName')]"
+          },
+          "extensionName": {
+            "value": "[variables('customScriptExtensionName')]"
+          },
+          "fileUris": {
+            "value": "[variables('customScript').downloadMaterials.fileUris]"
+          },
+          "commandToExecute": {
+            "value": "[variables('customScript').downloadMaterials.commandToExecute]"
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', variables('customScript').configureHostVm.deploymentName)]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "[variables('customScript').createBaseVhd.deploymentName]",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('customScriptLinkedTemplateUri')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "location": {
+            "value": "[variables('location')]"
+          },
+          "parentVmResourceName": {
+            "value": "[parameters('labHostVmName')]"
+          },
+          "extensionName": {
+            "value": "[variables('customScriptExtensionName')]"
+          },
+          "fileUris": {
+            "value": "[variables('customScript').createBaseVhd.fileUris]"
+          },
+          "commandToExecute": {
+            "value": "[variables('customScript').createBaseVhd.commandToExecute]"
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', variables('customScript').downloadMaterials.deploymentName)]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "[variables('dsc').rebootHostVm.deploymentName]",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('dscLinkedTemplateUri')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "location": {
+            "value": "[variables('location')]"
+          },
+          "parentVmResourceName": {
+            "value": "[parameters('labHostVmName')]"
+          },
+          "extensionName": {
+            "value": "[variables('dscExtensionName')]"
+          },
+          "zipUri": {
+            "value": "[variables('dsc').rebootHostVm.zipUri]"
+          },
+          "scriptName": {
+            "value": "[variables('dsc').rebootHostVm.scriptName]"
+          },
+          "functionName": {
+            "value": "[variables('dsc').rebootHostVm.functionName]"
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', variables('customScript').createBaseVhd.deploymentName)]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "[variables('customScript').createVm.deploymentName]",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('customScriptLinkedTemplateUri')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "location": {
+            "value": "[variables('location')]"
+          },
+          "parentVmResourceName": {
+            "value": "[parameters('labHostVmName')]"
+          },
+          "extensionName": {
+            "value": "[variables('customScriptExtensionName')]"
+          },
+          "fileUris": {
+            "value": "[variables('customScript').createVm.fileUris]"
+          },
+          "commandToExecute": {
+            "value": "[variables('customScript').createVm.commandToExecute]"
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', variables('dsc').rebootHostVm.deploymentName)]"
+      ]
+    },
+    {
+      "condition": "[variables('labConfig').hciCluster.shouldCreateCluster]",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "[variables('customScript').createHciCluster.deploymentName]",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('customScriptLinkedTemplateUri')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "location": {
+            "value": "[variables('location')]"
+          },
+          "parentVmResourceName": {
+            "value": "[parameters('labHostVmName')]"
+          },
+          "extensionName": {
+            "value": "[variables('customScriptExtensionName')]"
+          },
+          "fileUris": {
+            "value": "[variables('customScript').createHciCluster.fileUris]"
+          },
+          "commandToExecute": {
+            "value": "[variables('customScript').createHciCluster.commandToExecute]"
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', variables('customScript').createVm.deploymentName)]",
+        "[resourceId('Microsoft.Resources/deployments', variables('witnessStorageAccount').deploymentName)]"
+      ]
+    }
+  ],
+  "outputs": {
+    "adminUserName": {
+      "type": "string",
+      "value": "[parameters('adminUserName')]"
+    },
+    "vmPublicIpFqdn": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('hostVm').deploymentName), '2025-04-01').outputs.fqdn.value]"
+    }
+  }
+}

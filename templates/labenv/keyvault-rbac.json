@@ -1,0 +1,44 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.44.1.10279",
+      "templateHash": "7245698864958622920"
+    }
+  },
+  "parameters": {
+    "keyVaultName": {
+      "type": "string",
+      "metadata": {
+        "description": "The Key Vault resource name."
+      }
+    },
+    "servicePrincipalId": {
+      "type": "string",
+      "metadata": {
+        "description": "The service principal ID for the role assignment."
+      }
+    },
+    "roleDefinitionId": {
+      "type": "string",
+      "metadata": {
+        "description": "The role definition ID for the role assignment."
+      }
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]",
+      "name": "[guid(parameters('servicePrincipalId'))]",
+      "properties": {
+        "roleDefinitionId": "[parameters('roleDefinitionId')]",
+        "principalType": "ServicePrincipal",
+        "principalId": "[parameters('servicePrincipalId')]"
+      }
+    }
+  ]
+}
