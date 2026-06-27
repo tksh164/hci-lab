@@ -1,24 +1,24 @@
-@description('The location for the custom script extension resource.')
+@description('''The location for the custom script extension resource.''')
 param location string
 
-@description('The name of the parent virtual machine resource.')
+@description('''The name of the parent virtual machine resource.''')
 param parentVmResourceName string
 
-@description('The name of the custom script extension resource.')
+@description('''The name of the custom script extension resource.''')
 param extensionName string
 
-@description('The URI of custom scripts.')
+@description('''The URI of custom scripts.''')
 @minLength(1)
 param fileUris array
 
-@description('The command-line to execute the custom script.')
+@description('''The command-line to execute the custom script.''')
 param commandToExecute string
 
 resource parentVm 'Microsoft.Compute/virtualMachines@2024-11-01' existing = {
   name: parentVmResourceName
 }
 
-resource customScriptExtension 'Microsoft.Compute/virtualMachines/extensions@2022-11-01' = {
+resource res_customScriptExtension 'Microsoft.Compute/virtualMachines/extensions@2022-11-01' = {
   parent: parentVm
   name: extensionName
   location: location
@@ -36,4 +36,4 @@ resource customScriptExtension 'Microsoft.Compute/virtualMachines/extensions@202
   }
 }
 
-output instanceView object = customScriptExtension.properties.instanceView
+output instanceView object = res_customScriptExtension.properties.instanceView
