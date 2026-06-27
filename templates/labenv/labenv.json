@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.44.1.10279",
-      "templateHash": "3598194207507689322"
+      "templateHash": "16884493468299664292"
     }
   },
   "parameters": {
@@ -359,7 +359,7 @@
     },
     "repoBaseUri": {
       "type": "string",
-      "defaultValue": "https://raw.githubusercontent.com/tksh164/hci-lab/main/template/",
+      "defaultValue": "https://raw.githubusercontent.com/tksh164/hci-lab/main/templates/labenv/",
       "metadata": {
         "description": "The base URI of template's repository. The value must end with '/'."
       }

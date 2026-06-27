@@ -357,7 +357,7 @@ param lcmUserName string = 'lcmuser'
 param shouldInstallConfigAppForAzureLocal bool = false
 
 @description('''The base URI of template's repository. The value must end with '/'.''')
-param repoBaseUri string = 'https://raw.githubusercontent.com/tksh164/hci-lab/main/template/'
+param repoBaseUri string = 'https://raw.githubusercontent.com/tksh164/hci-lab/main/templates/labenv/'
 
 @description('''The value for generate unique values.''')
 param salt string = utcNow()
