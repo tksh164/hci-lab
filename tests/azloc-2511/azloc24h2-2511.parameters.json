@@ -15,7 +15,7 @@
             "value": 32
         },
         "hasEligibleWindowsServerLicense": {
-            "value": true
+            "value": false
         },
         "shouldDeployBastionDeveloper" : {
             "value": true
