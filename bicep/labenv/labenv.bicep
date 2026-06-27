@@ -376,7 +376,7 @@ var deploymentApiVersion = '2025-04-01'
 var virtualNetwork = {
   deploymentName: 'deploy-vnet'
   apiVersion: deploymentApiVersion
-  linkedTemplateUri: uri(repoBaseUriWithSlash, 'linkedtemplates/vnet.json')
+  linkedTemplateUri: uri(repoBaseUriWithSlash, 'vnet.json')
   name: 'labenv-vnet'
 }
 
@@ -384,7 +384,7 @@ var virtualNetwork = {
 var bastion = {
   deploymentName: 'deploy-bastion'
   apiVersion: deploymentApiVersion
-  linkedTemplateUri: uri(repoBaseUriWithSlash, 'linkedtemplates/bastion.json')
+  linkedTemplateUri: uri(repoBaseUriWithSlash, 'bastion.json')
   name: 'labenv-bastion'
 }
 
@@ -392,14 +392,14 @@ var bastion = {
 var hostVm = {
   deploymentName: 'deploy-host-vm'
   apiVersion: deploymentApiVersion
-  linkedTemplateUri: uri(repoBaseUriWithSlash, 'linkedtemplates/hostvm.json')
+  linkedTemplateUri: uri(repoBaseUriWithSlash, 'hostvm.json')
 }
 
 // Key Vault
 var keyVault = {
   deploymentName: 'deploy-key-vault'
   apiVersion: deploymentApiVersion
-  linkedTemplateUri: uri(repoBaseUriWithSlash, 'linkedtemplates/keyvault.json')
+  linkedTemplateUri: uri(repoBaseUriWithSlash, 'keyvault.json')
   name: format('labenv-{0}-kv', toLower(uniquePart))
 }
 
@@ -407,19 +407,19 @@ var keyVault = {
 var keyVaultRbac = {
   deploymentName: 'assign-key-vault-rbac-with-host-vm-managed-id'
   apiVersion: deploymentApiVersion
-  linkedTemplateUri: uri(repoBaseUriWithSlash, 'linkedtemplates/keyvault-rbac.json')
+  linkedTemplateUri: uri(repoBaseUriWithSlash, 'keyvault-rbac.json')
 }
 
 // Storage account for witness
 var witnessStorageAccount = {
   deploymentName: 'deploy-storage-account-witness'
   apiVersion: deploymentApiVersion
-  linkedTemplateUri: uri(repoBaseUriWithSlash, 'linkedtemplates/cloudwitness.json')
+  linkedTemplateUri: uri(repoBaseUriWithSlash, 'cloudwitness.json')
   namePrefix: 'labenvwitness'
 }
 
 // DSC extension
-var dscLinkedTemplateUri = uri(repoBaseUriWithSlash, 'linkedtemplates/dsc.json')
+var dscLinkedTemplateUri = uri(repoBaseUriWithSlash, 'dsc.json')
 var dscExtensionName = 'hci-lab-dsc-extension'
 var dscBaseUriWithSlash = uri(repoBaseUriWithSlash, 'dsc/') // Must end with "/".
 var dsc = {
@@ -440,7 +440,7 @@ var dsc = {
 }
 
 // Custom script extensions
-var customScriptLinkedTemplateUri = uri(repoBaseUriWithSlash, 'linkedtemplates/customscript.json')
+var customScriptLinkedTemplateUri = uri(repoBaseUriWithSlash, 'customscript.json')
 var customScriptExtensionName = 'hci-lab-customscript-extension'
 var customScriptBaseUriWithSlash = uri(repoBaseUriWithSlash, 'customscripts/') // Must end with "/".
 var customScript = {
