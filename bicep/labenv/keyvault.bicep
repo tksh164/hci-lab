@@ -1,20 +1,20 @@
-@description('The location for the Key Vault resource.')
+@description('''The location for the Key Vault resource.''')
 param location string
 
-@description('The Key Vault name.')
+@description('''The Key Vault name.''')
 param keyVaultName string
 
-@description('The subnet ID that has the host VM. This subnet ID will be set to the key vault\'s firewall rules as an allowed subnet.')
+@description('''The subnet ID that has the host VM. This subnet ID will be set to the key vault's firewall rules as an allowed subnet.''')
 param hostVmSubnetId string
 
-@description('The secret\'s name for the lab host\'s administrator password.')
+@description('''The secret's name for the lab host's administrator password.''')
 param secretNameForLabHostAdminPassword string
 
-@description('The lab host\'s administrator password.')
+@description('''The lab host's administrator password.''')
 @secure()
 param labHostAdminPassword string
 
-resource keyVault 'Microsoft.KeyVault/vaults@2026-02-01' = {
+resource res_keyVault 'Microsoft.KeyVault/vaults@2026-02-01' = {
   name: keyVaultName
   location: location
   properties: {
@@ -48,12 +48,12 @@ resource keyVault 'Microsoft.KeyVault/vaults@2026-02-01' = {
 }
 
 // Store the lab host's admin password to the Key Vault.
-resource labHostAdminPasswordSecret 'Microsoft.KeyVault/vaults/secrets@2026-02-01' = {
-  parent: keyVault
+resource res_labHostAdminPasswordSecret 'Microsoft.KeyVault/vaults/secrets@2026-02-01' = {
+  parent: res_keyVault
   name: secretNameForLabHostAdminPassword
   properties: {
     value: labHostAdminPassword
   }
 }
 
-output keyVaultId string = keyVault.id
+output keyVaultId string = res_keyVault.id
