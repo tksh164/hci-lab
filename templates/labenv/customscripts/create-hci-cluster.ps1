@@ -14,7 +14,7 @@ try {
     $labConfig = Get-LabDeploymentConfig
     Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log
     'Lab deployment config:' | Write-ScriptLog
-    $labConfig | ConvertTo-Json -Depth 16 | Write-Host
+    $labConfig | ConvertTo-Json -Depth 16 | Write-ScriptLog
 
     $nodeNames = @()
     $nodeNames += for ($nodeIndex = 0; $nodeIndex -lt $labConfig.hciNode.nodeCount; $nodeIndex++) {
