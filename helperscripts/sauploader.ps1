@@ -67,7 +67,7 @@ function Invoke-HciLabArtifactsUpload
         [Microsoft.WindowsAzure.Commands.Common.Storage.ResourceModel.AzureStorageContainer] $DestinationContainer
     )
 
-    $folderStructureRootPath = [IO.Path]::GetDirectoryName($SourceFolderPath)
+    $folderStructureRootPath = [IO.Path]::GetDirectoryName($PSScriptRoot)
 
     Get-ChildItem -LiteralPath $SourceFolderPath -Recurse -File | ForEach-Object -Process {
         $filePath = $_.FullName
@@ -112,13 +112,13 @@ function Get-WebEndpoint
 #
 
 $sourceFolderName = @{
-    Template = 'template'
-    UIForms  = 'uiforms'
+    Template = 'templates/labenv'
+    UIForm   = 'uiforms'
 }
 
 $sourceFolderName.Keys | ForEach-Object -Process {
     $params = @{
-        SourceFolderPath     = Get-SourceFolderPath -FolderName $_
+        SourceFolderPath     = Get-SourceFolderPath -FolderName $sourceFolderName[$_]
         DestinationContainer = Get-DestinationWebContainer -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName
     }
     Invoke-HciLabArtifactsUpload @params
@@ -135,8 +135,10 @@ $templateUri = $webEndpoint + $sourceFolderName.Template + '/' + $templateFileNa
 $escapedTemplateUri = [uri]::EscapeDataString($templateUri)
 
 $uiFormFileNames = @(
-    'uiform.json',
-    'uiform-jajp.json'
+    'uiform-azloc-enus.json',
+    'uiform-azloc-jajp.json',
+    'uiform-wshci-enus.json',
+    'uiform-wshci-jajp.json'
 )
 
 $uiFormFileNames | ForEach-Object -Process {
@@ -154,7 +156,7 @@ $uiFormFileNames | ForEach-Object -Process {
     Write-Host 'Template URI          : ' -NoNewline -ForegroundColor Green
     Write-Host $templateUri
 
-    $uiFormUri = $webEndpoint + $sourceFolderName.UIForms + '/' + $uiFormFileName
+    $uiFormUri = $webEndpoint + $sourceFolderName.UIForm + '/' + $uiFormFileName
     $escapedUiFormUri = [uri]::EscapeDataString($uiFormUri)
 
     Write-Host 'UIFrom URI            : ' -NoNewline -ForegroundColor Green
