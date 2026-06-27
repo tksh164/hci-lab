@@ -23,6 +23,20 @@ param (
 $ErrorActionPreference = [System.Management.Automation.ActionPreference]::Stop
 Set-StrictMode -Version 3
 
+function Compare-SecureString {
+    param (
+        [Parameter(Mandatory = $true)]
+        [SecureString] $SecureString1,
+
+        [Parameter(Mandatory = $true)]
+        [SecureString] $SecureString2
+    )
+
+    $plain1 = [System.Net.NetworkCredential]::new('', $SecureString1).Password
+    $plain2 = [System.Net.NetworkCredential]::new('', $SecureString2).Password
+    return $plain1 -ceq $plain2
+}
+
 $templateFilePath = [IO.Path]::GetFullPath([IO.Path]::Combine($PSScriptRoot, $TemplateFile))
 $templateParametersFilePath = [IO.Path]::GetFullPath([IO.Path]::Combine($PSScriptRoot, $TemplateParametersFile))
 
@@ -47,6 +61,13 @@ $response = Read-Host -Prompt 'Press Y to continue or other to cancel' -ErrorAct
 if ($response -ne 'Y') {
     Write-Host 'Deployment canceled.'
     return
+}
+
+# Check the adminPassword parameter ahead of deployment to avoid the deployment with an unintended password.
+$adminPassword = Read-Host -Prompt 'adminPassword' -AsSecureString
+$confirmPassword = Read-Host -Prompt 'adminPassword (Confirm)' -AsSecureString
+if (-not (Compare-SecureString -SecureString1 $adminPassword -SecureString2 $confirmPassword)) {
+    throw 'Passwords do not match.'
 }
 
 New-AzResourceGroup -Name $ResourceGroupName -Location $ResourceGroupLocation -Tag $ResourceGroupTag -Verbose -Force
@@ -87,6 +108,7 @@ else {
             WhatIf                  = $WhatIf
             Force                   = $true
             Verbose                 = $true
+            adminPassword           = $adminPassword  # The adminPassword parameter for the template
         }
 
         if (Test-Path -LiteralPath $templateParametersFilePath -PathType Leaf) {
