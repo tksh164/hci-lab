@@ -91,7 +91,7 @@ try {
     Start-ScriptLogging -OutputDirectory $labConfig.labHost.folderPath.log
 
     'Lab deployment config:' | Write-ScriptLog
-    $labConfig | ConvertTo-Json -Depth 16 | Write-Host
+    $labConfig | ConvertTo-Json -Depth 16 | Write-ScriptLog
 
     # Telemetry via GtiHub release download
     Send-Telemetry -IsAzureLocalDeployment $labConfig.hciNode.isAzureLocalDeployment
