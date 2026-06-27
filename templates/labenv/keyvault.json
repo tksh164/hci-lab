@@ -1,0 +1,96 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.44.1.10279",
+      "templateHash": "7017272354377994115"
+    }
+  },
+  "parameters": {
+    "location": {
+      "type": "string",
+      "metadata": {
+        "description": "The location for the Key Vault resource."
+      }
+    },
+    "keyVaultName": {
+      "type": "string",
+      "metadata": {
+        "description": "The Key Vault name."
+      }
+    },
+    "hostVmSubnetId": {
+      "type": "string",
+      "metadata": {
+        "description": "The subnet ID that has the host VM. This subnet ID will be set to the key vault's firewall rules as an allowed subnet."
+      }
+    },
+    "secretNameForLabHostAdminPassword": {
+      "type": "string",
+      "metadata": {
+        "description": "The secret's name for the lab host's administrator password."
+      }
+    },
+    "labHostAdminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "The lab host's administrator password."
+      }
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.KeyVault/vaults",
+      "apiVersion": "2026-02-01",
+      "name": "[parameters('keyVaultName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "sku": {
+          "family": "A",
+          "name": "standard"
+        },
+        "tenantId": "[tenant().tenantId]",
+        "enableSoftDelete": false,
+        "enabledForDeployment": false,
+        "enabledForTemplateDeployment": false,
+        "enabledForDiskEncryption": false,
+        "enableRbacAuthorization": true,
+        "accessPolicies": [],
+        "publicNetworkAccess": "Enabled",
+        "networkAcls": {
+          "bypass": "AzureServices",
+          "defaultAction": "Deny",
+          "ipRules": [],
+          "virtualNetworkRules": [
+            {
+              "id": "[parameters('hostVmSubnetId')]",
+              "ignoreMissingVnetServiceEndpoint": false
+            }
+          ]
+        }
+      },
+      "tags": {
+        "SecurityControl": "Ignore"
+      }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2026-02-01",
+      "name": "[format('{0}/{1}', parameters('keyVaultName'), parameters('secretNameForLabHostAdminPassword'))]",
+      "properties": {
+        "value": "[parameters('labHostAdminPassword')]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]"
+      ]
+    }
+  ],
+  "outputs": {
+    "keyVaultId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]"
+    }
+  }
+}

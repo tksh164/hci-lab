@@ -357,7 +357,7 @@ param lcmUserName string = 'lcmuser'
 param shouldInstallConfigAppForAzureLocal bool = false
 
 @description('''The base URI of template's repository. The value must end with '/'.''')
-param repoBaseUri string = 'https://raw.githubusercontent.com/tksh164/hci-lab/main/template/'
+param repoBaseUri string = 'https://raw.githubusercontent.com/tksh164/hci-lab/main/templates/labenv/'
 
 @description('''The value for generate unique values.''')
 param salt string = utcNow()
@@ -376,7 +376,7 @@ var deploymentApiVersion = '2025-04-01'
 var virtualNetwork = {
   deploymentName: 'deploy-vnet'
   apiVersion: deploymentApiVersion
-  linkedTemplateUri: uri(repoBaseUriWithSlash, 'linkedtemplates/vnet.json')
+  linkedTemplateUri: uri(repoBaseUriWithSlash, 'vnet.json')
   name: 'labenv-vnet'
 }
 
@@ -384,7 +384,7 @@ var virtualNetwork = {
 var bastion = {
   deploymentName: 'deploy-bastion'
   apiVersion: deploymentApiVersion
-  linkedTemplateUri: uri(repoBaseUriWithSlash, 'linkedtemplates/bastion.json')
+  linkedTemplateUri: uri(repoBaseUriWithSlash, 'bastion.json')
   name: 'labenv-bastion'
 }
 
@@ -392,14 +392,14 @@ var bastion = {
 var hostVm = {
   deploymentName: 'deploy-host-vm'
   apiVersion: deploymentApiVersion
-  linkedTemplateUri: uri(repoBaseUriWithSlash, 'linkedtemplates/hostvm.json')
+  linkedTemplateUri: uri(repoBaseUriWithSlash, 'hostvm.json')
 }
 
 // Key Vault
 var keyVault = {
   deploymentName: 'deploy-key-vault'
   apiVersion: deploymentApiVersion
-  linkedTemplateUri: uri(repoBaseUriWithSlash, 'linkedtemplates/keyvault.json')
+  linkedTemplateUri: uri(repoBaseUriWithSlash, 'keyvault.json')
   name: format('labenv-{0}-kv', toLower(uniquePart))
 }
 
@@ -407,19 +407,19 @@ var keyVault = {
 var keyVaultRbac = {
   deploymentName: 'assign-key-vault-rbac-with-host-vm-managed-id'
   apiVersion: deploymentApiVersion
-  linkedTemplateUri: uri(repoBaseUriWithSlash, 'linkedtemplates/keyvault-rbac.json')
+  linkedTemplateUri: uri(repoBaseUriWithSlash, 'keyvault-rbac.json')
 }
 
 // Storage account for witness
 var witnessStorageAccount = {
   deploymentName: 'deploy-storage-account-witness'
   apiVersion: deploymentApiVersion
-  linkedTemplateUri: uri(repoBaseUriWithSlash, 'linkedtemplates/cloudwitness.json')
+  linkedTemplateUri: uri(repoBaseUriWithSlash, 'cloudwitness.json')
   namePrefix: 'labenvwitness'
 }
 
 // DSC extension
-var dscLinkedTemplateUri = uri(repoBaseUriWithSlash, 'linkedtemplates/dsc.json')
+var dscLinkedTemplateUri = uri(repoBaseUriWithSlash, 'dsc.json')
 var dscExtensionName = 'hci-lab-dsc-extension'
 var dscBaseUriWithSlash = uri(repoBaseUriWithSlash, 'dsc/') // Must end with "/".
 var dsc = {
@@ -440,7 +440,7 @@ var dsc = {
 }
 
 // Custom script extensions
-var customScriptLinkedTemplateUri = uri(repoBaseUriWithSlash, 'linkedtemplates/customscript.json')
+var customScriptLinkedTemplateUri = uri(repoBaseUriWithSlash, 'customscript.json')
 var customScriptExtensionName = 'hci-lab-customscript-extension'
 var customScriptBaseUriWithSlash = uri(repoBaseUriWithSlash, 'customscripts/') // Must end with "/".
 var customScript = {
@@ -453,15 +453,15 @@ var customScript = {
     ]
     commandToExecute: 'powershell.exe -ExecutionPolicy Unrestricted -File .\\configure-lab-host.ps1'
   }
-  downloadIsoUpdates: {
+  downloadMaterials: {
     deploymentName: 'download-materials'
     apiVersion: deploymentApiVersion
     fileUris: [
-      uri(customScriptBaseUriWithSlash, 'download-iso-updates.ps1')
-      uri(customScriptBaseUriWithSlash, 'download-iso-updates-asset-urls.psd1')
+      uri(customScriptBaseUriWithSlash, 'download-materials.ps1')
+      uri(customScriptBaseUriWithSlash, 'materials.json')
       uri(customScriptBaseUriWithSlash, 'common.psm1')
     ]
-    commandToExecute: 'powershell.exe -ExecutionPolicy Unrestricted -File .\\download-iso-updates.ps1'
+    commandToExecute: 'powershell.exe -ExecutionPolicy Unrestricted -File .\\download-materials.ps1'
   }
   createBaseVhd: {
     deploymentName: 'create-base-vhd'
@@ -916,8 +916,8 @@ resource res_configureHostVm 'Microsoft.Resources/deployments@2025-04-01' = {
 }
 
 // Download ISO files and updates.
-resource res_downloadIsoUpdates 'Microsoft.Resources/deployments@2025-04-01' = {
-  name: customScript.downloadIsoUpdates.deploymentName
+resource res_downloadMaterials 'Microsoft.Resources/deployments@2025-04-01' = {
+  name: customScript.downloadMaterials.deploymentName
   dependsOn: [
     res_configureHostVm
   ]
@@ -938,10 +938,10 @@ resource res_downloadIsoUpdates 'Microsoft.Resources/deployments@2025-04-01' = {
         value: customScriptExtensionName
       }
       fileUris: {
-        value: customScript.downloadIsoUpdates.fileUris
+        value: customScript.downloadMaterials.fileUris
       }
       commandToExecute: {
-        value: customScript.downloadIsoUpdates.commandToExecute
+        value: customScript.downloadMaterials.commandToExecute
       }
     }
   }
@@ -951,7 +951,7 @@ resource res_downloadIsoUpdates 'Microsoft.Resources/deployments@2025-04-01' = {
 resource res_createBaseVhd 'Microsoft.Resources/deployments@2025-04-01' = {
   name: customScript.createBaseVhd.deploymentName
   dependsOn: [
-    res_downloadIsoUpdates
+    res_downloadMaterials
   ]
   properties: {
     mode: 'Incremental'

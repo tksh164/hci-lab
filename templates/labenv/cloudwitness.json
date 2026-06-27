@@ -1,0 +1,178 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.44.1.10279",
+      "templateHash": "17508426401414957445"
+    }
+  },
+  "parameters": {
+    "location": {
+      "type": "string",
+      "metadata": {
+        "description": "The location for the storage account resource."
+      }
+    },
+    "storageAccountNamePrefix": {
+      "type": "string",
+      "metadata": {
+        "description": "The prefix of the storage account name for Cloud Witness."
+      }
+    },
+    "uniqueString": {
+      "type": "string",
+      "metadata": {
+        "description": "The string for uniqueness of the storage account name."
+      }
+    },
+    "hostVmSubnetId": {
+      "type": "string",
+      "metadata": {
+        "description": "The subnet ID that has the host VM. This subnet ID will be set to the storage account's firewall rules as an allowed subnet."
+      }
+    },
+    "keyVaultName": {
+      "type": "string",
+      "metadata": {
+        "description": "The Key Vault name to store the storage account key."
+      }
+    },
+    "secretNameForStorageAccountName": {
+      "type": "string",
+      "metadata": {
+        "description": "The secret's name of the storage account name in the Key Vault."
+      }
+    },
+    "secretNameForStorageAccountKey": {
+      "type": "string",
+      "metadata": {
+        "description": "The secret's name of the storage account key in the Key Vault."
+      }
+    }
+  },
+  "variables": {
+    "storageAccountName": "[format('{0}{1}', toLower(parameters('storageAccountNamePrefix')), toLower(parameters('uniqueString')))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2022-09-01",
+      "name": "[variables('storageAccountName')]",
+      "location": "[parameters('location')]",
+      "kind": "StorageV2",
+      "sku": {
+        "name": "Standard_LRS"
+      },
+      "properties": {
+        "accessTier": "Hot",
+        "minimumTlsVersion": "TLS1_2",
+        "supportsHttpsTrafficOnly": true,
+        "allowSharedKeyAccess": true,
+        "allowCrossTenantReplication": true,
+        "defaultToOAuthAuthentication": false,
+        "allowBlobPublicAccess": false,
+        "publicNetworkAccess": "Enabled",
+        "networkAcls": {
+          "bypass": "AzureServices",
+          "defaultAction": "Deny",
+          "ipRules": [],
+          "virtualNetworkRules": [
+            {
+              "id": "[parameters('hostVmSubnetId')]",
+              "action": "Allow"
+            }
+          ]
+        },
+        "dnsEndpointType": "Standard",
+        "encryption": {
+          "keySource": "Microsoft.Storage",
+          "services": {
+            "blob": {
+              "enabled": true
+            },
+            "file": {
+              "enabled": true
+            },
+            "table": {
+              "enabled": true
+            },
+            "queue": {
+              "enabled": true
+            }
+          },
+          "requireInfrastructureEncryption": false
+        }
+      },
+      "tags": {
+        "SecurityControl": "Ignore"
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices",
+      "apiVersion": "2022-09-01",
+      "name": "[format('{0}/{1}', variables('storageAccountName'), 'default')]",
+      "properties": {
+        "restorePolicy": {
+          "enabled": false
+        },
+        "deleteRetentionPolicy": {
+          "enabled": false
+        },
+        "containerDeleteRetentionPolicy": {
+          "enabled": false
+        },
+        "changeFeed": {
+          "enabled": false
+        },
+        "isVersioningEnabled": false
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/fileServices",
+      "apiVersion": "2022-09-01",
+      "name": "[format('{0}/{1}', variables('storageAccountName'), 'default')]",
+      "properties": {
+        "shareDeleteRetentionPolicy": {
+          "enabled": false
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2022-11-01",
+      "name": "[format('{0}/{1}', parameters('keyVaultName'), parameters('secretNameForStorageAccountName'))]",
+      "properties": {
+        "value": "[variables('storageAccountName')]"
+      }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2022-11-01",
+      "name": "[format('{0}/{1}', parameters('keyVaultName'), parameters('secretNameForStorageAccountKey'))]",
+      "properties": {
+        "value": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2022-09-01').keys[0].value]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+      ]
+    }
+  ],
+  "outputs": {
+    "storageAccountId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+    },
+    "storageAccountName": {
+      "type": "string",
+      "value": "[variables('storageAccountName')]"
+    }
+  }
+}
