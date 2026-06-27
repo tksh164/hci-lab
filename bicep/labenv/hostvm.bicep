@@ -1,52 +1,52 @@
-@description('The location for the custom script extension resource.')
+@description('''The location for the custom script extension resource.''')
 param location string
 
-@description('The resource ID of the subnet to deploy the virtual machine.')
+@description('''The resource ID of the subnet to deploy the virtual machine.''')
 param subnetId string
 
-@description('The lab host virtual machine name.')
+@description('''The lab host virtual machine name.''')
 param vmName string
 
-@description('The administrator user name.')
+@description('''The administrator user name.''')
 param adminUserName string
 
-@description('The administrator password. The password must have 3 of the following: 1 lower case character, 1 upper case character, 1 number, and 1 special character. And the password must be between 12 and 123 characters long.')
+@description('''The administrator password. The password must have 3 of the following: 1 lower case character, 1 upper case character, 1 number, and 1 special character. And the password must be between 12 and 123 characters long.''')
 @secure()
 param adminPassword string
 
-@description('The lab host virtual machine size.')
+@description('''The lab host virtual machine size.''')
 param vmSize string
 
-@description('The storage type of the lab host virtual machine\'s OS disk.')
+@description('''The storage type of the lab host virtual machine's OS disk.''')
 param osDiskType string
 
-@description('The storage type of the lab host virtual machine\'s data disk.')
+@description('''The storage type of the lab host virtual machine's data disk.''')
 param dataDiskType string
 
-@description('The size of individual disk of the lab host virtual machine\'s data disks in GiB.')
+@description('''The size of individual disk of the lab host virtual machine's data disks in GiB.''')
 param dataDiskSize int
 
-@description('The number of data disks on the lab host virtual machine.')
+@description('''The number of data disks on the lab host virtual machine.''')
 @minValue(8)
 @maxValue(32)
 param dataDiskCount int
 
-@description('By specifying True, you confirm you have an eligible Windows Server license with Software Assurance or Windows Server subscription to apply this Azure Hybrid Benefit. You can read more about compliance here: http://go.microsoft.com/fwlink/?LinkId=859786')
+@description('''By specifying True, you confirm you have an eligible Windows Server license with Software Assurance or Windows Server subscription to apply this Azure Hybrid Benefit. You can read more about compliance here: http://go.microsoft.com/fwlink/?LinkId=859786''')
 param hasEligibleWindowsServerLicense bool
 
-@description('THe base64 encode user data for the lab host virtual machine.')
+@description('''The base64 encode user data for the lab host virtual machine.''')
 param base64EncodedLabConfig string
 
-@description('By specifying True, will be auto-shutdown configured to the lab host virtual machine.')
+@description('''By specifying True, will be auto-shutdown configured to the lab host virtual machine.''')
 param shouldEnabledAutoshutdown bool
 
-@description('The auto-shutdown time.')
+@description('''The auto-shutdown time.''')
 param autoshutdownTime string
 
-@description('The time zone for auto-shutdown time.')
+@description('''The time zone for auto-shutdown time.''')
 param autoshutdownTimeZone string
 
-@description('The string for uniqueness of resource names.')
+@description('''The string for uniqueness of resource names.''')
 param uniqueString string
 
 // Public IP address.
@@ -61,7 +61,7 @@ var privateIPAddress = '192.168.0.4'
 var computerName = 'labenv'
 
 // Public IP address.
-resource publicIpAddress 'Microsoft.Network/publicIpAddresses@2024-07-01' = {
+resource res_publicIpAddress 'Microsoft.Network/publicIpAddresses@2024-07-01' = {
   name: publicIpAddressName
   location: location
   sku: {
@@ -76,7 +76,7 @@ resource publicIpAddress 'Microsoft.Network/publicIpAddresses@2024-07-01' = {
 }
 
 // Network interface.
-resource networkInterface 'Microsoft.Network/networkInterfaces@2024-07-01' = {
+resource res_networkInterface 'Microsoft.Network/networkInterfaces@2024-07-01' = {
   name: networkInterfaceName
   location: location
   properties: {
@@ -90,7 +90,7 @@ resource networkInterface 'Microsoft.Network/networkInterfaces@2024-07-01' = {
           privateIPAllocationMethod: 'Static'
           privateIPAddress: privateIPAddress
           publicIPAddress: {
-            id: publicIpAddress.id
+            id: res_publicIpAddress.id
           }
         }
       }
@@ -100,7 +100,7 @@ resource networkInterface 'Microsoft.Network/networkInterfaces@2024-07-01' = {
 }
 
 // Virtual machine.
-resource virtualMachine 'Microsoft.Compute/virtualMachines@2024-11-01' = {
+resource res_virtualMachine 'Microsoft.Compute/virtualMachines@2024-11-01' = {
   name: vmName
   location: location
   properties: {
@@ -128,7 +128,7 @@ resource virtualMachine 'Microsoft.Compute/virtualMachines@2024-11-01' = {
     networkProfile: {
       networkInterfaces: [
         {
-          id: networkInterface.id
+          id: res_networkInterface.id
         }
       ]
     }
@@ -175,7 +175,7 @@ resource virtualMachine 'Microsoft.Compute/virtualMachines@2024-11-01' = {
 }
 
 // Auto-shutdown schedule.
-resource autoshutdownSchedule 'Microsoft.DevTestLab/schedules@2018-09-15' = if (shouldEnabledAutoshutdown) {
+resource res_autoshutdownSchedule 'Microsoft.DevTestLab/schedules@2018-09-15' = if (shouldEnabledAutoshutdown) {
   name: 'shutdown-computevm-${vmName}'
   location: location
   properties: {
@@ -185,9 +185,9 @@ resource autoshutdownSchedule 'Microsoft.DevTestLab/schedules@2018-09-15' = if (
       time: autoshutdownTime
     }
     timeZoneId: autoshutdownTimeZone
-    targetResourceId: virtualMachine.id
+    targetResourceId: res_virtualMachine.id
   }
 }
 
-output fqdn string = publicIpAddress.properties.dnsSettings.fqdn
-output principalId string = virtualMachine.identity.principalId
+output fqdn string = res_publicIpAddress.properties.dnsSettings.fqdn
+output principalId string = res_virtualMachine.identity.principalId
