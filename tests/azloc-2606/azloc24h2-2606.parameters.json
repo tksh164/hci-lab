@@ -48,7 +48,7 @@
             "value": true
         },
         "repoBaseUri": {
-            "value": "https://storage-account-name.xxx.web.core.windows.net/template/"
+            "value": "https://storage-account-name.xxx.web.core.windows.net/templates/labenv/"
         }
     }
 }
