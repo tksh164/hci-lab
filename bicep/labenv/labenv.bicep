@@ -368,135 +368,16 @@ param salt string = utcNow()
 
 // General
 var location = resourceGroup().location
-var uniquePart = substring(uniqueString(resourceGroup().id, salt), 0, 5)
-var repoBaseUriWithSlash = endsWith(repoBaseUri, '/') ? repoBaseUri : '${repoBaseUri}/'
-var deploymentApiVersion = '2025-04-01'
-
-// Virtual network
-var virtualNetwork = {
-  deploymentName: 'deploy-vnet'
-  apiVersion: deploymentApiVersion
-  linkedTemplateUri: uri(repoBaseUriWithSlash, 'vnet.json')
-  name: 'labenv-vnet'
-}
-
-// Bastion
-var bastion = {
-  deploymentName: 'deploy-bastion'
-  apiVersion: deploymentApiVersion
-  linkedTemplateUri: uri(repoBaseUriWithSlash, 'bastion.json')
-  name: 'labenv-bastion'
-}
-
-// Lab host virtual machine
-var hostVm = {
-  deploymentName: 'deploy-host-vm'
-  apiVersion: deploymentApiVersion
-  linkedTemplateUri: uri(repoBaseUriWithSlash, 'hostvm.json')
-}
-
-// Key Vault
-var keyVault = {
-  deploymentName: 'deploy-key-vault'
-  apiVersion: deploymentApiVersion
-  linkedTemplateUri: uri(repoBaseUriWithSlash, 'keyvault.json')
-  name: format('labenv-{0}-kv', toLower(uniquePart))
-}
-
-// Key Vault RBAC
-var keyVaultRbac = {
-  deploymentName: 'assign-key-vault-rbac-with-host-vm-managed-id'
-  apiVersion: deploymentApiVersion
-  linkedTemplateUri: uri(repoBaseUriWithSlash, 'keyvault-rbac.json')
-}
-
-// Storage account for witness
-var witnessStorageAccount = {
-  deploymentName: 'deploy-storage-account-witness'
-  apiVersion: deploymentApiVersion
-  linkedTemplateUri: uri(repoBaseUriWithSlash, 'cloudwitness.json')
-  namePrefix: 'labenvwitness'
-}
+var uniquenessFactor = substring(uniqueString(resourceGroup().id, salt), 0, 5)
+var repoBaseUrlNormalized = endsWith(repoBaseUri, '/') ? repoBaseUri : '${repoBaseUri}/'
 
 // DSC extension
-var dscLinkedTemplateUri = uri(repoBaseUriWithSlash, 'dsc.json')
-var dscExtensionName = 'hci-lab-dsc-extension'
-var dscBaseUriWithSlash = uri(repoBaseUriWithSlash, 'dsc/') // Must end with "/".
-var dsc = {
-  installRolesFeatures: {
-    deploymentName: 'install-roles-and-features-on-host-vm'
-    apiVersion: deploymentApiVersion
-    zipUri: uri(dscBaseUriWithSlash, 'install-roles-and-features.zip')
-    scriptName: 'install-roles-and-features.ps1'
-    functionName: 'install-roles-and-features'
-  }
-  rebootHostVm: {
-    deploymentName: 'reboot-host-vm'
-    apiVersion: deploymentApiVersion
-    zipUri: uri(dscBaseUriWithSlash, 'reboot.zip')
-    scriptName: 'reboot.ps1'
-    functionName: 'reboot'
-  }
-}
+var dscExtensionName = 'labenv-dsc-extension'
+var dscBaseUrl = uri(repoBaseUrlNormalized, 'dsc/')  // Must end with "/".
 
 // Custom script extensions
-var customScriptLinkedTemplateUri = uri(repoBaseUriWithSlash, 'customscript.json')
-var customScriptExtensionName = 'hci-lab-customscript-extension'
-var customScriptBaseUriWithSlash = uri(repoBaseUriWithSlash, 'customscripts/') // Must end with "/".
-var customScript = {
-  configureHostVm: {
-    deploymentName: 'configure-host-vm'
-    apiVersion: deploymentApiVersion
-    fileUris: [
-      uri(customScriptBaseUriWithSlash, 'configure-lab-host.ps1')
-      uri(customScriptBaseUriWithSlash, 'common.psm1')
-    ]
-    commandToExecute: 'powershell.exe -ExecutionPolicy Unrestricted -File .\\configure-lab-host.ps1'
-  }
-  downloadMaterials: {
-    deploymentName: 'download-materials'
-    apiVersion: deploymentApiVersion
-    fileUris: [
-      uri(customScriptBaseUriWithSlash, 'download-materials.ps1')
-      uri(customScriptBaseUriWithSlash, 'materials.json')
-      uri(customScriptBaseUriWithSlash, 'common.psm1')
-    ]
-    commandToExecute: 'powershell.exe -ExecutionPolicy Unrestricted -File .\\download-materials.ps1'
-  }
-  createBaseVhd: {
-    deploymentName: 'create-base-vhd'
-    apiVersion: deploymentApiVersion
-    fileUris: [
-      uri(customScriptBaseUriWithSlash, 'create-base-vhd.ps1')
-      uri(customScriptBaseUriWithSlash, 'create-base-vhd-job.ps1')
-      uri(customScriptBaseUriWithSlash, 'common.psm1')
-    ]
-    commandToExecute: 'powershell.exe -ExecutionPolicy Unrestricted -File .\\create-base-vhd.ps1'
-  }
-  createVm: {
-    deploymentName: 'create-lab-vms'
-    apiVersion: deploymentApiVersion
-    fileUris: [
-      uri(customScriptBaseUriWithSlash, 'create-vm.ps1')
-      uri(customScriptBaseUriWithSlash, 'create-vm-job-addsdc.ps1')
-      uri(customScriptBaseUriWithSlash, 'create-vm-job-wac.ps1')
-      uri(customScriptBaseUriWithSlash, 'create-vm-job-hcinode.ps1')
-      uri(customScriptBaseUriWithSlash, 'common.psm1')
-    ]
-    commandToExecute: 'powershell.exe -ExecutionPolicy Unrestricted -File .\\create-vm.ps1'
-  }
-  createHciCluster: {
-    deploymentName: 'create-hci-cluster'
-    apiVersion: deploymentApiVersion
-    fileUris: [
-      uri(customScriptBaseUriWithSlash, 'create-hci-cluster.ps1')
-      uri(customScriptBaseUriWithSlash, 'create-hci-cluster-test-cat-en-us.psd1')
-      uri(customScriptBaseUriWithSlash, 'create-hci-cluster-test-cat-ja-jp.psd1')
-      uri(customScriptBaseUriWithSlash, 'common.psm1')
-    ]
-    commandToExecute: 'powershell.exe -ExecutionPolicy Unrestricted -File .\\create-hci-cluster.ps1'
-  }
-}
+var customScriptExtensionName = 'labenv-customscript-extension'
+var customScriptBaseUrl = uri(repoBaseUrlNormalized, 'customscripts/')  // Must end with "/".
 
 // Configuration parameters
 var labConfig = {
@@ -573,7 +454,7 @@ var labConfig = {
     shouldInstallConfigAppForAzureLocal: shouldInstallConfigAppForAzureLocal
   }
   hciNode: {
-    vmName: 'machine{0:00}' // vmNameOffset + ZeroBasedNodeIndex
+    vmName: 'machine{0:00}'  // vmNameOffset + ZeroBasedNodeIndex
     vmNameOffset: 1
     operatingSystem: {
       sku: hciNodeOsSku
@@ -587,26 +468,26 @@ var labConfig = {
     netAdapters: {
       management: {
         name: 'Management'
-        ipAddress: '172.16.0.{0}' // ipAddressOffset + ZeroBasedNodeIndex
+        ipAddress: '172.16.0.{0}'  // ipAddressOffset + ZeroBasedNodeIndex
         prefixLength: 24
         defaultGateway: '172.16.0.1'
         dnsServerAddresses: ['172.16.0.2']
       }
       compute: {
         name: 'Compute'
-        ipAddress: '10.0.0.{0}' // ipAddressOffset + ZeroBasedNodeIndex
+        ipAddress: '10.0.0.{0}'  // ipAddressOffset + ZeroBasedNodeIndex
         prefixLength: 16
       }
       storage1: {
         name: 'Storage1'
         vlanId: 711
-        ipAddress: '172.20.1.{0}' // ipAddressOffset + ZeroBasedNodeIndex
+        ipAddress: '172.20.1.{0}'  // ipAddressOffset + ZeroBasedNodeIndex
         prefixLength: 24
       }
       storage2: {
         name: 'Storage2'
         vlanId: 712
-        ipAddress: '172.20.2.{0}' // ipAddressOffset + ZeroBasedNodeIndex
+        ipAddress: '172.20.2.{0}'  // ipAddressOffset + ZeroBasedNodeIndex
         prefixLength: 24
       }
     }
@@ -617,7 +498,7 @@ var labConfig = {
     ipAddress: '172.16.0.200'
   }
   keyVault: {
-    name: keyVault.name
+    name: format('labenv-{0}-kv', toLower(uniquenessFactor))
     secretName: {
       adminPassword: 'AdminPassword'
       cloudWitnessStorageAccountName: 'CloudWitnessStorageAccountName'
@@ -631,453 +512,217 @@ var labConfig = {
 //
 
 // Virtual network
-resource res_vnet 'Microsoft.Resources/deployments@2025-04-01' = {
-  name: virtualNetwork.deploymentName
-  properties: {
-    mode: 'Incremental'
-    templateLink: {
-      uri: virtualNetwork.linkedTemplateUri
-      contentVersion: '1.0.0.0'
-    }
-    parameters: {
-      location: {
-        value: location
-      }
-      virtualNetworkName: {
-        value: virtualNetwork.name
-      }
-    }
+module mod_vnet './vnet.bicep' = {
+  name: 'deploy-vnet'
+  params: {
+    location: location
+    virtualNetworkName: 'labenv-vnet'
   }
 }
 
-// module vnet './vnet.bicep' = {
-//   name: virtualNetwork.deploymentName
-//   params: {
-//     location: location
-//     virtualNetworkName: virtualNetwork.name
-//   }
-// }
-
 // Bastion
-resource res_bastion 'Microsoft.Resources/deployments@2025-04-01' = if (shouldDeployBastionDeveloper) {
-  name: bastion.deploymentName
-  dependsOn: [
-    res_vnet
-  ]
-  properties: {
-    mode: 'Incremental'
-    templateLink: {
-      uri: bastion.linkedTemplateUri
-      contentVersion: '1.0.0.0'
-    }
-    parameters: {
-      location: {
-        value: location
-      }
-      bastionName: {
-        value: bastion.name
-      }
-      virtualNetworkId: {
-        value: res_vnet.properties.outputs.virtualNetworkId.value
-      }
-    }
+module mod_bastion './bastion.bicep' = if (shouldDeployBastionDeveloper) {
+  name: 'deploy-bastion'
+  params: {
+    location: location
+    bastionName: 'labenv-bastion'
+    virtualNetworkId: mod_vnet.outputs.virtualNetworkId
   }
 }
 
 // Lab host virtual machine.
-resource res_labHostVm 'Microsoft.Resources/deployments@2025-04-01' = {
-  name: hostVm.deploymentName
-  dependsOn: [
-    res_vnet
-  ]
-  properties: {
-    mode: 'Incremental'
-    templateLink: {
-      uri: hostVm.linkedTemplateUri
-      contentVersion: '1.0.0.0'
-    }
-    parameters: {
-      location: {
-        value: location
-      }
-      subnetId: {
-        value: res_vnet.properties.outputs.subnetId.value.default
-      }
-      vmName: {
-        value: labHostVmName
-      }
-      adminUserName: {
-        value: adminUserName
-      }
-      adminPassword: {
-        value: adminPassword
-      }
-      vmSize: {
-        value: labHostVmSize
-      }
-      osDiskType: {
-        value: labHostVmOsDiskType
-      }
-      dataDiskType: {
-        value: labHostVmDataDiskType
-      }
-      dataDiskSize: {
-        value: labHostVmDataDiskSize
-      }
-      dataDiskCount: {
-        value: labHostVmDataDiskCount
-      }
-      hasEligibleWindowsServerLicense: {
-        value: hasEligibleWindowsServerLicense
-      }
-      base64EncodedLabConfig: {
-        value: base64(string(labConfig))
-      }
-      shouldEnabledAutoshutdown: {
-        value: shouldEnabledAutoshutdown
-      }
-      autoshutdownTime: {
-        value: autoshutdownTime
-      }
-      autoshutdownTimeZone: {
-        value: autoshutdownTimeZone
-      }
-      uniqueString: {
-        value: uniquePart
-      }
-    }
+module mod_labHostVm './hostvm.bicep' = {
+  name: 'deploy-host-vm'
+  params: {
+    location: location
+    subnetId: mod_vnet.outputs.subnetId.default
+    vmName: labHostVmName
+    adminUserName: adminUserName
+    adminPassword: adminPassword
+    vmSize: labHostVmSize
+    osDiskType: labHostVmOsDiskType
+    dataDiskType: labHostVmDataDiskType
+    dataDiskSize: labHostVmDataDiskSize
+    dataDiskCount: labHostVmDataDiskCount
+    hasEligibleWindowsServerLicense: hasEligibleWindowsServerLicense
+    base64EncodedLabConfig: base64(string(labConfig))
+    shouldEnabledAutoshutdown: shouldEnabledAutoshutdown
+    autoshutdownTime: autoshutdownTime
+    autoshutdownTimeZone: autoshutdownTimeZone
+    uniqueString: uniquenessFactor
   }
 }
 
 // Key Vault
-resource res_keyVault 'Microsoft.Resources/deployments@2025-04-01' = {
-  name: keyVault.deploymentName
-  dependsOn: [
-    res_vnet
-  ]
-  properties: {
-    mode: 'Incremental'
-    templateLink: {
-      uri: keyVault.linkedTemplateUri
-      contentVersion: '1.0.0.0'
-    }
-    parameters: {
-      location: {
-        value: location
-      }
-      keyVaultName: {
-        value: keyVault.name
-      }
-      hostVmSubnetId: {
-        value: res_vnet.properties.outputs.subnetId.value.default
-      }
-      secretNameForLabHostAdminPassword: {
-        value: labConfig.keyVault.secretName.adminPassword
-      }
-      labHostAdminPassword: {
-        value: adminPassword
-      }
-    }
+module mod_keyVault './keyvault.bicep' = {
+  name: 'deploy-key-vault'
+  params: {
+    location: location
+    keyVaultName: labConfig.keyVault.name
+    hostVmSubnetId: mod_vnet.outputs.subnetId.default
+    secretNameForLabHostAdminPassword: labConfig.keyVault.secretName.adminPassword
+    labHostAdminPassword: adminPassword
   }
 }
 
 // Key Vault RBAC
-resource res_keyVaultRbac 'Microsoft.Resources/deployments@2025-04-01' = {
-  name: keyVaultRbac.deploymentName
-  dependsOn: [
-    res_labHostVm
-    res_keyVault
-  ]
-  properties: {
-    mode: 'Incremental'
-    templateLink: {
-      uri: keyVaultRbac.linkedTemplateUri
-      contentVersion: '1.0.0.0'
-    }
-    parameters: {
-      keyVaultName: {
-        value: keyVault.name
-      }
-      servicePrincipalId: {
-        value: res_labHostVm.properties.outputs.principalId.value
-      }
-      roleDefinitionId: {
-        value: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6') // Key Vault Secrets User
-      }
-    }
+module mod_keyVaultRbac './keyvault-rbac.bicep' = {
+  name: 'assign-key-vault-rbac-with-host-vm-managed-id'
+  params: {
+    keyVaultName: labConfig.keyVault.name
+    servicePrincipalId: mod_labHostVm.outputs.principalId
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')  // Key Vault Secrets User
   }
 }
 
 // Storage account for the witness.
-resource res_witnessStorageAccount 'Microsoft.Resources/deployments@2025-04-01' = if (!isAzureLocalDeployment) {
-  name: witnessStorageAccount.deploymentName
-  dependsOn: [
-    res_vnet
-    res_keyVault
-  ]
-  properties: {
-    mode: 'Incremental'
-    templateLink: {
-      uri: witnessStorageAccount.linkedTemplateUri
-      contentVersion: '1.0.0.0'
-    }
-    parameters: {
-      location: {
-        value: location
-      }
-      storageAccountNamePrefix: {
-        value: witnessStorageAccount.namePrefix
-      }
-      uniqueString: {
-        value: uniquePart
-      }
-      hostVmSubnetId: {
-        value: res_vnet.properties.outputs.subnetId.value.default
-      }
-      keyVaultName: {
-        value: keyVault.name
-      }
-      secretNameForStorageAccountName: {
-        value: labConfig.keyVault.secretName.cloudWitnessStorageAccountName
-      }
-      secretNameForStorageAccountKey: {
-        value: labConfig.keyVault.secretName.cloudWitnessStorageAccountKey
-      }
-    }
+module mod_witnessStorageAccount './cloudwitness.bicep' = if (!isAzureLocalDeployment) {
+  name: 'deploy-storage-account-witness'
+  params: {
+    location: location
+    storageAccountNamePrefix: 'labenvwitness'
+    uniqueString: uniquenessFactor
+    hostVmSubnetId: mod_vnet.outputs.subnetId.default
+    keyVaultName: labConfig.keyVault.name
+    secretNameForStorageAccountName: labConfig.keyVault.secretName.cloudWitnessStorageAccountName
+    secretNameForStorageAccountKey: labConfig.keyVault.secretName.cloudWitnessStorageAccountKey
   }
 }
 
 // Install roles and features.
-resource res_installRolesFeatures 'Microsoft.Resources/deployments@2025-04-01' = {
-  name: dsc.installRolesFeatures.deploymentName
+module mod_installRolesFeatures './dsc.bicep' = {
+  name: 'install-roles-and-features-on-host-vm'
   dependsOn: [
-    res_labHostVm
+    mod_labHostVm
   ]
-  properties: {
-    mode: 'Incremental'
-    templateLink: {
-      uri: dscLinkedTemplateUri
-      contentVersion: '1.0.0.0'
-    }
-    parameters: {
-      location: {
-        value: location
-      }
-      parentVmResourceName: {
-        value: labHostVmName
-      }
-      extensionName: {
-        value: dscExtensionName
-      }
-      zipUri: {
-        value: dsc.installRolesFeatures.zipUri
-      }
-      scriptName: {
-        value: dsc.installRolesFeatures.scriptName
-      }
-      functionName: {
-        value: dsc.installRolesFeatures.functionName
-      }
-    }
+  params: {
+    location: location
+    parentVmResourceName: labHostVmName
+    extensionName: dscExtensionName
+    zipUri: uri(dscBaseUrl, 'install-roles-and-features.zip')
+    scriptName: 'install-roles-and-features.ps1'
+    functionName: 'install-roles-and-features'
   }
 }
 
 // Configure the lab host.
-resource res_configureHostVm 'Microsoft.Resources/deployments@2025-04-01' = {
-  name: customScript.configureHostVm.deploymentName
+module mod_configureHostVm './customscript.bicep' = {
+  name: 'configure-host-vm'
   dependsOn: [
-    res_keyVaultRbac
-    res_installRolesFeatures
+    mod_keyVaultRbac
+    mod_installRolesFeatures
   ]
-  properties: {
-    mode: 'Incremental'
-    templateLink: {
-      uri: customScriptLinkedTemplateUri
-      contentVersion: '1.0.0.0'
-    }
-    parameters: {
-      location: {
-        value: location
-      }
-      parentVmResourceName: {
-        value: labHostVmName
-      }
-      extensionName: {
-        value: customScriptExtensionName
-      }
-      fileUris: {
-        value: customScript.configureHostVm.fileUris
-      }
-      commandToExecute: {
-        value: customScript.configureHostVm.commandToExecute
-      }
-    }
+  params: {
+    location: location
+    parentVmResourceName: labHostVmName
+    extensionName: customScriptExtensionName
+    fileUris: [
+      uri(customScriptBaseUrl, 'configure-lab-host.ps1')
+      uri(customScriptBaseUrl, 'common.psm1')
+    ]
+    commandToExecute: 'powershell.exe -ExecutionPolicy Unrestricted -File .\\configure-lab-host.ps1'
   }
 }
 
 // Download ISO files and updates.
-resource res_downloadMaterials 'Microsoft.Resources/deployments@2025-04-01' = {
-  name: customScript.downloadMaterials.deploymentName
+module mod_downloadMaterials './customscript.bicep' = {
+  name: 'download-materials'
   dependsOn: [
-    res_configureHostVm
+    mod_configureHostVm
   ]
-  properties: {
-    mode: 'Incremental'
-    templateLink: {
-      uri: customScriptLinkedTemplateUri
-      contentVersion: '1.0.0.0'
-    }
-    parameters: {
-      location: {
-        value: location
-      }
-      parentVmResourceName: {
-        value: labHostVmName
-      }
-      extensionName: {
-        value: customScriptExtensionName
-      }
-      fileUris: {
-        value: customScript.downloadMaterials.fileUris
-      }
-      commandToExecute: {
-        value: customScript.downloadMaterials.commandToExecute
-      }
-    }
+  params: {
+    location: location
+    parentVmResourceName: labHostVmName
+    extensionName: customScriptExtensionName
+    fileUris: [
+      uri(customScriptBaseUrl, 'download-materials.ps1')
+      uri(customScriptBaseUrl, 'materials.json')
+      uri(customScriptBaseUrl, 'common.psm1')
+    ]
+    commandToExecute: 'powershell.exe -ExecutionPolicy Unrestricted -File .\\download-materials.ps1'
   }
 }
 
 // Create base virtual hard disks.
-resource res_createBaseVhd 'Microsoft.Resources/deployments@2025-04-01' = {
-  name: customScript.createBaseVhd.deploymentName
+module mod_createBaseVhd './customscript.bicep' = {
+  name: 'create-base-vhd'
   dependsOn: [
-    res_downloadMaterials
+    mod_downloadMaterials
   ]
-  properties: {
-    mode: 'Incremental'
-    templateLink: {
-      uri: customScriptLinkedTemplateUri
-      contentVersion: '1.0.0.0'
-    }
-    parameters: {
-      location: {
-        value: location
-      }
-      parentVmResourceName: {
-        value: labHostVmName
-      }
-      extensionName: {
-        value: customScriptExtensionName
-      }
-      fileUris: {
-        value: customScript.createBaseVhd.fileUris
-      }
-      commandToExecute: {
-        value: customScript.createBaseVhd.commandToExecute
-      }
-    }
+  params: {
+    location: location
+    parentVmResourceName: labHostVmName
+    extensionName: customScriptExtensionName
+    fileUris: [
+      uri(customScriptBaseUrl, 'create-base-vhd.ps1')
+      uri(customScriptBaseUrl, 'create-base-vhd-job.ps1')
+      uri(customScriptBaseUrl, 'common.psm1')
+    ]
+    commandToExecute: 'powershell.exe -ExecutionPolicy Unrestricted -File .\\create-base-vhd.ps1'
   }
 }
 
 // Reboot the lab host.
-resource res_rebootHostVm 'Microsoft.Resources/deployments@2025-04-01' = {
-  name: dsc.rebootHostVm.deploymentName
+module mod_rebootHostVm './dsc.bicep' = {
+  name: 'reboot-host-vm'
   dependsOn: [
-    res_createBaseVhd
+    mod_createBaseVhd
   ]
-  properties: {
-    mode: 'Incremental'
-    templateLink: {
-      uri: dscLinkedTemplateUri
-      contentVersion: '1.0.0.0'
-    }
-    parameters: {
-      location: {
-        value: location
-      }
-      parentVmResourceName: {
-        value: labHostVmName
-      }
-      extensionName: {
-        value: dscExtensionName
-      }
-      zipUri: {
-        value: dsc.rebootHostVm.zipUri
-      }
-      scriptName: {
-        value: dsc.rebootHostVm.scriptName
-      }
-      functionName: {
-        value: dsc.rebootHostVm.functionName
-      }
-    }
+  params: {
+    location: location
+    parentVmResourceName: labHostVmName
+    extensionName: dscExtensionName
+    zipUri: uri(dscBaseUrl, 'reboot.zip')
+    scriptName: 'reboot.ps1'
+    functionName: 'reboot'
   }
 }
 
 // Create VMs.
-resource res_createVm 'Microsoft.Resources/deployments@2025-04-01' = {
-  name: customScript.createVm.deploymentName
+module mod_createVm './customscript.bicep' = {
+  name: 'create-lab-vms'
   dependsOn: [
-    res_rebootHostVm
+    mod_rebootHostVm
   ]
-  properties: {
-    mode: 'Incremental'
-    templateLink: {
-      uri: customScriptLinkedTemplateUri
-      contentVersion: '1.0.0.0'
-    }
-    parameters: {
-      location: {
-        value: location
-      }
-      parentVmResourceName: {
-        value: labHostVmName
-      }
-      extensionName: {
-        value: customScriptExtensionName
-      }
-      fileUris: {
-        value: customScript.createVm.fileUris
-      }
-      commandToExecute: {
-        value: customScript.createVm.commandToExecute
-      }
-    }
+  params: {
+    location: location
+    parentVmResourceName: labHostVmName
+    extensionName: customScriptExtensionName
+    fileUris: [
+      uri(customScriptBaseUrl, 'create-vm.ps1')
+      uri(customScriptBaseUrl, 'create-vm-job-addsdc.ps1')
+      uri(customScriptBaseUrl, 'create-vm-job-wac.ps1')
+      uri(customScriptBaseUrl, 'create-vm-job-hcinode.ps1')
+      uri(customScriptBaseUrl, 'common.psm1')
+    ]
+    commandToExecute: 'powershell.exe -ExecutionPolicy Unrestricted -File .\\create-vm.ps1'
   }
 }
 
 // Create an HCI cluster.
-resource res_hciCluster 'Microsoft.Resources/deployments@2025-04-01' = if (labConfig.hciCluster.shouldCreateCluster) {
-  name: customScript.createHciCluster.deploymentName
+module mod_hciCluster './customscript.bicep' = if (labConfig.hciCluster.shouldCreateCluster) {
+  name: 'create-hci-cluster'
   dependsOn: [
-    res_witnessStorageAccount
-    res_createVm
+    mod_witnessStorageAccount
+    mod_createVm
   ]
-  properties: {
-    mode: 'Incremental'
-    templateLink: {
-      uri: customScriptLinkedTemplateUri
-      contentVersion: '1.0.0.0'
-    }
-    parameters: {
-      location: {
-        value: location
-      }
-      parentVmResourceName: {
-        value: labHostVmName
-      }
-      extensionName: {
-        value: customScriptExtensionName
-      }
-      fileUris: {
-        value: customScript.createHciCluster.fileUris
-      }
-      commandToExecute: {
-        value: customScript.createHciCluster.commandToExecute
-      }
-    }
+  params: {
+    location: location
+    parentVmResourceName: labHostVmName
+    extensionName: customScriptExtensionName
+    fileUris: [
+      uri(customScriptBaseUrl, 'create-hci-cluster.ps1')
+      uri(customScriptBaseUrl, 'create-hci-cluster-test-cat-en-us.psd1')
+      uri(customScriptBaseUrl, 'create-hci-cluster-test-cat-ja-jp.psd1')
+      uri(customScriptBaseUrl, 'common.psm1')
+    ]
+    commandToExecute: 'powershell.exe -ExecutionPolicy Unrestricted -File .\\create-hci-cluster.ps1'
   }
 }
 
+//
+// Outputs
+//
+
 output adminUserName string = adminUserName
-output vmPublicIpFqdn string = res_labHostVm.properties.outputs.fqdn.value
+output vmPublicIpFqdn string = mod_labHostVm.outputs.fqdn
