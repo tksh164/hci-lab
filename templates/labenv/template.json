@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.44.1.10279",
-      "templateHash": "7431074574050206301"
+      "templateHash": "11971733700139741750"
     }
   },
   "parameters": {
@@ -374,7 +374,7 @@
   },
   "variables": {
     "location": "[resourceGroup().location]",
-    "uniqueFactor": "[substring(uniqueString(resourceGroup().id, parameters('salt')), 0, 5)]",
+    "uniquenessFactor": "[substring(uniqueString(resourceGroup().id, parameters('salt')), 0, 5)]",
     "repoBaseUrlNormalized": "[if(endsWith(parameters('repoBaseUri'), '/'), parameters('repoBaseUri'), format('{0}/', parameters('repoBaseUri')))]",
     "dscExtensionName": "labenv-dsc-extension",
     "dscBaseUrl": "[uri(variables('repoBaseUrlNormalized'), 'dsc/')]",
@@ -504,7 +504,7 @@
         "ipAddress": "172.16.0.200"
       },
       "keyVault": {
-        "name": "[format('labenv-{0}-kv', toLower(variables('uniqueFactor')))]",
+        "name": "[format('labenv-{0}-kv', toLower(variables('uniquenessFactor')))]",
         "secretName": {
           "adminPassword": "AdminPassword",
           "cloudWitnessStorageAccountName": "CloudWitnessStorageAccountName",
@@ -762,7 +762,7 @@
             "value": "[parameters('autoshutdownTimeZone')]"
           },
           "uniqueString": {
-            "value": "[variables('uniqueFactor')]"
+            "value": "[variables('uniquenessFactor')]"
           }
         },
         "template": {
@@ -1257,7 +1257,7 @@
             "value": "labenvwitness"
           },
           "uniqueString": {
-            "value": "[variables('uniqueFactor')]"
+            "value": "[variables('uniquenessFactor')]"
           },
           "hostVmSubnetId": {
             "value": "[reference(resourceId('Microsoft.Resources/deployments', 'deploy-vnet'), '2025-04-01').outputs.subnetId.value.default]"
