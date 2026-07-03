@@ -340,3 +340,136 @@ type FXSeries =
   | 'Standard_FX24mds'
   | 'Standard_FX36mds'
   | 'Standard_FX48mds'
+
+@export()
+@sealed()
+type labConfiguration = {
+  labHost: {
+    storage: {
+      poolName: string
+      driveLetter: driveLetter
+      volumeLabel: string
+    }
+    folderPath: {
+      log: string
+      temp: string
+      updates: string
+      vhd: string
+      vm: string
+    }
+    vSwitch: {
+      nat: {
+        name: string
+      }
+    }
+    netNat: {
+        name: string
+        InternalAddressPrefix: string
+        hostInternalIPAddress: string
+        hostInternalPrefixLength: ipAddressPrefixLength
+    }[]
+    toolsToInstall: string
+  }
+  guestOS: {
+    culture: supportedOsLanguage
+    timeZone: string
+    shouldInstallUpdates: bool
+  }
+  addsDomain: {
+    fqdn: string
+  }
+  addsDC: {
+    vmName: string
+    maximumRamBytes: int
+    netAdapters: {
+      management: {
+        name: string
+        ipAddress: string
+        prefixLength: ipAddressPrefixLength
+        defaultGateway: string
+        dnsServerAddresses: string[]
+      }
+    }
+    shouldPrepareAddsForAzureLocal: bool
+    orgUnitForAzureLocal: string
+    lcmUserName: string
+  }
+  wac: {
+    vmName: string
+    maximumRamBytes: int
+    netAdapters: {
+      management: {
+        name: string
+        ipAddress: string
+        prefixLength: ipAddressPrefixLength
+        defaultGateway: string
+        dnsServerAddresses: string[]
+      }
+    }
+    shouldInstallConfigAppForAzureLocal: bool
+  }
+  hciNode: {
+    vmName: string  // 'name{0:00}', vmNameOffset + ZeroBasedNodeIndex
+    vmNameOffset: int
+    operatingSystem: {
+      sku: osSymbol
+      imageIndex: osImageIndex
+    }
+    nodeCount: supportedNodeMachineCount
+    shouldJoinToAddsDomain: bool
+    isAzureLocalDeployment: bool
+    dataDiskSizeBytes: int
+    ipAddressOffset: int
+    netAdapters: {
+      management: {
+        name: string
+        ipAddress: string  // 'x.x.x.{0}', ipAddressOffset + ZeroBasedNodeIndex
+        prefixLength: ipAddressPrefixLength
+        defaultGateway: string
+        dnsServerAddresses: string[]
+      }
+      compute: {
+        name: string
+        ipAddress: string  // 'x.x.x.{0}', ipAddressOffset + ZeroBasedNodeIndex
+        prefixLength: ipAddressPrefixLength
+      }
+      storage1: {
+        name: string
+        vlanId: vlanId
+        ipAddress: string  // 'x.x.x.{0}', ipAddressOffset + ZeroBasedNodeIndex
+        prefixLength: ipAddressPrefixLength
+      }
+      storage2: {
+        name: string
+        vlanId: vlanId
+        ipAddress: string  // 'x.x.x.{0}', ipAddressOffset + ZeroBasedNodeIndex
+        prefixLength: ipAddressPrefixLength
+      }
+    }
+  }
+  hciCluster: {
+    shouldCreateCluster: bool
+    name: string
+    ipAddress: string
+  }
+  keyVault: {
+    name: string
+    secretName: {
+      adminPassword: string
+      cloudWitnessStorageAccountName: string
+      cloudWitnessStorageAccountKey: string
+    }
+  }
+}
+
+@minLength(1)
+@maxLength(1)
+type driveLetter = string
+
+@minValue(0)
+@maxValue(32)
+type ipAddressPrefixLength = int
+
+@minValue(1)
+@maxValue(4094)
+type vlanId = int

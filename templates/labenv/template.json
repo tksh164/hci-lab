@@ -6,7 +6,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.44.1.10279",
-      "templateHash": "12612693129346693414"
+      "templateHash": "8842873530582555087"
     }
   },
   "definitions": {
@@ -62,6 +62,16 @@
         "Standard_D64ls_v6",
         "Standard_D96ls_v6"
       ],
+      "metadata": {
+        "__bicep_imported_from!": {
+          "sourceTemplate": "types.bicep"
+        }
+      }
+    },
+    "_1.driveLetter": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1,
       "metadata": {
         "__bicep_imported_from!": {
           "sourceTemplate": "types.bicep"
@@ -258,6 +268,16 @@
         }
       }
     },
+    "_1.ipAddressPrefixLength": {
+      "type": "int",
+      "minValue": 0,
+      "maxValue": 32,
+      "metadata": {
+        "__bicep_imported_from!": {
+          "sourceTemplate": "types.bicep"
+        }
+      }
+    },
     "_1.osSymbolAzureLocal": {
       "type": "string",
       "allowedValues": [
@@ -305,6 +325,363 @@
         "ws2022",
         "ws2025"
       ],
+      "metadata": {
+        "__bicep_imported_from!": {
+          "sourceTemplate": "types.bicep"
+        }
+      }
+    },
+    "_1.vlanId": {
+      "type": "int",
+      "minValue": 1,
+      "maxValue": 4094,
+      "metadata": {
+        "__bicep_imported_from!": {
+          "sourceTemplate": "types.bicep"
+        }
+      }
+    },
+    "labConfiguration": {
+      "type": "object",
+      "properties": {
+        "labHost": {
+          "type": "object",
+          "properties": {
+            "storage": {
+              "type": "object",
+              "properties": {
+                "poolName": {
+                  "type": "string"
+                },
+                "driveLetter": {
+                  "$ref": "#/definitions/_1.driveLetter"
+                },
+                "volumeLabel": {
+                  "type": "string"
+                }
+              }
+            },
+            "folderPath": {
+              "type": "object",
+              "properties": {
+                "log": {
+                  "type": "string"
+                },
+                "temp": {
+                  "type": "string"
+                },
+                "updates": {
+                  "type": "string"
+                },
+                "vhd": {
+                  "type": "string"
+                },
+                "vm": {
+                  "type": "string"
+                }
+              }
+            },
+            "vSwitch": {
+              "type": "object",
+              "properties": {
+                "nat": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "netNat": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "InternalAddressPrefix": {
+                    "type": "string"
+                  },
+                  "hostInternalIPAddress": {
+                    "type": "string"
+                  },
+                  "hostInternalPrefixLength": {
+                    "$ref": "#/definitions/_1.ipAddressPrefixLength"
+                  }
+                }
+              }
+            },
+            "toolsToInstall": {
+              "type": "string"
+            }
+          }
+        },
+        "guestOS": {
+          "type": "object",
+          "properties": {
+            "culture": {
+              "$ref": "#/definitions/supportedOsLanguage"
+            },
+            "timeZone": {
+              "type": "string"
+            },
+            "shouldInstallUpdates": {
+              "type": "bool"
+            }
+          }
+        },
+        "addsDomain": {
+          "type": "object",
+          "properties": {
+            "fqdn": {
+              "type": "string"
+            }
+          }
+        },
+        "addsDC": {
+          "type": "object",
+          "properties": {
+            "vmName": {
+              "type": "string"
+            },
+            "maximumRamBytes": {
+              "type": "int"
+            },
+            "netAdapters": {
+              "type": "object",
+              "properties": {
+                "management": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "ipAddress": {
+                      "type": "string"
+                    },
+                    "prefixLength": {
+                      "$ref": "#/definitions/_1.ipAddressPrefixLength"
+                    },
+                    "defaultGateway": {
+                      "type": "string"
+                    },
+                    "dnsServerAddresses": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "shouldPrepareAddsForAzureLocal": {
+              "type": "bool"
+            },
+            "orgUnitForAzureLocal": {
+              "type": "string"
+            },
+            "lcmUserName": {
+              "type": "string"
+            }
+          }
+        },
+        "wac": {
+          "type": "object",
+          "properties": {
+            "vmName": {
+              "type": "string"
+            },
+            "maximumRamBytes": {
+              "type": "int"
+            },
+            "netAdapters": {
+              "type": "object",
+              "properties": {
+                "management": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "ipAddress": {
+                      "type": "string"
+                    },
+                    "prefixLength": {
+                      "$ref": "#/definitions/_1.ipAddressPrefixLength"
+                    },
+                    "defaultGateway": {
+                      "type": "string"
+                    },
+                    "dnsServerAddresses": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "shouldInstallConfigAppForAzureLocal": {
+              "type": "bool"
+            }
+          }
+        },
+        "hciNode": {
+          "type": "object",
+          "properties": {
+            "vmName": {
+              "type": "string"
+            },
+            "vmNameOffset": {
+              "type": "int"
+            },
+            "operatingSystem": {
+              "type": "object",
+              "properties": {
+                "sku": {
+                  "$ref": "#/definitions/osSymbol"
+                },
+                "imageIndex": {
+                  "$ref": "#/definitions/osImageIndex"
+                }
+              }
+            },
+            "nodeCount": {
+              "$ref": "#/definitions/supportedNodeMachineCount"
+            },
+            "shouldJoinToAddsDomain": {
+              "type": "bool"
+            },
+            "isAzureLocalDeployment": {
+              "type": "bool"
+            },
+            "dataDiskSizeBytes": {
+              "type": "int"
+            },
+            "ipAddressOffset": {
+              "type": "int"
+            },
+            "netAdapters": {
+              "type": "object",
+              "properties": {
+                "management": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "ipAddress": {
+                      "type": "string"
+                    },
+                    "prefixLength": {
+                      "$ref": "#/definitions/_1.ipAddressPrefixLength"
+                    },
+                    "defaultGateway": {
+                      "type": "string"
+                    },
+                    "dnsServerAddresses": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "compute": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "ipAddress": {
+                      "type": "string"
+                    },
+                    "prefixLength": {
+                      "$ref": "#/definitions/_1.ipAddressPrefixLength"
+                    }
+                  }
+                },
+                "storage1": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "vlanId": {
+                      "$ref": "#/definitions/_1.vlanId"
+                    },
+                    "ipAddress": {
+                      "type": "string"
+                    },
+                    "prefixLength": {
+                      "$ref": "#/definitions/_1.ipAddressPrefixLength"
+                    }
+                  }
+                },
+                "storage2": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "vlanId": {
+                      "$ref": "#/definitions/_1.vlanId"
+                    },
+                    "ipAddress": {
+                      "type": "string"
+                    },
+                    "prefixLength": {
+                      "$ref": "#/definitions/_1.ipAddressPrefixLength"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "hciCluster": {
+          "type": "object",
+          "properties": {
+            "shouldCreateCluster": {
+              "type": "bool"
+            },
+            "name": {
+              "type": "string"
+            },
+            "ipAddress": {
+              "type": "string"
+            }
+          }
+        },
+        "keyVault": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "secretName": {
+              "type": "object",
+              "properties": {
+                "adminPassword": {
+                  "type": "string"
+                },
+                "cloudWitnessStorageAccountName": {
+                  "type": "string"
+                },
+                "cloudWitnessStorageAccountKey": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": false,
       "metadata": {
         "__bicep_imported_from!": {
           "sourceTemplate": "types.bicep"

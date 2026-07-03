@@ -10,6 +10,7 @@ import {
   supportedDataDiskCount
   supportedNodeMachineCount
   supportedVmSize
+  labConfiguration
 } from './types.bicep'
 
 //
@@ -128,7 +129,7 @@ var customScriptExtensionName = 'labenv-customscript-extension'
 var customScriptBaseUrl = uri(repoBaseUrlNormalized, 'customscripts/')  // Must end with "/".
 
 // Configuration parameters
-var labConfig = {
+var labConfig labConfiguration = {
   labHost: {
     storage: {
       poolName: 'hcilabpool'
