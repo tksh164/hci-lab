@@ -320,7 +320,7 @@ module mod_keyVaultRbac './keyvault-rbac.bicep' = {
   params: {
     keyVaultName: labConfig.keyVault.name
     servicePrincipalId: mod_labHostVm.outputs.principalId
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')  // Key Vault Secrets User
+    roleDefinitionId: roleDefinitions('Key Vault Secrets User').id
   }
 }
 
