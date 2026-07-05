@@ -1,3 +1,7 @@
+//
+// Parameters
+//
+
 @description('''The location for the Key Vault resource.''')
 param location string
 
@@ -13,6 +17,10 @@ param secretNameForLabHostAdminPassword string
 @description('''The lab host's administrator password.''')
 @secure()
 param labHostAdminPassword string
+
+//
+// Resources
+//
 
 resource res_keyVault 'Microsoft.KeyVault/vaults@2026-02-01' = {
   name: keyVaultName
@@ -55,5 +63,9 @@ resource res_labHostAdminPasswordSecret 'Microsoft.KeyVault/vaults/secrets@2026-
     value: labHostAdminPassword
   }
 }
+
+//
+// Outputs
+//
 
 output keyVaultId string = res_keyVault.id

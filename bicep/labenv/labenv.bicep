@@ -284,7 +284,7 @@ module mod_labHostVm './hostvm.bicep' = {
   name: 'deploy-host-vm'
   params: {
     location: location
-    subnetId: mod_vnet.outputs.subnetId.default
+    subnetId: mod_vnet.outputs.subnetId
     vmName: labHostVmName
     adminUserName: adminUserName
     adminPassword: adminPassword
@@ -308,7 +308,7 @@ module mod_keyVault './keyvault.bicep' = {
   params: {
     location: location
     keyVaultName: labConfig.keyVault.name
-    hostVmSubnetId: mod_vnet.outputs.subnetId.default
+    hostVmSubnetId: mod_vnet.outputs.subnetId
     secretNameForLabHostAdminPassword: labConfig.keyVault.secretName.adminPassword
     labHostAdminPassword: adminPassword
   }
@@ -331,7 +331,7 @@ module mod_witnessStorageAccount './cloudwitness.bicep' = if (!isAzureLocalDeplo
     location: location
     storageAccountNamePrefix: 'labenvwitness'
     uniqueString: uniquenessFactor
-    hostVmSubnetId: mod_vnet.outputs.subnetId.default
+    hostVmSubnetId: mod_vnet.outputs.subnetId
     keyVaultName: labConfig.keyVault.name
     secretNameForStorageAccountName: labConfig.keyVault.secretName.cloudWitnessStorageAccountName
     secretNameForStorageAccountKey: labConfig.keyVault.secretName.cloudWitnessStorageAccountKey

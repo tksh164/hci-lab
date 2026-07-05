@@ -1,3 +1,7 @@
+//
+// Parameters
+//
+
 @description('''The location for the custom script extension resource.''')
 param location string
 
@@ -49,20 +53,13 @@ param autoshutdownTimeZone string
 @description('''The string for uniqueness of resource names.''')
 param uniqueString string
 
-// Public IP address.
-var publicIpAddressName = '${vmName}-ip1'
-var dnsNameForPublicIP = toLower('${take(resourceGroup().name, 27)}-${take(vmName, 27)}-${toLower(uniqueString)}')
-
-// Network interface.
-var networkInterfaceName = '${vmName}-nic1'
-var privateIPAddress = '192.168.0.4'
-
-// Virtual machine.
-var computerName = 'labenv'
+//
+// Resources
+//
 
 // Public IP address.
-resource res_publicIpAddress 'Microsoft.Network/publicIpAddresses@2024-07-01' = {
-  name: publicIpAddressName
+resource res_publicIpAddress 'Microsoft.Network/publicIPAddresses@2025-07-01' = {
+  name: '${vmName}-ip1'
   location: location
   sku: {
     name: 'Standard'
@@ -70,14 +67,14 @@ resource res_publicIpAddress 'Microsoft.Network/publicIpAddresses@2024-07-01' = 
   properties: {
     publicIPAllocationMethod: 'Static'
     dnsSettings: {
-      domainNameLabel: dnsNameForPublicIP
+      domainNameLabel: toLower('${take(resourceGroup().name, 27)}-${take(vmName, 27)}-${toLower(uniqueString)}')
     }
   }
 }
 
 // Network interface.
-resource res_networkInterface 'Microsoft.Network/networkInterfaces@2024-07-01' = {
-  name: networkInterfaceName
+resource res_networkInterface 'Microsoft.Network/networkInterfaces@2025-07-01' = {
+  name: '${vmName}-nic1'
   location: location
   properties: {
     ipConfigurations: [
@@ -88,7 +85,7 @@ resource res_networkInterface 'Microsoft.Network/networkInterfaces@2024-07-01' =
             id: subnetId
           }
           privateIPAllocationMethod: 'Static'
-          privateIPAddress: privateIPAddress
+          privateIPAddress: '192.168.0.4'
           publicIPAddress: {
             id: res_publicIpAddress.id
           }
@@ -100,7 +97,7 @@ resource res_networkInterface 'Microsoft.Network/networkInterfaces@2024-07-01' =
 }
 
 // Virtual machine.
-resource res_virtualMachine 'Microsoft.Compute/virtualMachines@2024-11-01' = {
+resource res_virtualMachine 'Microsoft.Compute/virtualMachines@2025-11-01' = {
   name: vmName
   location: location
   properties: {
@@ -108,7 +105,7 @@ resource res_virtualMachine 'Microsoft.Compute/virtualMachines@2024-11-01' = {
       vmSize: vmSize
     }
     osProfile: {
-      computerName: computerName
+      computerName: 'labenv'
       adminUsername: adminUserName
       adminPassword: adminPassword
       windowsConfiguration: {
@@ -188,6 +185,10 @@ resource res_autoshutdownSchedule 'Microsoft.DevTestLab/schedules@2018-09-15' = 
     targetResourceId: res_virtualMachine.id
   }
 }
+
+//
+// Outputs
+//
 
 output fqdn string = res_publicIpAddress.properties.dnsSettings.fqdn
 output principalId string = res_virtualMachine.identity.principalId

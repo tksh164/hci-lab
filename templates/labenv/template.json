@@ -6,7 +6,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.44.1.10279",
-      "templateHash": "17496472974687775760"
+      "templateHash": "13800352176322751858"
     }
   },
   "definitions": {
@@ -1302,13 +1302,12 @@
         },
         "template": {
           "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-          "languageVersion": "2.0",
           "contentVersion": "1.0.0.0",
           "metadata": {
             "_generator": {
               "name": "bicep",
               "version": "0.44.1.10279",
-              "templateHash": "6579899646675758178"
+              "templateHash": "3723301071760275255"
             }
           },
           "parameters": {
@@ -1326,77 +1325,69 @@
             }
           },
           "variables": {
-            "virtualNetworkNameAddressPrefix": "192.168.0.0/16",
-            "defaultSubnet": {
-              "name": "default",
-              "addressPrefix": "192.168.0.0/24"
-            },
-            "subnetNsgName": {
-              "default": "[format('{0}-{1}-nsg', parameters('virtualNetworkName'), toLower(variables('defaultSubnet').name))]"
-            }
+            "subnetName": "default"
           },
-          "resources": {
-            "res_subnetNsg": {
+          "resources": [
+            {
               "type": "Microsoft.Network/networkSecurityGroups",
-              "apiVersion": "2024-07-01",
-              "name": "[variables('subnetNsgName').default]",
+              "apiVersion": "2025-07-01",
+              "name": "[format('{0}-{1}-nsg', parameters('virtualNetworkName'), toLower(variables('subnetName')))]",
               "location": "[parameters('location')]",
               "properties": {
                 "securityRules": []
               }
             },
-            "res_vnet": {
+            {
               "type": "Microsoft.Network/virtualNetworks",
-              "apiVersion": "2024-07-01",
+              "apiVersion": "2025-07-01",
               "name": "[parameters('virtualNetworkName')]",
               "location": "[parameters('location')]",
               "properties": {
                 "addressSpace": {
                   "addressPrefixes": [
-                    "[variables('virtualNetworkNameAddressPrefix')]"
+                    "192.168.0.0/16"
                   ]
+                }
+              }
+            },
+            {
+              "type": "Microsoft.Network/virtualNetworks/subnets",
+              "apiVersion": "2025-07-01",
+              "name": "[format('{0}/{1}', parameters('virtualNetworkName'), variables('subnetName'))]",
+              "properties": {
+                "addressPrefix": "192.168.0.0/24",
+                "networkSecurityGroup": {
+                  "id": "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-{1}-nsg', parameters('virtualNetworkName'), toLower(variables('subnetName'))))]"
                 },
-                "subnets": [
+                "serviceEndpoints": [
                   {
-                    "name": "[variables('defaultSubnet').name]",
-                    "properties": {
-                      "addressPrefix": "[variables('defaultSubnet').addressPrefix]",
-                      "networkSecurityGroup": {
-                        "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('subnetNsgName').default)]"
-                      },
-                      "serviceEndpoints": [
-                        {
-                          "service": "Microsoft.KeyVault",
-                          "locations": [
-                            "*"
-                          ]
-                        },
-                        {
-                          "service": "Microsoft.Storage",
-                          "locations": [
-                            "*"
-                          ]
-                        }
-                      ]
-                    }
+                    "service": "Microsoft.KeyVault",
+                    "locations": [
+                      "*"
+                    ]
+                  },
+                  {
+                    "service": "Microsoft.Storage",
+                    "locations": [
+                      "*"
+                    ]
                   }
                 ]
               },
               "dependsOn": [
-                "res_subnetNsg"
+                "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-{1}-nsg', parameters('virtualNetworkName'), toLower(variables('subnetName'))))]",
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]"
               ]
             }
-          },
+          ],
           "outputs": {
             "virtualNetworkId": {
               "type": "string",
               "value": "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]"
             },
             "subnetId": {
-              "type": "object",
-              "value": {
-                "default": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), variables('defaultSubnet').name)]"
-              }
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), variables('subnetName'))]"
             }
           }
         }
@@ -1430,7 +1421,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.44.1.10279",
-              "templateHash": "3902490897459835336"
+              "templateHash": "12103826913368314338"
             }
           },
           "parameters": {
@@ -1456,7 +1447,7 @@
           "resources": [
             {
               "type": "Microsoft.Network/bastionHosts",
-              "apiVersion": "2024-07-01",
+              "apiVersion": "2025-07-01",
               "name": "[parameters('bastionName')]",
               "location": "[parameters('location')]",
               "sku": {
@@ -1489,7 +1480,7 @@
             "value": "[variables('location')]"
           },
           "subnetId": {
-            "value": "[reference('mod_vnet').outputs.subnetId.value.default]"
+            "value": "[reference('mod_vnet').outputs.subnetId.value]"
           },
           "vmName": {
             "value": "[parameters('labHostVmName')]"
@@ -1541,7 +1532,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.44.1.10279",
-              "templateHash": "1500233530705972945"
+              "templateHash": "5540356182504717661"
             }
           },
           "parameters": {
@@ -1644,18 +1635,11 @@
               }
             }
           },
-          "variables": {
-            "publicIpAddressName": "[format('{0}-ip1', parameters('vmName'))]",
-            "dnsNameForPublicIP": "[toLower(format('{0}-{1}-{2}', take(resourceGroup().name, 27), take(parameters('vmName'), 27), toLower(parameters('uniqueString'))))]",
-            "networkInterfaceName": "[format('{0}-nic1', parameters('vmName'))]",
-            "privateIPAddress": "192.168.0.4",
-            "computerName": "labenv"
-          },
           "resources": [
             {
               "type": "Microsoft.Network/publicIPAddresses",
-              "apiVersion": "2024-07-01",
-              "name": "[variables('publicIpAddressName')]",
+              "apiVersion": "2025-07-01",
+              "name": "[format('{0}-ip1', parameters('vmName'))]",
               "location": "[parameters('location')]",
               "sku": {
                 "name": "Standard"
@@ -1663,14 +1647,14 @@
               "properties": {
                 "publicIPAllocationMethod": "Static",
                 "dnsSettings": {
-                  "domainNameLabel": "[variables('dnsNameForPublicIP')]"
+                  "domainNameLabel": "[toLower(format('{0}-{1}-{2}', take(resourceGroup().name, 27), take(parameters('vmName'), 27), toLower(parameters('uniqueString'))))]"
                 }
               }
             },
             {
               "type": "Microsoft.Network/networkInterfaces",
-              "apiVersion": "2024-07-01",
-              "name": "[variables('networkInterfaceName')]",
+              "apiVersion": "2025-07-01",
+              "name": "[format('{0}-nic1', parameters('vmName'))]",
               "location": "[parameters('location')]",
               "properties": {
                 "ipConfigurations": [
@@ -1681,9 +1665,9 @@
                         "id": "[parameters('subnetId')]"
                       },
                       "privateIPAllocationMethod": "Static",
-                      "privateIPAddress": "[variables('privateIPAddress')]",
+                      "privateIPAddress": "192.168.0.4",
                       "publicIPAddress": {
-                        "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIpAddressName'))]"
+                        "id": "[resourceId('Microsoft.Network/publicIPAddresses', format('{0}-ip1', parameters('vmName')))]"
                       }
                     }
                   }
@@ -1691,12 +1675,12 @@
                 "enableAcceleratedNetworking": true
               },
               "dependsOn": [
-                "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIpAddressName'))]"
+                "[resourceId('Microsoft.Network/publicIPAddresses', format('{0}-ip1', parameters('vmName')))]"
               ]
             },
             {
               "type": "Microsoft.Compute/virtualMachines",
-              "apiVersion": "2024-11-01",
+              "apiVersion": "2025-11-01",
               "name": "[parameters('vmName')]",
               "location": "[parameters('location')]",
               "properties": {
@@ -1704,7 +1688,7 @@
                   "vmSize": "[parameters('vmSize')]"
                 },
                 "osProfile": {
-                  "computerName": "[variables('computerName')]",
+                  "computerName": "labenv",
                   "adminUsername": "[parameters('adminUserName')]",
                   "adminPassword": "[parameters('adminPassword')]",
                   "windowsConfiguration": {
@@ -1724,7 +1708,7 @@
                 "networkProfile": {
                   "networkInterfaces": [
                     {
-                      "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfaceName'))]"
+                      "id": "[resourceId('Microsoft.Network/networkInterfaces', format('{0}-nic1', parameters('vmName')))]"
                     }
                   ]
                 },
@@ -1773,7 +1757,7 @@
                 "type": "SystemAssigned"
               },
               "dependsOn": [
-                "[resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfaceName'))]"
+                "[resourceId('Microsoft.Network/networkInterfaces', format('{0}-nic1', parameters('vmName')))]"
               ]
             },
             {
@@ -1799,11 +1783,11 @@
           "outputs": {
             "fqdn": {
               "type": "string",
-              "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('publicIpAddressName')), '2024-07-01').dnsSettings.fqdn]"
+              "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', format('{0}-ip1', parameters('vmName'))), '2025-07-01').dnsSettings.fqdn]"
             },
             "principalId": {
               "type": "string",
-              "value": "[reference(resourceId('Microsoft.Compute/virtualMachines', parameters('vmName')), '2024-11-01', 'full').identity.principalId]"
+              "value": "[reference(resourceId('Microsoft.Compute/virtualMachines', parameters('vmName')), '2025-11-01', 'full').identity.principalId]"
             }
           }
         }
@@ -1829,7 +1813,7 @@
             "value": "[variables('labConfig').keyVault.name]"
           },
           "hostVmSubnetId": {
-            "value": "[reference('mod_vnet').outputs.subnetId.value.default]"
+            "value": "[reference('mod_vnet').outputs.subnetId.value]"
           },
           "secretNameForLabHostAdminPassword": {
             "value": "[variables('labConfig').keyVault.secretName.adminPassword]"
@@ -2029,7 +2013,7 @@
             "value": "[variables('uniquenessFactor')]"
           },
           "hostVmSubnetId": {
-            "value": "[reference('mod_vnet').outputs.subnetId.value.default]"
+            "value": "[reference('mod_vnet').outputs.subnetId.value]"
           },
           "keyVaultName": {
             "value": "[variables('labConfig').keyVault.name]"
@@ -2048,7 +2032,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.44.1.10279",
-              "templateHash": "17508426401414957445"
+              "templateHash": "4814298182735854779"
             }
           },
           "parameters": {
@@ -2095,14 +2079,11 @@
               }
             }
           },
-          "variables": {
-            "storageAccountName": "[format('{0}{1}', toLower(parameters('storageAccountNamePrefix')), toLower(parameters('uniqueString')))]"
-          },
           "resources": [
             {
               "type": "Microsoft.Storage/storageAccounts",
-              "apiVersion": "2022-09-01",
-              "name": "[variables('storageAccountName')]",
+              "apiVersion": "2026-04-01",
+              "name": "[format('{0}{1}', toLower(parameters('storageAccountNamePrefix')), toLower(parameters('uniqueString')))]",
               "location": "[parameters('location')]",
               "kind": "StorageV2",
               "sku": {
@@ -2154,8 +2135,8 @@
             },
             {
               "type": "Microsoft.Storage/storageAccounts/blobServices",
-              "apiVersion": "2022-09-01",
-              "name": "[format('{0}/{1}', variables('storageAccountName'), 'default')]",
+              "apiVersion": "2026-04-01",
+              "name": "[format('{0}/{1}', format('{0}{1}', toLower(parameters('storageAccountNamePrefix')), toLower(parameters('uniqueString'))), 'default')]",
               "properties": {
                 "restorePolicy": {
                   "enabled": false
@@ -2172,50 +2153,53 @@
                 "isVersioningEnabled": false
               },
               "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+                "[resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}', toLower(parameters('storageAccountNamePrefix')), toLower(parameters('uniqueString'))))]"
               ]
             },
             {
               "type": "Microsoft.Storage/storageAccounts/fileServices",
-              "apiVersion": "2022-09-01",
-              "name": "[format('{0}/{1}', variables('storageAccountName'), 'default')]",
+              "apiVersion": "2026-04-01",
+              "name": "[format('{0}/{1}', format('{0}{1}', toLower(parameters('storageAccountNamePrefix')), toLower(parameters('uniqueString'))), 'default')]",
               "properties": {
                 "shareDeleteRetentionPolicy": {
                   "enabled": false
                 }
               },
               "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+                "[resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}', toLower(parameters('storageAccountNamePrefix')), toLower(parameters('uniqueString'))))]"
               ]
             },
             {
               "type": "Microsoft.KeyVault/vaults/secrets",
-              "apiVersion": "2022-11-01",
+              "apiVersion": "2026-02-01",
               "name": "[format('{0}/{1}', parameters('keyVaultName'), parameters('secretNameForStorageAccountName'))]",
               "properties": {
-                "value": "[variables('storageAccountName')]"
-              }
+                "value": "[format('{0}{1}', toLower(parameters('storageAccountNamePrefix')), toLower(parameters('uniqueString')))]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}', toLower(parameters('storageAccountNamePrefix')), toLower(parameters('uniqueString'))))]"
+              ]
             },
             {
               "type": "Microsoft.KeyVault/vaults/secrets",
-              "apiVersion": "2022-11-01",
+              "apiVersion": "2026-02-01",
               "name": "[format('{0}/{1}', parameters('keyVaultName'), parameters('secretNameForStorageAccountKey'))]",
               "properties": {
-                "value": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2022-09-01').keys[0].value]"
+                "value": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}', toLower(parameters('storageAccountNamePrefix')), toLower(parameters('uniqueString')))), '2026-04-01').keys[0].value]"
               },
               "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+                "[resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}', toLower(parameters('storageAccountNamePrefix')), toLower(parameters('uniqueString'))))]"
               ]
             }
           ],
           "outputs": {
             "storageAccountId": {
               "type": "string",
-              "value": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+              "value": "[resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}', toLower(parameters('storageAccountNamePrefix')), toLower(parameters('uniqueString'))))]"
             },
             "storageAccountName": {
               "type": "string",
-              "value": "[variables('storageAccountName')]"
+              "value": "[format('{0}{1}', toLower(parameters('storageAccountNamePrefix')), toLower(parameters('uniqueString')))]"
             }
           }
         }
@@ -2260,7 +2244,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.44.1.10279",
-              "templateHash": "7487795140541547562"
+              "templateHash": "12598710946001030347"
             }
           },
           "parameters": {
@@ -2304,7 +2288,7 @@
           "resources": [
             {
               "type": "Microsoft.Compute/virtualMachines/extensions",
-              "apiVersion": "2022-11-01",
+              "apiVersion": "2025-11-01",
               "name": "[format('{0}/{1}', parameters('parentVmResourceName'), parameters('extensionName'))]",
               "location": "[parameters('location')]",
               "properties": {
@@ -2329,7 +2313,7 @@
           "outputs": {
             "instanceView": {
               "type": "object",
-              "value": "[reference(resourceId('Microsoft.Compute/virtualMachines/extensions', parameters('parentVmResourceName'), parameters('extensionName')), '2022-11-01').instanceView]"
+              "value": "[reference(resourceId('Microsoft.Compute/virtualMachines/extensions', parameters('parentVmResourceName'), parameters('extensionName')), '2025-11-01').instanceView]"
             }
           }
         }
@@ -2374,7 +2358,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.44.1.10279",
-              "templateHash": "14985675425836239270"
+              "templateHash": "14838394609443764898"
             }
           },
           "parameters": {
@@ -2413,7 +2397,7 @@
           "resources": [
             {
               "type": "Microsoft.Compute/virtualMachines/extensions",
-              "apiVersion": "2022-11-01",
+              "apiVersion": "2025-11-01",
               "name": "[format('{0}/{1}', parameters('parentVmResourceName'), parameters('extensionName'))]",
               "location": "[parameters('location')]",
               "properties": {
@@ -2433,7 +2417,7 @@
           "outputs": {
             "instanceView": {
               "type": "object",
-              "value": "[reference(resourceId('Microsoft.Compute/virtualMachines/extensions', parameters('parentVmResourceName'), parameters('extensionName')), '2022-11-01').instanceView]"
+              "value": "[reference(resourceId('Microsoft.Compute/virtualMachines/extensions', parameters('parentVmResourceName'), parameters('extensionName')), '2025-11-01').instanceView]"
             }
           }
         }
@@ -2480,7 +2464,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.44.1.10279",
-              "templateHash": "14985675425836239270"
+              "templateHash": "14838394609443764898"
             }
           },
           "parameters": {
@@ -2519,7 +2503,7 @@
           "resources": [
             {
               "type": "Microsoft.Compute/virtualMachines/extensions",
-              "apiVersion": "2022-11-01",
+              "apiVersion": "2025-11-01",
               "name": "[format('{0}/{1}', parameters('parentVmResourceName'), parameters('extensionName'))]",
               "location": "[parameters('location')]",
               "properties": {
@@ -2539,7 +2523,7 @@
           "outputs": {
             "instanceView": {
               "type": "object",
-              "value": "[reference(resourceId('Microsoft.Compute/virtualMachines/extensions', parameters('parentVmResourceName'), parameters('extensionName')), '2022-11-01').instanceView]"
+              "value": "[reference(resourceId('Microsoft.Compute/virtualMachines/extensions', parameters('parentVmResourceName'), parameters('extensionName')), '2025-11-01').instanceView]"
             }
           }
         }
@@ -2585,7 +2569,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.44.1.10279",
-              "templateHash": "14985675425836239270"
+              "templateHash": "14838394609443764898"
             }
           },
           "parameters": {
@@ -2624,7 +2608,7 @@
           "resources": [
             {
               "type": "Microsoft.Compute/virtualMachines/extensions",
-              "apiVersion": "2022-11-01",
+              "apiVersion": "2025-11-01",
               "name": "[format('{0}/{1}', parameters('parentVmResourceName'), parameters('extensionName'))]",
               "location": "[parameters('location')]",
               "properties": {
@@ -2644,7 +2628,7 @@
           "outputs": {
             "instanceView": {
               "type": "object",
-              "value": "[reference(resourceId('Microsoft.Compute/virtualMachines/extensions', parameters('parentVmResourceName'), parameters('extensionName')), '2022-11-01').instanceView]"
+              "value": "[reference(resourceId('Microsoft.Compute/virtualMachines/extensions', parameters('parentVmResourceName'), parameters('extensionName')), '2025-11-01').instanceView]"
             }
           }
         }
@@ -2689,7 +2673,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.44.1.10279",
-              "templateHash": "7487795140541547562"
+              "templateHash": "12598710946001030347"
             }
           },
           "parameters": {
@@ -2733,7 +2717,7 @@
           "resources": [
             {
               "type": "Microsoft.Compute/virtualMachines/extensions",
-              "apiVersion": "2022-11-01",
+              "apiVersion": "2025-11-01",
               "name": "[format('{0}/{1}', parameters('parentVmResourceName'), parameters('extensionName'))]",
               "location": "[parameters('location')]",
               "properties": {
@@ -2758,7 +2742,7 @@
           "outputs": {
             "instanceView": {
               "type": "object",
-              "value": "[reference(resourceId('Microsoft.Compute/virtualMachines/extensions', parameters('parentVmResourceName'), parameters('extensionName')), '2022-11-01').instanceView]"
+              "value": "[reference(resourceId('Microsoft.Compute/virtualMachines/extensions', parameters('parentVmResourceName'), parameters('extensionName')), '2025-11-01').instanceView]"
             }
           }
         }
@@ -2806,7 +2790,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.44.1.10279",
-              "templateHash": "14985675425836239270"
+              "templateHash": "14838394609443764898"
             }
           },
           "parameters": {
@@ -2845,7 +2829,7 @@
           "resources": [
             {
               "type": "Microsoft.Compute/virtualMachines/extensions",
-              "apiVersion": "2022-11-01",
+              "apiVersion": "2025-11-01",
               "name": "[format('{0}/{1}', parameters('parentVmResourceName'), parameters('extensionName'))]",
               "location": "[parameters('location')]",
               "properties": {
@@ -2865,7 +2849,7 @@
           "outputs": {
             "instanceView": {
               "type": "object",
-              "value": "[reference(resourceId('Microsoft.Compute/virtualMachines/extensions', parameters('parentVmResourceName'), parameters('extensionName')), '2022-11-01').instanceView]"
+              "value": "[reference(resourceId('Microsoft.Compute/virtualMachines/extensions', parameters('parentVmResourceName'), parameters('extensionName')), '2025-11-01').instanceView]"
             }
           }
         }
@@ -2913,7 +2897,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.44.1.10279",
-              "templateHash": "14985675425836239270"
+              "templateHash": "14838394609443764898"
             }
           },
           "parameters": {
@@ -2952,7 +2936,7 @@
           "resources": [
             {
               "type": "Microsoft.Compute/virtualMachines/extensions",
-              "apiVersion": "2022-11-01",
+              "apiVersion": "2025-11-01",
               "name": "[format('{0}/{1}', parameters('parentVmResourceName'), parameters('extensionName'))]",
               "location": "[parameters('location')]",
               "properties": {
@@ -2972,7 +2956,7 @@
           "outputs": {
             "instanceView": {
               "type": "object",
-              "value": "[reference(resourceId('Microsoft.Compute/virtualMachines/extensions', parameters('parentVmResourceName'), parameters('extensionName')), '2022-11-01').instanceView]"
+              "value": "[reference(resourceId('Microsoft.Compute/virtualMachines/extensions', parameters('parentVmResourceName'), parameters('extensionName')), '2025-11-01').instanceView]"
             }
           }
         }
