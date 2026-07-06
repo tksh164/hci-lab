@@ -1,19 +1,932 @@
 {
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "languageVersion": "2.0",
   "contentVersion": "1.0.0.0",
   "metadata": {
     "_generator": {
       "name": "bicep",
       "version": "0.44.1.10279",
-      "templateHash": "16884493468299664292"
+      "templateHash": "13800352176322751858"
+    }
+  },
+  "definitions": {
+    "_1.Dasv5Series": {
+      "type": "string",
+      "allowedValues": [
+        "Standard_D32as_v5",
+        "Standard_D48as_v5",
+        "Standard_D64as_v5",
+        "Standard_D96as_v5"
+      ],
+      "metadata": {
+        "__bicep_imported_from!": {
+          "sourceTemplate": "types.bicep"
+        }
+      }
+    },
+    "_1.Dasv6Series": {
+      "type": "string",
+      "allowedValues": [
+        "Standard_D32as_v6",
+        "Standard_D48as_v6",
+        "Standard_D64as_v6",
+        "Standard_D96as_v6"
+      ],
+      "metadata": {
+        "__bicep_imported_from!": {
+          "sourceTemplate": "types.bicep"
+        }
+      }
+    },
+    "_1.Dlsv5Series": {
+      "type": "string",
+      "allowedValues": [
+        "Standard_D16ls_v5",
+        "Standard_D32ls_v5",
+        "Standard_D48ls_v5",
+        "Standard_D64ls_v5",
+        "Standard_D96ls_v5"
+      ],
+      "metadata": {
+        "__bicep_imported_from!": {
+          "sourceTemplate": "types.bicep"
+        }
+      }
+    },
+    "_1.Dlsv6Series": {
+      "type": "string",
+      "allowedValues": [
+        "Standard_D16ls_v6",
+        "Standard_D32ls_v6",
+        "Standard_D48ls_v6",
+        "Standard_D64ls_v6",
+        "Standard_D96ls_v6"
+      ],
+      "metadata": {
+        "__bicep_imported_from!": {
+          "sourceTemplate": "types.bicep"
+        }
+      }
+    },
+    "_1.driveLetter": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1,
+      "metadata": {
+        "__bicep_imported_from!": {
+          "sourceTemplate": "types.bicep"
+        }
+      }
+    },
+    "_1.Dsv4Series": {
+      "type": "string",
+      "allowedValues": [
+        "Standard_D16s_v4",
+        "Standard_D32s_v4",
+        "Standard_D48s_v4",
+        "Standard_D64s_v4",
+        "Standard_D8s_v4"
+      ],
+      "metadata": {
+        "__bicep_imported_from!": {
+          "sourceTemplate": "types.bicep"
+        }
+      }
+    },
+    "_1.Dsv5Series": {
+      "type": "string",
+      "allowedValues": [
+        "Standard_D16s_v5",
+        "Standard_D32s_v5",
+        "Standard_D48s_v5",
+        "Standard_D64s_v5",
+        "Standard_D8s_v5",
+        "Standard_D96s_v5"
+      ],
+      "metadata": {
+        "__bicep_imported_from!": {
+          "sourceTemplate": "types.bicep"
+        }
+      }
+    },
+    "_1.Dsv6Series": {
+      "type": "string",
+      "allowedValues": [
+        "Standard_D16s_v6",
+        "Standard_D32s_v6",
+        "Standard_D48s_v6",
+        "Standard_D64s_v6",
+        "Standard_D8s_v6",
+        "Standard_D96s_v6"
+      ],
+      "metadata": {
+        "__bicep_imported_from!": {
+          "sourceTemplate": "types.bicep"
+        }
+      }
+    },
+    "_1.Easv5Series": {
+      "type": "string",
+      "allowedValues": [
+        "Standard_E16as_v5",
+        "Standard_E20as_v5",
+        "Standard_E32as_v5",
+        "Standard_E48as_v5",
+        "Standard_E64as_v5",
+        "Standard_E96as_v5"
+      ],
+      "metadata": {
+        "__bicep_imported_from!": {
+          "sourceTemplate": "types.bicep"
+        }
+      }
+    },
+    "_1.Easv6Series": {
+      "type": "string",
+      "allowedValues": [
+        "Standard_E16as_v6",
+        "Standard_E20as_v6",
+        "Standard_E32as_v6",
+        "Standard_E48as_v6",
+        "Standard_E64as_v6",
+        "Standard_E96as_v6"
+      ],
+      "metadata": {
+        "__bicep_imported_from!": {
+          "sourceTemplate": "types.bicep"
+        }
+      }
+    },
+    "_1.Ebsv5Series": {
+      "type": "string",
+      "allowedValues": [
+        "Standard_E16bs_v5",
+        "Standard_E32bs_v5",
+        "Standard_E48bs_v5",
+        "Standard_E4bs_v5",
+        "Standard_E64bs_v5",
+        "Standard_E8bs_v5"
+      ],
+      "metadata": {
+        "__bicep_imported_from!": {
+          "sourceTemplate": "types.bicep"
+        }
+      }
+    },
+    "_1.Esv5Series": {
+      "type": "string",
+      "allowedValues": [
+        "Standard_E16s_v5",
+        "Standard_E20s_v5",
+        "Standard_E32s_v5",
+        "Standard_E48s_v5",
+        "Standard_E4s_v5",
+        "Standard_E64s_v5",
+        "Standard_E8s_v5",
+        "Standard_E96s_v5"
+      ],
+      "metadata": {
+        "__bicep_imported_from!": {
+          "sourceTemplate": "types.bicep"
+        }
+      }
+    },
+    "_1.Esv6Series": {
+      "type": "string",
+      "allowedValues": [
+        "Standard_E16s_v6",
+        "Standard_E20s_v6",
+        "Standard_E32s_v6",
+        "Standard_E48s_v6",
+        "Standard_E4s_v6",
+        "Standard_E64s_v6",
+        "Standard_E8s_v6",
+        "Standard_E96s_v6"
+      ],
+      "metadata": {
+        "__bicep_imported_from!": {
+          "sourceTemplate": "types.bicep"
+        }
+      }
+    },
+    "_1.Falsv6Series": {
+      "type": "string",
+      "allowedValues": [
+        "Standard_F16als_v6",
+        "Standard_F32als_v6",
+        "Standard_F48als_v6",
+        "Standard_F64als_v6"
+      ],
+      "metadata": {
+        "__bicep_imported_from!": {
+          "sourceTemplate": "types.bicep"
+        }
+      }
+    },
+    "_1.Fasv6Series": {
+      "type": "string",
+      "allowedValues": [
+        "Standard_F16as_v6",
+        "Standard_F32as_v6",
+        "Standard_F48as_v6",
+        "Standard_F64as_v6",
+        "Standard_F8as_v6"
+      ],
+      "metadata": {
+        "__bicep_imported_from!": {
+          "sourceTemplate": "types.bicep"
+        }
+      }
+    },
+    "_1.Fsv2Series": {
+      "type": "string",
+      "allowedValues": [
+        "Standard_F16s_v2",
+        "Standard_F32s_v2",
+        "Standard_F48s_v2",
+        "Standard_F64s_v2",
+        "Standard_F72s_v2"
+      ],
+      "metadata": {
+        "__bicep_imported_from!": {
+          "sourceTemplate": "types.bicep"
+        }
+      }
+    },
+    "_1.FXSeries": {
+      "type": "string",
+      "allowedValues": [
+        "Standard_FX12mds",
+        "Standard_FX24mds",
+        "Standard_FX36mds",
+        "Standard_FX48mds",
+        "Standard_FX4mds"
+      ],
+      "metadata": {
+        "__bicep_imported_from!": {
+          "sourceTemplate": "types.bicep"
+        }
+      }
+    },
+    "_1.ipAddressPrefixLength": {
+      "type": "int",
+      "minValue": 0,
+      "maxValue": 32,
+      "metadata": {
+        "__bicep_imported_from!": {
+          "sourceTemplate": "types.bicep"
+        }
+      }
+    },
+    "_1.osSymbolAzureLocal": {
+      "type": "string",
+      "allowedValues": [
+        "azloc24h2_2504",
+        "azloc24h2_2505",
+        "azloc24h2_2506",
+        "azloc24h2_2507",
+        "azloc24h2_2508",
+        "azloc24h2_2509",
+        "azloc24h2_2510",
+        "azloc24h2_2511",
+        "azloc24h2_2512",
+        "azloc24h2_2601",
+        "azloc24h2_2602",
+        "azloc24h2_2603",
+        "azloc24h2_2604",
+        "azloc24h2_2605",
+        "azloc24h2_2606"
+      ],
+      "metadata": {
+        "__bicep_imported_from!": {
+          "sourceTemplate": "types.bicep"
+        }
+      }
+    },
+    "_1.osSymbolAzureStackHCI": {
+      "type": "string",
+      "allowedValues": [
+        "ashci20h2",
+        "ashci21h2",
+        "ashci22h2",
+        "ashci23h2",
+        "ws2022",
+        "ws2025"
+      ],
+      "metadata": {
+        "__bicep_imported_from!": {
+          "sourceTemplate": "types.bicep"
+        }
+      }
+    },
+    "_1.osSymbolWindowsServer": {
+      "type": "string",
+      "allowedValues": [
+        "ws2022",
+        "ws2025"
+      ],
+      "metadata": {
+        "__bicep_imported_from!": {
+          "sourceTemplate": "types.bicep"
+        }
+      }
+    },
+    "_1.vlanId": {
+      "type": "int",
+      "minValue": 1,
+      "maxValue": 4094,
+      "metadata": {
+        "__bicep_imported_from!": {
+          "sourceTemplate": "types.bicep"
+        }
+      }
+    },
+    "labConfiguration": {
+      "type": "object",
+      "properties": {
+        "labHost": {
+          "type": "object",
+          "properties": {
+            "storage": {
+              "type": "object",
+              "properties": {
+                "poolName": {
+                  "type": "string"
+                },
+                "driveLetter": {
+                  "$ref": "#/definitions/_1.driveLetter"
+                },
+                "volumeLabel": {
+                  "type": "string"
+                }
+              }
+            },
+            "folderPath": {
+              "type": "object",
+              "properties": {
+                "log": {
+                  "type": "string"
+                },
+                "temp": {
+                  "type": "string"
+                },
+                "updates": {
+                  "type": "string"
+                },
+                "vhd": {
+                  "type": "string"
+                },
+                "vm": {
+                  "type": "string"
+                }
+              }
+            },
+            "vSwitch": {
+              "type": "object",
+              "properties": {
+                "nat": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "netNat": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "InternalAddressPrefix": {
+                    "type": "string"
+                  },
+                  "hostInternalIPAddress": {
+                    "type": "string"
+                  },
+                  "hostInternalPrefixLength": {
+                    "$ref": "#/definitions/_1.ipAddressPrefixLength"
+                  }
+                }
+              }
+            },
+            "toolsToInstall": {
+              "type": "string"
+            }
+          }
+        },
+        "guestOS": {
+          "type": "object",
+          "properties": {
+            "culture": {
+              "$ref": "#/definitions/supportedOsLanguage"
+            },
+            "timeZone": {
+              "type": "string"
+            },
+            "shouldInstallUpdates": {
+              "type": "bool"
+            }
+          }
+        },
+        "addsDomain": {
+          "type": "object",
+          "properties": {
+            "fqdn": {
+              "type": "string"
+            }
+          }
+        },
+        "addsDC": {
+          "type": "object",
+          "properties": {
+            "vmName": {
+              "type": "string"
+            },
+            "maximumRamBytes": {
+              "type": "int"
+            },
+            "netAdapters": {
+              "type": "object",
+              "properties": {
+                "management": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "ipAddress": {
+                      "type": "string"
+                    },
+                    "prefixLength": {
+                      "$ref": "#/definitions/_1.ipAddressPrefixLength"
+                    },
+                    "defaultGateway": {
+                      "type": "string"
+                    },
+                    "dnsServerAddresses": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "shouldPrepareAddsForAzureLocal": {
+              "type": "bool"
+            },
+            "orgUnitForAzureLocal": {
+              "type": "string"
+            },
+            "lcmUserName": {
+              "type": "string"
+            }
+          }
+        },
+        "wac": {
+          "type": "object",
+          "properties": {
+            "vmName": {
+              "type": "string"
+            },
+            "maximumRamBytes": {
+              "type": "int"
+            },
+            "netAdapters": {
+              "type": "object",
+              "properties": {
+                "management": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "ipAddress": {
+                      "type": "string"
+                    },
+                    "prefixLength": {
+                      "$ref": "#/definitions/_1.ipAddressPrefixLength"
+                    },
+                    "defaultGateway": {
+                      "type": "string"
+                    },
+                    "dnsServerAddresses": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "shouldInstallConfigAppForAzureLocal": {
+              "type": "bool"
+            }
+          }
+        },
+        "hciNode": {
+          "type": "object",
+          "properties": {
+            "vmName": {
+              "type": "string"
+            },
+            "vmNameOffset": {
+              "type": "int"
+            },
+            "operatingSystem": {
+              "type": "object",
+              "properties": {
+                "sku": {
+                  "$ref": "#/definitions/osSymbol"
+                },
+                "imageIndex": {
+                  "$ref": "#/definitions/osImageIndex"
+                }
+              }
+            },
+            "nodeCount": {
+              "$ref": "#/definitions/supportedNodeMachineCount"
+            },
+            "shouldJoinToAddsDomain": {
+              "type": "bool"
+            },
+            "isAzureLocalDeployment": {
+              "type": "bool"
+            },
+            "dataDiskSizeBytes": {
+              "type": "int"
+            },
+            "ipAddressOffset": {
+              "type": "int"
+            },
+            "netAdapters": {
+              "type": "object",
+              "properties": {
+                "management": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "ipAddress": {
+                      "type": "string"
+                    },
+                    "prefixLength": {
+                      "$ref": "#/definitions/_1.ipAddressPrefixLength"
+                    },
+                    "defaultGateway": {
+                      "type": "string"
+                    },
+                    "dnsServerAddresses": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "compute": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "ipAddress": {
+                      "type": "string"
+                    },
+                    "prefixLength": {
+                      "$ref": "#/definitions/_1.ipAddressPrefixLength"
+                    }
+                  }
+                },
+                "storage1": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "vlanId": {
+                      "$ref": "#/definitions/_1.vlanId"
+                    },
+                    "ipAddress": {
+                      "type": "string"
+                    },
+                    "prefixLength": {
+                      "$ref": "#/definitions/_1.ipAddressPrefixLength"
+                    }
+                  }
+                },
+                "storage2": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "vlanId": {
+                      "$ref": "#/definitions/_1.vlanId"
+                    },
+                    "ipAddress": {
+                      "type": "string"
+                    },
+                    "prefixLength": {
+                      "$ref": "#/definitions/_1.ipAddressPrefixLength"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "hciCluster": {
+          "type": "object",
+          "properties": {
+            "shouldCreateCluster": {
+              "type": "bool"
+            },
+            "name": {
+              "type": "string"
+            },
+            "ipAddress": {
+              "type": "string"
+            }
+          }
+        },
+        "keyVault": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "secretName": {
+              "type": "object",
+              "properties": {
+                "adminPassword": {
+                  "type": "string"
+                },
+                "cloudWitnessStorageAccountName": {
+                  "type": "string"
+                },
+                "cloudWitnessStorageAccountKey": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": false,
+      "metadata": {
+        "__bicep_imported_from!": {
+          "sourceTemplate": "types.bicep"
+        }
+      }
+    },
+    "osImageIndex": {
+      "type": "int",
+      "allowedValues": [
+        1,
+        4
+      ],
+      "metadata": {
+        "__bicep_imported_from!": {
+          "sourceTemplate": "types.bicep"
+        }
+      }
+    },
+    "osSymbol": {
+      "type": "string",
+      "allowedValues": [
+        "ashci20h2",
+        "ashci21h2",
+        "ashci22h2",
+        "ashci23h2",
+        "azloc24h2_2504",
+        "azloc24h2_2505",
+        "azloc24h2_2506",
+        "azloc24h2_2507",
+        "azloc24h2_2508",
+        "azloc24h2_2509",
+        "azloc24h2_2510",
+        "azloc24h2_2511",
+        "azloc24h2_2512",
+        "azloc24h2_2601",
+        "azloc24h2_2602",
+        "azloc24h2_2603",
+        "azloc24h2_2604",
+        "azloc24h2_2605",
+        "azloc24h2_2606",
+        "ws2022",
+        "ws2025"
+      ],
+      "metadata": {
+        "__bicep_imported_from!": {
+          "sourceTemplate": "types.bicep"
+        }
+      }
+    },
+    "supportedDataDiskCount": {
+      "type": "int",
+      "minValue": 8,
+      "maxValue": 32,
+      "metadata": {
+        "__bicep_imported_from!": {
+          "sourceTemplate": "types.bicep"
+        }
+      }
+    },
+    "supportedDataDiskSize": {
+      "type": "int",
+      "allowedValues": [
+        1024,
+        128,
+        256,
+        32,
+        512,
+        64
+      ],
+      "metadata": {
+        "__bicep_imported_from!": {
+          "sourceTemplate": "types.bicep"
+        }
+      }
+    },
+    "supportedDataDiskType": {
+      "type": "string",
+      "allowedValues": [
+        "Premium_LRS",
+        "StandardSSD_LRS"
+      ],
+      "metadata": {
+        "__bicep_imported_from!": {
+          "sourceTemplate": "types.bicep"
+        }
+      }
+    },
+    "supportedNodeMachineCount": {
+      "type": "int",
+      "minValue": 2,
+      "maxValue": 8,
+      "metadata": {
+        "__bicep_imported_from!": {
+          "sourceTemplate": "types.bicep"
+        }
+      }
+    },
+    "supportedOsDiskType": {
+      "type": "string",
+      "allowedValues": [
+        "Premium_LRS",
+        "StandardSSD_LRS",
+        "Standard_LRS"
+      ],
+      "metadata": {
+        "__bicep_imported_from!": {
+          "sourceTemplate": "types.bicep"
+        }
+      }
+    },
+    "supportedOsLanguage": {
+      "type": "string",
+      "allowedValues": [
+        "en-us",
+        "ja-jp"
+      ],
+      "metadata": {
+        "__bicep_imported_from!": {
+          "sourceTemplate": "types.bicep"
+        }
+      }
+    },
+    "supportedVmSize": {
+      "type": "string",
+      "allowedValues": [
+        "Standard_D16ls_v5",
+        "Standard_D16ls_v6",
+        "Standard_D16s_v4",
+        "Standard_D16s_v5",
+        "Standard_D16s_v6",
+        "Standard_D32as_v5",
+        "Standard_D32as_v6",
+        "Standard_D32ls_v5",
+        "Standard_D32ls_v6",
+        "Standard_D32s_v4",
+        "Standard_D32s_v5",
+        "Standard_D32s_v6",
+        "Standard_D48as_v5",
+        "Standard_D48as_v6",
+        "Standard_D48ls_v5",
+        "Standard_D48ls_v6",
+        "Standard_D48s_v4",
+        "Standard_D48s_v5",
+        "Standard_D48s_v6",
+        "Standard_D64as_v5",
+        "Standard_D64as_v6",
+        "Standard_D64ls_v5",
+        "Standard_D64ls_v6",
+        "Standard_D64s_v4",
+        "Standard_D64s_v5",
+        "Standard_D64s_v6",
+        "Standard_D8s_v4",
+        "Standard_D8s_v5",
+        "Standard_D8s_v6",
+        "Standard_D96as_v5",
+        "Standard_D96as_v6",
+        "Standard_D96ls_v5",
+        "Standard_D96ls_v6",
+        "Standard_D96s_v5",
+        "Standard_D96s_v6",
+        "Standard_E16as_v5",
+        "Standard_E16as_v6",
+        "Standard_E16bs_v5",
+        "Standard_E16s_v5",
+        "Standard_E16s_v6",
+        "Standard_E20as_v5",
+        "Standard_E20as_v6",
+        "Standard_E20s_v5",
+        "Standard_E20s_v6",
+        "Standard_E32as_v5",
+        "Standard_E32as_v6",
+        "Standard_E32bs_v5",
+        "Standard_E32s_v5",
+        "Standard_E32s_v6",
+        "Standard_E48as_v5",
+        "Standard_E48as_v6",
+        "Standard_E48bs_v5",
+        "Standard_E48s_v5",
+        "Standard_E48s_v6",
+        "Standard_E4bs_v5",
+        "Standard_E4s_v5",
+        "Standard_E4s_v6",
+        "Standard_E64as_v5",
+        "Standard_E64as_v6",
+        "Standard_E64bs_v5",
+        "Standard_E64s_v5",
+        "Standard_E64s_v6",
+        "Standard_E8bs_v5",
+        "Standard_E8s_v5",
+        "Standard_E8s_v6",
+        "Standard_E96as_v5",
+        "Standard_E96as_v6",
+        "Standard_E96s_v5",
+        "Standard_E96s_v6",
+        "Standard_F16als_v6",
+        "Standard_F16as_v6",
+        "Standard_F16s_v2",
+        "Standard_F32als_v6",
+        "Standard_F32as_v6",
+        "Standard_F32s_v2",
+        "Standard_F48als_v6",
+        "Standard_F48as_v6",
+        "Standard_F48s_v2",
+        "Standard_F64als_v6",
+        "Standard_F64as_v6",
+        "Standard_F64s_v2",
+        "Standard_F72s_v2",
+        "Standard_F8as_v6",
+        "Standard_FX12mds",
+        "Standard_FX24mds",
+        "Standard_FX36mds",
+        "Standard_FX48mds",
+        "Standard_FX4mds"
+      ],
+      "metadata": {
+        "__bicep_imported_from!": {
+          "sourceTemplate": "types.bicep"
+        }
+      }
+    },
+    "vmAdminUserName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 20,
+      "metadata": {
+        "__bicep_imported_from!": {
+          "sourceTemplate": "types.bicep"
+        }
+      }
+    },
+    "vmResourceName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "metadata": {
+        "__bicep_imported_from!": {
+          "sourceTemplate": "types.bicep"
+        }
+      }
     }
   },
   "parameters": {
     "adminUserName": {
-      "type": "string",
+      "$ref": "#/definitions/vmAdminUserName",
       "defaultValue": "AzureUser",
-      "minLength": 1,
-      "maxLength": 20,
       "metadata": {
         "description": "The administrator user name."
       }
@@ -25,154 +938,43 @@
       }
     },
     "labHostVmName": {
-      "type": "string",
+      "$ref": "#/definitions/vmResourceName",
       "defaultValue": "labenv-vm1",
-      "minLength": 1,
-      "maxLength": 64,
       "metadata": {
         "description": "The name of the lab host virtual machine resource name. This value is not used for the virtual machine's computer name."
       }
     },
     "labHostVmSize": {
-      "type": "string",
+      "$ref": "#/definitions/supportedVmSize",
       "defaultValue": "Standard_E16s_v5",
-      "allowedValues": [
-        "Standard_E4s_v6",
-        "Standard_E8s_v6",
-        "Standard_E16s_v6",
-        "Standard_E20s_v6",
-        "Standard_E32s_v6",
-        "Standard_E48s_v6",
-        "Standard_E64s_v6",
-        "Standard_E96s_v6",
-        "Standard_E4s_v5",
-        "Standard_E8s_v5",
-        "Standard_E16s_v5",
-        "Standard_E20s_v5",
-        "Standard_E32s_v5",
-        "Standard_E48s_v5",
-        "Standard_E64s_v5",
-        "Standard_E96s_v5",
-        "Standard_E4bs_v5",
-        "Standard_E8bs_v5",
-        "Standard_E16bs_v5",
-        "Standard_E32bs_v5",
-        "Standard_E48bs_v5",
-        "Standard_E64bs_v5",
-        "Standard_E16as_v6",
-        "Standard_E20as_v6",
-        "Standard_E32as_v6",
-        "Standard_E48as_v6",
-        "Standard_E64as_v6",
-        "Standard_E96as_v6",
-        "Standard_E16as_v5",
-        "Standard_E20as_v5",
-        "Standard_E32as_v5",
-        "Standard_E48as_v5",
-        "Standard_E64as_v5",
-        "Standard_E96as_v5",
-        "Standard_D8s_v6",
-        "Standard_D16s_v6",
-        "Standard_D32s_v6",
-        "Standard_D48s_v6",
-        "Standard_D64s_v6",
-        "Standard_D96s_v6",
-        "Standard_D8s_v5",
-        "Standard_D16s_v5",
-        "Standard_D32s_v5",
-        "Standard_D48s_v5",
-        "Standard_D64s_v5",
-        "Standard_D96s_v5",
-        "Standard_D32as_v6",
-        "Standard_D48as_v6",
-        "Standard_D64as_v6",
-        "Standard_D96as_v6",
-        "Standard_D32as_v5",
-        "Standard_D48as_v5",
-        "Standard_D64as_v5",
-        "Standard_D96as_v5",
-        "Standard_D16ls_v6",
-        "Standard_D32ls_v6",
-        "Standard_D48ls_v6",
-        "Standard_D64ls_v6",
-        "Standard_D96ls_v6",
-        "Standard_D16ls_v5",
-        "Standard_D32ls_v5",
-        "Standard_D48ls_v5",
-        "Standard_D64ls_v5",
-        "Standard_D96ls_v5",
-        "Standard_D8s_v4",
-        "Standard_D16s_v4",
-        "Standard_D32s_v4",
-        "Standard_D48s_v4",
-        "Standard_D64s_v4",
-        "Standard_F8as_v6",
-        "Standard_F16as_v6",
-        "Standard_F32as_v6",
-        "Standard_F48as_v6",
-        "Standard_F64as_v6",
-        "Standard_F16als_v6",
-        "Standard_F32als_v6",
-        "Standard_F48als_v6",
-        "Standard_F64als_v6",
-        "Standard_F16s_v2",
-        "Standard_F32s_v2",
-        "Standard_F48s_v2",
-        "Standard_F64s_v2",
-        "Standard_F72s_v2",
-        "Standard_FX4mds",
-        "Standard_FX12mds",
-        "Standard_FX24mds",
-        "Standard_FX36mds",
-        "Standard_FX48mds"
-      ],
       "metadata": {
         "description": "The size of the lab host virtual machine."
       }
     },
     "labHostVmOsDiskType": {
-      "type": "string",
+      "$ref": "#/definitions/supportedOsDiskType",
       "defaultValue": "StandardSSD_LRS",
-      "allowedValues": [
-        "Premium_LRS",
-        "StandardSSD_LRS",
-        "Standard_LRS"
-      ],
       "metadata": {
         "description": "The storage type of the lab host virtual machine's OS disk."
       }
     },
     "labHostVmDataDiskType": {
-      "type": "string",
+      "$ref": "#/definitions/supportedDataDiskType",
       "defaultValue": "StandardSSD_LRS",
-      "allowedValues": [
-        "Premium_LRS",
-        "StandardSSD_LRS"
-      ],
       "metadata": {
         "description": "The storage type of the lab host virtual machine's data disk."
       }
     },
     "labHostVmDataDiskSize": {
-      "type": "int",
+      "$ref": "#/definitions/supportedDataDiskSize",
       "defaultValue": 64,
-      "allowedValues": [
-        32,
-        64,
-        128,
-        256,
-        512,
-        1024
-      ],
       "metadata": {
         "description": "The size of individual disk of the lab host virtual machine's data disks in GiB."
       }
     },
     "labHostVmDataDiskCount": {
-      "type": "int",
+      "$ref": "#/definitions/supportedDataDiskCount",
       "defaultValue": 8,
-      "minValue": 8,
-      "maxValue": 32,
       "metadata": {
         "description": "The number of data disks on the lab host virtual machine."
       }
@@ -220,12 +1022,8 @@
       }
     },
     "labVmOsCulture": {
-      "type": "string",
+      "$ref": "#/definitions/supportedOsLanguage",
       "defaultValue": "en-us",
-      "allowedValues": [
-        "en-us",
-        "ja-jp"
-      ],
       "metadata": {
         "description": "The operating system's culture of the lab virtual machines. This affects such as language and input method of the operating system."
       }
@@ -245,51 +1043,22 @@
       }
     },
     "hciNodeOsSku": {
-      "type": "string",
+      "$ref": "#/definitions/osSymbol",
       "defaultValue": "azloc24h2_2606",
-      "allowedValues": [
-        "azloc24h2_2606",
-        "azloc24h2_2605",
-        "azloc24h2_2604",
-        "azloc24h2_2603",
-        "azloc24h2_2602",
-        "azloc24h2_2601",
-        "azloc24h2_2512",
-        "azloc24h2_2511",
-        "azloc24h2_2510",
-        "azloc24h2_2509",
-        "azloc24h2_2508",
-        "azloc24h2_2507",
-        "azloc24h2_2506",
-        "azloc24h2_2505",
-        "azloc24h2_2504",
-        "ashci23h2",
-        "ashci22h2",
-        "ashci21h2",
-        "ashci20h2",
-        "ws2025",
-        "ws2022"
-      ],
       "metadata": {
         "description": "The operating system for the HCI node virtual machines."
       }
     },
     "hciNodeOsImageIndex": {
-      "type": "int",
+      "$ref": "#/definitions/osImageIndex",
       "defaultValue": 1,
-      "allowedValues": [
-        1,
-        4
-      ],
       "metadata": {
         "description": "The image index of the operating system for the HCI node virtual machines."
       }
     },
     "hciNodeCount": {
-      "type": "int",
+      "$ref": "#/definitions/supportedNodeMachineCount",
       "defaultValue": 2,
-      "minValue": 2,
-      "maxValue": 8,
       "metadata": {
         "description": "The number of HCI nodes to deploy."
       }
@@ -374,119 +1143,12 @@
   },
   "variables": {
     "location": "[resourceGroup().location]",
-    "uniquePart": "[substring(uniqueString(resourceGroup().id, parameters('salt')), 0, 5)]",
-    "repoBaseUriWithSlash": "[if(endsWith(parameters('repoBaseUri'), '/'), parameters('repoBaseUri'), format('{0}/', parameters('repoBaseUri')))]",
-    "deploymentApiVersion": "2025-04-01",
-    "virtualNetwork": {
-      "deploymentName": "deploy-vnet",
-      "apiVersion": "[variables('deploymentApiVersion')]",
-      "linkedTemplateUri": "[uri(variables('repoBaseUriWithSlash'), 'vnet.json')]",
-      "name": "labenv-vnet"
-    },
-    "bastion": {
-      "deploymentName": "deploy-bastion",
-      "apiVersion": "[variables('deploymentApiVersion')]",
-      "linkedTemplateUri": "[uri(variables('repoBaseUriWithSlash'), 'bastion.json')]",
-      "name": "labenv-bastion"
-    },
-    "hostVm": {
-      "deploymentName": "deploy-host-vm",
-      "apiVersion": "[variables('deploymentApiVersion')]",
-      "linkedTemplateUri": "[uri(variables('repoBaseUriWithSlash'), 'hostvm.json')]"
-    },
-    "keyVault": {
-      "deploymentName": "deploy-key-vault",
-      "apiVersion": "[variables('deploymentApiVersion')]",
-      "linkedTemplateUri": "[uri(variables('repoBaseUriWithSlash'), 'keyvault.json')]",
-      "name": "[format('labenv-{0}-kv', toLower(variables('uniquePart')))]"
-    },
-    "keyVaultRbac": {
-      "deploymentName": "assign-key-vault-rbac-with-host-vm-managed-id",
-      "apiVersion": "[variables('deploymentApiVersion')]",
-      "linkedTemplateUri": "[uri(variables('repoBaseUriWithSlash'), 'keyvault-rbac.json')]"
-    },
-    "witnessStorageAccount": {
-      "deploymentName": "deploy-storage-account-witness",
-      "apiVersion": "[variables('deploymentApiVersion')]",
-      "linkedTemplateUri": "[uri(variables('repoBaseUriWithSlash'), 'cloudwitness.json')]",
-      "namePrefix": "labenvwitness"
-    },
-    "dscLinkedTemplateUri": "[uri(variables('repoBaseUriWithSlash'), 'dsc.json')]",
-    "dscExtensionName": "hci-lab-dsc-extension",
-    "dscBaseUriWithSlash": "[uri(variables('repoBaseUriWithSlash'), 'dsc/')]",
-    "dsc": {
-      "installRolesFeatures": {
-        "deploymentName": "install-roles-and-features-on-host-vm",
-        "apiVersion": "[variables('deploymentApiVersion')]",
-        "zipUri": "[uri(variables('dscBaseUriWithSlash'), 'install-roles-and-features.zip')]",
-        "scriptName": "install-roles-and-features.ps1",
-        "functionName": "install-roles-and-features"
-      },
-      "rebootHostVm": {
-        "deploymentName": "reboot-host-vm",
-        "apiVersion": "[variables('deploymentApiVersion')]",
-        "zipUri": "[uri(variables('dscBaseUriWithSlash'), 'reboot.zip')]",
-        "scriptName": "reboot.ps1",
-        "functionName": "reboot"
-      }
-    },
-    "customScriptLinkedTemplateUri": "[uri(variables('repoBaseUriWithSlash'), 'customscript.json')]",
-    "customScriptExtensionName": "hci-lab-customscript-extension",
-    "customScriptBaseUriWithSlash": "[uri(variables('repoBaseUriWithSlash'), 'customscripts/')]",
-    "customScript": {
-      "configureHostVm": {
-        "deploymentName": "configure-host-vm",
-        "apiVersion": "[variables('deploymentApiVersion')]",
-        "fileUris": [
-          "[uri(variables('customScriptBaseUriWithSlash'), 'configure-lab-host.ps1')]",
-          "[uri(variables('customScriptBaseUriWithSlash'), 'common.psm1')]"
-        ],
-        "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\configure-lab-host.ps1"
-      },
-      "downloadMaterials": {
-        "deploymentName": "download-materials",
-        "apiVersion": "[variables('deploymentApiVersion')]",
-        "fileUris": [
-          "[uri(variables('customScriptBaseUriWithSlash'), 'download-materials.ps1')]",
-          "[uri(variables('customScriptBaseUriWithSlash'), 'materials.json')]",
-          "[uri(variables('customScriptBaseUriWithSlash'), 'common.psm1')]"
-        ],
-        "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\download-materials.ps1"
-      },
-      "createBaseVhd": {
-        "deploymentName": "create-base-vhd",
-        "apiVersion": "[variables('deploymentApiVersion')]",
-        "fileUris": [
-          "[uri(variables('customScriptBaseUriWithSlash'), 'create-base-vhd.ps1')]",
-          "[uri(variables('customScriptBaseUriWithSlash'), 'create-base-vhd-job.ps1')]",
-          "[uri(variables('customScriptBaseUriWithSlash'), 'common.psm1')]"
-        ],
-        "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\create-base-vhd.ps1"
-      },
-      "createVm": {
-        "deploymentName": "create-lab-vms",
-        "apiVersion": "[variables('deploymentApiVersion')]",
-        "fileUris": [
-          "[uri(variables('customScriptBaseUriWithSlash'), 'create-vm.ps1')]",
-          "[uri(variables('customScriptBaseUriWithSlash'), 'create-vm-job-addsdc.ps1')]",
-          "[uri(variables('customScriptBaseUriWithSlash'), 'create-vm-job-wac.ps1')]",
-          "[uri(variables('customScriptBaseUriWithSlash'), 'create-vm-job-hcinode.ps1')]",
-          "[uri(variables('customScriptBaseUriWithSlash'), 'common.psm1')]"
-        ],
-        "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\create-vm.ps1"
-      },
-      "createHciCluster": {
-        "deploymentName": "create-hci-cluster",
-        "apiVersion": "[variables('deploymentApiVersion')]",
-        "fileUris": [
-          "[uri(variables('customScriptBaseUriWithSlash'), 'create-hci-cluster.ps1')]",
-          "[uri(variables('customScriptBaseUriWithSlash'), 'create-hci-cluster-test-cat-en-us.psd1')]",
-          "[uri(variables('customScriptBaseUriWithSlash'), 'create-hci-cluster-test-cat-ja-jp.psd1')]",
-          "[uri(variables('customScriptBaseUriWithSlash'), 'common.psm1')]"
-        ],
-        "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File .\\create-hci-cluster.ps1"
-      }
-    },
+    "uniquenessFactor": "[substring(uniqueString(resourceGroup().id, parameters('salt')), 0, 5)]",
+    "repoBaseUrlNormalized": "[if(endsWith(parameters('repoBaseUri'), '/'), parameters('repoBaseUri'), format('{0}/', parameters('repoBaseUri')))]",
+    "dscExtensionName": "labenv-dsc-extension",
+    "dscBaseUrl": "[uri(variables('repoBaseUrlNormalized'), 'dsc/')]",
+    "customScriptExtensionName": "labenv-customscript-extension",
+    "customScriptBaseUrl": "[uri(variables('repoBaseUrlNormalized'), 'customscripts/')]",
     "labConfig": {
       "labHost": {
         "storage": {
@@ -611,7 +1273,7 @@
         "ipAddress": "172.16.0.200"
       },
       "keyVault": {
-        "name": "[variables('keyVault').name]",
+        "name": "[format('labenv-{0}-kv', toLower(variables('uniquenessFactor')))]",
         "secretName": {
           "adminPassword": "AdminPassword",
           "cloudWitnessStorageAccountName": "CloudWitnessStorageAccountName",
@@ -620,70 +1282,205 @@
       }
     }
   },
-  "resources": [
-    {
+  "resources": {
+    "mod_vnet": {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2025-04-01",
-      "name": "[variables('virtualNetwork').deploymentName]",
+      "name": "deploy-vnet",
       "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[variables('virtualNetwork').linkedTemplateUri]",
-          "contentVersion": "1.0.0.0"
+        "expressionEvaluationOptions": {
+          "scope": "inner"
         },
+        "mode": "Incremental",
         "parameters": {
           "location": {
             "value": "[variables('location')]"
           },
           "virtualNetworkName": {
-            "value": "[variables('virtualNetwork').name]"
+            "value": "labenv-vnet"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.44.1.10279",
+              "templateHash": "3723301071760275255"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "metadata": {
+                "description": "The location for the resources."
+              }
+            },
+            "virtualNetworkName": {
+              "type": "string",
+              "metadata": {
+                "description": "The name of the virtual network."
+              }
+            }
+          },
+          "variables": {
+            "subnetName": "default"
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Network/networkSecurityGroups",
+              "apiVersion": "2025-07-01",
+              "name": "[format('{0}-{1}-nsg', parameters('virtualNetworkName'), toLower(variables('subnetName')))]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "securityRules": []
+              }
+            },
+            {
+              "type": "Microsoft.Network/virtualNetworks",
+              "apiVersion": "2025-07-01",
+              "name": "[parameters('virtualNetworkName')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "addressSpace": {
+                  "addressPrefixes": [
+                    "192.168.0.0/16"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "Microsoft.Network/virtualNetworks/subnets",
+              "apiVersion": "2025-07-01",
+              "name": "[format('{0}/{1}', parameters('virtualNetworkName'), variables('subnetName'))]",
+              "properties": {
+                "addressPrefix": "192.168.0.0/24",
+                "networkSecurityGroup": {
+                  "id": "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-{1}-nsg', parameters('virtualNetworkName'), toLower(variables('subnetName'))))]"
+                },
+                "serviceEndpoints": [
+                  {
+                    "service": "Microsoft.KeyVault",
+                    "locations": [
+                      "*"
+                    ]
+                  },
+                  {
+                    "service": "Microsoft.Storage",
+                    "locations": [
+                      "*"
+                    ]
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-{1}-nsg', parameters('virtualNetworkName'), toLower(variables('subnetName'))))]",
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "virtualNetworkId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]"
+            },
+            "subnetId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), variables('subnetName'))]"
+            }
           }
         }
       }
     },
-    {
+    "mod_bastion": {
       "condition": "[parameters('shouldDeployBastionDeveloper')]",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2025-04-01",
-      "name": "[variables('bastion').deploymentName]",
+      "name": "deploy-bastion",
       "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[variables('bastion').linkedTemplateUri]",
-          "contentVersion": "1.0.0.0"
+        "expressionEvaluationOptions": {
+          "scope": "inner"
         },
+        "mode": "Incremental",
         "parameters": {
           "location": {
             "value": "[variables('location')]"
           },
           "bastionName": {
-            "value": "[variables('bastion').name]"
+            "value": "labenv-bastion"
           },
           "virtualNetworkId": {
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('virtualNetwork').deploymentName), '2025-04-01').outputs.virtualNetworkId.value]"
+            "value": "[reference('mod_vnet').outputs.virtualNetworkId.value]"
           }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.44.1.10279",
+              "templateHash": "12103826913368314338"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "metadata": {
+                "description": "The location for the custom script extension resource."
+              }
+            },
+            "bastionName": {
+              "type": "string",
+              "metadata": {
+                "description": "The name of the Bastion."
+              }
+            },
+            "virtualNetworkId": {
+              "type": "string",
+              "metadata": {
+                "description": "The resource ID of the virtual network."
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Network/bastionHosts",
+              "apiVersion": "2025-07-01",
+              "name": "[parameters('bastionName')]",
+              "location": "[parameters('location')]",
+              "sku": {
+                "name": "Developer"
+              },
+              "properties": {
+                "virtualNetwork": {
+                  "id": "[parameters('virtualNetworkId')]"
+                }
+              }
+            }
+          ]
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Resources/deployments', variables('virtualNetwork').deploymentName)]"
+        "mod_vnet"
       ]
     },
-    {
+    "mod_labHostVm": {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2025-04-01",
-      "name": "[variables('hostVm').deploymentName]",
+      "name": "deploy-host-vm",
       "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[variables('hostVm').linkedTemplateUri]",
-          "contentVersion": "1.0.0.0"
+        "expressionEvaluationOptions": {
+          "scope": "inner"
         },
+        "mode": "Incremental",
         "parameters": {
           "location": {
             "value": "[variables('location')]"
           },
           "subnetId": {
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('virtualNetwork').deploymentName), '2025-04-01').outputs.subnetId.value.default]"
+            "value": "[reference('mod_vnet').outputs.subnetId.value]"
           },
           "vmName": {
             "value": "[parameters('labHostVmName')]"
@@ -725,33 +1522,298 @@
             "value": "[parameters('autoshutdownTimeZone')]"
           },
           "uniqueString": {
-            "value": "[variables('uniquePart')]"
+            "value": "[variables('uniquenessFactor')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.44.1.10279",
+              "templateHash": "5540356182504717661"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "metadata": {
+                "description": "The location for the custom script extension resource."
+              }
+            },
+            "subnetId": {
+              "type": "string",
+              "metadata": {
+                "description": "The resource ID of the subnet to deploy the virtual machine."
+              }
+            },
+            "vmName": {
+              "type": "string",
+              "metadata": {
+                "description": "The lab host virtual machine name."
+              }
+            },
+            "adminUserName": {
+              "type": "string",
+              "metadata": {
+                "description": "The administrator user name."
+              }
+            },
+            "adminPassword": {
+              "type": "securestring",
+              "metadata": {
+                "description": "The administrator password. The password must have 3 of the following: 1 lower case character, 1 upper case character, 1 number, and 1 special character. And the password must be between 12 and 123 characters long."
+              }
+            },
+            "vmSize": {
+              "type": "string",
+              "metadata": {
+                "description": "The lab host virtual machine size."
+              }
+            },
+            "osDiskType": {
+              "type": "string",
+              "metadata": {
+                "description": "The storage type of the lab host virtual machine's OS disk."
+              }
+            },
+            "dataDiskType": {
+              "type": "string",
+              "metadata": {
+                "description": "The storage type of the lab host virtual machine's data disk."
+              }
+            },
+            "dataDiskSize": {
+              "type": "int",
+              "metadata": {
+                "description": "The size of individual disk of the lab host virtual machine's data disks in GiB."
+              }
+            },
+            "dataDiskCount": {
+              "type": "int",
+              "minValue": 8,
+              "maxValue": 32,
+              "metadata": {
+                "description": "The number of data disks on the lab host virtual machine."
+              }
+            },
+            "hasEligibleWindowsServerLicense": {
+              "type": "bool",
+              "metadata": {
+                "description": "By specifying True, you confirm you have an eligible Windows Server license with Software Assurance or Windows Server subscription to apply this Azure Hybrid Benefit. You can read more about compliance here: http://go.microsoft.com/fwlink/?LinkId=859786"
+              }
+            },
+            "base64EncodedLabConfig": {
+              "type": "string",
+              "metadata": {
+                "description": "The base64 encode user data for the lab host virtual machine."
+              }
+            },
+            "shouldEnabledAutoshutdown": {
+              "type": "bool",
+              "metadata": {
+                "description": "By specifying True, will be auto-shutdown configured to the lab host virtual machine."
+              }
+            },
+            "autoshutdownTime": {
+              "type": "string",
+              "metadata": {
+                "description": "The auto-shutdown time."
+              }
+            },
+            "autoshutdownTimeZone": {
+              "type": "string",
+              "metadata": {
+                "description": "The time zone for auto-shutdown time."
+              }
+            },
+            "uniqueString": {
+              "type": "string",
+              "metadata": {
+                "description": "The string for uniqueness of resource names."
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Network/publicIPAddresses",
+              "apiVersion": "2025-07-01",
+              "name": "[format('{0}-ip1', parameters('vmName'))]",
+              "location": "[parameters('location')]",
+              "sku": {
+                "name": "Standard"
+              },
+              "properties": {
+                "publicIPAllocationMethod": "Static",
+                "dnsSettings": {
+                  "domainNameLabel": "[toLower(format('{0}-{1}-{2}', take(resourceGroup().name, 27), take(parameters('vmName'), 27), toLower(parameters('uniqueString'))))]"
+                }
+              }
+            },
+            {
+              "type": "Microsoft.Network/networkInterfaces",
+              "apiVersion": "2025-07-01",
+              "name": "[format('{0}-nic1', parameters('vmName'))]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "ipConfigurations": [
+                  {
+                    "name": "ipconfig1",
+                    "properties": {
+                      "subnet": {
+                        "id": "[parameters('subnetId')]"
+                      },
+                      "privateIPAllocationMethod": "Static",
+                      "privateIPAddress": "192.168.0.4",
+                      "publicIPAddress": {
+                        "id": "[resourceId('Microsoft.Network/publicIPAddresses', format('{0}-ip1', parameters('vmName')))]"
+                      }
+                    }
+                  }
+                ],
+                "enableAcceleratedNetworking": true
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', format('{0}-ip1', parameters('vmName')))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Compute/virtualMachines",
+              "apiVersion": "2025-11-01",
+              "name": "[parameters('vmName')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "hardwareProfile": {
+                  "vmSize": "[parameters('vmSize')]"
+                },
+                "osProfile": {
+                  "computerName": "labenv",
+                  "adminUsername": "[parameters('adminUserName')]",
+                  "adminPassword": "[parameters('adminPassword')]",
+                  "windowsConfiguration": {
+                    "provisionVMAgent": true,
+                    "enableAutomaticUpdates": true,
+                    "patchSettings": {
+                      "enableHotpatching": true,
+                      "patchMode": "AutomaticByPlatform",
+                      "automaticByPlatformSettings": {
+                        "rebootSetting": "Never"
+                      },
+                      "assessmentMode": "ImageDefault"
+                    }
+                  }
+                },
+                "licenseType": "[if(parameters('hasEligibleWindowsServerLicense'), 'Windows_Server', 'None')]",
+                "networkProfile": {
+                  "networkInterfaces": [
+                    {
+                      "id": "[resourceId('Microsoft.Network/networkInterfaces', format('{0}-nic1', parameters('vmName')))]"
+                    }
+                  ]
+                },
+                "storageProfile": {
+                  "copy": [
+                    {
+                      "name": "dataDisks",
+                      "count": "[length(range(0, parameters('dataDiskCount')))]",
+                      "input": {
+                        "name": "[format('{0}-datadisk{1:00}', parameters('vmName'), range(0, parameters('dataDiskCount'))[copyIndex('dataDisks')])]",
+                        "lun": "[range(0, parameters('dataDiskCount'))[copyIndex('dataDisks')]]",
+                        "managedDisk": {
+                          "storageAccountType": "[parameters('dataDiskType')]"
+                        },
+                        "diskSizeGB": "[parameters('dataDiskSize')]",
+                        "createOption": "Empty",
+                        "caching": "ReadWrite",
+                        "deleteOption": "Delete"
+                      }
+                    }
+                  ],
+                  "osDisk": {
+                    "name": "[format('{0}-osdisk', parameters('vmName'))]",
+                    "managedDisk": {
+                      "storageAccountType": "[parameters('osDiskType')]"
+                    },
+                    "createOption": "FromImage",
+                    "caching": "ReadWrite",
+                    "deleteOption": "Delete"
+                  },
+                  "imageReference": {
+                    "publisher": "MicrosoftWindowsServer",
+                    "offer": "WindowsServer",
+                    "sku": "2025-datacenter-azure-edition-smalldisk",
+                    "version": "latest"
+                  }
+                },
+                "diagnosticsProfile": {
+                  "bootDiagnostics": {
+                    "enabled": true
+                  }
+                },
+                "userData": "[parameters('base64EncodedLabConfig')]"
+              },
+              "identity": {
+                "type": "SystemAssigned"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', format('{0}-nic1', parameters('vmName')))]"
+              ]
+            },
+            {
+              "condition": "[parameters('shouldEnabledAutoshutdown')]",
+              "type": "Microsoft.DevTestLab/schedules",
+              "apiVersion": "2018-09-15",
+              "name": "[format('shutdown-computevm-{0}', parameters('vmName'))]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "status": "[if(parameters('shouldEnabledAutoshutdown'), 'Enabled', 'Disabled')]",
+                "taskType": "ComputeVmShutdownTask",
+                "dailyRecurrence": {
+                  "time": "[parameters('autoshutdownTime')]"
+                },
+                "timeZoneId": "[parameters('autoshutdownTimeZone')]",
+                "targetResourceId": "[resourceId('Microsoft.Compute/virtualMachines', parameters('vmName'))]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachines', parameters('vmName'))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "fqdn": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', format('{0}-ip1', parameters('vmName'))), '2025-07-01').dnsSettings.fqdn]"
+            },
+            "principalId": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.Compute/virtualMachines', parameters('vmName')), '2025-11-01', 'full').identity.principalId]"
+            }
           }
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Resources/deployments', variables('virtualNetwork').deploymentName)]"
+        "mod_vnet"
       ]
     },
-    {
+    "mod_keyVault": {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2025-04-01",
-      "name": "[variables('keyVault').deploymentName]",
+      "name": "deploy-key-vault",
       "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[variables('keyVault').linkedTemplateUri]",
-          "contentVersion": "1.0.0.0"
+        "expressionEvaluationOptions": {
+          "scope": "inner"
         },
+        "mode": "Incremental",
         "parameters": {
           "location": {
             "value": "[variables('location')]"
           },
           "keyVaultName": {
-            "value": "[variables('keyVault').name]"
+            "value": "[variables('labConfig').keyVault.name]"
           },
           "hostVmSubnetId": {
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('virtualNetwork').deploymentName), '2025-04-01').outputs.subnetId.value.default]"
+            "value": "[reference('mod_vnet').outputs.subnetId.value]"
           },
           "secretNameForLabHostAdminPassword": {
             "value": "[variables('labConfig').keyVault.secretName.adminPassword]"
@@ -759,65 +1821,202 @@
           "labHostAdminPassword": {
             "value": "[parameters('adminPassword')]"
           }
-        }
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.Resources/deployments', variables('virtualNetwork').deploymentName)]"
-      ]
-    },
-    {
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2025-04-01",
-      "name": "[variables('keyVaultRbac').deploymentName]",
-      "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[variables('keyVaultRbac').linkedTemplateUri]",
-          "contentVersion": "1.0.0.0"
         },
-        "parameters": {
-          "keyVaultName": {
-            "value": "[variables('keyVault').name]"
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.44.1.10279",
+              "templateHash": "7017272354377994115"
+            }
           },
-          "servicePrincipalId": {
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('hostVm').deploymentName), '2025-04-01').outputs.principalId.value]"
+          "parameters": {
+            "location": {
+              "type": "string",
+              "metadata": {
+                "description": "The location for the Key Vault resource."
+              }
+            },
+            "keyVaultName": {
+              "type": "string",
+              "metadata": {
+                "description": "The Key Vault name."
+              }
+            },
+            "hostVmSubnetId": {
+              "type": "string",
+              "metadata": {
+                "description": "The subnet ID that has the host VM. This subnet ID will be set to the key vault's firewall rules as an allowed subnet."
+              }
+            },
+            "secretNameForLabHostAdminPassword": {
+              "type": "string",
+              "metadata": {
+                "description": "The secret's name for the lab host's administrator password."
+              }
+            },
+            "labHostAdminPassword": {
+              "type": "securestring",
+              "metadata": {
+                "description": "The lab host's administrator password."
+              }
+            }
           },
-          "roleDefinitionId": {
-            "value": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')]"
+          "resources": [
+            {
+              "type": "Microsoft.KeyVault/vaults",
+              "apiVersion": "2026-02-01",
+              "name": "[parameters('keyVaultName')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "sku": {
+                  "family": "A",
+                  "name": "standard"
+                },
+                "tenantId": "[tenant().tenantId]",
+                "enableSoftDelete": false,
+                "enabledForDeployment": false,
+                "enabledForTemplateDeployment": false,
+                "enabledForDiskEncryption": false,
+                "enableRbacAuthorization": true,
+                "accessPolicies": [],
+                "publicNetworkAccess": "Enabled",
+                "networkAcls": {
+                  "bypass": "AzureServices",
+                  "defaultAction": "Deny",
+                  "ipRules": [],
+                  "virtualNetworkRules": [
+                    {
+                      "id": "[parameters('hostVmSubnetId')]",
+                      "ignoreMissingVnetServiceEndpoint": false
+                    }
+                  ]
+                }
+              },
+              "tags": {
+                "SecurityControl": "Ignore"
+              }
+            },
+            {
+              "type": "Microsoft.KeyVault/vaults/secrets",
+              "apiVersion": "2026-02-01",
+              "name": "[format('{0}/{1}', parameters('keyVaultName'), parameters('secretNameForLabHostAdminPassword'))]",
+              "properties": {
+                "value": "[parameters('labHostAdminPassword')]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "keyVaultId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]"
+            }
           }
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Resources/deployments', variables('keyVault').deploymentName)]",
-        "[resourceId('Microsoft.Resources/deployments', variables('hostVm').deploymentName)]"
+        "mod_vnet"
       ]
     },
-    {
+    "mod_keyVaultRbac": {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "assign-key-vault-rbac-with-host-vm-managed-id",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "keyVaultName": {
+            "value": "[variables('labConfig').keyVault.name]"
+          },
+          "servicePrincipalId": {
+            "value": "[reference('mod_labHostVm').outputs.principalId.value]"
+          },
+          "roleDefinitionId": {
+            "value": "[roleDefinitions('Key Vault Secrets User').id]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.44.1.10279",
+              "templateHash": "7245698864958622920"
+            }
+          },
+          "parameters": {
+            "keyVaultName": {
+              "type": "string",
+              "metadata": {
+                "description": "The Key Vault resource name."
+              }
+            },
+            "servicePrincipalId": {
+              "type": "string",
+              "metadata": {
+                "description": "The service principal ID for the role assignment."
+              }
+            },
+            "roleDefinitionId": {
+              "type": "string",
+              "metadata": {
+                "description": "The role definition ID for the role assignment."
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]",
+              "name": "[guid(parameters('servicePrincipalId'))]",
+              "properties": {
+                "roleDefinitionId": "[parameters('roleDefinitionId')]",
+                "principalType": "ServicePrincipal",
+                "principalId": "[parameters('servicePrincipalId')]"
+              }
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "mod_labHostVm"
+      ]
+    },
+    "mod_witnessStorageAccount": {
       "condition": "[not(parameters('isAzureLocalDeployment'))]",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2025-04-01",
-      "name": "[variables('witnessStorageAccount').deploymentName]",
+      "name": "deploy-storage-account-witness",
       "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[variables('witnessStorageAccount').linkedTemplateUri]",
-          "contentVersion": "1.0.0.0"
+        "expressionEvaluationOptions": {
+          "scope": "inner"
         },
+        "mode": "Incremental",
         "parameters": {
           "location": {
             "value": "[variables('location')]"
           },
           "storageAccountNamePrefix": {
-            "value": "[variables('witnessStorageAccount').namePrefix]"
+            "value": "labenvwitness"
           },
           "uniqueString": {
-            "value": "[variables('uniquePart')]"
+            "value": "[variables('uniquenessFactor')]"
           },
           "hostVmSubnetId": {
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('virtualNetwork').deploymentName), '2025-04-01').outputs.subnetId.value.default]"
+            "value": "[reference('mod_vnet').outputs.subnetId.value]"
           },
           "keyVaultName": {
-            "value": "[variables('keyVault').name]"
+            "value": "[variables('labConfig').keyVault.name]"
           },
           "secretNameForStorageAccountName": {
             "value": "[variables('labConfig').keyVault.secretName.cloudWitnessStorageAccountName]"
@@ -825,23 +2024,199 @@
           "secretNameForStorageAccountKey": {
             "value": "[variables('labConfig').keyVault.secretName.cloudWitnessStorageAccountKey]"
           }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.44.1.10279",
+              "templateHash": "4814298182735854779"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "metadata": {
+                "description": "The location for the storage account resource."
+              }
+            },
+            "storageAccountNamePrefix": {
+              "type": "string",
+              "metadata": {
+                "description": "The prefix of the storage account name for Cloud Witness."
+              }
+            },
+            "uniqueString": {
+              "type": "string",
+              "metadata": {
+                "description": "The string for uniqueness of the storage account name."
+              }
+            },
+            "hostVmSubnetId": {
+              "type": "string",
+              "metadata": {
+                "description": "The subnet ID that has the host VM. This subnet ID will be set to the storage account's firewall rules as an allowed subnet."
+              }
+            },
+            "keyVaultName": {
+              "type": "string",
+              "metadata": {
+                "description": "The Key Vault name to store the storage account key."
+              }
+            },
+            "secretNameForStorageAccountName": {
+              "type": "string",
+              "metadata": {
+                "description": "The secret's name of the storage account name in the Key Vault."
+              }
+            },
+            "secretNameForStorageAccountKey": {
+              "type": "string",
+              "metadata": {
+                "description": "The secret's name of the storage account key in the Key Vault."
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Storage/storageAccounts",
+              "apiVersion": "2026-04-01",
+              "name": "[format('{0}{1}', toLower(parameters('storageAccountNamePrefix')), toLower(parameters('uniqueString')))]",
+              "location": "[parameters('location')]",
+              "kind": "StorageV2",
+              "sku": {
+                "name": "Standard_LRS"
+              },
+              "properties": {
+                "accessTier": "Hot",
+                "minimumTlsVersion": "TLS1_2",
+                "supportsHttpsTrafficOnly": true,
+                "allowSharedKeyAccess": true,
+                "allowCrossTenantReplication": true,
+                "defaultToOAuthAuthentication": false,
+                "allowBlobPublicAccess": false,
+                "publicNetworkAccess": "Enabled",
+                "networkAcls": {
+                  "bypass": "AzureServices",
+                  "defaultAction": "Deny",
+                  "ipRules": [],
+                  "virtualNetworkRules": [
+                    {
+                      "id": "[parameters('hostVmSubnetId')]",
+                      "action": "Allow"
+                    }
+                  ]
+                },
+                "dnsEndpointType": "Standard",
+                "encryption": {
+                  "keySource": "Microsoft.Storage",
+                  "services": {
+                    "blob": {
+                      "enabled": true
+                    },
+                    "file": {
+                      "enabled": true
+                    },
+                    "table": {
+                      "enabled": true
+                    },
+                    "queue": {
+                      "enabled": true
+                    }
+                  },
+                  "requireInfrastructureEncryption": false
+                }
+              },
+              "tags": {
+                "SecurityControl": "Ignore"
+              }
+            },
+            {
+              "type": "Microsoft.Storage/storageAccounts/blobServices",
+              "apiVersion": "2026-04-01",
+              "name": "[format('{0}/{1}', format('{0}{1}', toLower(parameters('storageAccountNamePrefix')), toLower(parameters('uniqueString'))), 'default')]",
+              "properties": {
+                "restorePolicy": {
+                  "enabled": false
+                },
+                "deleteRetentionPolicy": {
+                  "enabled": false
+                },
+                "containerDeleteRetentionPolicy": {
+                  "enabled": false
+                },
+                "changeFeed": {
+                  "enabled": false
+                },
+                "isVersioningEnabled": false
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}', toLower(parameters('storageAccountNamePrefix')), toLower(parameters('uniqueString'))))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Storage/storageAccounts/fileServices",
+              "apiVersion": "2026-04-01",
+              "name": "[format('{0}/{1}', format('{0}{1}', toLower(parameters('storageAccountNamePrefix')), toLower(parameters('uniqueString'))), 'default')]",
+              "properties": {
+                "shareDeleteRetentionPolicy": {
+                  "enabled": false
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}', toLower(parameters('storageAccountNamePrefix')), toLower(parameters('uniqueString'))))]"
+              ]
+            },
+            {
+              "type": "Microsoft.KeyVault/vaults/secrets",
+              "apiVersion": "2026-02-01",
+              "name": "[format('{0}/{1}', parameters('keyVaultName'), parameters('secretNameForStorageAccountName'))]",
+              "properties": {
+                "value": "[format('{0}{1}', toLower(parameters('storageAccountNamePrefix')), toLower(parameters('uniqueString')))]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}', toLower(parameters('storageAccountNamePrefix')), toLower(parameters('uniqueString'))))]"
+              ]
+            },
+            {
+              "type": "Microsoft.KeyVault/vaults/secrets",
+              "apiVersion": "2026-02-01",
+              "name": "[format('{0}/{1}', parameters('keyVaultName'), parameters('secretNameForStorageAccountKey'))]",
+              "properties": {
+                "value": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}', toLower(parameters('storageAccountNamePrefix')), toLower(parameters('uniqueString')))), '2026-04-01').keys[0].value]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}', toLower(parameters('storageAccountNamePrefix')), toLower(parameters('uniqueString'))))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "storageAccountId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}', toLower(parameters('storageAccountNamePrefix')), toLower(parameters('uniqueString'))))]"
+            },
+            "storageAccountName": {
+              "type": "string",
+              "value": "[format('{0}{1}', toLower(parameters('storageAccountNamePrefix')), toLower(parameters('uniqueString')))]"
+            }
+          }
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Resources/deployments', variables('keyVault').deploymentName)]",
-        "[resourceId('Microsoft.Resources/deployments', variables('virtualNetwork').deploymentName)]"
+        "mod_vnet"
       ]
     },
-    {
+    "mod_installRolesFeatures": {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2025-04-01",
-      "name": "[variables('dsc').installRolesFeatures.deploymentName]",
+      "name": "install-roles-and-features-on-host-vm",
       "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[variables('dscLinkedTemplateUri')]",
-          "contentVersion": "1.0.0.0"
+        "expressionEvaluationOptions": {
+          "scope": "inner"
         },
+        "mode": "Incremental",
         "parameters": {
           "location": {
             "value": "[variables('location')]"
@@ -853,30 +2228,109 @@
             "value": "[variables('dscExtensionName')]"
           },
           "zipUri": {
-            "value": "[variables('dsc').installRolesFeatures.zipUri]"
+            "value": "[uri(variables('dscBaseUrl'), 'install-roles-and-features.zip')]"
           },
           "scriptName": {
-            "value": "[variables('dsc').installRolesFeatures.scriptName]"
+            "value": "install-roles-and-features.ps1"
           },
           "functionName": {
-            "value": "[variables('dsc').installRolesFeatures.functionName]"
+            "value": "install-roles-and-features"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.44.1.10279",
+              "templateHash": "12598710946001030347"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "metadata": {
+                "description": "The location for the DSC extension resource."
+              }
+            },
+            "parentVmResourceName": {
+              "type": "string",
+              "metadata": {
+                "description": "The name of the parent virtual machine resource."
+              }
+            },
+            "extensionName": {
+              "type": "string",
+              "metadata": {
+                "description": "The name of the DSC extension resource."
+              }
+            },
+            "zipUri": {
+              "type": "string",
+              "metadata": {
+                "description": "The URI of the DSC zip package file."
+              }
+            },
+            "scriptName": {
+              "type": "string",
+              "metadata": {
+                "description": "The DSC configuration script file name."
+              }
+            },
+            "functionName": {
+              "type": "string",
+              "metadata": {
+                "description": "The DSC configuration name."
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Compute/virtualMachines/extensions",
+              "apiVersion": "2025-11-01",
+              "name": "[format('{0}/{1}', parameters('parentVmResourceName'), parameters('extensionName'))]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "publisher": "Microsoft.Powershell",
+                "type": "DSC",
+                "typeHandlerVersion": "2.83",
+                "autoUpgradeMinorVersion": true,
+                "suppressFailures": false,
+                "settings": {
+                  "wmfVersion": "latest",
+                  "configuration": {
+                    "url": "[parameters('zipUri')]",
+                    "script": "[parameters('scriptName')]",
+                    "function": "[parameters('functionName')]"
+                  },
+                  "configurationArguments": {}
+                },
+                "protectedSettings": {}
+              }
+            }
+          ],
+          "outputs": {
+            "instanceView": {
+              "type": "object",
+              "value": "[reference(resourceId('Microsoft.Compute/virtualMachines/extensions', parameters('parentVmResourceName'), parameters('extensionName')), '2025-11-01').instanceView]"
+            }
           }
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Resources/deployments', variables('hostVm').deploymentName)]"
+        "mod_labHostVm"
       ]
     },
-    {
+    "mod_configureHostVm": {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2025-04-01",
-      "name": "[variables('customScript').configureHostVm.deploymentName]",
+      "name": "configure-host-vm",
       "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[variables('customScriptLinkedTemplateUri')]",
-          "contentVersion": "1.0.0.0"
+        "expressionEvaluationOptions": {
+          "scope": "inner"
         },
+        "mode": "Incremental",
         "parameters": {
           "location": {
             "value": "[variables('location')]"
@@ -888,28 +2342,100 @@
             "value": "[variables('customScriptExtensionName')]"
           },
           "fileUris": {
-            "value": "[variables('customScript').configureHostVm.fileUris]"
+            "value": [
+              "[uri(variables('customScriptBaseUrl'), 'configure-lab-host.ps1')]",
+              "[uri(variables('customScriptBaseUrl'), 'common.psm1')]"
+            ]
           },
           "commandToExecute": {
-            "value": "[variables('customScript').configureHostVm.commandToExecute]"
+            "value": "powershell.exe -ExecutionPolicy Unrestricted -File .\\configure-lab-host.ps1"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.44.1.10279",
+              "templateHash": "14838394609443764898"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "metadata": {
+                "description": "The location for the custom script extension resource."
+              }
+            },
+            "parentVmResourceName": {
+              "type": "string",
+              "metadata": {
+                "description": "The name of the parent virtual machine resource."
+              }
+            },
+            "extensionName": {
+              "type": "string",
+              "metadata": {
+                "description": "The name of the custom script extension resource."
+              }
+            },
+            "fileUris": {
+              "type": "array",
+              "minLength": 1,
+              "metadata": {
+                "description": "The URI of custom scripts."
+              }
+            },
+            "commandToExecute": {
+              "type": "string",
+              "metadata": {
+                "description": "The command-line to execute the custom script."
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Compute/virtualMachines/extensions",
+              "apiVersion": "2025-11-01",
+              "name": "[format('{0}/{1}', parameters('parentVmResourceName'), parameters('extensionName'))]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "publisher": "Microsoft.Compute",
+                "type": "CustomScriptExtension",
+                "typeHandlerVersion": "1.10",
+                "autoUpgradeMinorVersion": true,
+                "suppressFailures": false,
+                "settings": {},
+                "protectedSettings": {
+                  "fileUris": "[parameters('fileUris')]",
+                  "commandToExecute": "[parameters('commandToExecute')]"
+                }
+              }
+            }
+          ],
+          "outputs": {
+            "instanceView": {
+              "type": "object",
+              "value": "[reference(resourceId('Microsoft.Compute/virtualMachines/extensions', parameters('parentVmResourceName'), parameters('extensionName')), '2025-11-01').instanceView]"
+            }
           }
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Resources/deployments', variables('dsc').installRolesFeatures.deploymentName)]",
-        "[resourceId('Microsoft.Resources/deployments', variables('keyVaultRbac').deploymentName)]"
+        "mod_installRolesFeatures",
+        "mod_keyVaultRbac"
       ]
     },
-    {
+    "mod_downloadMaterials": {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2025-04-01",
-      "name": "[variables('customScript').downloadMaterials.deploymentName]",
+      "name": "download-materials",
       "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[variables('customScriptLinkedTemplateUri')]",
-          "contentVersion": "1.0.0.0"
+        "expressionEvaluationOptions": {
+          "scope": "inner"
         },
+        "mode": "Incremental",
         "parameters": {
           "location": {
             "value": "[variables('location')]"
@@ -921,27 +2447,100 @@
             "value": "[variables('customScriptExtensionName')]"
           },
           "fileUris": {
-            "value": "[variables('customScript').downloadMaterials.fileUris]"
+            "value": [
+              "[uri(variables('customScriptBaseUrl'), 'download-materials.ps1')]",
+              "[uri(variables('customScriptBaseUrl'), 'materials.json')]",
+              "[uri(variables('customScriptBaseUrl'), 'common.psm1')]"
+            ]
           },
           "commandToExecute": {
-            "value": "[variables('customScript').downloadMaterials.commandToExecute]"
+            "value": "powershell.exe -ExecutionPolicy Unrestricted -File .\\download-materials.ps1"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.44.1.10279",
+              "templateHash": "14838394609443764898"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "metadata": {
+                "description": "The location for the custom script extension resource."
+              }
+            },
+            "parentVmResourceName": {
+              "type": "string",
+              "metadata": {
+                "description": "The name of the parent virtual machine resource."
+              }
+            },
+            "extensionName": {
+              "type": "string",
+              "metadata": {
+                "description": "The name of the custom script extension resource."
+              }
+            },
+            "fileUris": {
+              "type": "array",
+              "minLength": 1,
+              "metadata": {
+                "description": "The URI of custom scripts."
+              }
+            },
+            "commandToExecute": {
+              "type": "string",
+              "metadata": {
+                "description": "The command-line to execute the custom script."
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Compute/virtualMachines/extensions",
+              "apiVersion": "2025-11-01",
+              "name": "[format('{0}/{1}', parameters('parentVmResourceName'), parameters('extensionName'))]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "publisher": "Microsoft.Compute",
+                "type": "CustomScriptExtension",
+                "typeHandlerVersion": "1.10",
+                "autoUpgradeMinorVersion": true,
+                "suppressFailures": false,
+                "settings": {},
+                "protectedSettings": {
+                  "fileUris": "[parameters('fileUris')]",
+                  "commandToExecute": "[parameters('commandToExecute')]"
+                }
+              }
+            }
+          ],
+          "outputs": {
+            "instanceView": {
+              "type": "object",
+              "value": "[reference(resourceId('Microsoft.Compute/virtualMachines/extensions', parameters('parentVmResourceName'), parameters('extensionName')), '2025-11-01').instanceView]"
+            }
           }
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Resources/deployments', variables('customScript').configureHostVm.deploymentName)]"
+        "mod_configureHostVm"
       ]
     },
-    {
+    "mod_createBaseVhd": {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2025-04-01",
-      "name": "[variables('customScript').createBaseVhd.deploymentName]",
+      "name": "create-base-vhd",
       "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[variables('customScriptLinkedTemplateUri')]",
-          "contentVersion": "1.0.0.0"
+        "expressionEvaluationOptions": {
+          "scope": "inner"
         },
+        "mode": "Incremental",
         "parameters": {
           "location": {
             "value": "[variables('location')]"
@@ -953,27 +2552,100 @@
             "value": "[variables('customScriptExtensionName')]"
           },
           "fileUris": {
-            "value": "[variables('customScript').createBaseVhd.fileUris]"
+            "value": [
+              "[uri(variables('customScriptBaseUrl'), 'create-base-vhd.ps1')]",
+              "[uri(variables('customScriptBaseUrl'), 'create-base-vhd-job.ps1')]",
+              "[uri(variables('customScriptBaseUrl'), 'common.psm1')]"
+            ]
           },
           "commandToExecute": {
-            "value": "[variables('customScript').createBaseVhd.commandToExecute]"
+            "value": "powershell.exe -ExecutionPolicy Unrestricted -File .\\create-base-vhd.ps1"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.44.1.10279",
+              "templateHash": "14838394609443764898"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "metadata": {
+                "description": "The location for the custom script extension resource."
+              }
+            },
+            "parentVmResourceName": {
+              "type": "string",
+              "metadata": {
+                "description": "The name of the parent virtual machine resource."
+              }
+            },
+            "extensionName": {
+              "type": "string",
+              "metadata": {
+                "description": "The name of the custom script extension resource."
+              }
+            },
+            "fileUris": {
+              "type": "array",
+              "minLength": 1,
+              "metadata": {
+                "description": "The URI of custom scripts."
+              }
+            },
+            "commandToExecute": {
+              "type": "string",
+              "metadata": {
+                "description": "The command-line to execute the custom script."
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Compute/virtualMachines/extensions",
+              "apiVersion": "2025-11-01",
+              "name": "[format('{0}/{1}', parameters('parentVmResourceName'), parameters('extensionName'))]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "publisher": "Microsoft.Compute",
+                "type": "CustomScriptExtension",
+                "typeHandlerVersion": "1.10",
+                "autoUpgradeMinorVersion": true,
+                "suppressFailures": false,
+                "settings": {},
+                "protectedSettings": {
+                  "fileUris": "[parameters('fileUris')]",
+                  "commandToExecute": "[parameters('commandToExecute')]"
+                }
+              }
+            }
+          ],
+          "outputs": {
+            "instanceView": {
+              "type": "object",
+              "value": "[reference(resourceId('Microsoft.Compute/virtualMachines/extensions', parameters('parentVmResourceName'), parameters('extensionName')), '2025-11-01').instanceView]"
+            }
           }
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Resources/deployments', variables('customScript').downloadMaterials.deploymentName)]"
+        "mod_downloadMaterials"
       ]
     },
-    {
+    "mod_rebootHostVm": {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2025-04-01",
-      "name": "[variables('dsc').rebootHostVm.deploymentName]",
+      "name": "reboot-host-vm",
       "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[variables('dscLinkedTemplateUri')]",
-          "contentVersion": "1.0.0.0"
+        "expressionEvaluationOptions": {
+          "scope": "inner"
         },
+        "mode": "Incremental",
         "parameters": {
           "location": {
             "value": "[variables('location')]"
@@ -985,30 +2657,109 @@
             "value": "[variables('dscExtensionName')]"
           },
           "zipUri": {
-            "value": "[variables('dsc').rebootHostVm.zipUri]"
+            "value": "[uri(variables('dscBaseUrl'), 'reboot.zip')]"
           },
           "scriptName": {
-            "value": "[variables('dsc').rebootHostVm.scriptName]"
+            "value": "reboot.ps1"
           },
           "functionName": {
-            "value": "[variables('dsc').rebootHostVm.functionName]"
+            "value": "reboot"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.44.1.10279",
+              "templateHash": "12598710946001030347"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "metadata": {
+                "description": "The location for the DSC extension resource."
+              }
+            },
+            "parentVmResourceName": {
+              "type": "string",
+              "metadata": {
+                "description": "The name of the parent virtual machine resource."
+              }
+            },
+            "extensionName": {
+              "type": "string",
+              "metadata": {
+                "description": "The name of the DSC extension resource."
+              }
+            },
+            "zipUri": {
+              "type": "string",
+              "metadata": {
+                "description": "The URI of the DSC zip package file."
+              }
+            },
+            "scriptName": {
+              "type": "string",
+              "metadata": {
+                "description": "The DSC configuration script file name."
+              }
+            },
+            "functionName": {
+              "type": "string",
+              "metadata": {
+                "description": "The DSC configuration name."
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Compute/virtualMachines/extensions",
+              "apiVersion": "2025-11-01",
+              "name": "[format('{0}/{1}', parameters('parentVmResourceName'), parameters('extensionName'))]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "publisher": "Microsoft.Powershell",
+                "type": "DSC",
+                "typeHandlerVersion": "2.83",
+                "autoUpgradeMinorVersion": true,
+                "suppressFailures": false,
+                "settings": {
+                  "wmfVersion": "latest",
+                  "configuration": {
+                    "url": "[parameters('zipUri')]",
+                    "script": "[parameters('scriptName')]",
+                    "function": "[parameters('functionName')]"
+                  },
+                  "configurationArguments": {}
+                },
+                "protectedSettings": {}
+              }
+            }
+          ],
+          "outputs": {
+            "instanceView": {
+              "type": "object",
+              "value": "[reference(resourceId('Microsoft.Compute/virtualMachines/extensions', parameters('parentVmResourceName'), parameters('extensionName')), '2025-11-01').instanceView]"
+            }
           }
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Resources/deployments', variables('customScript').createBaseVhd.deploymentName)]"
+        "mod_createBaseVhd"
       ]
     },
-    {
+    "mod_createVm": {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2025-04-01",
-      "name": "[variables('customScript').createVm.deploymentName]",
+      "name": "create-lab-vms",
       "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[variables('customScriptLinkedTemplateUri')]",
-          "contentVersion": "1.0.0.0"
+        "expressionEvaluationOptions": {
+          "scope": "inner"
         },
+        "mode": "Incremental",
         "parameters": {
           "location": {
             "value": "[variables('location')]"
@@ -1020,28 +2771,103 @@
             "value": "[variables('customScriptExtensionName')]"
           },
           "fileUris": {
-            "value": "[variables('customScript').createVm.fileUris]"
+            "value": [
+              "[uri(variables('customScriptBaseUrl'), 'create-vm.ps1')]",
+              "[uri(variables('customScriptBaseUrl'), 'create-vm-job-addsdc.ps1')]",
+              "[uri(variables('customScriptBaseUrl'), 'create-vm-job-wac.ps1')]",
+              "[uri(variables('customScriptBaseUrl'), 'create-vm-job-hcinode.ps1')]",
+              "[uri(variables('customScriptBaseUrl'), 'common.psm1')]"
+            ]
           },
           "commandToExecute": {
-            "value": "[variables('customScript').createVm.commandToExecute]"
+            "value": "powershell.exe -ExecutionPolicy Unrestricted -File .\\create-vm.ps1"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.44.1.10279",
+              "templateHash": "14838394609443764898"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "metadata": {
+                "description": "The location for the custom script extension resource."
+              }
+            },
+            "parentVmResourceName": {
+              "type": "string",
+              "metadata": {
+                "description": "The name of the parent virtual machine resource."
+              }
+            },
+            "extensionName": {
+              "type": "string",
+              "metadata": {
+                "description": "The name of the custom script extension resource."
+              }
+            },
+            "fileUris": {
+              "type": "array",
+              "minLength": 1,
+              "metadata": {
+                "description": "The URI of custom scripts."
+              }
+            },
+            "commandToExecute": {
+              "type": "string",
+              "metadata": {
+                "description": "The command-line to execute the custom script."
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Compute/virtualMachines/extensions",
+              "apiVersion": "2025-11-01",
+              "name": "[format('{0}/{1}', parameters('parentVmResourceName'), parameters('extensionName'))]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "publisher": "Microsoft.Compute",
+                "type": "CustomScriptExtension",
+                "typeHandlerVersion": "1.10",
+                "autoUpgradeMinorVersion": true,
+                "suppressFailures": false,
+                "settings": {},
+                "protectedSettings": {
+                  "fileUris": "[parameters('fileUris')]",
+                  "commandToExecute": "[parameters('commandToExecute')]"
+                }
+              }
+            }
+          ],
+          "outputs": {
+            "instanceView": {
+              "type": "object",
+              "value": "[reference(resourceId('Microsoft.Compute/virtualMachines/extensions', parameters('parentVmResourceName'), parameters('extensionName')), '2025-11-01').instanceView]"
+            }
           }
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Resources/deployments', variables('dsc').rebootHostVm.deploymentName)]"
+        "mod_rebootHostVm"
       ]
     },
-    {
+    "mod_hciCluster": {
       "condition": "[variables('labConfig').hciCluster.shouldCreateCluster]",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2025-04-01",
-      "name": "[variables('customScript').createHciCluster.deploymentName]",
+      "name": "create-hci-cluster",
       "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[variables('customScriptLinkedTemplateUri')]",
-          "contentVersion": "1.0.0.0"
+        "expressionEvaluationOptions": {
+          "scope": "inner"
         },
+        "mode": "Incremental",
         "parameters": {
           "location": {
             "value": "[variables('location')]"
@@ -1053,19 +2879,94 @@
             "value": "[variables('customScriptExtensionName')]"
           },
           "fileUris": {
-            "value": "[variables('customScript').createHciCluster.fileUris]"
+            "value": [
+              "[uri(variables('customScriptBaseUrl'), 'create-hci-cluster.ps1')]",
+              "[uri(variables('customScriptBaseUrl'), 'create-hci-cluster-test-cat-en-us.psd1')]",
+              "[uri(variables('customScriptBaseUrl'), 'create-hci-cluster-test-cat-ja-jp.psd1')]",
+              "[uri(variables('customScriptBaseUrl'), 'common.psm1')]"
+            ]
           },
           "commandToExecute": {
-            "value": "[variables('customScript').createHciCluster.commandToExecute]"
+            "value": "powershell.exe -ExecutionPolicy Unrestricted -File .\\create-hci-cluster.ps1"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.44.1.10279",
+              "templateHash": "14838394609443764898"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "metadata": {
+                "description": "The location for the custom script extension resource."
+              }
+            },
+            "parentVmResourceName": {
+              "type": "string",
+              "metadata": {
+                "description": "The name of the parent virtual machine resource."
+              }
+            },
+            "extensionName": {
+              "type": "string",
+              "metadata": {
+                "description": "The name of the custom script extension resource."
+              }
+            },
+            "fileUris": {
+              "type": "array",
+              "minLength": 1,
+              "metadata": {
+                "description": "The URI of custom scripts."
+              }
+            },
+            "commandToExecute": {
+              "type": "string",
+              "metadata": {
+                "description": "The command-line to execute the custom script."
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Compute/virtualMachines/extensions",
+              "apiVersion": "2025-11-01",
+              "name": "[format('{0}/{1}', parameters('parentVmResourceName'), parameters('extensionName'))]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "publisher": "Microsoft.Compute",
+                "type": "CustomScriptExtension",
+                "typeHandlerVersion": "1.10",
+                "autoUpgradeMinorVersion": true,
+                "suppressFailures": false,
+                "settings": {},
+                "protectedSettings": {
+                  "fileUris": "[parameters('fileUris')]",
+                  "commandToExecute": "[parameters('commandToExecute')]"
+                }
+              }
+            }
+          ],
+          "outputs": {
+            "instanceView": {
+              "type": "object",
+              "value": "[reference(resourceId('Microsoft.Compute/virtualMachines/extensions', parameters('parentVmResourceName'), parameters('extensionName')), '2025-11-01').instanceView]"
+            }
           }
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Resources/deployments', variables('customScript').createVm.deploymentName)]",
-        "[resourceId('Microsoft.Resources/deployments', variables('witnessStorageAccount').deploymentName)]"
+        "mod_createVm",
+        "mod_witnessStorageAccount"
       ]
     }
-  ],
+  },
   "outputs": {
     "adminUserName": {
       "type": "string",
@@ -1073,7 +2974,7 @@
     },
     "vmPublicIpFqdn": {
       "type": "string",
-      "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('hostVm').deploymentName), '2025-04-01').outputs.fqdn.value]"
+      "value": "[reference('mod_labHostVm').outputs.fqdn.value]"
     }
   }
 }

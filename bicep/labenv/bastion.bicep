@@ -1,3 +1,7 @@
+//
+// Parameters
+//
+
 @description('''The location for the custom script extension resource.''')
 param location string
 
@@ -7,7 +11,11 @@ param bastionName string
 @description('''The resource ID of the virtual network.''')
 param virtualNetworkId string
 
-resource res_bastionHost 'Microsoft.Network/bastionHosts@2024-07-01' = {
+//
+// Resources
+//
+
+resource res_bastionHost 'Microsoft.Network/bastionHosts@2025-07-01' = {
   name: bastionName
   location: location
   sku: {

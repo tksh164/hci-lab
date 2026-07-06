@@ -1,3 +1,7 @@
+//
+// Parameters
+//
+
 @description('''The location for the DSC extension resource.''')
 param location string
 
@@ -16,11 +20,15 @@ param scriptName string
 @description('''The DSC configuration name.''')
 param functionName string
 
-resource res_parentVm 'Microsoft.Compute/virtualMachines@2024-11-01' existing = {
+//
+// Resources
+//
+
+resource res_parentVm 'Microsoft.Compute/virtualMachines@2025-11-01' existing = {
   name: parentVmResourceName
 }
 
-resource res_dscExtension 'Microsoft.Compute/virtualMachines/extensions@2022-11-01' = {
+resource res_dscExtension 'Microsoft.Compute/virtualMachines/extensions@2025-11-01' = {
   parent: res_parentVm
   name: extensionName
   location: location
@@ -42,5 +50,9 @@ resource res_dscExtension 'Microsoft.Compute/virtualMachines/extensions@2022-11-
     protectedSettings: {}
   }
 }
+
+//
+// Outputs
+//
 
 output instanceView object = res_dscExtension.properties.instanceView

@@ -2,15 +2,7 @@
 
 $outputFolderBasePath = '../templates'
 $buildConfig = @(
-    @{ BicepFilePath = './labenv/labenv.bicep';        OutputFolderBasePath = $outputFolderBasePath; JsonFileName = 'template.json' },
-    @{ BicepFilePath = './labenv/bastion.bicep';       OutputFolderBasePath = $outputFolderBasePath; JsonFileName = $null },
-    @{ BicepFilePath = './labenv/cloudwitness.bicep';  OutputFolderBasePath = $outputFolderBasePath; JsonFileName = $null },
-    @{ BicepFilePath = './labenv/customscript.bicep';  OutputFolderBasePath = $outputFolderBasePath; JsonFileName = $null },
-    @{ BicepFilePath = './labenv/dsc.bicep';           OutputFolderBasePath = $outputFolderBasePath; JsonFileName = $null },
-    @{ BicepFilePath = './labenv/hostvm.bicep';        OutputFolderBasePath = $outputFolderBasePath; JsonFileName = $null },
-    @{ BicepFilePath = './labenv/keyvault-rbac.bicep'; OutputFolderBasePath = $outputFolderBasePath; JsonFileName = $null },
-    @{ BicepFilePath = './labenv/keyvault.bicep';      OutputFolderBasePath = $outputFolderBasePath; JsonFileName = $null },
-    @{ BicepFilePath = './labenv/vnet.bicep';          OutputFolderBasePath = $outputFolderBasePath; JsonFileName = $null }
+    @{ BicepFilePath = './labenv/labenv.bicep'; OutputFolderBasePath = $outputFolderBasePath; JsonFileName = 'template.json' }
 )
 
 # Check the az command.

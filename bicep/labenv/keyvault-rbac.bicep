@@ -1,3 +1,7 @@
+//
+// Parameters
+//
+
 @description('''The Key Vault resource name.''')
 param keyVaultName string
 
@@ -6,6 +10,10 @@ param servicePrincipalId string
 
 @description('''The role definition ID for the role assignment.''')
 param roleDefinitionId string
+
+//
+// Resources
+//
 
 resource keyVault 'Microsoft.KeyVault/vaults@2026-02-01' existing = {
   name: keyVaultName
