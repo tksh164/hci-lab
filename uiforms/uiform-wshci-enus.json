@@ -1379,8 +1379,8 @@
                                         "required": true,
                                         "validations": [
                                             {
-                                                "regex": "^[A-Za-z0-9-]+$",
-                                                "message": "Invalid cluster name."
+                                                "regex": "^[a-zA-Z0-9-]{3,15}$",
+                                                "message": "The cluster name must contain between 3 to 15 characters. The name only allows alphanumeric characters and hyphens."
                                             }
                                         ]
                                     },
