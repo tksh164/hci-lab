@@ -2,6 +2,7 @@
 type osSymbol = osSymbolAzureLocal | osSymbolAzureStackHCI | osSymbolWindowsServer
 
 type osSymbolAzureLocal =
+  | 'azloc24h2_2607'  // Azure Local 24H2 2607
   | 'azloc24h2_2606'  // Azure Local 24H2 2606
   | 'azloc24h2_2605'  // Azure Local 24H2 2605
   | 'azloc24h2_2604'  // Azure Local 24H2 2604
