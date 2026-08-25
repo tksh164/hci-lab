@@ -348,10 +348,10 @@
             },
             "updates": [
                 // OS
-                "https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/a71830b0-cbf7-4f91-9ad0-27c92c497e7a/public/windows11.0-kb5099536-x64_62ec237bff7d2c4065936b2b2b58be57cf0d668d.msu",
+                "https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/e5f3de0c-a700-4872-a580-75b335df8696/public/windows11.0-kb5120233-x64_9344a2fc7fe36fbe88ebe94abedde1fa862213c1.msu",
                 // .NET Framework
-                "https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/8c2f6f8a-f600-442a-b82f-7e403af2095f/public/windows11.0-kb5101001-x64-ndp481_221190f947cff00f765d54f40799787c33e64b5f.msu",
-                "https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/6748a7f6-ecf2-41b3-8d8b-c7dafdcced8a/public/windows11.0-kb5100998-x64-ndp481_339c932fd328785b23753facb676f86ac45778b7.msu"
+                "https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/b3f18556-b530-470b-bb18-f84ba6a06b23/public/windows11.0-kb5120710-x64-ndp481_7f3b344bcc1a63b22088d5ef0a3b942028d3c5ae.msu",
+                "https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/d825fff1-3c0a-49f0-beef-b27bf81b7c60/public/windows11.0-kb5120708-x64-ndp481_220a883ccfe787f231226d3e6af4cc37c293a611.msu"
             ]
         },
         "ws2022": {
@@ -373,11 +373,11 @@
             },
             "updates": [
                 // OS
-                "https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2023/09/windows10.0-kb5030216-x64_cbe587155f9818548b75f65d5cd41d341ed2fc61.msu",  // Update the SSU version to the minimum required SSU version 20348.1960 to install the latest LCU.
-                "https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2026/07/windows10.0-kb5099540-x64_9238518dcf76e3b46d5c72e0392b0e04e5d2ae66.msu",
+                "https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2023/09/windows10.0-kb5030216-x64_cbe587155f9818548b75f65d5cd41d341ed2fc61.msu",  // For update the SSU version to the minimum required SSU version 20348.1960 to install the latest LCU.
+                "https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2026/08/windows10.0-kb5120242-x64_e300a688ac0776c29a5e33aaee063d53ff6eb0ee.msu",
                 // .NET Framework
-                "https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2026/06/windows10.0-kb5101010-x64-ndp48_09533d7252f883f2215afe382c17677b873ed148.msu",
-                "https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2026/06/windows10.0-kb5101005-x64-ndp481_0de766290a6372221ade3428768a5f1b11011054.msu"
+                "https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2026/07/windows10.0-kb5120705-x64-ndp48_bb301675abc0ee81e1f4b0a8ab9cb86b53b33367.msu",
+                "https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/secu/2026/07/windows10.0-kb5120714-x64-ndp481_3a009ef9abfc5f7ce06c89263913e46e24a8d861.msu"
             ]
         }
     },
