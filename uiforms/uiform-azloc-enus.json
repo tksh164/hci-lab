@@ -1307,7 +1307,7 @@
                                                 }
                                             },
                                             {
-                                                "label": "Azure Local 2603",
+                                                "label": "Azure Local 2603 [End of support]",
                                                 "description": "Notice: This version reached the end of support.",
                                                 "value": {
                                                     "sku": "azloc24h2_2603",
@@ -1315,7 +1315,7 @@
                                                 }
                                             },
                                             {
-                                                "label": "Azure Local 2602",
+                                                "label": "Azure Local 2602 [End of support]",
                                                 "description": "Notice: This version reached the end of support.",
                                                 "value": {
                                                     "sku": "azloc24h2_2602",
@@ -1323,7 +1323,7 @@
                                                 }
                                             },
                                             {
-                                                "label": "Azure Local 2601",
+                                                "label": "Azure Local 2601 [End of support]",
                                                 "description": "Notice: This version reached the end of support.",
                                                 "value": {
                                                     "sku": "azloc24h2_2601",
@@ -1331,7 +1331,7 @@
                                                 }
                                             },
                                             {
-                                                "label": "Azure Local 2512",
+                                                "label": "Azure Local 2512 [End of support]",
                                                 "description": "Notice: This version reached the end of support.",
                                                 "value": {
                                                     "sku": "azloc24h2_2512",
