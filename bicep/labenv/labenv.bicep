@@ -70,7 +70,7 @@ param labVmOsTimeZone string = 'UTC'
 param shouldInstallUpdatesToLabVm bool = false
 
 @description('''The operating system for the HCI node virtual machines.''')
-param hciNodeOsSku osSymbol = 'azloc24h2_2608'
+param hciNodeOsSku osSymbol = 'azloc24h2_2609'
 
 @description('''The image index of the operating system for the HCI node virtual machines.''')
 param hciNodeOsImageIndex osImageIndex = 1
